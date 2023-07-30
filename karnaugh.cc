@@ -9,8 +9,39 @@
 #include <vector>
 
 
+using strings_t = std::vector<std::string>;
 using names_t = std::vector<std::string>;
 using bits_t = std::uint_fast8_t;
+
+void trimString(std::string &string)
+{
+    string.erase(string.begin(), std::find_if(string.begin(), string.end(), [](unsigned char ch) { return !std::isspace(ch); }));
+    string.erase(std::find_if(string.rbegin(), string.rend(), [](unsigned char ch) { return !std::isspace(ch); }).base(), string.end());
+}
+
+bool readStrings(strings_t &strings, const bool optional = false)
+{
+	strings.clear();
+	std::string line;
+	do
+	{
+		std::getline(std::cin, line);
+		if (!std::cin)
+		{
+			std::cerr << "Cannot read line from stdin!\n";
+			return false;
+		}
+		trimString(line);
+		if (optional && line.empty())
+			return true;
+	} while (line.empty() || line.front() == '#');
+	static const std::regex separator("\\s*,\\s*|\\s+");
+	static const std::regex_token_iterator<std::string::const_iterator> rend;
+	for (std::sregex_token_iterator iter(line.cbegin(), line.cend(), separator, -1); iter != rend; ++iter)
+		if (iter->length() != 0)
+			strings.emplace_back(*iter);
+	return true;
+}
 
 
 template<bits_t BITS>
@@ -32,7 +63,7 @@ class Karnaugh
 	static void printBits(const number_t number, const bits_t bits);
 	static void prettyPrintTable(const table_t &target, const table_t &acceptable = {});
 	
-	static bool loadTable(table_t &table);
+	static bool loadTable(table_t &table, const bool optional);
 	bool loadData();
 	
 	static minterms_t makeAllPossibleMinterms();
@@ -104,32 +135,26 @@ void Karnaugh<BITS>::prettyPrintTable(const table_t &target, const table_t &acce
 }
 
 template<bits_t BITS>
-bool Karnaugh<BITS>::loadTable(table_t &table)
+bool Karnaugh<BITS>::loadTable(table_t &table, const bool optional)
 {
-	std::string line;
-	std::getline(std::cin, line);
-	if (!std::cin)
-	{
-		std::cerr << "Cannot read line from stdin!\n";
+	strings_t strings;
+	if (!readStrings(strings, optional))
 		return false;
-	}
-	static std::regex separator("\\s*,\\s*|\\s+");
-	static std::regex_token_iterator<std::string::const_iterator> rend;
-	for (std::sregex_token_iterator iter(line.cbegin(), line.cend(), separator, -1); iter != rend; ++iter)
+	for (const std::string &string : strings)
 	{
 		try
 		{
-			const auto num = std::stoi(*iter);
+			const auto num = std::stoi(string);
 			if (num >= (1 << BITS))
 			{
-				std::cerr << '"' << *iter << "\" is too big!\n";
+				std::cerr << '"' << string << "\" is too big!\n";
 				return false;
 			}
 			table[num] = true;
 		}
 		catch (std::invalid_argument &e)
 		{
-			std::cerr << '"' << *iter << "\" is not a number!\n";
+			std::cerr << '"' << string << "\" is not a number!\n";
 			return false;
 		}
 	}
@@ -139,9 +164,9 @@ bool Karnaugh<BITS>::loadTable(table_t &table)
 template<bits_t BITS>
 bool Karnaugh<BITS>::loadData()
 {
-	if (!loadTable(target))
+	if (!loadTable(target, false))
 		return false;
-	if (!loadTable(acceptable))
+	if (!loadTable(acceptable, true))
 		return false;
 	acceptable |= target;
 	return true;
@@ -296,18 +321,7 @@ bool Karnaugh<BITS>::doItAll(const names_t &names)
 
 bool loadNames(names_t &names)
 {
-	std::string line;
-	std::getline(std::cin, line);
-	if (!std::cin)
-	{
-		std::cerr << "Cannot read line from stdin!\n";
-		return false;
-	}
-	static std::regex separator("\\s*,\\s*|\\s+");
-	static std::regex_token_iterator<std::string::const_iterator> rend;
-	for (std::sregex_token_iterator iter(line.cbegin(), line.cend(), separator, -1); iter != rend; ++iter)
-		names.emplace_back(*iter);
-	return true;
+	return readStrings(names);
 }
 
 int main()
