@@ -2,3 +2,4 @@
 .gitattributes text
 *.hh text
 *.cc text
+SConstruct text
