@@ -3,44 +3,29 @@
 #include <cstdint>
 #include <iostream>
 #include <limits>
+#include <list>
 #include <regex>
 #include <string>
 #include <utility>
 #include <vector>
 
 
+using lines_t = std::list<std::string>;
 using strings_t = std::vector<std::string>;
 using names_t = std::vector<std::string>;
 using bits_t = std::uint_fast8_t;
 
-void trimString(std::string &string)
+strings_t readStrings(std::string &line)
 {
-    string.erase(string.begin(), std::find_if(string.begin(), string.end(), [](unsigned char ch) { return !std::isspace(ch); }));
-    string.erase(std::find_if(string.rbegin(), string.rend(), [](unsigned char ch) { return !std::isspace(ch); }).base(), string.end());
-}
-
-bool readStrings(strings_t &strings, const bool optional = false)
-{
-	strings.clear();
-	std::string line;
-	do
-	{
-		std::getline(std::cin, line);
-		if (!std::cin)
-		{
-			std::cerr << "Cannot read line from stdin!\n";
-			return false;
-		}
-		trimString(line);
-		if (optional && line.empty())
-			return true;
-	} while (line.empty() || line.front() == '#');
+	strings_t strings;
+	if (line == "-")
+		return strings;
 	static const std::regex separator("\\s*,\\s*|\\s+");
 	static const std::regex_token_iterator<std::string::const_iterator> rend;
 	for (std::sregex_token_iterator iter(line.cbegin(), line.cend(), separator, -1); iter != rend; ++iter)
 		if (iter->length() != 0)
 			strings.emplace_back(*iter);
-	return true;
+	return strings;
 }
 
 
@@ -63,8 +48,8 @@ class Karnaugh
 	static void printBits(const number_t number, const bits_t bits);
 	static void prettyPrintTable(const table_t &target, const table_t &acceptable = {});
 	
-	static bool loadTable(table_t &table, const bool optional);
-	bool loadData();
+	static bool loadTable(table_t &table, std::string &line);
+	bool loadData(lines_t &lines);
 	
 	static minterms_t makeAllPossibleMinterms();
 	void findMinterms();
@@ -73,7 +58,7 @@ class Karnaugh
 	minterms_t solve() const;
 	
 public:
-	static bool doItAll(const names_t &names);
+	static bool doItAll(const names_t &names, lines_t &lines);
 };
 
 template<bits_t BITS>
@@ -135,12 +120,9 @@ void Karnaugh<BITS>::prettyPrintTable(const table_t &target, const table_t &acce
 }
 
 template<bits_t BITS>
-bool Karnaugh<BITS>::loadTable(table_t &table, const bool optional)
+bool Karnaugh<BITS>::loadTable(table_t &table, std::string &line)
 {
-	strings_t strings;
-	if (!readStrings(strings, optional))
-		return false;
-	for (const std::string &string : strings)
+	for (const std::string &string : readStrings(line))
 	{
 		try
 		{
@@ -162,12 +144,19 @@ bool Karnaugh<BITS>::loadTable(table_t &table, const bool optional)
 }
 
 template<bits_t BITS>
-bool Karnaugh<BITS>::loadData()
+bool Karnaugh<BITS>::loadData(lines_t &lines)
 {
-	if (!loadTable(target, false))
+	if (lines.size() < 2)
+	{
+		std::cerr << "A description of a Karnaugh map has to have 2 lines!\n";
 		return false;
-	if (!loadTable(acceptable, true))
+	}
+	if (!loadTable(target, lines.front()))
 		return false;
+	lines.pop_front();
+	if (!loadTable(acceptable, lines.front()))
+		return false;
+	lines.pop_front();
 	acceptable |= target;
 	return true;
 }
@@ -284,10 +273,10 @@ typename Karnaugh<BITS>::minterms_t Karnaugh<BITS>::solve() const
 }
 
 template<bits_t BITS>
-bool Karnaugh<BITS>::doItAll(const names_t &names)
+bool Karnaugh<BITS>::doItAll(const names_t &names, lines_t &lines)
 {
 	Karnaugh karnaugh(names);
-	if (!karnaugh.loadData())
+	if (!karnaugh.loadData(lines))
 		return false;
 	prettyPrintTable(karnaugh.target, karnaugh.acceptable);
 	
@@ -319,63 +308,96 @@ bool Karnaugh<BITS>::doItAll(const names_t &names)
 }
 
 
-bool loadNames(names_t &names)
+void trimString(std::string &string)
 {
-	return readStrings(names);
+    string.erase(string.begin(), std::find_if(string.begin(), string.end(), [](unsigned char ch) { return !std::isspace(ch); }));
+    string.erase(std::find_if(string.rbegin(), string.rend(), [](unsigned char ch) { return !std::isspace(ch); }).base(), string.end());
+}
+
+bool loadLines(std::istream &in, lines_t &lines)
+{
+	lines.clear();
+	while (true)
+	{
+		std::string line;
+		std::getline(in, line);
+		if (in.eof())
+			return true;
+		if (!in)
+		{
+			std::cerr << "Cannot read from stdin!\n";
+			return false;
+		}
+		trimString(line);
+		if (!line.empty() && line.front() != '#')
+			lines.emplace_back(std::move(line));
+	}
+}
+
+names_t loadNames(std::string &line)
+{
+	return readStrings(line);
 }
 
 int main()
 {
-	names_t names;
-	if (!loadNames(names))
+	lines_t lines;
+	if (!loadLines(std::cin, lines))
 		return 1;
+	if (lines.empty())
+	{
+		std::cerr << "Input names are missing!\n";
+		return 1;
+	}
+	const names_t names = loadNames(lines.front());
+	lines.pop_front();
 	bool result;
 	switch (names.size())
 	{
 	case 2:
-		result = Karnaugh<2>::doItAll(names);
+		result = Karnaugh<2>::doItAll(names, lines);
 		break;
 	case 3:
-		result = Karnaugh<3>::doItAll(names);
+		result = Karnaugh<3>::doItAll(names, lines);
 		break;
 	case 4:
-		result = Karnaugh<4>::doItAll(names);
+		result = Karnaugh<4>::doItAll(names, lines);
 		break;
 	case 5:
-		result = Karnaugh<5>::doItAll(names);
+		result = Karnaugh<5>::doItAll(names, lines);
 		break;
 	case 6:
-		result = Karnaugh<6>::doItAll(names);
+		result = Karnaugh<6>::doItAll(names, lines);
 		break;
 	case 7:
-		result = Karnaugh<7>::doItAll(names);
+		result = Karnaugh<7>::doItAll(names, lines);
 		break;
 	case 8:
-		result = Karnaugh<8>::doItAll(names);
+		result = Karnaugh<8>::doItAll(names, lines);
 		break;
 	case 9:
-		result = Karnaugh<9>::doItAll(names);
+		result = Karnaugh<9>::doItAll(names, lines);
 		break;
 	case 10:
-		result = Karnaugh<10>::doItAll(names);
+		result = Karnaugh<10>::doItAll(names, lines);
 		break;
 	case 11:
-		result = Karnaugh<11>::doItAll(names);
+		result = Karnaugh<11>::doItAll(names, lines);
 		break;
 	case 12:
-		result = Karnaugh<12>::doItAll(names);
+		result = Karnaugh<12>::doItAll(names, lines);
 		break;
 	case 13:
-		result = Karnaugh<13>::doItAll(names);
+		result = Karnaugh<13>::doItAll(names, lines);
 		break;
 	case 14:
-		result = Karnaugh<14>::doItAll(names);
+		result = Karnaugh<14>::doItAll(names, lines);
 		break;
 	case 15:
-		result = Karnaugh<15>::doItAll(names);
+		result = Karnaugh<15>::doItAll(names, lines);
 		break;
 	case 16:
-		result = Karnaugh<16>::doItAll(names);
+		result = Karnaugh<16>::doItAll(names, lines);
 		break;
 	default:
 		std::cerr << "Unsupported number of variables!\n";
