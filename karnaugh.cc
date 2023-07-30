@@ -38,11 +38,14 @@ class Karnaugh
 	using minterm_t = std::pair<number_t, number_t>;
 	using minterms_t = std::vector<minterm_t>;
 	
-	const names_t &names;
+	static std::size_t nameCount;
+	
+	const names_t &inputNames;
+	std::string functionName;
 	table_t target, acceptable;
 	minterms_t allMinterms;
 	
-	Karnaugh(const names_t &names) : names(names) {}
+	Karnaugh(const names_t &inputNames) : inputNames(inputNames), functionName('f' + std::to_string(nameCount++)) {}
 	
 	static grayCode_t makeGrayCode(const bits_t bits);
 	static void printBits(const number_t number, const bits_t bits);
@@ -58,8 +61,14 @@ class Karnaugh
 	minterms_t solve() const;
 	
 public:
-	static bool doItAll(const names_t &names, lines_t &lines);
+	Karnaugh(Karnaugh &&) = default;
+	Karnaugh& operator=(Karnaugh &&) = default;
+	
+	static bool doItAll(const names_t &inputNames, lines_t &lines);
 };
+
+template<bits_t BITS>
+std::size_t Karnaugh<BITS>::nameCount = 0;
 
 template<bits_t BITS>
 typename Karnaugh<BITS>::grayCode_t Karnaugh<BITS>::makeGrayCode(const bits_t bits)
@@ -86,8 +95,8 @@ void Karnaugh<BITS>::prettyPrintTable(const table_t &target, const table_t &acce
 {
 	static constexpr bits_t vBits = (BITS + 1) / 2;
 	static constexpr bits_t hBits = BITS / 2;
-	const grayCode_t vGrayCode = makeGrayCode(vBits);
-	const grayCode_t hGrayCode = makeGrayCode(hBits);
+	static const grayCode_t vGrayCode = makeGrayCode(vBits);
+	static const grayCode_t hGrayCode = makeGrayCode(hBits);
 	for (int i = 0; i != vBits; ++i)
 		std::cout << ' ';
 	std::cout << ' ';
@@ -146,6 +155,11 @@ bool Karnaugh<BITS>::loadTable(table_t &table, std::string &line)
 template<bits_t BITS>
 bool Karnaugh<BITS>::loadData(lines_t &lines)
 {
+	if (!lines.empty() && (lines.front().front() < '0' || lines.front().front() >'9'))
+	{
+		functionName = std::move(lines.front());
+		lines.pop_front();
+	}
 	if (lines.size() < 2)
 	{
 		std::cerr << "A description of a Karnaugh map has to have 2 lines!\n";
@@ -176,13 +190,15 @@ typename Karnaugh<BITS>::minterms_t Karnaugh<BITS>::makeAllPossibleMinterms()
 	static const auto getOnesCount = [](const minterm_t minterm) -> bits_t { return __builtin_popcount((minterm.first << 16) | minterm.second); };
 	static const auto hasLessOnes = [](const minterm_t x, const minterm_t y) -> bool { return getOnesCount(x) < getOnesCount(y); };
 	std::stable_sort(minterms.begin(), minterms.end(), hasLessOnes);
+	minterms.shrink_to_fit();
 	return minterms;
 }
 
 template<bits_t BITS>
 void Karnaugh<BITS>::findMinterms()
 {
-	for (const minterm_t &newMinterm : makeAllPossibleMinterms())
+	static const minterms_t allPossibleMinterms = makeAllPossibleMinterms();
+	for (const minterm_t &newMinterm : allPossibleMinterms)
 	{
 		const number_t positiveMask = newMinterm.first;
 		const number_t negativeMask = newMinterm.second ^ ((1 << BITS) - 1);
@@ -206,7 +222,7 @@ void Karnaugh<BITS>::printMinterm(const minterm_t minterm) const
 		const bool negated = (minterm.second & (1 << (BITS - i - 1))) != 0;
 		if (normal || negated)
 		{
-			std::cout << names[i];
+			std::cout << inputNames[i];
 			if (negated)
 				std::cout << '\'';
 		}
@@ -264,6 +280,7 @@ typename Karnaugh<BITS>::minterms_t Karnaugh<BITS>::solve() const
 	table_t bestTable;
 	for (const std::size_t x : best)
 		bestTable |= mintermTables[x];
+	std::cout << functionName << '\n';
 	prettyPrintTable(bestTable);
 	
 	bestMinterms.reserve(best.size());
@@ -273,36 +290,46 @@ typename Karnaugh<BITS>::minterms_t Karnaugh<BITS>::solve() const
 }
 
 template<bits_t BITS>
-bool Karnaugh<BITS>::doItAll(const names_t &names, lines_t &lines)
+bool Karnaugh<BITS>::doItAll(const names_t &inputNames, lines_t &lines)
 {
-	Karnaugh karnaugh(names);
-	if (!karnaugh.loadData(lines))
-		return false;
-	prettyPrintTable(karnaugh.target, karnaugh.acceptable);
-	
-	karnaugh.findMinterms();
-	bool first = true;
-	for (const minterm_t &minterm : karnaugh.allMinterms)
+	std::list<Karnaugh> karnaughs;
+	while (!lines.empty())
 	{
-		if (first)
-			first = false;
-		else
-			std::cout << ' ';
-		karnaugh.printMinterm(minterm);
+		karnaughs.push_back(inputNames);
+		
+		Karnaugh &karnaugh = karnaughs.back();
+		if (!karnaugh.loadData(lines))
+			return false;
+		std::cout << karnaugh.functionName << '\n';
+		prettyPrintTable(karnaugh.target, karnaugh.acceptable);
+		
+		karnaugh.findMinterms();
+		bool first = true;
+		for (const minterm_t &minterm : karnaugh.allMinterms)
+		{
+			if (first)
+				first = false;
+			else
+				std::cout << ' ';
+			karnaugh.printMinterm(minterm);
+		}
+		std::cout << '\n' << std::endl;
 	}
-	std::cout << '\n' << std::endl;
 	
-	const minterms_t solution = karnaugh.solve();
-	first = true;
-	for (const minterm_t &minterm : solution)
+	for (Karnaugh &karnaugh : karnaughs)
 	{
-		if (first)
-			first = false;
-		else
-			std::cout << " + ";
-		karnaugh.printMinterm(minterm);
+		const minterms_t solution = karnaugh.solve();
+		bool first = true;
+		for (const minterm_t &minterm : solution)
+		{
+			if (first)
+				first = false;
+			else
+				std::cout << " + ";
+			karnaugh.printMinterm(minterm);
+		}
+		std::cout << '\n' << std::endl;
 	}
-	std::cout << std::endl;
 	
 	return true;
 }
