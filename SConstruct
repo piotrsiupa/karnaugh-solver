@@ -1,3 +1,8 @@
 env = Environment()
+
 env.Append(CCFLAGS=['-O3', '-Wall', '-Wextra', '-pedantic', '-fdiagnostics-color=always'])
-env.Program('karnaugh', ['karnaugh.cc'])
+program = env.Program('karnaugh', ['karnaugh.cc'])
+env.Alias('build', program)
+
+test = env.Alias('test', program, 'tests/run.py $SOURCE')
+env.AlwaysBuild(test)

@@ -1,0 +1,42 @@
+=== f0 ===
+
+goal:
+     0000 0001 0011 0010 0110 0111 0101 0100 1100 1101 1111 1110 1010 1011 1001 1000 
+0000  T    T    T    T    T    T    T    T    T    T    T    T    T    T    T    T
+0001  T    T    T    F    F    T    T    T    T    F    T    F    F    T    T    T
+0011  T    T    T    F    F    T    T    T    T    T    T    F    F    T    T    T
+0010  T    T    T    T    T    T    T    T    T    T    T    T    T    T    T    T
+0110  T    T    T    T    T    T    T    T    T    T    T    T    T    T    T    T
+0111  T    T    T    F    F    T    T    T    T    T    T    F    F    T    T    T
+0101  T    T    T    F    F    T    T    T    T    F    T    F    F    T    T    T
+0100  T    T    T    T    F    T    T    T    T    F    T    T    T    T    T    T
+1100  T    T    T    T    T    T    T    T    T    T    T    T    T    T    T    T
+1101  T    T    T    T    T    T    T    T    T    T    T    T    T    T    T    T
+1111  T    T    T    T    T    T    T    T    T    T    T    T    T    T    T    T
+1110  T    T    T    T    T    T    T    T    T    T    T    F    F    F    F    F
+1010  T    T    T    T    T    T    T    T    T    T    T    F    F    F    F    F
+1011  T    T    T    T    T    T    F    T    T    T    T    F    F    F    F    F
+1001  T    T    T    T    T    T    T    T    T    T    T    F    F    F    F    F
+1000  T    T    T    T    T    T    T    T    T    T    T    F    F    F    F    F
+
+best fit:
+     0000 0001 0011 0010 0110 0111 0101 0100 1100 1101 1111 1110 1010 1011 1001 1000 
+0000  T    T    T    T    T    T    T    T    T    T    T    T    T    T    T    T
+0001  T    T    T    F    F    T    T    T    T    F    T    F    F    T    T    T
+0011  T    T    T    F    F    T    T    T    T    T    T    F    F    T    T    T
+0010  T    T    T    T    T    T    T    T    T    T    T    T    T    T    T    T
+0110  T    T    T    T    T    T    T    T    T    T    T    T    T    T    T    T
+0111  T    T    T    F    F    T    T    T    T    T    T    F    F    T    T    T
+0101  T    T    T    F    F    T    T    T    T    F    T    F    F    T    T    T
+0100  T    T    T    T    F    T    T    T    T    F    T    T    T    T    T    T
+1100  T    T    T    T    T    T    T    T    T    T    T    T    T    T    T    T
+1101  T    T    T    T    T    T    T    T    T    T    T    T    T    T    T    T
+1111  T    T    T    T    T    T    T    T    T    T    T    T    T    T    T    T
+1110  T    T    T    T    T    T    T    T    T    T    T    F    F    F    F    F
+1010  T    T    T    T    T    T    T    T    T    T    T    F    F    F    F    F
+1011  T    T    T    T    T    T    F    T    T    T    T    F    F    F    F    F
+1001  T    T    T    T    T    T    T    T    T    T    T    F    F    F    F    F
+1000  T    T    T    T    T    T    T    T    T    T    T    F    F    F    F    F
+
+solution:
+???

@@ -1,0 +1,18 @@
+=== short 0 ===
+
+goal:
+   00 01 11 10 
+00 F  T  T  F
+01 F  F  F  F
+11 F  F  F  F
+10 F  F  F  F
+
+best fit:
+   00 01 11 10 
+00 F  T  T  F
+01 F  F  F  F
+11 F  F  F  F
+10 F  F  F  F
+
+solution:
+a'b'd

@@ -1,0 +1,9 @@
+in0 in1 carry-in
+
+sum
+1 2 4 7
+-
+
+carry-out
+3 5 6 7
+-

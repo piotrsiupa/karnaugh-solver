@@ -3,3 +3,6 @@
 *.hh text
 *.cc text
 SConstruct text
+*.py text
+tests/*.input text
+tests/*.output text
