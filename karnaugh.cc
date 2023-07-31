@@ -4,6 +4,7 @@
 #include <iostream>
 #include <limits>
 #include <list>
+#include <map>
 #include <regex>
 #include <string>
 #include <utility>
@@ -37,6 +38,8 @@ class Karnaugh
 	using grayCode_t = std::vector<number_t>;
 	using minterm_t = std::pair<number_t, number_t>;
 	using minterms_t = std::vector<minterm_t>;
+	using mintermPart_t = std::pair<bits_t, bool>;
+	using splitMinterm_t = std::vector<mintermPart_t>;
 	
 	static std::size_t nameCount;
 	
@@ -54,9 +57,13 @@ class Karnaugh
 	static bool loadTable(table_t &table, std::string &line);
 	bool loadData(lines_t &lines);
 	
+	static bits_t getOnesCount(const minterm_t minterm) { return __builtin_popcount((minterm.first << 16) | minterm.second); }
 	static minterms_t makeAllPossibleMinterms();
 	void findMinterms();
+	static splitMinterm_t splitMinterm(const minterm_t &minterm);
 	void printMinterm(const minterm_t minterm) const;
+	
+	static void applyHeuristic(std::list<Karnaugh> &karnaughs);
 	
 	minterms_t solve() const;
 	
@@ -64,7 +71,7 @@ public:
 	Karnaugh(Karnaugh &&) = default;
 	Karnaugh& operator=(Karnaugh &&) = default;
 	
-	static bool doItAll(const names_t &inputNames, lines_t &lines);
+	static bool processMultiple(const names_t &inputNames, lines_t &lines);
 };
 
 template<bits_t BITS>
@@ -187,7 +194,6 @@ typename Karnaugh<BITS>::minterms_t Karnaugh<BITS>::makeAllPossibleMinterms()
 		if ((normal & negated) == 0)
 			minterms.emplace_back(normal, negated);
 	}
-	static const auto getOnesCount = [](const minterm_t minterm) -> bits_t { return __builtin_popcount((minterm.first << 16) | minterm.second); };
 	static const auto hasLessOnes = [](const minterm_t x, const minterm_t y) -> bool { return getOnesCount(x) < getOnesCount(y); };
 	std::stable_sort(minterms.begin(), minterms.end(), hasLessOnes);
 	minterms.shrink_to_fit();
@@ -214,19 +220,56 @@ void Karnaugh<BITS>::findMinterms()
 }
 
 template<bits_t BITS>
-void Karnaugh<BITS>::printMinterm(const minterm_t minterm) const
+typename Karnaugh<BITS>::splitMinterm_t Karnaugh<BITS>::splitMinterm(const minterm_t &minterm)
 {
+	splitMinterm_t splitMinterm;
 	for (number_t i = 0; i != BITS; ++i)
 	{
 		const bool normal = (minterm.first & (1 << (BITS - i - 1))) != 0;
 		const bool negated = (minterm.second & (1 << (BITS - i - 1))) != 0;
 		if (normal || negated)
-		{
-			std::cout << inputNames[i];
-			if (negated)
-				std::cout << '\'';
-		}
+			splitMinterm.emplace_back(i, negated);
 	}
+	return splitMinterm;
+}
+
+template<bits_t BITS>
+void Karnaugh<BITS>::printMinterm(const minterm_t minterm) const
+{
+	for (const mintermPart_t &mintermPart : splitMinterm(minterm))
+	{
+		std::cout << inputNames[mintermPart.first];
+		if (mintermPart.second)
+			std::cout << '\'';
+	}
+}
+
+template<bits_t BITS>
+void Karnaugh<BITS>::applyHeuristic(std::list<Karnaugh> &karnaughs)
+{
+	std::map<mintermPart_t, std::size_t> mintermPartCounts;
+	for (const Karnaugh &karnaugh : karnaughs)
+		for (const minterm_t &minterm : karnaugh.allMinterms)
+			for (const mintermPart_t &x : splitMinterm(minterm))
+				++mintermPartCounts[x];
+	std::map<minterm_t, std::size_t> mintermWeights;
+	const auto getMintermWeight = [&mintermPartCounts = std::as_const(mintermPartCounts), &mintermWeights](const minterm_t &minterm) -> std::size_t
+		{
+			std::size_t &weight = mintermWeights[minterm];
+			if (weight == 0)
+				for (const mintermPart_t &x : splitMinterm(minterm))
+					weight += mintermPartCounts.at(x);
+			return weight;
+		};
+	const auto theHeuristic = [&getMintermWeight](const minterm_t &x, const minterm_t &y) -> bool
+		{
+			const bits_t xOnes = getOnesCount(x), yOnes = getOnesCount(y);
+			return xOnes == yOnes
+				? getMintermWeight(x) > getMintermWeight(y)
+				: xOnes < yOnes;
+		};
+	for (Karnaugh &karnaugh : karnaughs)
+		std::stable_sort(karnaugh.allMinterms.begin(), karnaugh.allMinterms.end(), theHeuristic);
 }
 
 template<bits_t BITS>
@@ -290,7 +333,7 @@ typename Karnaugh<BITS>::minterms_t Karnaugh<BITS>::solve() const
 }
 
 template<bits_t BITS>
-bool Karnaugh<BITS>::doItAll(const names_t &inputNames, lines_t &lines)
+bool Karnaugh<BITS>::processMultiple(const names_t &inputNames, lines_t &lines)
 {
 	std::list<Karnaugh> karnaughs;
 	while (!lines.empty())
@@ -315,6 +358,8 @@ bool Karnaugh<BITS>::doItAll(const names_t &inputNames, lines_t &lines)
 		}
 		std::cout << '\n' << std::endl;
 	}
+	
+	applyHeuristic(karnaughs);
 	
 	for (Karnaugh &karnaugh : karnaughs)
 	{
@@ -382,49 +427,49 @@ int main()
 	switch (names.size())
 	{
 	case 2:
-		result = Karnaugh<2>::doItAll(names, lines);
+		result = Karnaugh<2>::processMultiple(names, lines);
 		break;
 	case 3:
-		result = Karnaugh<3>::doItAll(names, lines);
+		result = Karnaugh<3>::processMultiple(names, lines);
 		break;
 	case 4:
-		result = Karnaugh<4>::doItAll(names, lines);
+		result = Karnaugh<4>::processMultiple(names, lines);
 		break;
 	case 5:
-		result = Karnaugh<5>::doItAll(names, lines);
+		result = Karnaugh<5>::processMultiple(names, lines);
 		break;
 	case 6:
-		result = Karnaugh<6>::doItAll(names, lines);
+		result = Karnaugh<6>::processMultiple(names, lines);
 		break;
 	case 7:
-		result = Karnaugh<7>::doItAll(names, lines);
+		result = Karnaugh<7>::processMultiple(names, lines);
 		break;
 	case 8:
-		result = Karnaugh<8>::doItAll(names, lines);
+		result = Karnaugh<8>::processMultiple(names, lines);
 		break;
 	case 9:
-		result = Karnaugh<9>::doItAll(names, lines);
+		result = Karnaugh<9>::processMultiple(names, lines);
 		break;
 	case 10:
-		result = Karnaugh<10>::doItAll(names, lines);
+		result = Karnaugh<10>::processMultiple(names, lines);
 		break;
 	case 11:
-		result = Karnaugh<11>::doItAll(names, lines);
+		result = Karnaugh<11>::processMultiple(names, lines);
 		break;
 	case 12:
-		result = Karnaugh<12>::doItAll(names, lines);
+		result = Karnaugh<12>::processMultiple(names, lines);
 		break;
 	case 13:
-		result = Karnaugh<13>::doItAll(names, lines);
+		result = Karnaugh<13>::processMultiple(names, lines);
 		break;
 	case 14:
-		result = Karnaugh<14>::doItAll(names, lines);
+		result = Karnaugh<14>::processMultiple(names, lines);
 		break;
 	case 15:
-		result = Karnaugh<15>::doItAll(names, lines);
+		result = Karnaugh<15>::processMultiple(names, lines);
 		break;
 	case 16:
-		result = Karnaugh<16>::doItAll(names, lines);
+		result = Karnaugh<16>::processMultiple(names, lines);
 		break;
 	default:
 		std::cerr << "Unsupported number of variables!\n";
