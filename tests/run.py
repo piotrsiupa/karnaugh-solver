@@ -38,7 +38,11 @@ def main() -> None:
         if run_test(test_dir, program, test):
             success_count += 1;
     print(f'Passed {success_count}/{len(tests)} tests.')
-    print('SUCCESS' if success_count == len(tests) else 'FAIL')
+    if success_count == len(tests):
+        print('SUCCESS')
+    else:
+        print('FAIL')
+        sys.exit(1)
 
 if __name__ == '__main__':
     main()

@@ -1,6 +1,11 @@
 #include <algorithm>
+#include <atomic>
 #include <bitset>
+#include <chrono>
+#include <cmath>
+#include <csignal>
 #include <cstdint>
+#include <iomanip>
 #include <iostream>
 #include <limits>
 #include <list>
@@ -16,6 +21,8 @@ using strings_t = std::vector<std::string>;
 using names_t = std::vector<std::string>;
 using bits_t = std::uint_fast8_t;
 
+std::atomic<bool> intSignalFlag = false;
+
 strings_t readStrings(std::string &line)
 {
 	strings_t strings;
@@ -27,6 +34,42 @@ strings_t readStrings(std::string &line)
 		if (iter->length() != 0)
 			strings.emplace_back(*iter);
 	return strings;
+}
+
+double calcBinomialCoefficient(const std::size_t n, std::size_t k)
+{
+	if (k > n / 2)
+		k = n - k;
+	
+	static std::map<std::pair<std::size_t, std::size_t>, double> cache;
+	const auto cacheHit = cache.find({n, k});
+	if (cacheHit != cache.cend())
+		return cacheHit->second;
+	
+	double coefficient = 1.0;
+	for (std::size_t i = 1, j = n; i != k + 1; ++i, --j)
+	{
+		coefficient *= j;
+		coefficient /= i;
+	}
+	
+	cache[{n, k}] = coefficient;
+	return coefficient;
+}
+
+double calcBinomialCoefficientSum(const std::size_t n, const std::size_t k)
+{
+	static std::map<std::pair<std::size_t, std::size_t>, double> cache;
+	const auto cacheHit = cache.find({n, k});
+	if (cacheHit != cache.cend())
+		return cacheHit->second;
+	
+	double coefficientSum = 0.0;
+	for (std::size_t i = 0; i != k + 1; ++i)
+		coefficientSum += calcBinomialCoefficient(n, i);
+	
+	cache[{n, k}] = coefficientSum;
+	return coefficientSum;
 }
 
 
@@ -294,14 +337,74 @@ typename Karnaugh<BITS>::minterms_t Karnaugh<BITS>::solve() const
 	std::vector<std::size_t> current;
 	current.reserve(allMinterms.size());
 	current.emplace_back(0);
-	while (true)
+	const auto startTime = std::chrono::system_clock::now();
+	auto bestTime = startTime;
+	std::uintmax_t progressInterval = 65536;
+	bool progressAdjusted = false;
+	intSignalFlag = false;
+	static constexpr char clearProgress[] = "\033[2K\033[A\033[2K\033[A\033[2K\033[A\033[2K\033[A\033[2K\r";
+	const double solutionSpaceSize = std::pow(2.0, allMinterms.size());
+	for (std::uintmax_t progressCounter = 0;; ++progressCounter)
 	{
+		if (progressCounter == progressInterval)
+		{
+			if (progressAdjusted)
+				std::clog << clearProgress;
+			if (intSignalFlag)
+				break;
+			const auto currentTime = std::chrono::system_clock::now();
+			const std::chrono::duration<double> elapsedTime = currentTime - startTime;
+			if (!progressAdjusted)
+			{
+				static constexpr double targetInterval = 5.0;
+				if (elapsedTime.count() < targetInterval)
+				{
+					std::uintmax_t intervalAdjustment = progressInterval * ((targetInterval - elapsedTime.count()) / elapsedTime.count());
+					if (intervalAdjustment != 0)
+					{
+						progressInterval += intervalAdjustment;
+						goto skip_progress;
+					}
+				}
+				progressAdjusted = true;
+				static constexpr double magicConstantOfBetterTiming = 1.07;
+				progressInterval *= magicConstantOfBetterTiming;
+			}
+			progressCounter = 0;
+			const std::chrono::duration<double> elapsedTimeSinceBest = currentTime - bestTime;
+			std::clog << "Oops... This is taking a long time. (currently " << std::fixed << std::setprecision(1) << elapsedTime.count() << " seconds)\n";
+			std::clog << "The best solution so far uses " << best.size() << " out of " << allMinterms.size() << " minterms. (found " << elapsedTimeSinceBest.count() << " seconds ago)\n";
+			std::clog << "(Currently testing combination:";
+			for (const std::size_t x : current)
+				std::clog << ' ' << x;
+			std::clog << ")\n";
+			double remaingSolutionsFactor = 1.0;
+			double currentCutoffFactor = 1.0;
+			std::size_t expectedValue = 0;
+			for (const std::size_t x : current)
+			{
+				currentCutoffFactor /= 2;
+				while (x != expectedValue)
+				{
+					remaingSolutionsFactor -= currentCutoffFactor;
+					currentCutoffFactor /= 2;
+					expectedValue += 1;
+				}
+				expectedValue += 1;
+			}
+			const double remainingSolutions = calcBinomialCoefficientSum(allMinterms.size(), best.size()) * remaingSolutionsFactor;
+			const double progressPercent = remainingSolutions / solutionSpaceSize * 100.0;
+			std::clog << "Estimation of remaining solution space: ~" << std::fixed << std::setprecision(3) << progressPercent << "% (~" << std::setprecision(0) << remainingSolutions << " combinations)\n";
+			std::clog << "Press Ctrl-C to abort further search and use this solution..." << std::flush;
+		}
+		skip_progress:
 		table_t currentTable;
 		for (const std::size_t x : current)
 			currentTable |= mintermTables[x];
 		if ((currentTable & target) == target && (currentTable & acceptable) == currentTable)
 		{
 			best = current;
+			bestTime = std::chrono::system_clock::now();
 			goto go_back;
 		}
 		if (current.size() + 1 == best.size())
@@ -313,12 +416,16 @@ typename Karnaugh<BITS>::minterms_t Karnaugh<BITS>::solve() const
 		go_back:
 		current.pop_back();
 		if (current.empty())
+		{
+			if (progressAdjusted)
+				std::clog << clearProgress;
 			break;
+		}
 		go_next:
 		if (++current.back() == allMinterms.size())
 			goto go_back;
 	}
-	minterms_t bestMinterms;
+	std::clog << std::flush;
 	
 	table_t bestTable;
 	for (const std::size_t x : best)
@@ -326,6 +433,7 @@ typename Karnaugh<BITS>::minterms_t Karnaugh<BITS>::solve() const
 	std::cout << "best fit:\n";
 	prettyPrintTable(bestTable);
 	
+	minterms_t bestMinterms;
 	bestMinterms.reserve(best.size());
 	for (const std::size_t x : best)
 		bestMinterms.emplace_back(allMinterms[x]);
@@ -414,9 +522,12 @@ names_t loadNames(std::string &line)
 
 int main()
 {
+	std::signal(SIGINT, []([[maybe_unused]] const int signum){ intSignalFlag = true; });
+	
 	lines_t lines;
 	if (!loadLines(std::cin, lines))
 		return 1;
+		
 	if (lines.empty())
 	{
 		std::cerr << "Input names are missing!\n";
@@ -424,6 +535,7 @@ int main()
 	}
 	const names_t names = loadNames(lines.front());
 	lines.pop_front();
+	
 	bool result;
 	switch (names.size())
 	{
