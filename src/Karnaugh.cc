@@ -1,121 +1,15 @@
+#include "./Karnaugh.hh"
+
 #include <algorithm>
-#include <atomic>
-#include <bitset>
 #include <chrono>
 #include <cmath>
-#include <csignal>
-#include <cstdint>
 #include <iomanip>
 #include <iostream>
-#include <limits>
-#include <list>
 #include <map>
-#include <regex>
-#include <string>
-#include <utility>
-#include <vector>
 
+#include "input.hh"
+#include "math.hh"
 
-using lines_t = std::list<std::string>;
-using strings_t = std::vector<std::string>;
-using names_t = std::vector<std::string>;
-using bits_t = std::uint_fast8_t;
-
-std::atomic<bool> intSignalFlag = false;
-
-strings_t readStrings(std::string &line)
-{
-	strings_t strings;
-	if (line == "-")
-		return strings;
-	static const std::regex separator("\\s*,\\s*|\\s+");
-	static const std::regex_token_iterator<std::string::const_iterator> rend;
-	for (std::sregex_token_iterator iter(line.cbegin(), line.cend(), separator, -1); iter != rend; ++iter)
-		if (iter->length() != 0)
-			strings.emplace_back(*iter);
-	return strings;
-}
-
-double calcBinomialCoefficient(const std::size_t n, std::size_t k)
-{
-	if (k > n / 2)
-		k = n - k;
-	
-	static std::map<std::pair<std::size_t, std::size_t>, double> cache;
-	const auto cacheHit = cache.find({n, k});
-	if (cacheHit != cache.cend())
-		return cacheHit->second;
-	
-	double coefficient = 1.0;
-	for (std::size_t i = 1, j = n; i != k + 1; ++i, --j)
-	{
-		coefficient *= j;
-		coefficient /= i;
-	}
-	
-	cache[{n, k}] = coefficient;
-	return coefficient;
-}
-
-double calcBinomialCoefficientSum(const std::size_t n, const std::size_t k)
-{
-	static std::map<std::pair<std::size_t, std::size_t>, double> cache;
-	const auto cacheHit = cache.find({n, k});
-	if (cacheHit != cache.cend())
-		return cacheHit->second;
-	
-	double coefficientSum = 0.0;
-	for (std::size_t i = 0; i != k + 1; ++i)
-		coefficientSum += calcBinomialCoefficient(n, i);
-	
-	cache[{n, k}] = coefficientSum;
-	return coefficientSum;
-}
-
-
-template<bits_t BITS>
-class Karnaugh
-{
-	using table_t = std::bitset<1 << BITS>;
-	using number_t = std::uint_fast16_t;
-	using grayCode_t = std::vector<number_t>;
-	using minterm_t = std::pair<number_t, number_t>;
-	using minterms_t = std::vector<minterm_t>;
-	using mintermPart_t = std::pair<bits_t, bool>;
-	using splitMinterm_t = std::vector<mintermPart_t>;
-	
-	static std::size_t nameCount;
-	
-	const names_t &inputNames;
-	std::string functionName;
-	table_t target, acceptable;
-	minterms_t allMinterms;
-	
-	Karnaugh(const names_t &inputNames) : inputNames(inputNames), functionName('f' + std::to_string(nameCount++)) {}
-	
-	static grayCode_t makeGrayCode(const bits_t bits);
-	static void printBits(const number_t number, const bits_t bits);
-	static void prettyPrintTable(const table_t &target, const table_t &acceptable = {});
-	
-	static bool loadTable(table_t &table, std::string &line);
-	bool loadData(lines_t &lines);
-	
-	static bits_t getOnesCount(const minterm_t minterm) { return __builtin_popcount((minterm.first << 16) | minterm.second); }
-	static minterms_t makeAllPossibleMinterms();
-	void findMinterms();
-	static splitMinterm_t splitMinterm(const minterm_t &minterm);
-	void printMinterm(const minterm_t minterm) const;
-	
-	static void applyHeuristic(std::list<Karnaugh> &karnaughs);
-	
-	minterms_t solve() const;
-	
-public:
-	Karnaugh(Karnaugh &&) = default;
-	Karnaugh& operator=(Karnaugh &&) = default;
-	
-	static bool processMultiple(const names_t &inputNames, lines_t &lines);
-};
 
 template<bits_t BITS>
 std::size_t Karnaugh<BITS>::nameCount = 0;
@@ -489,104 +383,18 @@ bool Karnaugh<BITS>::processMultiple(const names_t &inputNames, lines_t &lines)
 }
 
 
-void trimString(std::string &string)
-{
-    string.erase(string.begin(), std::find_if(string.begin(), string.end(), [](unsigned char ch) { return !std::isspace(ch); }));
-    string.erase(std::find_if(string.rbegin(), string.rend(), [](unsigned char ch) { return !std::isspace(ch); }).base(), string.end());
-}
-
-bool loadLines(std::istream &in, lines_t &lines)
-{
-	lines.clear();
-	while (true)
-	{
-		std::string line;
-		std::getline(in, line);
-		if (in.eof())
-			return true;
-		if (!in)
-		{
-			std::cerr << "Cannot read from stdin!\n";
-			return false;
-		}
-		trimString(line);
-		if (!line.empty() && line.front() != '#')
-			lines.emplace_back(std::move(line));
-	}
-}
-
-names_t loadNames(std::string &line)
-{
-	return readStrings(line);
-}
-
-int main()
-{
-	std::signal(SIGINT, []([[maybe_unused]] const int signum){ intSignalFlag = true; });
-	
-	lines_t lines;
-	if (!loadLines(std::cin, lines))
-		return 1;
-		
-	if (lines.empty())
-	{
-		std::cerr << "Input names are missing!\n";
-		return 1;
-	}
-	const names_t names = loadNames(lines.front());
-	lines.pop_front();
-	
-	bool result;
-	switch (names.size())
-	{
-	case 2:
-		result = Karnaugh<2>::processMultiple(names, lines);
-		break;
-	case 3:
-		result = Karnaugh<3>::processMultiple(names, lines);
-		break;
-	case 4:
-		result = Karnaugh<4>::processMultiple(names, lines);
-		break;
-	case 5:
-		result = Karnaugh<5>::processMultiple(names, lines);
-		break;
-	case 6:
-		result = Karnaugh<6>::processMultiple(names, lines);
-		break;
-	case 7:
-		result = Karnaugh<7>::processMultiple(names, lines);
-		break;
-	case 8:
-		result = Karnaugh<8>::processMultiple(names, lines);
-		break;
-	case 9:
-		result = Karnaugh<9>::processMultiple(names, lines);
-		break;
-	case 10:
-		result = Karnaugh<10>::processMultiple(names, lines);
-		break;
-	case 11:
-		result = Karnaugh<11>::processMultiple(names, lines);
-		break;
-	case 12:
-		result = Karnaugh<12>::processMultiple(names, lines);
-		break;
-	case 13:
-		result = Karnaugh<13>::processMultiple(names, lines);
-		break;
-	case 14:
-		result = Karnaugh<14>::processMultiple(names, lines);
-		break;
-	case 15:
-		result = Karnaugh<15>::processMultiple(names, lines);
-		break;
-	case 16:
-		result = Karnaugh<16>::processMultiple(names, lines);
-		break;
-	default:
-		std::cerr << "Unsupported number of variables!\n";
-		return 1;
-	}
-	return result ? 0 : 1;
-}
+template class Karnaugh<2>;
+template class Karnaugh<3>;
+template class Karnaugh<4>;
+template class Karnaugh<5>;
+template class Karnaugh<6>;
+template class Karnaugh<7>;
+template class Karnaugh<8>;
+template class Karnaugh<9>;
+template class Karnaugh<10>;
+template class Karnaugh<11>;
+template class Karnaugh<12>;
+template class Karnaugh<13>;
+template class Karnaugh<14>;
+template class Karnaugh<15>;
+template class Karnaugh<16>;
