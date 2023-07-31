@@ -323,7 +323,7 @@ typename Karnaugh<BITS>::minterms_t Karnaugh<BITS>::solve() const
 	table_t bestTable;
 	for (const std::size_t x : best)
 		bestTable |= mintermTables[x];
-	std::cout << functionName << '\n';
+	std::cout << "best fit:\n";
 	prettyPrintTable(bestTable);
 	
 	bestMinterms.reserve(best.size());
@@ -343,27 +343,27 @@ bool Karnaugh<BITS>::processMultiple(const names_t &inputNames, lines_t &lines)
 		Karnaugh &karnaugh = karnaughs.back();
 		if (!karnaugh.loadData(lines))
 			return false;
-		std::cout << karnaugh.functionName << '\n';
-		prettyPrintTable(karnaugh.target, karnaugh.acceptable);
 		
 		karnaugh.findMinterms();
-		bool first = true;
-		for (const minterm_t &minterm : karnaugh.allMinterms)
-		{
-			if (first)
-				first = false;
-			else
-				std::cout << ' ';
-			karnaugh.printMinterm(minterm);
-		}
-		std::cout << '\n' << std::endl;
 	}
 	
 	applyHeuristic(karnaughs);
 	
+	bool firstKarnaugh = true;
 	for (Karnaugh &karnaugh : karnaughs)
 	{
+		if (firstKarnaugh)
+			firstKarnaugh = false;
+		else
+			std::cout << '\n';
+		std::cout << "=== " << karnaugh.functionName << " ===\n\n";
+		
+		std::cout << "goal:\n";
+		prettyPrintTable(karnaugh.target, karnaugh.acceptable);
+		
 		const minterms_t solution = karnaugh.solve();
+		
+		std::cout << "solution:\n";
 		bool first = true;
 		for (const minterm_t &minterm : solution)
 		{
@@ -373,7 +373,8 @@ bool Karnaugh<BITS>::processMultiple(const names_t &inputNames, lines_t &lines)
 				std::cout << " + ";
 			karnaugh.printMinterm(minterm);
 		}
-		std::cout << '\n' << std::endl;
+		
+		std::cout << std::endl;
 	}
 	
 	return true;
