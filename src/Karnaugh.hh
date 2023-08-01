@@ -1,3 +1,5 @@
+#pragma once
+
 #include <bitset>
 #include <cstdint>
 #include <list>
@@ -9,6 +11,10 @@
 
 
 using bits_t = std::uint_fast8_t;
+
+
+template<bits_t>
+class Karnaugh_Solution;
 
 
 template<bits_t BITS>
@@ -46,7 +52,10 @@ class Karnaugh
 	
 	static void applyHeuristic(std::list<Karnaugh> &karnaughs);
 	
-	minterms_t solve() const;
+	Karnaugh_Solution<BITS> solve() const;
+	
+	template<bits_t>
+	friend class Karnaugh_Solution;
 	
 public:
 	Karnaugh(Karnaugh &&) = default;
