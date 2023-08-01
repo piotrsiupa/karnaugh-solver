@@ -28,17 +28,20 @@ class Karnaugh_Solution
 	
 	Karnaugh_Solution(const Karnaugh<BITS> &karnaugh);
 	
-	void createMintermTables();
 	static bool adjustProgressInterval(const elapsedTime_t elapsedTime, progressCounter_t &progressInterval);
 	static double estimateRemainingSolutionsFactor(const solution_t &currentSolution);
 	void displayProgress(const solution_t &currentSolution, const timePoint_t &currentTime, const elapsedTime_t elapsedTime) const;
 	bool processProgress(const solution_t &currentSolution, progressCounter_t &progressInterval, bool &progressIntervalAdjusted) const;
 	static void clearProgress();
+	
+	void createMintermTables();
+	void removeUnnededMinterms(solution_t &current, mintermTables_t &currentTables);
 	void solve();
 	
 public:
 	static Karnaugh_Solution solve(const Karnaugh<BITS> &karnaugh);
 	
+	bool isBestFitValid() const { return best.size() < 2 || best[0] != best[1]; }
 	void prettyPrintBestFit() const;
 	minterms_t getBestMinterms() const;
 };

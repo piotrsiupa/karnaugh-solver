@@ -242,6 +242,11 @@ bool Karnaugh<BITS>::processMultiple(const names_t &inputNames, lines_t &lines)
 		prettyPrintTable(karnaugh.target, karnaugh.acceptable);
 		
 		const Karnaugh_Solution<BITS> solution = karnaugh.solve();
+		if (!solution.isBestFitValid())
+		{
+			std::clog << "No solution found!\n";
+			return false;
+		}
 		solution.prettyPrintBestFit();
 		
 		std::cout << "solution:\n";
