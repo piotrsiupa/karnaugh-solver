@@ -32,7 +32,7 @@ class Karnaugh
 	
 	const names_t &inputNames;
 	std::string functionName;
-	table_t target, acceptable;
+	table_t target, dontCares, acceptable;
 	minterms_t allMinterms;
 	
 	Karnaugh(const names_t &inputNames) : inputNames(inputNames), functionName('f' + std::to_string(nameCount++)) {}

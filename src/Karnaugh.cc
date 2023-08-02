@@ -109,10 +109,10 @@ bool Karnaugh<BITS>::loadData(lines_t &lines)
 	if (!loadTable(target, lines.front()))
 		return false;
 	lines.pop_front();
-	if (!loadTable(acceptable, lines.front()))
+	if (!loadTable(dontCares, lines.front()))
 		return false;
 	lines.pop_front();
-	acceptable |= target;
+	acceptable = target | dontCares;
 	return true;
 }
 
@@ -209,7 +209,7 @@ void Karnaugh<BITS>::applyHeuristic(std::list<Karnaugh> &karnaughs)
 template<bits_t BITS>
 Karnaugh_Solution<BITS> Karnaugh<BITS>::solve() const
 {
-	return Karnaugh_Solution<BITS>::solve(*this);
+	return Karnaugh_Solution<BITS>::solve(allMinterms, target, dontCares);
 }
 
 template<bits_t BITS>
@@ -242,16 +242,16 @@ bool Karnaugh<BITS>::processMultiple(const names_t &inputNames, lines_t &lines)
 		prettyPrintTable(karnaugh.target, karnaugh.acceptable);
 		
 		const Karnaugh_Solution<BITS> solution = karnaugh.solve();
-		if (!solution.isBestFitValid())
+		if (!solution.isSolutionValid())
 		{
 			std::clog << "No solution found!\n";
 			return false;
 		}
-		solution.prettyPrintBestFit();
+		solution.prettyPrintSolution();
 		
 		std::cout << "solution:\n";
 		bool first = true;
-		for (const minterm_t &minterm : solution.getBestMinterms())
+		for (const minterm_t &minterm : solution.getSolution())
 		{
 			if (first)
 				first = false;

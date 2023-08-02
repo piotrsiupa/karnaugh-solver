@@ -11,6 +11,7 @@
 template<bits_t BITS>
 class Karnaugh_Solution
 {
+	using minterm_t = typename Karnaugh<BITS>::minterm_t;
 	using minterms_t = typename Karnaugh<BITS>::minterms_t;
 	using table_t = typename Karnaugh<BITS>::table_t;
 	using number_t = typename Karnaugh<BITS>::number_t;
@@ -20,13 +21,16 @@ class Karnaugh_Solution
 	using elapsedTime_t = std::chrono::duration<double>;
 	using progressCounter_t = std::uintmax_t;
 	
-	const Karnaugh<BITS> &karnaugh;
+	minterms_t minterms;
+	table_t target;
+	const table_t &dontCares;
 	mintermTables_t mintermTables;
 	solution_t best;
 	const double solutionSpaceSize;
 	timePoint_t startTime, bestTime;
+	minterms_t solution;
 	
-	Karnaugh_Solution(const Karnaugh<BITS> &karnaugh);
+	Karnaugh_Solution(const minterms_t &minterms, const table_t &target, const table_t &dontCares);
 	
 	static bool adjustProgressInterval(const elapsedTime_t elapsedTime, progressCounter_t &progressInterval);
 	static double estimateRemainingSolutionsFactor(const solution_t &currentSolution);
@@ -34,14 +38,16 @@ class Karnaugh_Solution
 	bool processProgress(const solution_t &currentSolution, progressCounter_t &progressInterval, bool &progressIntervalAdjusted) const;
 	static void clearProgress();
 	
+	static table_t createMintermTable(const minterm_t minterm);
 	void createMintermTables();
+	minterms_t removeEssentials();
 	void removeUnnededMinterms(solution_t &current, mintermTables_t &currentTables);
 	void solve();
 	
 public:
-	static Karnaugh_Solution solve(const Karnaugh<BITS> &karnaugh);
+	static Karnaugh_Solution solve(const minterms_t &allMinters, const table_t &target, const table_t &dontCares);
 	
-	bool isBestFitValid() const { return best.size() < 2 || best[0] != best[1]; }
-	void prettyPrintBestFit() const;
-	minterms_t getBestMinterms() const;
+	bool isSolutionValid() const { return solution.size() < 2 || solution[0] != solution[1]; }
+	void prettyPrintSolution() const;
+	const minterms_t& getSolution() const { return solution; }
 };
