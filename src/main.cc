@@ -1,4 +1,3 @@
-#include <csignal>
 #include <iostream>
 #include <string>
 
@@ -6,11 +5,6 @@
 #include "input.hh"
 #include "Karnaugh.hh"
 
-
-static void trapSigint()
-{
-	std::signal(SIGINT, []([[maybe_unused]] const int signum){ intSignalFlag = true; });
-}
 
 names_t loadNames(std::string &line)
 {
@@ -59,8 +53,6 @@ bool runKarnaugh(const names_t &names, lines_t &lines)
 
 int main()
 {
-	trapSigint();
-	
 	lines_t lines;
 	if (!loadLines(std::cin, lines))
 		return 1;

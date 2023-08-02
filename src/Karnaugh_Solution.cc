@@ -1,107 +1,17 @@
 #include "./Karnaugh_Solution.hh"
 
 #include <algorithm>
-#include <cmath>
 #include <iomanip>
 #include <iostream>
-
-#include "math.hh"
+#include <set>
 
 
 template<bits_t BITS>
 Karnaugh_Solution<BITS>::Karnaugh_Solution(const minterms_t &minterms, const table_t &target, const table_t &dontCares) :
 	minterms(minterms),
 	target(target),
-	dontCares(dontCares),
-	solutionSpaceSize(std::pow(2.0, minterms.size()))
+	dontCares(dontCares)
 {
-}
-
-template<bits_t BITS>
-bool Karnaugh_Solution<BITS>::adjustProgressInterval(const elapsedTime_t elapsedTime, progressCounter_t &progressInterval)
-{
-	static constexpr double targetInterval = 5.0;
-	if (elapsedTime.count() < targetInterval)
-	{
-		const progressCounter_t intervalAdjustment = progressInterval * ((targetInterval - elapsedTime.count()) / elapsedTime.count());
-		if (intervalAdjustment != 0)
-		{
-			progressInterval += intervalAdjustment;
-			return false;
-		}
-	}
-	static constexpr double magicConstantOfBetterTiming = 1.07;
-	progressInterval *= magicConstantOfBetterTiming;
-	return true;
-}
-
-template<bits_t BITS>
-double Karnaugh_Solution<BITS>::estimateRemainingSolutionsFactor(const solution_t &currentSolution)
-{
-	double remaingSolutionsFactor = 1.0;
-	double currentCutoffFactor = 1.0;
-	std::size_t expectedValue = 0;
-	for (const std::size_t x : currentSolution)
-	{
-		currentCutoffFactor /= 2;
-		while (x != expectedValue)
-		{
-			remaingSolutionsFactor -= currentCutoffFactor;
-			currentCutoffFactor /= 2;
-			expectedValue += 1;
-		}
-		expectedValue += 1;
-	}
-	return remaingSolutionsFactor;
-}
-
-template<bits_t BITS>
-void Karnaugh_Solution<BITS>::displayProgress(const solution_t &currentSolution, const timePoint_t &currentTime, const elapsedTime_t elapsedTime) const
-{
-	const std::chrono::duration<double> elapsedTimeSinceBest = currentTime - bestTime;
-	const double remainingSolutionsFactor = estimateRemainingSolutionsFactor(currentSolution);
-	const double progressGuess = (1.0 - remainingSolutionsFactor) * 100.0;
-	const double remainingSolutions = calcBinomialCoefficientSum(minterms.size(), best.size()) * remainingSolutionsFactor;
-	const double progressPercent = remainingSolutions / solutionSpaceSize * 100.0;
-	
-	std::clog << "Oops... This is taking a long time. (currently " << std::fixed << std::setprecision(1) << elapsedTime.count() << " seconds)\n";
-	std::clog << "(Currently tested combination:";
-	for (const std::size_t x : currentSolution)
-		std::clog << ' ' << x;
-	std::clog << ")\n";
-	std::clog << "Estimation of remaining solution space: ~" << std::fixed << std::setprecision(3) << progressPercent << "% (~" << std::setprecision(0) << remainingSolutions << " combinations)\n";
-	std::clog << "A very rough guess of the actual progress is ~" << std::fixed << std::setprecision(3) << progressGuess << "%.\n";
-	if (isSolutionValid())
-	{
-		std::clog << "The best solution found so far uses " << best.size() << " out of " << minterms.size() << " minterms. (found " << elapsedTimeSinceBest.count() << " seconds ago)\n";
-		std::clog << "Press Ctrl-C to abort further search and use this solution..." << std::flush;
-	}
-	else
-	{
-		std::clog << "No satisfactory solution was found yet.\n";
-		std::clog << "Press Ctrl-C to abort further search and give up..." << std::flush;
-	}
-}
-
-template<bits_t BITS>
-bool Karnaugh_Solution<BITS>::processProgress(const solution_t &currentSolution, progressCounter_t &progressInterval, bool &progressIntervalAdjusted) const
-{
-	const timePoint_t currentTime = std::chrono::steady_clock::now();
-	const std::chrono::duration<double> elapsedTime = currentTime - startTime;
-	if (!progressIntervalAdjusted)
-	{
-		progressIntervalAdjusted = adjustProgressInterval(elapsedTime, progressInterval);
-		if (!progressIntervalAdjusted)
-			return false;
-	}
-	displayProgress(currentSolution, currentTime, elapsedTime);
-	return true;
-}
-
-template<bits_t BITS>
-void Karnaugh_Solution<BITS>::clearProgress()
-{
-	std::clog << "\033[2K\033[A\033[2K\033[A\033[2K\033[A\033[2K\033[A\033[2K\033[A\033[2K\r";
 }
 
 template<bits_t BITS>
@@ -165,102 +75,88 @@ typename Karnaugh_Solution<BITS>::minterms_t Karnaugh_Solution<BITS>::removeEsse
 }
 
 template<bits_t BITS>
-void Karnaugh_Solution<BITS>::removeUnnededMinterms(solution_t &current, mintermTables_t &currentTables)
-{
-	table_t remainingTable;
-	for (std::size_t i = current.size() - 1; i != 0; --i)
-	{
-		if (((currentTables[i] | remainingTable) & target) == target)
-			current.erase(std::next(current.begin(), i));
-		else
-			remainingTable |= mintermTables[current[i]];
-	}
-	if (best.size() != current.size())
-	{
-		best = current;
-		bestTime = std::chrono::steady_clock::now();
-		currentTables.resize(current.size() + 1);
-		for (std::size_t i = 0; i != current.size(); ++i)
-			currentTables[i + 1] = currentTables[i] | mintermTables[current[i]];
-	}
-}
-
-template<bits_t BITS>
 void Karnaugh_Solution<BITS>::solve()
 {
 	solution = removeEssentials();
 	
-	if (!minterms.empty())
+	std::vector<std::vector<std::pair<std::set<std::size_t>, bool>>> magic;
+	
+	for (number_t i = 0; i != 1 << BITS; ++i)
 	{
-		best.resize(minterms.size() + 1);
-		
-		solution_t current;
-		current.reserve(minterms.size());
-		current.emplace_back(0);
-		mintermTables_t currentTables;
-		currentTables.reserve(minterms.size() + 1);
-		currentTables.emplace_back();
-		
-		bestTime = startTime = std::chrono::steady_clock::now();
-		std::uintmax_t progressInterval = 65536;
-		bool progressIntervalAdjusted = false;
-		
-		for (std::uintmax_t progressCounter = 0;; ++progressCounter)
+		if (target[i])
 		{
-			if (progressCounter == progressInterval)
-			{
-				if (progressIntervalAdjusted)
-					clearProgress();
-				if (intSignalFlag)
-					break;
-				if (processProgress(current, progressInterval, progressIntervalAdjusted))
-					progressCounter = 0;
-			}
-			
-			currentTables.push_back(currentTables.back() | mintermTables[current.back()]);
-			if (currentTables.back() == target)
-			{
-				best = current;
-				bestTime = std::chrono::steady_clock::now();
-				if (current.size() == 1)
-					break;
-				removeUnnededMinterms(current, currentTables);
-				currentTables.pop_back();
-				goto go_back;
-			}
-			else if (currentTables.back() == currentTables[currentTables.size() - 2])
-			{
-				currentTables.pop_back();
-				goto go_next;
-			}
-			if (current.size() + 1 == best.size())
-			{
-				currentTables.pop_back();
-				goto go_next;
-			}
-			current.emplace_back(current.back() + 1);
-			if (current.back() != minterms.size())
-				continue;
-			go_back:
-			current.pop_back();
-			currentTables.pop_back();
-			if (current.empty())
-			{
-				if (progressIntervalAdjusted)
-					clearProgress();
-				break;
-			}
-			go_next:
-			if (++current.back() == minterms.size())
-				goto go_back;
+			auto &m = magic.emplace_back();
+			for (std::size_t j = 0; j != minterms.size(); ++j)
+				if (mintermTables[j][i])
+					m.emplace_back().first.insert(j);
 		}
-		
-		std::clog << std::flush;
-		
-		solution.reserve(solution.size() + best.size());
-		for (const auto &x : best)
-			solution.push_back(minterms[x]);
 	}
+	
+	for (auto x = magic.begin(); x != magic.end(); ++x)
+	{
+		if (!x->empty())
+		{
+			for (auto y = std::next(x); y != magic.end(); ++y)
+			{
+				if (!y->empty())
+				{
+					if (std::includes(x->cbegin(), x->cend(), y->cbegin(), y->cend()))
+					{
+						x->clear();
+						break;
+					}
+					else if (std::includes(y->cbegin(), y->cend(), x->cbegin(), x->cend()))
+					{
+						y->clear();
+					}
+				}
+			}
+		}
+	}
+	magic.erase(std::remove_if(magic.begin(), magic.end(), [](const auto &x){ return x.empty(); }), magic.end());
+	
+	while (magic.size() >= 2)
+	{
+		auto multiplier0 = std::move(magic.back());
+		magic.pop_back();
+		auto multiplier1 = std::move(magic.back());
+		magic.pop_back();
+		auto &result = magic.emplace_back();
+		
+		for (auto &x : multiplier0)
+		{
+			for (auto &y : multiplier1)
+			{
+				if (std::includes(x.first.begin(), x.first.end(), y.first.begin(), y.first.end()))
+				{
+					result.emplace_back(x);
+					x.second = true;
+					y.second = true;
+				}
+				else if (std::includes(y.first.begin(), y.first.end(), x.first.begin(), x.first.end()))
+				{
+					result.emplace_back(y);
+					x.second = true;
+					y.second = true;
+				}
+			}
+		}
+		multiplier0.erase(std::remove_if(multiplier0.begin(), multiplier0.end(), [](auto &x){ return x.second; }), multiplier0.end());
+		multiplier1.erase(std::remove_if(multiplier1.begin(), multiplier1.end(), [](auto &x){ return x.second; }), multiplier1.end());
+		
+		for (const auto &x : multiplier0)
+		{
+			for (const auto &y : multiplier1)
+			{
+				result.push_back(x);
+				result.back().first.insert(y.first.cbegin(), y.first.cend());
+			}
+		}
+	}
+	
+	if (!magic.empty())
+		for (const auto &x : magic.front().front().first)
+			solution.push_back(minterms[x]);
 }
 
 template<bits_t BITS>
@@ -276,8 +172,6 @@ void Karnaugh_Solution<BITS>::prettyPrintSolution() const
 template<bits_t BITS>
 Karnaugh_Solution<BITS> Karnaugh_Solution<BITS>::solve(const minterms_t &allMinters, const table_t &target, const table_t &dontCares)
 {
-	intSignalFlag = false;
-	
 	Karnaugh_Solution karnaugh_solver(allMinters, target, dontCares);
 	karnaugh_solver.solve();
 	return karnaugh_solver;
