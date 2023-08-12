@@ -155,8 +155,34 @@ void Karnaugh_Solution<BITS>::solve()
 	}
 	
 	if (!magic.empty())
+	{
+		for (auto x = magic.front().begin(); x != magic.front().end(); ++x)
+		{
+			if (!x->second)
+			{
+				for (auto y = std::next(x); y != magic.front().end(); ++y)
+				{
+					if (!y->second)
+					{
+						if (std::includes(x->first.cbegin(), x->first.cend(), y->first.cbegin(), y->first.cend()))
+						{
+							x->second = true;
+							break;
+						}
+						else if (std::includes(y->first.cbegin(), y->first.cend(), x->first.cbegin(), x->first.cend()))
+						{
+							y->second = true;
+						}
+					}
+				}
+			}
+		}
+		magic.front().erase(std::remove_if(magic.front().begin(), magic.front().end(), [](auto &x){ return x.second; }), magic.front().end());
+		magic.front().shrink_to_fit();
+		
 		for (const auto &x : magic.front().front().first)
 			solution.push_back(minterms[x]);
+	}
 }
 
 template<bits_t BITS>
