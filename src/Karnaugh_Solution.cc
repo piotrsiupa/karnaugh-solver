@@ -129,13 +129,13 @@ void Karnaugh_Solution<BITS>::solve()
 			{
 				if (std::includes(x.first.begin(), x.first.end(), y.first.begin(), y.first.end()))
 				{
-					result.emplace_back(x);
+					result.emplace_back(x.first, false);
 					x.second = true;
 					y.second = true;
 				}
 				else if (std::includes(y.first.begin(), y.first.end(), x.first.begin(), x.first.end()))
 				{
-					result.emplace_back(y);
+					result.emplace_back(y.first, false);
 					x.second = true;
 					y.second = true;
 				}
