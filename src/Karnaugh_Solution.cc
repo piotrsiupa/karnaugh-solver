@@ -3,8 +3,73 @@
 #include <algorithm>
 #include <iomanip>
 #include <iostream>
+#include <map>
 #include <set>
 
+
+template<bits_t BITS>
+void Karnaugh_Solution<BITS>::OptimizedSolution::print(std::ostream &o, const names_t &inputNames, const names_t &functionNames) const
+{
+	o << "Negated inputs:";
+	bool first = true;
+	for (number_t i = 0; i != BITS; ++i)
+	{
+		if ((negatedInputs & (1 << (BITS - i - 1))) != 0)
+		{
+			if (first)
+			{
+				first = false;
+				o << ' ';
+			}
+			else
+			{
+				o << ", ";
+			}
+			o << inputNames[i];
+		}
+	}
+	o << '\n';
+	
+	o << "Products:";
+	for (std::size_t i = 0; i != products.size(); ++i)
+	{
+		if (i == 0)
+			o << ' ';
+		else
+			o << ", ";
+		o << '[' << i << "] = ";
+		Karnaugh<BITS>::printMinterm(o, inputNames, products[i].first);
+		for (const auto &productRef : products[i].second)
+			o << '[' << productRef << ']';
+	}
+	o << '\n';
+	
+	o << "Sums:";
+	for (std::size_t i = 0; i != sums.size(); ++i)
+	{
+		if (i == 0)
+			o << ' ';
+		else
+			o << ", ";
+		o << '[' << i + products.size() << "] = ";
+		for (const auto &productRef : sums[i])
+			o << '[' << productRef << ']';
+	}
+	o << '\n';
+	
+	o << "Final sums:";
+	for (std::size_t i = 0; i != finalSums.size(); ++i)
+	{
+		if (i == 0)
+			o << ' ';
+		else
+			o << ", ";
+		o << '"' << functionNames[i] << "\" = [" << finalSums[i] << ']';
+	}
+	o << '\n';
+	
+	o << "\nGate scores: NOTs = " << getNotCount() << ", ANDs = " << getAndCount() << ", ORs = " << getOrCount() << '\n';
+}
 
 template<bits_t BITS>
 Karnaugh_Solution<BITS>::Karnaugh_Solution(const minterms_t &minterms, const table_t &target, const table_t &dontCares) :
@@ -77,7 +142,7 @@ typename Karnaugh_Solution<BITS>::minterms_t Karnaugh_Solution<BITS>::removeEsse
 template<bits_t BITS>
 void Karnaugh_Solution<BITS>::solve()
 {
-	solution = removeEssentials();
+	const minterms_t essentials = removeEssentials();
 	
 	std::vector<std::vector<std::pair<std::set<std::size_t>, bool>>> magic;
 	
@@ -154,7 +219,11 @@ void Karnaugh_Solution<BITS>::solve()
 		}
 	}
 	
-	if (!magic.empty())
+	if (magic.empty())
+	{
+		solutions.emplace_back(essentials);
+	}
+	else
 	{
 		for (auto x = magic.front().begin(); x != magic.front().end(); ++x)
 		{
@@ -180,13 +249,21 @@ void Karnaugh_Solution<BITS>::solve()
 		magic.front().erase(std::remove_if(magic.front().begin(), magic.front().end(), [](auto &x){ return x.second; }), magic.front().end());
 		magic.front().shrink_to_fit();
 		
-		for (const auto &x : magic.front().front().first)
-			solution.push_back(minterms[x]);
+		solutions.reserve(magic.front().size());
+		for (const auto &x : magic.front())
+		{
+			solutions.emplace_back();
+			solutions.back().reserve(essentials.size() + x.first.size());
+			for (const auto &e : essentials)
+				solutions.back().push_back(e);
+			for (const auto &y : x.first)
+				solutions.back().push_back(minterms[y]);
+		}
 	}
 }
 
 template<bits_t BITS>
-void Karnaugh_Solution<BITS>::prettyPrintSolution() const
+void Karnaugh_Solution<BITS>::prettyPrintSolution(const minterms_t &solution)
 {
 	table_t solutionTable;
 	for (const auto &x : solution)
@@ -201,6 +278,163 @@ Karnaugh_Solution<BITS> Karnaugh_Solution<BITS>::solve(const minterms_t &allMint
 	Karnaugh_Solution karnaugh_solver(allMinters, target, dontCares);
 	karnaugh_solver.solve();
 	return karnaugh_solver;
+}
+
+template<bits_t BITS>
+typename Karnaugh_Solution<BITS>::OptimizedSolution Karnaugh_Solution<BITS>::optimizeSolutions(const std::vector<const minterms_t*> &solutions)
+{
+	static constexpr auto wipProductsSort = [](const minterm_t &x, const minterm_t &y)
+		{
+			const bits_t xOnes = Karnaugh<BITS>::getOnesCount(x);
+			const bits_t yOnes = Karnaugh<BITS>::getOnesCount(y);
+			if (xOnes != yOnes)
+				return xOnes < yOnes;
+			const number_t xMask = x.first | x.second;
+			const number_t yMask = y.first | y.second;
+			if (xMask != yMask)
+				return xMask < yMask;
+			return x < y;
+		};
+	static constexpr auto wipSumsSort = [](const std::set<const void*> &x, const std::set<const void*> &y)
+		{
+			return x.size() != y.size()
+					? x.size() < y.size()
+					: x < y;
+		};
+	std::map<minterm_t, std::vector<const void*>, decltype(wipProductsSort)> wipProducts(wipProductsSort);
+	std::map<std::set<const void*>, std::vector<const void*>, decltype(wipSumsSort)> wipSums(wipSumsSort);
+	std::vector<const void*> wipFinalSums;
+	wipFinalSums.reserve(solutions.size());
+	OptimizedSolution optimizedSolution;
+	for (const minterms_t *const solution : solutions)
+	{
+		std::set<const void*> wipSum;
+		for (const auto &x : *solution)
+		{
+			optimizedSolution.negatedInputs |= x.second;
+			wipSum.insert(&wipProducts[x]);
+		}
+		wipFinalSums.push_back(&wipSums[std::move(wipSum)]);
+	}
+	for (auto iter = wipProducts.rbegin(); iter != wipProducts.rend(); ++iter)
+	{
+		//TODO This approach does not strictly guarantee to find the best solution. Petrick's method could be used here.
+		minterm_t remainingInputs = iter->first;
+		for (auto jiter = std::next(iter); jiter != wipProducts.rend(); ++jiter)
+		{
+			const minterm_t commonInputs = {remainingInputs.first & jiter->first.first, remainingInputs.second & jiter->first.second};
+			if (Karnaugh<BITS>::getOnesCount(commonInputs) > 1)
+			{
+				remainingInputs.first &= ~commonInputs.first;
+				remainingInputs.second &= ~commonInputs.second;
+				const auto &commonProduct = wipProducts[commonInputs];
+				if (&commonProduct != &iter->second)
+					iter->second.push_back(&commonProduct);
+			}
+		}
+	}
+	for (auto iter = wipSums.rbegin(); iter != wipSums.rend(); ++iter)
+	{
+		//TODO This approach does not strictly guarantee to find the best solution. Petrick's method could be used here.
+		std::set<const void*> remainingProducts = iter->first;
+		for (auto jiter = std::next(iter); jiter != wipSums.rend(); ++jiter)
+		{
+			std::set<const void*> commonProducts;
+			std::set_intersection(remainingProducts.cbegin(), remainingProducts.cend(), jiter->first.cbegin(), jiter->first.cend(), std::inserter(commonProducts, commonProducts.begin()));
+			if (commonProducts.size() > 1)
+			{
+				for (const void *const commonProduct : commonProducts)
+					remainingProducts.erase(commonProduct);
+				const auto &commonSum = wipSums[commonProducts];
+				if (&commonSum != &iter->second)
+					iter->second.push_back(&commonSum);
+			}
+		}
+	}
+	optimizedSolution.products.reserve(wipProducts.size());
+	for (const auto &wipProduct : wipProducts)
+	{
+		optimizedSolution.products.push_back({wipProduct.first, {}});
+		for (auto wipProductRefIter = wipProduct.second.crbegin(); wipProductRefIter != wipProduct.second.crend(); ++wipProductRefIter)
+		{
+			std::size_t i = 0;
+			for (const auto &wipProduct2 : wipProducts)
+			{
+				if (&wipProduct2.second == *wipProductRefIter)
+				{
+					optimizedSolution.products.back().second.push_back(i);
+					break;
+				}
+				++i;
+			}
+		}
+	}
+	for (auto productIter = optimizedSolution.products.rbegin(); productIter != optimizedSolution.products.rend(); ++productIter)
+	{
+		for (const std::size_t productRef : productIter->second)
+		{
+			productIter->first.first &= ~optimizedSolution.products[productRef].first.first;
+			productIter->first.second &= ~optimizedSolution.products[productRef].first.second;
+		}
+	}
+	for (const auto &wipSum : wipSums)
+	{
+		optimizedSolution.sums.emplace_back();
+		optimizedSolution.sums.back().reserve(wipSum.first.size() + wipSum.second.size());
+		for (const auto &wipProductRef : wipSum.first)
+		{
+			std::size_t i = 0;
+			for (const auto &wipProduct : wipProducts)
+			{
+				if (&wipProduct.second == wipProductRef)
+				{
+					optimizedSolution.sums.back().push_back(i);
+					break;
+				}
+				++i;
+			}
+		}
+		for (auto wipSumRefIter = wipSum.second.crbegin(); wipSumRefIter != wipSum.second.crend(); ++wipSumRefIter)
+		{
+			std::size_t i = 0;
+			for (const auto &wipSum2 : wipSums)
+			{
+				if (&wipSum2.second == *wipSumRefIter)
+				{
+					optimizedSolution.sums.back().push_back(i + optimizedSolution.products.size());
+					break;
+				}
+				++i;
+			}
+		}
+	}
+	for (auto sumIter = optimizedSolution.sums.rbegin(); sumIter != optimizedSolution.sums.rend(); ++sumIter)
+	{
+		for (const std::size_t sumRef : *sumIter)
+		{
+			if (sumRef >= optimizedSolution.products.size())
+			{
+				const auto &referedSum = optimizedSolution.sums[sumRef - optimizedSolution.products.size()];
+				sumIter->erase(std::remove_if(sumIter->begin(), sumIter->end(), [&referedSum](const std::size_t x){ return std::find(referedSum.cbegin(), referedSum.cend(), x) != referedSum.cend(); }), sumIter->end());
+			}
+		}
+		std::sort(sumIter->begin(), sumIter->end());
+	}
+	optimizedSolution.finalSums.reserve(wipFinalSums.size());
+	for (const void *wipFinalSum : wipFinalSums)
+	{
+		std::size_t i = 0;
+		for (const auto &wipSum : wipSums)
+		{
+			if (&wipSum.second == wipFinalSum)
+			{
+				optimizedSolution.finalSums.push_back(i + optimizedSolution.products.size());
+				break;
+			}
+			++i;
+		}
+	}
+	return optimizedSolution;
 }
 
 

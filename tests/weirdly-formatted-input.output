@@ -1,4 +1,4 @@
-=== my-function ===
+--- my-function ---
 
 goal:
    00 01 11 10 
@@ -16,3 +16,12 @@ best fit:
 
 solution:
 w'y'z + w'x'y
+
+=== optimized solution ===
+
+Negated inputs: w, x, y
+Products: [0] = w'y'z, [1] = w'x'y
+Sums: [2] = [0][1]
+Final sums: "my-function" = [2]
+
+Gate scores: NOTs = 3, ANDs = 4, ORs = 1

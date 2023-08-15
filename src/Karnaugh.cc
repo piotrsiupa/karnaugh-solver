@@ -168,42 +168,20 @@ typename Karnaugh<BITS>::splitMinterm_t Karnaugh<BITS>::splitMinterm(const minte
 }
 
 template<bits_t BITS>
-void Karnaugh<BITS>::printMinterm(const minterm_t minterm) const
+void Karnaugh<BITS>::printMinterm(std::ostream &o, const names_t &inputNames, const minterm_t minterm)
 {
 	for (const mintermPart_t &mintermPart : splitMinterm(minterm))
 	{
-		std::cout << inputNames[mintermPart.first];
+		o << inputNames[mintermPart.first];
 		if (mintermPart.second)
-			std::cout << '\'';
+			o << '\'';
 	}
 }
 
 template<bits_t BITS>
-void Karnaugh<BITS>::applyHeuristic(std::list<Karnaugh> &karnaughs)
+void Karnaugh<BITS>::printMinterm(const minterm_t minterm) const
 {
-	std::map<mintermPart_t, std::size_t> mintermPartCounts;
-	for (const Karnaugh &karnaugh : karnaughs)
-		for (const minterm_t &minterm : karnaugh.allMinterms)
-			for (const mintermPart_t &x : splitMinterm(minterm))
-				++mintermPartCounts[x];
-	std::map<minterm_t, std::size_t> mintermWeights;
-	const auto getMintermWeight = [&mintermPartCounts = std::as_const(mintermPartCounts), &mintermWeights](const minterm_t &minterm) -> std::size_t
-		{
-			std::size_t &weight = mintermWeights[minterm];
-			if (weight == 0)
-				for (const mintermPart_t &x : splitMinterm(minterm))
-					weight += mintermPartCounts.at(x);
-			return weight;
-		};
-	const auto theHeuristic = [&getMintermWeight](const minterm_t &x, const minterm_t &y) -> bool
-		{
-			const bits_t xOnes = getOnesCount(x), yOnes = getOnesCount(y);
-			return xOnes == yOnes
-				? getMintermWeight(x) > getMintermWeight(y)
-				: xOnes < yOnes;
-		};
-	for (Karnaugh &karnaugh : karnaughs)
-		std::stable_sort(karnaugh.allMinterms.begin(), karnaugh.allMinterms.end(), theHeuristic);
+	return printMinterm(std::cout, inputNames, minterm);
 }
 
 template<bits_t BITS>
@@ -215,7 +193,7 @@ Karnaugh_Solution<BITS> Karnaugh<BITS>::solve() const
 template<bits_t BITS>
 bool Karnaugh<BITS>::processMultiple(const names_t &inputNames, lines_t &lines)
 {
-	std::list<Karnaugh> karnaughs;
+	std::vector<Karnaugh> karnaughs;
 	while (!lines.empty())
 	{
 		karnaughs.push_back(inputNames);
@@ -227,31 +205,58 @@ bool Karnaugh<BITS>::processMultiple(const names_t &inputNames, lines_t &lines)
 		karnaugh.findMinterms();
 	}
 	
-	applyHeuristic(karnaughs);
-	
-	bool firstKarnaugh = true;
+	std::vector<Karnaugh_Solution<BITS>> karnaugh_solutions;
+	karnaugh_solutions.reserve(karnaughs.size());
 	for (Karnaugh &karnaugh : karnaughs)
+		karnaugh_solutions.emplace_back(karnaugh.solve());
+	
+	std::vector<minterms_t> bestSolutions;
+	bestSolutions.resize(karnaughs.size());
+	typename Karnaugh_Solution<BITS>::OptimizedSolution bestOptimizedSolution;
+	std::size_t bestGateScore = SIZE_MAX;
+	for (std::vector<std::size_t> indexes(karnaughs.size(), 0);;)
 	{
-		if (firstKarnaugh)
-			firstKarnaugh = false;
-		else
+		std::vector<const minterms_t*> solutions;
+		solutions.reserve(indexes.size());
+		for (std::size_t i = 0; i != indexes.size(); ++i)
+			solutions.push_back(&karnaugh_solutions[i].getSolutions()[indexes[i]]);
+		typename Karnaugh_Solution<BITS>::OptimizedSolution optimizedSolution = Karnaugh_Solution<BITS>::optimizeSolutions(solutions);
+		if (optimizedSolution.getGateScore() < bestGateScore)
+		{
+			bestGateScore = optimizedSolution.getGateScore();
+			for (std::size_t i = 0; i != indexes.size(); ++i)
+				bestSolutions[i] = karnaugh_solutions[i].getSolutions()[indexes[i]];
+			bestOptimizedSolution = std::move(optimizedSolution);
+		}
+		
+		for (std::size_t i = indexes.size() - 1;; --i)
+		{
+			if (++indexes[i] != karnaugh_solutions[i].getSolutions().size())
+				break;
+			indexes[i] = 0;
+			if (i == 0)
+				goto all_solutions_checked;
+		}
+	}
+	all_solutions_checked:
+	
+	for (std::size_t i = 0; i != karnaughs.size(); ++i)
+	{
+		const Karnaugh &karnaugh = karnaughs[i];
+		const minterms_t &bestSolution = bestSolutions[i];
+		
+		if (i != 0)
 			std::cout << '\n';
-		std::cout << "=== " << karnaugh.functionName << " ===\n\n";
+		std::cout << "--- " << karnaugh.functionName << " ---\n\n";
 		
 		std::cout << "goal:\n";
 		prettyPrintTable(karnaugh.target, karnaugh.acceptable);
 		
-		const Karnaugh_Solution<BITS> solution = karnaugh.solve();
-		if (!solution.isSolutionValid())
-		{
-			std::clog << "No solution found!\n";
-			return false;
-		}
-		solution.prettyPrintSolution();
+		Karnaugh_Solution<BITS>::prettyPrintSolution(bestSolution);
 		
 		std::cout << "solution:\n";
 		bool first = true;
-		for (const minterm_t &minterm : solution.getSolution())
+		for (const minterm_t &minterm : bestSolution)
 		{
 			if (first)
 				first = false;
@@ -259,9 +264,16 @@ bool Karnaugh<BITS>::processMultiple(const names_t &inputNames, lines_t &lines)
 				std::cout << " + ";
 			karnaugh.printMinterm(minterm);
 		}
-		
 		std::cout << std::endl;
 	}
+	
+	std::cout << "\n=== optimized solution ===\n\n";
+	names_t functionNames;
+	functionNames.reserve(karnaughs.size());
+	for (const Karnaugh &karnaugh : karnaughs)
+		functionNames.push_back(karnaugh.functionName);
+	bestOptimizedSolution.print(std::cout, inputNames, functionNames);
+	std::cout << std::flush;
 	
 	return true;
 }

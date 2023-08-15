@@ -48,9 +48,8 @@ class Karnaugh
 	static minterms_t makeAllPossibleMinterms();
 	void findMinterms();
 	static splitMinterm_t splitMinterm(const minterm_t &minterm);
+	static void printMinterm(std::ostream &o, const names_t &inputNames, const minterm_t minterm);
 	void printMinterm(const minterm_t minterm) const;
-	
-	static void applyHeuristic(std::list<Karnaugh> &karnaughs);
 	
 	Karnaugh_Solution<BITS> solve() const;
 	

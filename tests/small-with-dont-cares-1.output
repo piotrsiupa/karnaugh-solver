@@ -1,4 +1,4 @@
-=== short with don't cares 1 ===
+--- short with don't cares 1 ---
 
 goal:
    00 01 11 10 
@@ -16,3 +16,12 @@ best fit:
 
 solution:
 a'cd'
+
+=== optimized solution ===
+
+Negated inputs: a, d
+Products: [0] = a'cd'
+Sums: [1] = [0]
+Final sums: "short with don't cares 1" = [1]
+
+Gate scores: NOTs = 2, ANDs = 2, ORs = 0

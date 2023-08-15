@@ -1,4 +1,4 @@
-=== short 1 ===
+--- short 1 ---
 
 goal:
    00 01 11 10 
@@ -16,3 +16,12 @@ best fit:
 
 solution:
 a'b'cd'
+
+=== optimized solution ===
+
+Negated inputs: a, b, d
+Products: [0] = a'b'cd'
+Sums: [1] = [0]
+Final sums: "short 1" = [1]
+
+Gate scores: NOTs = 3, ANDs = 3, ORs = 0

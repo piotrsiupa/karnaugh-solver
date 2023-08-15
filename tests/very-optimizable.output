@@ -1,0 +1,84 @@
+--- first ---
+
+goal:
+   00 01 11 10 
+00 F  F  F  F
+01 F  T  F  T
+11 F  F  F  F
+10 F  T  F  T
+
+best fit:
+   00 01 11 10 
+00 F  F  F  F
+01 F  T  F  T
+11 F  F  F  F
+10 F  T  F  T
+
+solution:
+ab'cd' + ab'c'd + a'bcd' + a'bc'd
+
+--- second ---
+
+goal:
+   00 01 11 10 
+00 F  F  F  F
+01 F  T  F  T
+11 F  F  T  F
+10 F  T  F  F
+
+best fit:
+   00 01 11 10 
+00 F  F  F  F
+01 F  T  F  T
+11 F  F  T  F
+10 F  T  F  F
+
+solution:
+abcd + ab'c'd + a'bcd' + a'bc'd
+
+--- third ---
+
+goal:
+   00 01 11 10 
+00 F  F  F  F
+01 F  T  F  T
+11 F  F  F  F
+10 F  T  F  F
+
+best fit:
+   00 01 11 10 
+00 F  F  F  F
+01 F  T  F  T
+11 F  F  F  F
+10 F  T  F  F
+
+solution:
+ab'c'd + a'bcd' + a'bc'd
+
+--- fourth ---
+
+goal:
+   00 01 11 10 
+00 T  F  F  F
+01 F  F  F  T
+11 F  F  F  F
+10 F  T  F  F
+
+best fit:
+   00 01 11 10 
+00 T  F  F  F
+01 F  F  F  T
+11 F  F  F  F
+10 F  T  F  F
+
+solution:
+ab'c'd + a'bcd' + a'b'c'd'
+
+=== optimized solution ===
+
+Negated inputs: a, b, c, d
+Products: [0] = c'd, [1] = cd', [2] = bd, [3] = a'c', [4] = ac, [5] = a'b, [6] = ab', [7] = b'd'[3], [8] = [2][3], [9] = [1][5], [10] = [6][0], [11] = [1][6], [12] = [2][4]
+Sums: [13] = [9][10], [14] = [8][13], [15] = [7][13], [16] = [8][11][13], [17] = [12][14]
+Final sums: "first" = [16], "second" = [17], "third" = [14], "fourth" = [15]
+
+Gate scores: NOTs = 4, ANDs = 14, ORs = 6

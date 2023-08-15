@@ -1,4 +1,4 @@
-=== f0 ===
+--- f0 ---
 
 goal:
      0000 0001 0011 0010 0110 0111 0101 0100 1100 1101 1111 1110 1010 1011 1001 1000 
@@ -39,4 +39,13 @@ best fit:
 1000  T    T    T    T    T    T    T    T    T    T    T    F    F    F    F    F
 
 solution:
-abd + d'e'h + c'e'h + e'f'h + fgh + a'ch + a'f'h + ae'h' + a'cd' + a'g'h' + a'b'd' + bc'd'f' + aefg' + bc'd'eh'
+abd + fgh + ae'h' + e'f'h + ad'e' + a'g'h' + a'f'h + a'e'g' + a'cd' + a'b'd' + cefg' + ac'fg' + bc'd'f' + bc'd'eh'
+
+=== optimized solution ===
+
+Negated inputs: a, b, c, d, e, f, g, h
+Products: [0] = f'h, [1] = fg', [2] = a'g', [3] = ae', [4] = a'd', [5] = fgh, [6] = e'[0], [7] = bc'd', [8] = h'[2], [9] = a'[0], [10] = h'[3], [11] = e'[2], [12] = d'[3], [13] = c[4], [14] = b'[4], [15] = abd, [16] = ce[1], [17] = f'[7], [18] = ac'[1], [19] = eh'[7]
+Sums: [20] = [5][6][8][9][10][11][12][13][14][15][16][17][18][19]
+Final sums: "f0" = [20]
+
+Gate scores: NOTs = 8, ANDs = 26, ORs = 13
