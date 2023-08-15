@@ -15,12 +15,12 @@ best fit:
 10 F  F  F  F
 
 solution:
-a'b'd
+!a && !b && d
 
 === optimized solution ===
 
 Negated inputs: a, b
-Products: [0] = a'b'd
+Products: [0] = !a && !b && d
 Sums: [1] = [0]
 Final sums: "short 0" = [1]
 

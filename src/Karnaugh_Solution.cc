@@ -36,11 +36,18 @@ void Karnaugh_Solution<BITS>::OptimizedSolution::print(std::ostream &o, const na
 		if (i == 0)
 			o << ' ';
 		else
-			o << ", ";
+			o << ",  ";
 		o << '[' << i << "] = ";
-		Karnaugh<BITS>::printMinterm(o, inputNames, products[i].first);
+		Karnaugh<BITS>::printMinterm(o, inputNames, products[i].first, false);
+		bool first = products[i].first == minterm_t{0, 0};
 		for (const auto &productRef : products[i].second)
+		{
+			if (first)
+				first = false;
+			else
+				o << " && ";
 			o << '[' << productRef << ']';
+		}
 	}
 	o << '\n';
 	
@@ -50,10 +57,17 @@ void Karnaugh_Solution<BITS>::OptimizedSolution::print(std::ostream &o, const na
 		if (i == 0)
 			o << ' ';
 		else
-			o << ", ";
+			o << ",  ";
 		o << '[' << i + products.size() << "] = ";
+		bool first = true;
 		for (const auto &productRef : sums[i])
+		{
+			if (first)
+				first = false;
+			else
+				o << " || ";
 			o << '[' << productRef << ']';
+		}
 	}
 	o << '\n';
 	

@@ -15,12 +15,12 @@ best fit:
 10 F  F  F  F
 
 solution:
-a'd
+!a && d
 
 === optimized solution ===
 
 Negated inputs: a
-Products: [0] = a'd
+Products: [0] = !a && d
 Sums: [1] = [0]
 Final sums: "short with don't cares 0" = [1]
 

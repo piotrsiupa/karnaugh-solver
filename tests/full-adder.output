@@ -15,7 +15,7 @@ best fit:
 10 T F
 
 solution:
-in0in1carry-in + in0in1'carry-in' + in0'in1carry-in' + in0'in1'carry-in
+(in0 && in1 && carry-in) || (in0 && !in1 && !carry-in) || (!in0 && in1 && !carry-in) || (!in0 && !in1 && carry-in)
 
 --- carry-out ---
 
@@ -34,13 +34,13 @@ best fit:
 10 F T
 
 solution:
-in0in1 + in0carry-in + in1carry-in
+(in0 && in1) || (in0 && carry-in) || (in1 && carry-in)
 
 === optimized solution ===
 
 Negated inputs: in0, in1, carry-in
-Products: [0] = in0in1, [1] = in0carry-in, [2] = in1carry-in, [3] = in0[2], [4] = in0in1'carry-in', [5] = in0'in1carry-in', [6] = in0'in1'carry-in
-Sums: [7] = [0][1][2], [8] = [3][4][5][6]
+Products: [0] = in0 && in1,  [1] = in0 && carry-in,  [2] = in1 && carry-in,  [3] = in0 && [2],  [4] = in0 && !in1 && !carry-in,  [5] = !in0 && in1 && !carry-in,  [6] = !in0 && !in1 && carry-in
+Sums: [7] = [0] || [1] || [2],  [8] = [3] || [4] || [5] || [6]
 Final sums: "sum" = [8], "carry-out" = [7]
 
 Gate scores: NOTs = 3, ANDs = 10, ORs = 5

@@ -39,13 +39,13 @@ best fit:
 1000  F    F    F    F    F    F    F    F    T    T    T    T    F    F    F    F
 
 solution:
-bg + ef
+(b && g) || (e && f)
 
 === optimized solution ===
 
 Negated inputs:
-Products: [0] = bg, [1] = ef
-Sums: [2] = [0][1]
+Products: [0] = b && g,  [1] = e && f
+Sums: [2] = [0] || [1]
 Final sums: "f0" = [2]
 
 Gate scores: NOTs = 0, ANDs = 2, ORs = 1

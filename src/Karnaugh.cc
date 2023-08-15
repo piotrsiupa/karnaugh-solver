@@ -180,36 +180,52 @@ typename Karnaugh<BITS>::splitMinterm_t Karnaugh<BITS>::splitMinterm(const minte
 }
 
 template<bits_t BITS>
-void Karnaugh<BITS>::printMinterm(std::ostream &o, const names_t &inputNames, const minterm_t minterm)
+void Karnaugh<BITS>::printMinterm(std::ostream &o, const names_t &inputNames, const minterm_t minterm, const bool parentheses)
 {
+	const bool needsParentheses = parentheses && getOnesCount(minterm) != 1;
+	if (needsParentheses)
+		o << '(';
+	bool first = true;
 	for (const mintermPart_t &mintermPart : splitMinterm(minterm))
 	{
-		o << inputNames[mintermPart.first];
+		if (first)
+			first = false;
+		else
+			o << " && ";
 		if (mintermPart.second)
-			o << '\'';
+			o << '!';
+		o << inputNames[mintermPart.first];
 	}
+	if (needsParentheses)
+		o << ')';
 }
 
 template<bits_t BITS>
-void Karnaugh<BITS>::printMinterm(const minterm_t minterm) const
+void Karnaugh<BITS>::printMinterm(const minterm_t minterm, const bool parentheses) const
 {
-	return printMinterm(std::cout, inputNames, minterm);
+	return printMinterm(std::cout, inputNames, minterm, parentheses);
 }
 
 template<bits_t BITS>
 void Karnaugh<BITS>::printMinterms(minterms_t minterms) const
 {
-	std::sort(minterms.begin(), minterms.end(), compareMinterms);
-	bool first = true;
-	for (const minterm_t &minterm : minterms)
+	if (minterms.size() == 1)
 	{
-		if (first)
-			first = false;
-		else
-			std::cout << " + ";
-		printMinterm(minterm);
+		printMinterm(minterms.front(), false);
 	}
-	std::cout << std::endl;
+	else
+	{
+		std::sort(minterms.begin(), minterms.end(), compareMinterms);
+		bool first = true;
+		for (const minterm_t &minterm : minterms)
+		{
+			if (first)
+				first = false;
+			else
+				std::cout << " || ";
+			printMinterm(minterm, true);
+		}
+	}
 }
 
 template<bits_t BITS>
@@ -284,6 +300,7 @@ bool Karnaugh<BITS>::processMultiple(const names_t &inputNames, lines_t &lines)
 		
 		std::cout << "solution:\n";
 		karnaugh.printMinterms(bestSolution);
+		std::cout << std::endl;
 	}
 	
 	std::cout << "\n=== optimized solution ===\n\n";

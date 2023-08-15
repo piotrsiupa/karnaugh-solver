@@ -48,8 +48,8 @@ class Karnaugh
 	void findMinterms();
 	static bool compareMinterms(const minterm_t x, const minterm_t y);
 	static splitMinterm_t splitMinterm(const minterm_t &minterm);
-	static void printMinterm(std::ostream &o, const names_t &inputNames, const minterm_t minterm);
-	void printMinterm(const minterm_t minterm) const;
+	static void printMinterm(std::ostream &o, const names_t &inputNames, const minterm_t minterm, const bool parentheses);
+	void printMinterm(const minterm_t minterm, const bool parentheses) const;
 	void printMinterms(minterms_t minterms) const;
 	
 	Karnaugh_Solution<BITS> solve() const;
