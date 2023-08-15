@@ -28,6 +28,8 @@ void Karnaugh_Solution<BITS>::OptimizedSolution::print(std::ostream &o, const na
 			o << inputNames[i];
 		}
 	}
+	if (first)
+		o << " <none>";
 	o << '\n';
 	
 	o << "Products:";
@@ -38,9 +40,11 @@ void Karnaugh_Solution<BITS>::OptimizedSolution::print(std::ostream &o, const na
 		else
 			o << ",  ";
 		o << '[' << i << "] = ";
-		Karnaugh<BITS>::printMinterm(o, inputNames, products[i].first, false);
-		bool first = products[i].first == minterm_t{0, 0};
-		for (const auto &productRef : products[i].second)
+		const auto &product = products[i];
+		bool first = product.first == minterm_t{0, 0};
+		if (!first || product.second.empty())
+			Karnaugh<BITS>::printMinterm(o, inputNames, product.first, false);
+		for (const auto &productRef : product.second)
 		{
 			if (first)
 				first = false;
@@ -49,6 +53,8 @@ void Karnaugh_Solution<BITS>::OptimizedSolution::print(std::ostream &o, const na
 			o << '[' << productRef << ']';
 		}
 	}
+	if (products.empty())
+		o << " <none>";
 	o << '\n';
 	
 	o << "Sums:";
@@ -69,6 +75,8 @@ void Karnaugh_Solution<BITS>::OptimizedSolution::print(std::ostream &o, const na
 			o << '[' << productRef << ']';
 		}
 	}
+	if (sums.empty())
+		o << " <none>";
 	o << '\n';
 	
 	o << "Final sums:";
@@ -80,6 +88,8 @@ void Karnaugh_Solution<BITS>::OptimizedSolution::print(std::ostream &o, const na
 			o << ", ";
 		o << '"' << functionNames[i] << "\" = [" << finalSums[i] << ']';
 	}
+	if (finalSums.empty())
+		o << " <none>";
 	o << '\n';
 	
 	o << "\nGate scores: NOTs = " << getNotCount() << ", ANDs = " << getAndCount() << ", ORs = " << getOrCount() << '\n';
@@ -235,7 +245,10 @@ void Karnaugh_Solution<BITS>::solve()
 	
 	if (magic.empty())
 	{
-		solutions.emplace_back(essentials);
+		if (!essentials.empty())
+			solutions.emplace_back(essentials);
+		else
+			solutions.emplace_back().emplace_back(~number_t(0), ~number_t(0));
 	}
 	else
 	{
@@ -309,7 +322,7 @@ typename Karnaugh_Solution<BITS>::OptimizedSolution Karnaugh_Solution<BITS>::opt
 		std::set<const void*> wipSum;
 		for (const auto &x : *solution)
 		{
-			optimizedSolution.negatedInputs |= x.second;
+			optimizedSolution.negatedInputs |= x.second & (~x.first);
 			wipSum.insert(&wipProducts[x]);
 		}
 		wipFinalSums.push_back(&wipSums[std::move(wipSum)]);
@@ -436,6 +449,8 @@ typename Karnaugh_Solution<BITS>::OptimizedSolution Karnaugh_Solution<BITS>::opt
 }
 
 
+template class Karnaugh_Solution<0>;
+template class Karnaugh_Solution<1>;
 template class Karnaugh_Solution<2>;
 template class Karnaugh_Solution<3>;
 template class Karnaugh_Solution<4>;

@@ -1,0 +1,19 @@
+# A corner case - only one input and no don't-cares.
+
+the_only_input
+
+true
+0 1
+-
+
+pass_though
+1
+-
+
+negate
+0
+-
+
+false
+-
+-

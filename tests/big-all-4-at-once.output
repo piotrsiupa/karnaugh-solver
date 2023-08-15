@@ -1,0 +1,180 @@
+--- lots of don't cares ---
+
+goal:
+     0000 0001 0011 0010 0110 0111 0101 0100 1100 1101 1111 1110 1010 1011 1001 1000 
+0000  -    -    -    -    -    -    -    -    -    -    -    -    -    -    -    -
+0001  -    -    -    -    -    -    -    F    -    -    -    -    -    -    -    -
+0011  -    -    -    F    -    -    -    -    -    -    -    -    -    F    -    -
+0010  -    -    F    -    -    -    -    -    -    -    -    -    -    -    -    -
+0110  -    -    -    -    -    -    -    -    -    -    -    -    -    -    -    -
+0111  -    -    -    -    -    -    F    -    -    -    -    -    -    -    -    -
+0101  -    -    -    -    T    -    -    -    -    T    -    -    -    -    -    -
+0100  -    -    -    -    T    -    F    -    -    T    -    -    -    -    -    -
+1100  -    -    -    -    -    -    -    -    -    -    -    -    -    -    -    -
+1101  -    -    -    -    -    -    -    -    -    -    -    -    -    -    -    -
+1111  -    -    -    -    -    -    -    F    -    -    -    -    -    -    -    -
+1110  -    -    -    -    -    -    -    -    -    -    -    -    -    -    -    -
+1010  -    -    -    -    -    -    -    -    -    -    -    -    -    -    -    -
+1011  -    -    -    F    -    -    -    -    -    -    -    -    -    -    F    -
+1001  -    -    -    -    F    -    -    -    -    -    -    -    -    -    -    -
+1000  -    -    -    -    -    -    -    -    -    -    -    -    -    -    -    -
+
+best fit:
+     0000 0001 0011 0010 0110 0111 0101 0100 1100 1101 1111 1110 1010 1011 1001 1000 
+0000  F    F    F    F    T    T    F    F    T    T    T    T    T    T    T    T
+0001  F    F    F    F    T    T    F    F    T    T    T    T    T    T    T    T
+0011  F    F    F    F    T    T    F    F    F    F    T    T    F    F    F    F
+0010  F    F    F    F    T    T    F    F    F    F    T    T    F    F    F    F
+0110  F    F    F    F    T    T    F    F    F    F    T    T    F    F    F    F
+0111  F    F    F    F    T    T    F    F    F    F    T    T    F    F    F    F
+0101  F    F    F    F    T    T    F    F    T    T    T    T    T    T    T    T
+0100  F    F    F    F    T    T    F    F    T    T    T    T    T    T    T    T
+1100  F    F    F    F    F    F    F    F    T    T    T    T    T    T    T    T
+1101  F    F    F    F    F    F    F    F    T    T    T    T    T    T    T    T
+1111  F    F    F    F    F    F    F    F    F    F    F    F    F    F    F    F
+1110  F    F    F    F    F    F    F    F    F    F    F    F    F    F    F    F
+1010  F    F    F    F    F    F    F    F    F    F    F    F    F    F    F    F
+1011  F    F    F    F    F    F    F    F    F    F    F    F    F    F    F    F
+1001  F    F    F    F    F    F    F    F    T    T    T    T    T    T    T    T
+1000  F    F    F    F    F    F    F    F    T    T    T    T    T    T    T    T
+
+solution:
+(!c && e) || (!a && f && g)
+
+--- balanced don't cares ---
+
+goal:
+     0000 0001 0011 0010 0110 0111 0101 0100 1100 1101 1111 1110 1010 1011 1001 1000 
+0000  T    -    -    T    T    -    -    T    T    -    -    T    T    -    -    T
+0001  T    -    T    F    F    -    T    -    -    F    T    F    F    T    -    T
+0011  -    T    -    F    F    T    -    T    T    -    T    F    F    -    T    -
+0010  -    T    T    -    -    T    T    -    -    T    T    -    -    T    T    -
+0110  T    -    -    T    T    -    -    T    T    -    -    T    T    -    -    T
+0111  T    -    T    F    F    -    T    -    -    T    -    F    F    T    -    T
+0101  -    T    -    F    F    T    -    T    T    F    -    F    F    -    T    -
+0100  -    T    T    -    F    -    T    -    T    F    T    -    T    -    -    T
+1100  -    T    T    -    -    T    T    -    -    T    T    -    -    T    T    -
+1101  -    T    T    -    -    T    T    -    -    T    T    -    -    T    T    -
+1111  T    -    -    T    T    -    -    T    T    -    -    T    T    -    -    T
+1110  -    T    T    -    -    T    T    -    -    T    -    F    F    F    F    F
+1010  T    -    -    T    T    -    -    T    T    -    T    F    F    F    F    F
+1011  -    T    T    -    T    -    F    -    T    -    T    F    F    F    F    F
+1001  -    T    T    -    -    T    T    -    -    T    -    F    F    F    F    F
+1000  T    -    -    T    T    -    -    T    T    -    T    F    F    F    F    F
+
+best fit:
+     0000 0001 0011 0010 0110 0111 0101 0100 1100 1101 1111 1110 1010 1011 1001 1000 
+0000  T    T    T    T    T    T    T    T    T    T    T    T    T    T    T    T
+0001  T    T    T    F    F    T    T    T    T    F    T    F    F    T    T    T
+0011  T    T    T    F    F    T    F    T    T    F    T    F    F    T    T    T
+0010  T    T    T    T    T    T    T    T    T    T    T    T    T    T    T    T
+0110  T    T    T    T    T    T    T    T    T    T    T    T    T    T    T    T
+0111  T    T    T    F    F    T    T    T    T    T    T    F    F    T    T    T
+0101  T    T    T    F    F    T    T    T    T    F    T    F    F    T    T    T
+0100  T    T    T    T    F    T    T    T    T    F    T    T    T    T    T    T
+1100  T    T    T    T    T    T    T    T    T    T    T    F    T    T    T    T
+1101  T    T    T    T    T    T    T    T    T    T    T    T    T    T    T    T
+1111  T    T    T    T    T    T    T    T    T    T    T    T    T    T    T    T
+1110  T    T    T    T    T    T    T    T    T    T    T    F    F    F    F    F
+1010  T    T    T    T    T    T    T    T    T    T    T    F    F    F    F    F
+1011  T    T    T    T    T    F    F    T    T    T    T    F    F    F    F    F
+1001  T    T    T    T    T    T    T    T    T    T    T    F    F    F    F    F
+1000  T    T    T    T    T    T    T    T    T    T    T    F    F    F    F    F
+
+solution:
+(a && b && d) || (!a && !b && !d) || (a && !e && !h) || (!a && !f && !g) || (!a && g && h) || (c && !d && !e) || (!c && !e && h) || (!e && !f && h) || (f && !g && !h) || (!a && !d && e && g) || (a && e && f && h) || (b && !c && !d && !f) || (b && c && f && h)
+
+--- mostly 0s ---
+
+goal:
+     0000 0001 0011 0010 0110 0111 0101 0100 1100 1101 1111 1110 1010 1011 1001 1000 
+0000  F    F    F    F    F    F    F    F    F    F    F    F    F    F    F    F
+0001  F    F    F    T    T    F    F    F    F    T    F    T    T    F    F    F
+0011  F    F    F    T    T    F    F    F    F    F    F    T    T    F    F    F
+0010  F    F    F    F    F    F    F    F    F    F    F    F    F    F    F    F
+0110  F    F    F    F    F    F    F    F    F    F    F    F    F    F    F    F
+0111  F    F    F    T    T    F    F    F    F    F    F    T    T    F    F    F
+0101  F    F    F    T    T    F    F    F    F    T    F    T    T    F    F    F
+0100  F    F    F    F    T    F    F    F    F    T    F    F    F    F    F    F
+1100  F    F    F    F    F    F    F    F    F    F    F    F    F    F    F    F
+1101  F    F    F    F    F    F    F    F    F    F    F    F    F    F    F    F
+1111  F    F    F    F    F    F    F    F    F    F    F    F    F    F    F    F
+1110  F    F    F    F    F    F    F    F    F    F    F    T    T    T    T    T
+1010  F    F    F    F    F    F    F    F    F    F    F    T    T    T    T    T
+1011  F    F    F    F    F    F    T    F    F    F    F    T    T    T    T    T
+1001  F    F    F    F    F    F    F    F    F    F    F    T    T    T    T    T
+1000  F    F    F    F    F    F    F    F    F    F    F    T    T    T    T    T
+
+best fit:
+     0000 0001 0011 0010 0110 0111 0101 0100 1100 1101 1111 1110 1010 1011 1001 1000 
+0000  F    F    F    F    F    F    F    F    F    F    F    F    F    F    F    F
+0001  F    F    F    T    T    F    F    F    F    T    F    T    T    F    F    F
+0011  F    F    F    T    T    F    F    F    F    F    F    T    T    F    F    F
+0010  F    F    F    F    F    F    F    F    F    F    F    F    F    F    F    F
+0110  F    F    F    F    F    F    F    F    F    F    F    F    F    F    F    F
+0111  F    F    F    T    T    F    F    F    F    F    F    T    T    F    F    F
+0101  F    F    F    T    T    F    F    F    F    T    F    T    T    F    F    F
+0100  F    F    F    F    T    F    F    F    F    T    F    F    F    F    F    F
+1100  F    F    F    F    F    F    F    F    F    F    F    F    F    F    F    F
+1101  F    F    F    F    F    F    F    F    F    F    F    F    F    F    F    F
+1111  F    F    F    F    F    F    F    F    F    F    F    F    F    F    F    F
+1110  F    F    F    F    F    F    F    F    F    F    F    T    T    T    T    T
+1010  F    F    F    F    F    F    F    F    F    F    F    T    T    T    T    T
+1011  F    F    F    F    F    F    T    F    F    F    F    T    T    T    T    T
+1001  F    F    F    F    F    F    F    F    F    F    F    T    T    T    T    T
+1000  F    F    F    F    F    F    F    F    F    F    F    T    T    T    T    T
+
+solution:
+(a && !b && e && !f) || (!a && d && g && !h) || (a && !b && e && g && !h) || (a && c && !d && e && !f) || (a && c && !d && e && g && !h) || (!a && b && !c && e && f && !g && h) || (!a && b && !c && !e && f && g && !h) || (!a && !c && d && e && f && !g && h) || (a && !b && c && d && !e && f && !g && h)
+
+--- mostly 1s ---
+
+goal:
+     0000 0001 0011 0010 0110 0111 0101 0100 1100 1101 1111 1110 1010 1011 1001 1000 
+0000  T    T    T    T    T    T    T    T    T    T    T    T    T    T    T    T
+0001  T    T    T    F    F    T    T    T    T    F    T    F    F    T    T    T
+0011  T    T    T    F    F    T    T    T    T    T    T    F    F    T    T    T
+0010  T    T    T    T    T    T    T    T    T    T    T    T    T    T    T    T
+0110  T    T    T    T    T    T    T    T    T    T    T    T    T    T    T    T
+0111  T    T    T    F    F    T    T    T    T    T    T    F    F    T    T    T
+0101  T    T    T    F    F    T    T    T    T    F    T    F    F    T    T    T
+0100  T    T    T    T    F    T    T    T    T    F    T    T    T    T    T    T
+1100  T    T    T    T    T    T    T    T    T    T    T    T    T    T    T    T
+1101  T    T    T    T    T    T    T    T    T    T    T    T    T    T    T    T
+1111  T    T    T    T    T    T    T    T    T    T    T    T    T    T    T    T
+1110  T    T    T    T    T    T    T    T    T    T    T    F    F    F    F    F
+1010  T    T    T    T    T    T    T    T    T    T    T    F    F    F    F    F
+1011  T    T    T    T    T    T    F    T    T    T    T    F    F    F    F    F
+1001  T    T    T    T    T    T    T    T    T    T    T    F    F    F    F    F
+1000  T    T    T    T    T    T    T    T    T    T    T    F    F    F    F    F
+
+best fit:
+     0000 0001 0011 0010 0110 0111 0101 0100 1100 1101 1111 1110 1010 1011 1001 1000 
+0000  T    T    T    T    T    T    T    T    T    T    T    T    T    T    T    T
+0001  T    T    T    F    F    T    T    T    T    F    T    F    F    T    T    T
+0011  T    T    T    F    F    T    T    T    T    T    T    F    F    T    T    T
+0010  T    T    T    T    T    T    T    T    T    T    T    T    T    T    T    T
+0110  T    T    T    T    T    T    T    T    T    T    T    T    T    T    T    T
+0111  T    T    T    F    F    T    T    T    T    T    T    F    F    T    T    T
+0101  T    T    T    F    F    T    T    T    T    F    T    F    F    T    T    T
+0100  T    T    T    T    F    T    T    T    T    F    T    T    T    T    T    T
+1100  T    T    T    T    T    T    T    T    T    T    T    T    T    T    T    T
+1101  T    T    T    T    T    T    T    T    T    T    T    T    T    T    T    T
+1111  T    T    T    T    T    T    T    T    T    T    T    T    T    T    T    T
+1110  T    T    T    T    T    T    T    T    T    T    T    F    F    F    F    F
+1010  T    T    T    T    T    T    T    T    T    T    T    F    F    F    F    F
+1011  T    T    T    T    T    T    F    T    T    T    T    F    F    F    F    F
+1001  T    T    T    T    T    T    T    T    T    T    T    F    F    F    F    F
+1000  T    T    T    T    T    T    T    T    T    T    T    F    F    F    F    F
+
+solution:
+(a && b && d) || (!a && !b && !d) || (!a && c && !d) || (!a && c && h) || (a && !e && g) || (!a && !f && !g) || (!a && g && h) || (c && !d && !e) || (!c && !e && h) || (!e && !f && !g) || (f && !g && !h) || (a && e && f && h) || (b && !c && !d && !f) || (b && !c && !d && e && !h)
+
+=== optimized solution ===
+
+Negated inputs: a, b, c, d, e, f, g, h
+Products: [0] = a && c,  [1] = !a && c,  [2] = !a && !d,  [3] = a && e,  [4] = a && !e,  [5] = !a && f,  [6] = !a && g,  [7] = b && !c,  [8] = c && !d,  [9] = !c && e,  [10] = !d && e,  [11] = !d && !f,  [12] = !e && !f,  [13] = f && !g,  [14] = !f && !g,  [15] = f && h,  [16] = g && !h,  [17] = !g && h,  [18] = a && b && d,  [19] = !b && [2],  [20] = c && [2],  [21] = !c && [5],  [22] = h && [1],  [23] = g && [4],  [24] = !h && [4],  [25] = g && [5],  [26] = !a && [14],  [27] = h && [6],  [28] = b && [9],  [29] = !e && [8],  [30] = !c && !e && h,  [31] = !h && [10],  [32] = !e && [14],  [33] = h && [12],  [34] = e && [17],  [35] = f && [17],  [36] = !h && [13],  [37] = [5] && [7],  [38] = !b && !f && [3],  [39] = [6] && [10],  [40] = d && !h && [6],  [41] = [15] && [3],  [42] = [11] && [7],  [43] = b && c && [15],  [44] = d && !g && [15],  [45] = !b && [16] && [3],  [46] = c && [11] && [3],  [47] = !h && [7] && [10],  [48] = g && [0] && [31],  [49] = !a && [35] && [28],  [50] = !e && [16] && [37],  [51] = d && [34] && [21],  [52] = !b && !e && [0] && [44]
+Sums: [53] = [9] || [25],  [54] = [18] || [19] || [26] || [27] || [29] || [30] || [36] || [41] || [42],  [55] = [38] || [40] || [45] || [46] || [48] || [49] || [50] || [51] || [52],  [56] = [24] || [33] || [39] || [43] || [54],  [57] = [20] || [22] || [23] || [32] || [47] || [54]
+Final sums: "lots of don't cares" = [53], "balanced don't cares" = [56], "mostly 0s" = [55], "mostly 1s" = [57]
+
+Gate scores: NOTs = 8, ANDs = 68, ORs = 26

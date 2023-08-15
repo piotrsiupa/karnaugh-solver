@@ -1,0 +1,68 @@
+--- true ---
+
+goal:
+   
+0 T
+1 T
+
+best fit:
+   
+0 T
+1 T
+
+solution:
+<True>
+
+--- pass_though ---
+
+goal:
+   
+0 F
+1 T
+
+best fit:
+   
+0 F
+1 T
+
+solution:
+the_only_input
+
+--- negate ---
+
+goal:
+   
+0 T
+1 F
+
+best fit:
+   
+0 T
+1 F
+
+solution:
+!the_only_input
+
+--- false ---
+
+goal:
+   
+0 F
+1 F
+
+best fit:
+   
+0 F
+1 F
+
+solution:
+<False>
+
+=== optimized solution ===
+
+Negated inputs: the_only_input
+Products: [0] = <False>,  [1] = <True>,  [2] = the_only_input,  [3] = !the_only_input
+Sums: [4] = [1],  [5] = [2],  [6] = [3],  [7] = [0]
+Final sums: "true" = [4], "pass_though" = [5], "negate" = [6], "false" = [7]
+
+Gate scores: NOTs = 1, ANDs = 0, ORs = 0

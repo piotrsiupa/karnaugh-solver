@@ -44,7 +44,7 @@ class Karnaugh
 	static bool loadTable(table_t &table, std::string &line);
 	bool loadData(lines_t &lines);
 	
-	static constexpr bits_t getOnesCount(const minterm_t minterm) { return __builtin_popcount((minterm.first << 16) | minterm.second); }
+	static constexpr bits_t getOnesCount(const minterm_t minterm) { return __builtin_popcount(minterm.first | minterm.second) - __builtin_popcount(minterm.first & minterm.second); }
 	void findMinterms();
 	static bool compareMinterms(const minterm_t x, const minterm_t y);
 	static splitMinterm_t splitMinterm(const minterm_t &minterm);

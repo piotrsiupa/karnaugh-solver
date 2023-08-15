@@ -5,4 +5,5 @@
 SConstruct text
 *.py text
 tests/*.input text
+tests/*.input.disabled text
 tests/*.output text

@@ -43,7 +43,7 @@ solution:
 
 === optimized solution ===
 
-Negated inputs:
+Negated inputs: <none>
 Products: [0] = b && g,  [1] = e && f
 Sums: [2] = [0] || [1]
 Final sums: "f0" = [2]

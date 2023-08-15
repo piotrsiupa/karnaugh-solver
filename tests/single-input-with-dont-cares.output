@@ -1,0 +1,83 @@
+--- don't care ---
+
+goal:
+   
+0 -
+1 -
+
+best fit:
+   
+0 F
+1 F
+
+solution:
+<False>
+
+--- 0 must be F ---
+
+goal:
+   
+0 F
+1 -
+
+best fit:
+   
+0 F
+1 F
+
+solution:
+<False>
+
+--- 1 must be F ---
+
+goal:
+   
+0 -
+1 F
+
+best fit:
+   
+0 F
+1 F
+
+solution:
+<False>
+
+--- 0 must be T ---
+
+goal:
+   
+0 T
+1 -
+
+best fit:
+   
+0 T
+1 T
+
+solution:
+<True>
+
+--- 1 must be T ---
+
+goal:
+   
+0 -
+1 T
+
+best fit:
+   
+0 T
+1 T
+
+solution:
+<True>
+
+=== optimized solution ===
+
+Negated inputs: <none>
+Products: [0] = <False>,  [1] = <True>
+Sums: [2] = [0],  [3] = [1]
+Final sums: "don't care" = [2], "0 must be F" = [2], "1 must be F" = [2], "0 must be T" = [3], "1 must be T" = [3]
+
+Gate scores: NOTs = 0, ANDs = 0, ORs = 0

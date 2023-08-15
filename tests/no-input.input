@@ -1,0 +1,15 @@
+# Corner case - no inputs at all.
+
+-
+
+true
+0
+-
+
+false
+-
+-
+
+don't care
+-
+0

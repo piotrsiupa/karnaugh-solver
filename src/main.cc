@@ -15,6 +15,10 @@ bool runKarnaugh(const names_t &names, lines_t &lines)
 {
 	switch (names.size())
 	{
+	case 0:
+		return Karnaugh<0>::processMultiple(names, lines);
+	case 1:
+		return Karnaugh<1>::processMultiple(names, lines);
 	case 2:
 		return Karnaugh<2>::processMultiple(names, lines);
 	case 3:
@@ -46,7 +50,7 @@ bool runKarnaugh(const names_t &names, lines_t &lines)
 	case 16:
 		return Karnaugh<16>::processMultiple(names, lines);
 	default:
-		std::cerr << "Unsupported number of variables!\n";
+		std::cerr << "Too many variables!\n";
 		return false;
 	}
 }

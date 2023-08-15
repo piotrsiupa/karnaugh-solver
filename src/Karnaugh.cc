@@ -1,6 +1,7 @@
 #include "./Karnaugh.hh"
 
 #include <algorithm>
+#include <cctype>
 #include <iostream>
 #include <map>
 #include <set>
@@ -18,10 +19,13 @@ typename Karnaugh<BITS>::grayCode_t Karnaugh<BITS>::makeGrayCode(const bits_t bi
 	grayCode_t grayCode;
 	grayCode.reserve(1 << bits);
 	grayCode.push_back(0);
-	grayCode.push_back(1);
-	for (bits_t i = 1; i != bits; ++i)
-		for (number_t j = 0; j != unsigned(1) << i; ++j)
-			grayCode.push_back(grayCode[j ^ ((1 << i) - 1)] | (1 << i));
+	if (bits != 0)
+	{
+		grayCode.push_back(1);
+		for (bits_t i = 1; i != bits; ++i)
+			for (number_t j = 0; j != unsigned(1) << i; ++j)
+				grayCode.push_back(grayCode[j ^ ((1 << i) - 1)] | (1 << i));
+	}
 	return grayCode;
 }
 
@@ -50,7 +54,7 @@ void Karnaugh<BITS>::prettyPrintTable(const table_t &target, const table_t &acce
 	std::cout << '\n';
 	for (const number_t x : vGrayCode)
 	{
-		printBits(x, vBits);
+		printBits(x, std::max(bits_t(1), vBits));
 		std::cout << ' ';
 		bool first = true;
 		for (int i = 0; i != (hBits - 1) / 2; ++i)
@@ -97,7 +101,7 @@ bool Karnaugh<BITS>::loadTable(table_t &table, std::string &line)
 template<bits_t BITS>
 bool Karnaugh<BITS>::loadData(lines_t &lines)
 {
-	if (!lines.empty() && (lines.front().front() < '0' || lines.front().front() >'9'))
+	if (!lines.empty() && lines.front() != "-" && !std::all_of(lines.front().cbegin(), lines.front().cend(), [](const char c){ return std::isdigit(c) || std::iswspace(c) || c == ','; }))
 	{
 		functionName = std::move(lines.front());
 		lines.pop_front();
@@ -149,6 +153,8 @@ void Karnaugh<BITS>::findMinterms()
 			oldMinterms.emplace_back(newMinterm, false);
 		newMinterms.clear();
 	}
+	if (!oldMinterms.empty())
+		allMinterms.push_back(oldMinterms.front().first);
 }
 	
 template<bits_t BITS>
@@ -182,7 +188,16 @@ typename Karnaugh<BITS>::splitMinterm_t Karnaugh<BITS>::splitMinterm(const minte
 template<bits_t BITS>
 void Karnaugh<BITS>::printMinterm(std::ostream &o, const names_t &inputNames, const minterm_t minterm, const bool parentheses)
 {
-	const bool needsParentheses = parentheses && getOnesCount(minterm) != 1;
+	const bits_t onesCount = getOnesCount(minterm);
+	if (onesCount == 0)
+	{
+		if (minterm == minterm_t{0, 0})
+			o << "<True>";
+		else
+			o << "<False>";
+		return;
+	}
+	const bool needsParentheses = parentheses && onesCount != 1;
 	if (needsParentheses)
 		o << '(';
 	bool first = true;
@@ -258,31 +273,34 @@ bool Karnaugh<BITS>::processMultiple(const names_t &inputNames, lines_t &lines)
 	bestSolutions.resize(karnaughs.size());
 	typename Karnaugh_Solution<BITS>::OptimizedSolution bestOptimizedSolution;
 	std::size_t bestGateScore = SIZE_MAX;
-	for (std::vector<std::size_t> indexes(karnaughs.size(), 0);;)
+	if (!karnaughs.empty())
 	{
-		std::vector<const minterms_t*> solutions;
-		solutions.reserve(indexes.size());
-		for (std::size_t i = 0; i != indexes.size(); ++i)
-			solutions.push_back(&karnaugh_solutions[i].getSolutions()[indexes[i]]);
-		typename Karnaugh_Solution<BITS>::OptimizedSolution optimizedSolution = Karnaugh_Solution<BITS>::optimizeSolutions(solutions);
-		if (optimizedSolution.getGateScore() < bestGateScore)
+		for (std::vector<std::size_t> indexes(karnaughs.size(), 0);;)
 		{
-			bestGateScore = optimizedSolution.getGateScore();
+			std::vector<const minterms_t*> solutions;
+			solutions.reserve(indexes.size());
 			for (std::size_t i = 0; i != indexes.size(); ++i)
-				bestSolutions[i] = karnaugh_solutions[i].getSolutions()[indexes[i]];
-			bestOptimizedSolution = std::move(optimizedSolution);
+				solutions.push_back(&karnaugh_solutions[i].getSolutions()[indexes[i]]);
+			typename Karnaugh_Solution<BITS>::OptimizedSolution optimizedSolution = Karnaugh_Solution<BITS>::optimizeSolutions(solutions);
+			if (optimizedSolution.getGateScore() < bestGateScore)
+			{
+				bestGateScore = optimizedSolution.getGateScore();
+				for (std::size_t i = 0; i != indexes.size(); ++i)
+					bestSolutions[i] = karnaugh_solutions[i].getSolutions()[indexes[i]];
+				bestOptimizedSolution = std::move(optimizedSolution);
+			}
+			
+			for (std::size_t i = indexes.size() - 1;; --i)
+			{
+				if (++indexes[i] != karnaugh_solutions[i].getSolutions().size())
+					break;
+				indexes[i] = 0;
+				if (i == 0)
+					goto all_solutions_checked;
+			}
 		}
-		
-		for (std::size_t i = indexes.size() - 1;; --i)
-		{
-			if (++indexes[i] != karnaugh_solutions[i].getSolutions().size())
-				break;
-			indexes[i] = 0;
-			if (i == 0)
-				goto all_solutions_checked;
-		}
+		all_solutions_checked:;
 	}
-	all_solutions_checked:
 	
 	for (std::size_t i = 0; i != karnaughs.size(); ++i)
 	{
@@ -303,7 +321,9 @@ bool Karnaugh<BITS>::processMultiple(const names_t &inputNames, lines_t &lines)
 		std::cout << std::endl;
 	}
 	
-	std::cout << "\n=== optimized solution ===\n\n";
+	if (!karnaughs.empty())
+		std::cout << '\n';
+	std::cout << "=== optimized solution ===\n\n";
 	names_t functionNames;
 	functionNames.reserve(karnaughs.size());
 	for (const Karnaugh &karnaugh : karnaughs)
@@ -315,6 +335,8 @@ bool Karnaugh<BITS>::processMultiple(const names_t &inputNames, lines_t &lines)
 }
 
 
+template class Karnaugh<0>;
+template class Karnaugh<1>;
 template class Karnaugh<2>;
 template class Karnaugh<3>;
 template class Karnaugh<4>;

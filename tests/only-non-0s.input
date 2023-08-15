@@ -1,0 +1,5 @@
+# Corner case - output can be always true but doesn't have to.
+
+x y
+1
+0 2 3

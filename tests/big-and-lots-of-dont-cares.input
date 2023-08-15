@@ -1,3 +1,6 @@
+# A lot of inputs (8) and a lot of don't cares.
+# That is usually quite expensive to solve but in this case the solution is very simple.
+
 a,b,c,d,e,f,g,h
 
 70,77,86,93
