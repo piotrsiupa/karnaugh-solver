@@ -96,70 +96,40 @@ void Karnaugh_Solution<BITS>::OptimizedSolution::print(std::ostream &o, const na
 }
 
 template<bits_t BITS>
-Karnaugh_Solution<BITS>::Karnaugh_Solution(const minterms_t &minterms, const table_t &target, const table_t &dontCares) :
+Karnaugh_Solution<BITS>::Karnaugh_Solution(const minterms_t &minterms, const numbers_t &target) :
 	minterms(minterms),
-	target(target),
-	dontCares(dontCares)
+	target(target)
 {
-}
-
-template<bits_t BITS>
-typename Karnaugh_Solution<BITS>::table_t Karnaugh_Solution<BITS>::createMintermTable(const minterm_t minterm)
-{
-	table_t table;
-	const number_t positiveMask = minterm.first;
-	const number_t negativeMask = minterm.second ^ ((1 << BITS) - 1);
-	for (number_t i = 0; i != 1 << BITS; ++i)
-		table[(i | positiveMask) & negativeMask] = true;
-	return table;
-}
-
-template<bits_t BITS>
-void Karnaugh_Solution<BITS>::createMintermTables()
-{
-	const table_t cares = ~dontCares;
-	mintermTables.resize(minterms.size());
-	for (size_t i = 0; i != minterms.size(); ++i)
-		mintermTables[i] = createMintermTable(minterms[i]) & cares;
 }
 
 template<bits_t BITS>
 typename Karnaugh_Solution<BITS>::minterms_t Karnaugh_Solution<BITS>::removeEssentials()
 {
-	createMintermTables();
-	
-	table_t all, repeated;
-	for (const table_t &x : mintermTables)
-	{
-		repeated |= all & x;
-		all |= x;
-	}
-	const table_t unique = all & ~repeated;
-	
 	minterms_t essentials;
-	table_t essentialTable;
-	for (std::size_t i = 0; i != minterms.size(); ++i)
+	for (number_t i = 0; i != 1 << BITS; ++i)
 	{
-		if ((mintermTables[i] & unique).any())
+		if (target.find(i) == target.cend())
+			continue;
+		std::uint_fast8_t count = 0;
+		std::size_t matchingIndex;
+		for (std::size_t j = 0; j != minterms.size(); ++j)
 		{
-			essentials.push_back(minterms[i]);
-			essentialTable |= mintermTables[i];
-			mintermTables[i].reset();
+			if ((minterms[j].first & i) == minterms[j].first && (minterms[j].second & ~i) == minterms[j].second)
+			{
+				if (++count == 2)
+					break;
+				matchingIndex = j;
+			}
+		}
+		if (count == 1)
+		{
+			essentials.push_back(minterms[matchingIndex]);
+			for (number_t j = 0; j != 1 << BITS; ++j)
+				if ((minterms[matchingIndex].first & j) == minterms[matchingIndex].first && (minterms[matchingIndex].second & ~j) == minterms[matchingIndex].second)
+					target.erase(j);
+			minterms.erase(minterms.begin() + matchingIndex);
 		}
 	}
-	
-	const table_t nonEssentialsMask = ~essentialTable;
-	for (table_t &mintermTable : mintermTables)
-		mintermTable &= nonEssentialsMask;
-	target &= nonEssentialsMask;
-	
-	for (std::size_t i = 0; i != minterms.size(); ++i)
-		if (mintermTables[i].none())
-			minterms[i] = {0, 0};
-	
-	minterms.erase(std::remove_if(minterms.begin(), minterms.end(), [](const minterm_t x){ return x.first == 0 && x.second == 0; }), minterms.end());
-	mintermTables.erase(std::remove_if(mintermTables.begin(), mintermTables.end(), [](const table_t &x){ return x.none(); }), mintermTables.end());
-	
 	return essentials;
 }
 
@@ -172,11 +142,11 @@ void Karnaugh_Solution<BITS>::solve()
 	
 	for (number_t i = 0; i != 1 << BITS; ++i)
 	{
-		if (target[i])
+		if (target.find(i) != target.cend())
 		{
 			auto &m = magic.emplace_back();
 			for (std::size_t j = 0; j != minterms.size(); ++j)
-				if (mintermTables[j][i])
+				if ((minterms[j].first & i) == minterms[j].first && (minterms[j].second & ~i) == minterms[j].second)
 					m.emplace_back().first.insert(j);
 		}
 	}
@@ -292,17 +262,22 @@ void Karnaugh_Solution<BITS>::solve()
 template<bits_t BITS>
 void Karnaugh_Solution<BITS>::prettyPrintSolution(const minterms_t &solution)
 {
-	table_t solutionTable;
-	for (const auto &x : solution)
-		solutionTable |= createMintermTable(x);
+	numbers_t numbers;
+	for (const auto &minterm : solution)
+	{
+		const number_t positiveMask = minterm.first;
+		const number_t negativeMask = minterm.second ^ ((1 << BITS) - 1);
+		for (number_t i = 0; i != 1 << BITS; ++i)
+			numbers.insert((i | positiveMask) & negativeMask);
+	}
 	std::cout << "best fit:\n";
-	Karnaugh<BITS>::prettyPrintTable(solutionTable);
+	Karnaugh<BITS>::prettyPrintTable(numbers);
 }
 
 template<bits_t BITS>
-Karnaugh_Solution<BITS> Karnaugh_Solution<BITS>::solve(const minterms_t &allMinters, const table_t &target, const table_t &dontCares)
+Karnaugh_Solution<BITS> Karnaugh_Solution<BITS>::solve(const minterms_t &allMinters, const numbers_t &target)
 {
-	Karnaugh_Solution karnaugh_solver(allMinters, target, dontCares);
+	Karnaugh_Solution karnaugh_solver(allMinters, target);
 	karnaugh_solver.solve();
 	return karnaugh_solver;
 }

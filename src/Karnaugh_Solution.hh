@@ -13,9 +13,8 @@ class Karnaugh_Solution
 {
 	using minterm_t = typename Karnaugh<BITS>::minterm_t;
 	using minterms_t = typename Karnaugh<BITS>::minterms_t;
-	using table_t = typename Karnaugh<BITS>::table_t;
 	using number_t = typename Karnaugh<BITS>::number_t;
-	using mintermTables_t = std::vector<table_t>;
+	using numbers_t = typename Karnaugh<BITS>::numbers_t;
 	
 public:
 	struct OptimizedSolution
@@ -34,20 +33,16 @@ public:
 	
 private:
 	minterms_t minterms;
-	table_t target;
-	const table_t &dontCares;
-	mintermTables_t mintermTables;
+	numbers_t target;
 	std::vector<minterms_t> solutions;
 	
-	Karnaugh_Solution(const minterms_t &minterms, const table_t &target, const table_t &dontCares);
+	Karnaugh_Solution(const minterms_t &minterms, const numbers_t &target);
 	
-	static table_t createMintermTable(const minterm_t minterm);
-	void createMintermTables();
 	minterms_t removeEssentials();
 	void solve();
 	
 public:
-	static Karnaugh_Solution solve(const minterms_t &allMinters, const table_t &target, const table_t &dontCares);
+	static Karnaugh_Solution solve(const minterms_t &allMinters, const numbers_t &target);
 	
 	static void prettyPrintSolution(const minterms_t &solution);
 	const std::vector<minterms_t>& getSolutions() const { return solutions; }

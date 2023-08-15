@@ -3,6 +3,7 @@
 #include <bitset>
 #include <cstdint>
 #include <list>
+#include <set>
 #include <string>
 #include <utility>
 #include <vector>
@@ -20,8 +21,8 @@ class Karnaugh_Solution;
 template<bits_t BITS>
 class Karnaugh
 {
-	using table_t = std::bitset<1 << BITS>;
 	using number_t = std::uint_fast16_t;
+	using numbers_t = std::set<number_t>;
 	using grayCode_t = std::vector<number_t>;
 	using minterm_t = std::pair<number_t, number_t>;
 	using minterms_t = std::vector<minterm_t>;
@@ -32,16 +33,16 @@ class Karnaugh
 	
 	const names_t &inputNames;
 	std::string functionName;
-	table_t target, dontCares, acceptable;
+	numbers_t target, dontCares, allowed;
 	minterms_t allMinterms;
 	
 	Karnaugh(const names_t &inputNames) : inputNames(inputNames), functionName('f' + std::to_string(nameCount++)) {}
 	
 	static grayCode_t makeGrayCode(const bits_t bits);
 	static void printBits(const number_t number, const bits_t bits);
-	static void prettyPrintTable(const table_t &target, const table_t &acceptable = {});
+	static void prettyPrintTable(const numbers_t &target, const numbers_t &allowed = {});
 	
-	static bool loadTable(table_t &table, std::string &line);
+	static bool loadNumbers(numbers_t &numbers, std::string &line);
 	bool loadData(lines_t &lines);
 	
 	static constexpr bits_t getOnesCount(const minterm_t minterm) { return __builtin_popcount(minterm.first | minterm.second) - __builtin_popcount(minterm.first & minterm.second); }

@@ -4,7 +4,6 @@
 #include <cctype>
 #include <iostream>
 #include <map>
-#include <set>
 
 #include "./Karnaugh_Solution.hh"
 #include "input.hh"
@@ -37,7 +36,7 @@ void Karnaugh<BITS>::printBits(const number_t number, const bits_t bits)
 }
 
 template<bits_t BITS>
-void Karnaugh<BITS>::prettyPrintTable(const table_t &target, const table_t &acceptable)
+void Karnaugh<BITS>::prettyPrintTable(const numbers_t &target, const numbers_t &allowed)
 {
 	static constexpr bits_t vBits = (BITS + 1) / 2;
 	static constexpr bits_t hBits = BITS / 2;
@@ -66,8 +65,8 @@ void Karnaugh<BITS>::prettyPrintTable(const table_t &target, const table_t &acce
 			else
 				for (int i = 0; i != hBits; ++i)
 					std::cout << ' ';
-			const bits_t index = (x << hBits) | y;
-			std::cout << (target[index] ? 'T' : (acceptable[index] ? '-' : 'F'));
+			const number_t number = (x << hBits) | y;
+			std::cout << (target.find(number) != target.cend() ? 'T' : (allowed.find(number) != allowed.cend() ? '-' : 'F'));
 		}
 		std::cout << '\n';
 	}
@@ -75,7 +74,7 @@ void Karnaugh<BITS>::prettyPrintTable(const table_t &target, const table_t &acce
 }
 
 template<bits_t BITS>
-bool Karnaugh<BITS>::loadTable(table_t &table, std::string &line)
+bool Karnaugh<BITS>::loadNumbers(numbers_t &numbers, std::string &line)
 {
 	for (const std::string &string : readStrings(line))
 	{
@@ -87,7 +86,7 @@ bool Karnaugh<BITS>::loadTable(table_t &table, std::string &line)
 				std::cerr << '"' << string << "\" is too big!\n";
 				return false;
 			}
-			table[num] = true;
+			numbers.insert(num);
 		}
 		catch (std::invalid_argument &e)
 		{
@@ -111,13 +110,14 @@ bool Karnaugh<BITS>::loadData(lines_t &lines)
 		std::cerr << "A description of a Karnaugh map has to have 2 lines!\n";
 		return false;
 	}
-	if (!loadTable(target, lines.front()))
+	if (!loadNumbers(target, lines.front()))
 		return false;
 	lines.pop_front();
-	if (!loadTable(dontCares, lines.front()))
+	if (!loadNumbers(dontCares, lines.front()))
 		return false;
 	lines.pop_front();
-	acceptable = target | dontCares;
+	allowed.insert(target.cbegin(), target.cend());
+	allowed.insert(dontCares.cbegin(), dontCares.cend());
 	return true;
 }
 
@@ -125,9 +125,8 @@ template<bits_t BITS>
 void Karnaugh<BITS>::findMinterms()
 {
 	std::vector<std::pair<minterm_t, bool>> oldMinterms;
-	for (number_t number = 0; number != (1 << BITS); ++number)
-		if (acceptable[number])
-			oldMinterms.emplace_back(minterm_t{number, number ^ ((1 << BITS) - 1)}, false);
+	for (const number_t &number : allowed)
+		oldMinterms.emplace_back(minterm_t{number, number ^ ((1 << BITS) - 1)}, false);
 	std::set<minterm_t> newMinterms;
 	for (bits_t oldOnesCount = BITS; oldOnesCount != 0; --oldOnesCount)
 	{
@@ -246,7 +245,7 @@ void Karnaugh<BITS>::printMinterms(minterms_t minterms) const
 template<bits_t BITS>
 Karnaugh_Solution<BITS> Karnaugh<BITS>::solve() const
 {
-	return Karnaugh_Solution<BITS>::solve(allMinterms, target, dontCares);
+	return Karnaugh_Solution<BITS>::solve(allMinterms, target);
 }
 
 template<bits_t BITS>
@@ -312,7 +311,7 @@ bool Karnaugh<BITS>::processMultiple(const names_t &inputNames, lines_t &lines)
 		std::cout << "--- " << karnaugh.functionName << " ---\n\n";
 		
 		std::cout << "goal:\n";
-		prettyPrintTable(karnaugh.target, karnaugh.acceptable);
+		prettyPrintTable(karnaugh.target, karnaugh.allowed);
 		
 		Karnaugh_Solution<BITS>::prettyPrintSolution(bestSolution);
 		
