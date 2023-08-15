@@ -39,12 +39,12 @@ best fit:
 1000  F    F    F    F    F    F    F    F    T    T    T    T    F    F    F    F
 
 solution:
-ef + bg
+bg + ef
 
 === optimized solution ===
 
 Negated inputs:
-Products: [0] = ef, [1] = bg
+Products: [0] = bg, [1] = ef
 Sums: [2] = [0][1]
 Final sums: "f0" = [2]
 

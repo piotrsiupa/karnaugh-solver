@@ -283,24 +283,8 @@ Karnaugh_Solution<BITS> Karnaugh_Solution<BITS>::solve(const minterms_t &allMint
 template<bits_t BITS>
 typename Karnaugh_Solution<BITS>::OptimizedSolution Karnaugh_Solution<BITS>::optimizeSolutions(const std::vector<const minterms_t*> &solutions)
 {
-	static constexpr auto wipProductsSort = [](const minterm_t &x, const minterm_t &y)
-		{
-			const bits_t xOnes = Karnaugh<BITS>::getOnesCount(x);
-			const bits_t yOnes = Karnaugh<BITS>::getOnesCount(y);
-			if (xOnes != yOnes)
-				return xOnes < yOnes;
-			const number_t xMask = x.first | x.second;
-			const number_t yMask = y.first | y.second;
-			if (xMask != yMask)
-				return xMask < yMask;
-			return x < y;
-		};
-	static constexpr auto wipSumsSort = [](const std::set<const void*> &x, const std::set<const void*> &y)
-		{
-			return x.size() != y.size()
-					? x.size() < y.size()
-					: x < y;
-		};
+	static constexpr auto wipProductsSort = [](const minterm_t x, const minterm_t y) { return Karnaugh<BITS>::compareMinterms(x, y); };
+	static constexpr auto wipSumsSort = [](const std::set<const void*> &x, const std::set<const void*> &y) { return x.size() != y.size() ? x.size() < y.size() : x < y; };
 	std::map<minterm_t, std::vector<const void*>, decltype(wipProductsSort)> wipProducts(wipProductsSort);
 	std::map<std::set<const void*>, std::vector<const void*>, decltype(wipSumsSort)> wipSums(wipSumsSort);
 	std::vector<const void*> wipFinalSums;

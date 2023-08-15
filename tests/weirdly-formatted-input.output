@@ -15,12 +15,12 @@ best fit:
 10 F  F  F  F
 
 solution:
-w'y'z + w'x'y
+w'x'y + w'y'z
 
 === optimized solution ===
 
 Negated inputs: w, x, y
-Products: [0] = w'y'z, [1] = w'x'y
+Products: [0] = w'x'y, [1] = w'y'z
 Sums: [2] = [0][1]
 Final sums: "my-function" = [2]
 

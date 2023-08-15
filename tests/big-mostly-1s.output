@@ -39,13 +39,13 @@ best fit:
 1000  T    T    T    T    T    T    T    T    T    T    T    F    F    F    F    F
 
 solution:
-abd + fgh + ae'h' + e'f'h + ad'e' + a'g'h' + a'f'h + a'e'g' + a'cd' + a'b'd' + cefg' + ac'fg' + bc'd'f' + bc'd'eh'
+abd + a'b'd' + a'cd' + a'e'g' + ae'h' + a'f'h + a'g'h' + e'f'h + fgh + ac'fg' + ad'fg' + bc'd'f' + cefg' + bc'd'eh'
 
 === optimized solution ===
 
 Negated inputs: a, b, c, d, e, f, g, h
-Products: [0] = f'h, [1] = fg', [2] = a'g', [3] = ae', [4] = a'd', [5] = fgh, [6] = e'[0], [7] = bc'd', [8] = h'[2], [9] = a'[0], [10] = h'[3], [11] = e'[2], [12] = d'[3], [13] = c[4], [14] = b'[4], [15] = abd, [16] = ce[1], [17] = f'[7], [18] = ac'[1], [19] = eh'[7]
-Sums: [20] = [5][6][8][9][10][11][12][13][14][15][16][17][18][19]
+Products: [0] = a'd', [1] = a'g', [2] = fg', [3] = f'h, [4] = abd, [5] = b'[0], [6] = c[0], [7] = e'[1], [8] = ae'h', [9] = a[2], [10] = a'[3], [11] = h'[1], [12] = bc'd', [13] = e'[3], [14] = fgh, [15] = c'[9], [16] = d'[9], [17] = f'[12], [18] = ce[2], [19] = eh'[12]
+Sums: [20] = [4][5][6][7][8][10][11][13][14][15][16][17][18][19]
 Final sums: "f0" = [20]
 
 Gate scores: NOTs = 8, ANDs = 26, ORs = 13

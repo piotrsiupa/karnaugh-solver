@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <iostream>
 #include <map>
+#include <set>
 
 #include "./Karnaugh_Solution.hh"
 #include "input.hh"
@@ -117,40 +118,51 @@ bool Karnaugh<BITS>::loadData(lines_t &lines)
 }
 
 template<bits_t BITS>
-typename Karnaugh<BITS>::minterms_t Karnaugh<BITS>::makeAllPossibleMinterms()
-{
-	static_assert(sizeof(int) >= 4);
-	minterms_t minterms;
-	for (std::size_t i = 0; i != (std::size_t(1) << (BITS * 2)); ++i)
-	{
-		const number_t normal = i & ((1 << BITS) - 1);
-		const number_t negated = i >> BITS;
-		if ((normal & negated) == 0)
-			minterms.emplace_back(normal, negated);
-	}
-	static const auto hasLessOnes = [](const minterm_t x, const minterm_t y) -> bool { return getOnesCount(x) < getOnesCount(y); };
-	std::stable_sort(minterms.begin(), minterms.end(), hasLessOnes);
-	minterms.shrink_to_fit();
-	return minterms;
-}
-
-template<bits_t BITS>
 void Karnaugh<BITS>::findMinterms()
 {
-	static const minterms_t allPossibleMinterms = makeAllPossibleMinterms();
-	for (const minterm_t &newMinterm : allPossibleMinterms)
+	std::vector<std::pair<minterm_t, bool>> oldMinterms;
+	for (number_t number = 0; number != (1 << BITS); ++number)
+		if (acceptable[number])
+			oldMinterms.emplace_back(minterm_t{number, number ^ ((1 << BITS) - 1)}, false);
+	std::set<minterm_t> newMinterms;
+	for (bits_t oldOnesCount = BITS; oldOnesCount != 0; --oldOnesCount)
 	{
-		const number_t positiveMask = newMinterm.first;
-		const number_t negativeMask = newMinterm.second ^ ((1 << BITS) - 1);
-		for (number_t i = 0; i != 1 << BITS; ++i)
-			if (!acceptable[(i | positiveMask) & negativeMask])
-				goto next_term;
-		for (const minterm_t &oldMinterm : allMinterms)
-			if ((oldMinterm.first & newMinterm.first) == oldMinterm.first && (oldMinterm.second & newMinterm.second) == oldMinterm.second)
-				goto next_term;
-		allMinterms.emplace_back(newMinterm);
-		next_term:;
+		for (auto iter = oldMinterms.begin(); iter != oldMinterms.end(); ++iter)
+		{
+			for (auto jiter = std::next(iter); jiter != oldMinterms.end(); ++jiter)
+			{
+				const minterm_t commonPart = {iter->first.first & jiter->first.first, iter->first.second & jiter->first.second};
+				if (getOnesCount(commonPart) == oldOnesCount - 1 && ((~commonPart.first & iter->first.first) | (~commonPart.first & jiter->first.first)) == ((~commonPart.second & iter->first.second) | (~commonPart.second & jiter->first.second)))
+				{
+					newMinterms.insert(commonPart);
+					iter->second = true;
+					jiter->second = true;
+				}
+			}
+		}
+		for (const auto &oldMinterm : oldMinterms)
+			if (!oldMinterm.second)
+				allMinterms.push_back(oldMinterm.first);
+		oldMinterms.clear();
+		oldMinterms.reserve(newMinterms.size());
+		for (const auto &newMinterm : newMinterms)
+			oldMinterms.emplace_back(newMinterm, false);
+		newMinterms.clear();
 	}
+}
+	
+template<bits_t BITS>
+bool Karnaugh<BITS>::compareMinterms(const minterm_t x, const minterm_t y)
+{
+	const bits_t xOnes = getOnesCount(x);
+	const bits_t yOnes = getOnesCount(y);
+	if (xOnes != yOnes)
+		return xOnes < yOnes;
+	const number_t xMask = x.first | x.second;
+	const number_t yMask = y.first | y.second;
+	if (xMask != yMask)
+		return xMask > yMask;
+	return x.first > y.first;
 }
 
 template<bits_t BITS>
@@ -182,6 +194,22 @@ template<bits_t BITS>
 void Karnaugh<BITS>::printMinterm(const minterm_t minterm) const
 {
 	return printMinterm(std::cout, inputNames, minterm);
+}
+
+template<bits_t BITS>
+void Karnaugh<BITS>::printMinterms(minterms_t minterms) const
+{
+	std::sort(minterms.begin(), minterms.end(), compareMinterms);
+	bool first = true;
+	for (const minterm_t &minterm : minterms)
+	{
+		if (first)
+			first = false;
+		else
+			std::cout << " + ";
+		printMinterm(minterm);
+	}
+	std::cout << std::endl;
 }
 
 template<bits_t BITS>
@@ -255,16 +283,7 @@ bool Karnaugh<BITS>::processMultiple(const names_t &inputNames, lines_t &lines)
 		Karnaugh_Solution<BITS>::prettyPrintSolution(bestSolution);
 		
 		std::cout << "solution:\n";
-		bool first = true;
-		for (const minterm_t &minterm : bestSolution)
-		{
-			if (first)
-				first = false;
-			else
-				std::cout << " + ";
-			karnaugh.printMinterm(minterm);
-		}
-		std::cout << std::endl;
+		karnaugh.printMinterms(bestSolution);
 	}
 	
 	std::cout << "\n=== optimized solution ===\n\n";
