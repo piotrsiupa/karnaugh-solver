@@ -9,14 +9,12 @@
 #include "input.hh"
 
 
-template<bits_t BITS>
-std::size_t Karnaugh<BITS>::nameCount = 0;
+std::size_t Karnaugh::nameCount = 0;
 
-template<bits_t BITS>
-typename Karnaugh<BITS>::grayCode_t Karnaugh<BITS>::makeGrayCode(const bits_t bits)
+Karnaugh::grayCode_t Karnaugh::makeGrayCode(const bits_t bits)
 {
 	grayCode_t grayCode;
-	grayCode.reserve(1 << bits);
+	grayCode.reserve(1u << bits);
 	grayCode.push_back(0);
 	if (bits != 0)
 	{
@@ -28,20 +26,18 @@ typename Karnaugh<BITS>::grayCode_t Karnaugh<BITS>::makeGrayCode(const bits_t bi
 	return grayCode;
 }
 
-template<bits_t BITS>
-void Karnaugh<BITS>::printBits(const number_t number, const bits_t bits)
+void Karnaugh::printBits(const number_t number, const bits_t bits)
 {
 	for (bits_t i = bits; i != 0; --i)
 		std::cout << ((number & (1 << (i - 1))) != 0 ? '1' : '0');
 }
 
-template<bits_t BITS>
-void Karnaugh<BITS>::prettyPrintTable(const numbers_t &target, const numbers_t &allowed)
+void Karnaugh::prettyPrintTable(const bits_t bits, const numbers_t &target, const numbers_t &allowed)
 {
-	static constexpr bits_t vBits = (BITS + 1) / 2;
-	static constexpr bits_t hBits = BITS / 2;
-	static const grayCode_t vGrayCode = makeGrayCode(vBits);
-	static const grayCode_t hGrayCode = makeGrayCode(hBits);
+	const bits_t vBits = (bits + 1) / 2;
+	const bits_t hBits = bits / 2;
+	const grayCode_t vGrayCode = makeGrayCode(vBits);
+	const grayCode_t hGrayCode = makeGrayCode(hBits);
 	for (int i = 0; i != vBits; ++i)
 		std::cout << ' ';
 	std::cout << ' ';
@@ -73,15 +69,19 @@ void Karnaugh<BITS>::prettyPrintTable(const numbers_t &target, const numbers_t &
 	std::cout << std::endl;
 }
 
-template<bits_t BITS>
-bool Karnaugh<BITS>::loadNumbers(numbers_t &numbers, std::string &line)
+bool Karnaugh::loadNumbers(numbers_t &numbers, std::string &line) const
 {
 	for (const std::string &string : readStrings(line))
 	{
 		try
 		{
 			const auto num = std::stoi(string);
-			if (num >= (1 << BITS))
+			if (num < 0)
+			{
+				std::cerr << '"' << string << "\" is negative!\n";
+				return false;
+			}
+			else if (num >= (1 << bits))
 			{
 				std::cerr << '"' << string << "\" is too big!\n";
 				return false;
@@ -97,8 +97,7 @@ bool Karnaugh<BITS>::loadNumbers(numbers_t &numbers, std::string &line)
 	return true;
 }
 
-template<bits_t BITS>
-bool Karnaugh<BITS>::loadData(lines_t &lines)
+bool Karnaugh::loadData(lines_t &lines)
 {
 	if (!lines.empty() && lines.front() != "-" && !std::all_of(lines.front().cbegin(), lines.front().cend(), [](const char c){ return std::isdigit(c) || std::iswspace(c) || c == ','; }))
 	{
@@ -121,14 +120,13 @@ bool Karnaugh<BITS>::loadData(lines_t &lines)
 	return true;
 }
 
-template<bits_t BITS>
-void Karnaugh<BITS>::findMinterms()
+void Karnaugh::findMinterms()
 {
 	std::vector<std::pair<minterm_t, bool>> oldMinterms;
 	for (const number_t &number : allowed)
-		oldMinterms.emplace_back(minterm_t{number, number ^ ((1 << BITS) - 1)}, false);
+		oldMinterms.emplace_back(minterm_t{number, number ^ ((1u << bits) - 1)}, false);
 	std::set<minterm_t> newMinterms;
-	for (bits_t oldOnesCount = BITS; oldOnesCount != 0; --oldOnesCount)
+	for (bits_t oldOnesCount = bits; oldOnesCount != 0; --oldOnesCount)
 	{
 		for (auto iter = oldMinterms.begin(); iter != oldMinterms.end(); ++iter)
 		{
@@ -156,8 +154,7 @@ void Karnaugh<BITS>::findMinterms()
 		allMinterms.push_back(oldMinterms.front().first);
 }
 	
-template<bits_t BITS>
-bool Karnaugh<BITS>::compareMinterms(const minterm_t x, const minterm_t y)
+bool Karnaugh::compareMinterms(const minterm_t x, const minterm_t y)
 {
 	const bits_t xOnes = getOnesCount(x);
 	const bits_t yOnes = getOnesCount(y);
@@ -170,22 +167,20 @@ bool Karnaugh<BITS>::compareMinterms(const minterm_t x, const minterm_t y)
 	return x.first > y.first;
 }
 
-template<bits_t BITS>
-typename Karnaugh<BITS>::splitMinterm_t Karnaugh<BITS>::splitMinterm(const minterm_t &minterm)
+Karnaugh::splitMinterm_t Karnaugh::splitMinterm(const bits_t bits, const minterm_t &minterm)
 {
 	splitMinterm_t splitMinterm;
-	for (number_t i = 0; i != BITS; ++i)
+	for (number_t i = 0; i != bits; ++i)
 	{
-		const bool normal = (minterm.first & (1 << (BITS - i - 1))) != 0;
-		const bool negated = (minterm.second & (1 << (BITS - i - 1))) != 0;
+		const bool normal = (minterm.first & (1 << (bits - i - 1))) != 0;
+		const bool negated = (minterm.second & (1 << (bits - i - 1))) != 0;
 		if (normal || negated)
 			splitMinterm.emplace_back(i, negated);
 	}
 	return splitMinterm;
 }
 
-template<bits_t BITS>
-void Karnaugh<BITS>::printMinterm(std::ostream &o, const names_t &inputNames, const minterm_t minterm, const bool parentheses)
+void Karnaugh::printMinterm(const bits_t bits, std::ostream &o, const names_t &inputNames, const minterm_t minterm, const bool parentheses)
 {
 	const bits_t onesCount = getOnesCount(minterm);
 	if (onesCount == 0)
@@ -200,7 +195,7 @@ void Karnaugh<BITS>::printMinterm(std::ostream &o, const names_t &inputNames, co
 	if (needsParentheses)
 		o << '(';
 	bool first = true;
-	for (const mintermPart_t &mintermPart : splitMinterm(minterm))
+	for (const mintermPart_t &mintermPart : splitMinterm(bits, minterm))
 	{
 		if (first)
 			first = false;
@@ -214,14 +209,12 @@ void Karnaugh<BITS>::printMinterm(std::ostream &o, const names_t &inputNames, co
 		o << ')';
 }
 
-template<bits_t BITS>
-void Karnaugh<BITS>::printMinterm(const minterm_t minterm, const bool parentheses) const
+void Karnaugh::printMinterm(const minterm_t minterm, const bool parentheses) const
 {
-	return printMinterm(std::cout, inputNames, minterm, parentheses);
+	return printMinterm(bits, std::cout, inputNames, minterm, parentheses);
 }
 
-template<bits_t BITS>
-void Karnaugh<BITS>::printMinterms(minterms_t minterms) const
+void Karnaugh::printMinterms(minterms_t minterms) const
 {
 	if (minterms.size() == 1)
 	{
@@ -242,15 +235,15 @@ void Karnaugh<BITS>::printMinterms(minterms_t minterms) const
 	}
 }
 
-template<bits_t BITS>
-Karnaugh_Solution<BITS> Karnaugh<BITS>::solve() const
+Karnaugh_Solution Karnaugh::solve() const
 {
-	return Karnaugh_Solution<BITS>::solve(allMinterms, target);
+	return Karnaugh_Solution::solve(bits, allMinterms, target);
 }
 
-template<bits_t BITS>
-bool Karnaugh<BITS>::processMultiple(const names_t &inputNames, lines_t &lines)
+bool Karnaugh::processMultiple(const names_t &inputNames, lines_t &lines)
 {
+	const bits_t bits = inputNames.size();
+	
 	std::vector<Karnaugh> karnaughs;
 	while (!lines.empty())
 	{
@@ -263,14 +256,14 @@ bool Karnaugh<BITS>::processMultiple(const names_t &inputNames, lines_t &lines)
 		karnaugh.findMinterms();
 	}
 	
-	std::vector<Karnaugh_Solution<BITS>> karnaugh_solutions;
+	std::vector<Karnaugh_Solution> karnaugh_solutions;
 	karnaugh_solutions.reserve(karnaughs.size());
 	for (Karnaugh &karnaugh : karnaughs)
 		karnaugh_solutions.emplace_back(karnaugh.solve());
 	
 	std::vector<minterms_t> bestSolutions;
 	bestSolutions.resize(karnaughs.size());
-	typename Karnaugh_Solution<BITS>::OptimizedSolution bestOptimizedSolution;
+	typename Karnaugh_Solution::OptimizedSolution bestOptimizedSolution;
 	std::size_t bestGateScore = SIZE_MAX;
 	if (!karnaughs.empty())
 	{
@@ -280,7 +273,7 @@ bool Karnaugh<BITS>::processMultiple(const names_t &inputNames, lines_t &lines)
 			solutions.reserve(indexes.size());
 			for (std::size_t i = 0; i != indexes.size(); ++i)
 				solutions.push_back(&karnaugh_solutions[i].getSolutions()[indexes[i]]);
-			typename Karnaugh_Solution<BITS>::OptimizedSolution optimizedSolution = Karnaugh_Solution<BITS>::optimizeSolutions(solutions);
+			typename Karnaugh_Solution::OptimizedSolution optimizedSolution = Karnaugh_Solution::optimizeSolutions(solutions);
 			if (optimizedSolution.getGateScore() < bestGateScore)
 			{
 				bestGateScore = optimizedSolution.getGateScore();
@@ -311,9 +304,9 @@ bool Karnaugh<BITS>::processMultiple(const names_t &inputNames, lines_t &lines)
 		std::cout << "--- " << karnaugh.functionName << " ---\n\n";
 		
 		std::cout << "goal:\n";
-		prettyPrintTable(karnaugh.target, karnaugh.allowed);
+		prettyPrintTable(bits, karnaugh.target, karnaugh.allowed);
 		
-		Karnaugh_Solution<BITS>::prettyPrintSolution(bestSolution);
+		Karnaugh_Solution::prettyPrintSolution(bits, bestSolution);
 		
 		std::cout << "solution:\n";
 		karnaugh.printMinterms(bestSolution);
@@ -327,27 +320,8 @@ bool Karnaugh<BITS>::processMultiple(const names_t &inputNames, lines_t &lines)
 	functionNames.reserve(karnaughs.size());
 	for (const Karnaugh &karnaugh : karnaughs)
 		functionNames.push_back(karnaugh.functionName);
-	bestOptimizedSolution.print(std::cout, inputNames, functionNames);
+	bestOptimizedSolution.print(bits, std::cout, inputNames, functionNames);
 	std::cout << std::flush;
 	
 	return true;
 }
-
-
-template class Karnaugh<0>;
-template class Karnaugh<1>;
-template class Karnaugh<2>;
-template class Karnaugh<3>;
-template class Karnaugh<4>;
-template class Karnaugh<5>;
-template class Karnaugh<6>;
-template class Karnaugh<7>;
-template class Karnaugh<8>;
-template class Karnaugh<9>;
-template class Karnaugh<10>;
-template class Karnaugh<11>;
-template class Karnaugh<12>;
-template class Karnaugh<13>;
-template class Karnaugh<14>;
-template class Karnaugh<15>;
-template class Karnaugh<16>;

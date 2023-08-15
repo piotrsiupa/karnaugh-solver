@@ -12,13 +12,12 @@
 
 
 using bits_t = std::uint_fast8_t;
+constexpr bits_t maxBits = 16;
 
 
-template<bits_t>
 class Karnaugh_Solution;
 
 
-template<bits_t BITS>
 class Karnaugh
 {
 	using number_t = std::uint_fast16_t;
@@ -33,29 +32,29 @@ class Karnaugh
 	
 	const names_t &inputNames;
 	std::string functionName;
+	bits_t bits;
 	numbers_t target, dontCares, allowed;
 	minterms_t allMinterms;
 	
-	Karnaugh(const names_t &inputNames) : inputNames(inputNames), functionName('f' + std::to_string(nameCount++)) {}
+	Karnaugh(const names_t &inputNames) : inputNames(inputNames), functionName('f' + std::to_string(nameCount++)), bits(inputNames.size()) {}
 	
 	static grayCode_t makeGrayCode(const bits_t bits);
 	static void printBits(const number_t number, const bits_t bits);
-	static void prettyPrintTable(const numbers_t &target, const numbers_t &allowed = {});
+	static void prettyPrintTable(const bits_t bits, const numbers_t &target, const numbers_t &allowed = {});
 	
-	static bool loadNumbers(numbers_t &numbers, std::string &line);
+	bool loadNumbers(numbers_t &numbers, std::string &line) const;
 	bool loadData(lines_t &lines);
 	
 	static constexpr bits_t getOnesCount(const minterm_t minterm) { return __builtin_popcount(minterm.first | minterm.second) - __builtin_popcount(minterm.first & minterm.second); }
 	void findMinterms();
 	static bool compareMinterms(const minterm_t x, const minterm_t y);
-	static splitMinterm_t splitMinterm(const minterm_t &minterm);
-	static void printMinterm(std::ostream &o, const names_t &inputNames, const minterm_t minterm, const bool parentheses);
+	static splitMinterm_t splitMinterm(const bits_t bits, const minterm_t &minterm);
+	static void printMinterm(const bits_t bits, std::ostream &o, const names_t &inputNames, const minterm_t minterm, const bool parentheses);
 	void printMinterm(const minterm_t minterm, const bool parentheses) const;
 	void printMinterms(minterms_t minterms) const;
 	
-	Karnaugh_Solution<BITS> solve() const;
+	Karnaugh_Solution solve() const;
 	
-	template<bits_t>
 	friend class Karnaugh_Solution;
 	
 public:

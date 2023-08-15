@@ -7,14 +7,13 @@
 #include <set>
 
 
-template<bits_t BITS>
-void Karnaugh_Solution<BITS>::OptimizedSolution::print(std::ostream &o, const names_t &inputNames, const names_t &functionNames) const
+void Karnaugh_Solution::OptimizedSolution::print(const bits_t bits, std::ostream &o, const names_t &inputNames, const names_t &functionNames) const
 {
 	o << "Negated inputs:";
 	bool first = true;
-	for (number_t i = 0; i != BITS; ++i)
+	for (number_t i = 0; i != bits; ++i)
 	{
-		if ((negatedInputs & (1 << (BITS - i - 1))) != 0)
+		if ((negatedInputs & (1 << (bits - i - 1))) != 0)
 		{
 			if (first)
 			{
@@ -43,7 +42,7 @@ void Karnaugh_Solution<BITS>::OptimizedSolution::print(std::ostream &o, const na
 		const auto &product = products[i];
 		bool first = product.first == minterm_t{0, 0};
 		if (!first || product.second.empty())
-			Karnaugh<BITS>::printMinterm(o, inputNames, product.first, false);
+			Karnaugh::printMinterm(bits, o, inputNames, product.first, false);
 		for (const auto &productRef : product.second)
 		{
 			if (first)
@@ -95,18 +94,17 @@ void Karnaugh_Solution<BITS>::OptimizedSolution::print(std::ostream &o, const na
 	o << "\nGate scores: NOTs = " << getNotCount() << ", ANDs = " << getAndCount() << ", ORs = " << getOrCount() << '\n';
 }
 
-template<bits_t BITS>
-Karnaugh_Solution<BITS>::Karnaugh_Solution(const minterms_t &minterms, const numbers_t &target) :
+Karnaugh_Solution::Karnaugh_Solution(const bits_t bits, const minterms_t &minterms, const numbers_t &target) :
+	bits(bits),
 	minterms(minterms),
 	target(target)
 {
 }
 
-template<bits_t BITS>
-typename Karnaugh_Solution<BITS>::minterms_t Karnaugh_Solution<BITS>::removeEssentials()
+Karnaugh_Solution::minterms_t Karnaugh_Solution::removeEssentials()
 {
 	minterms_t essentials;
-	for (number_t i = 0; i != 1 << BITS; ++i)
+	for (number_t i = 0; i != 1u << bits; ++i)
 	{
 		if (target.find(i) == target.cend())
 			continue;
@@ -124,7 +122,7 @@ typename Karnaugh_Solution<BITS>::minterms_t Karnaugh_Solution<BITS>::removeEsse
 		if (count == 1)
 		{
 			essentials.push_back(minterms[matchingIndex]);
-			for (number_t j = 0; j != 1 << BITS; ++j)
+			for (number_t j = 0; j != 1u << bits; ++j)
 				if ((minterms[matchingIndex].first & j) == minterms[matchingIndex].first && (minterms[matchingIndex].second & ~j) == minterms[matchingIndex].second)
 					target.erase(j);
 			minterms.erase(minterms.begin() + matchingIndex);
@@ -133,14 +131,13 @@ typename Karnaugh_Solution<BITS>::minterms_t Karnaugh_Solution<BITS>::removeEsse
 	return essentials;
 }
 
-template<bits_t BITS>
-void Karnaugh_Solution<BITS>::solve()
+void Karnaugh_Solution::solve()
 {
 	const minterms_t essentials = removeEssentials();
 	
 	std::vector<std::vector<std::pair<std::set<std::size_t>, bool>>> magic;
 	
-	for (number_t i = 0; i != 1 << BITS; ++i)
+	for (number_t i = 0; i != 1u << bits; ++i)
 	{
 		if (target.find(i) != target.cend())
 		{
@@ -259,33 +256,30 @@ void Karnaugh_Solution<BITS>::solve()
 	}
 }
 
-template<bits_t BITS>
-void Karnaugh_Solution<BITS>::prettyPrintSolution(const minterms_t &solution)
+void Karnaugh_Solution::prettyPrintSolution(const bits_t bits, const minterms_t &solution)
 {
 	numbers_t numbers;
 	for (const auto &minterm : solution)
 	{
 		const number_t positiveMask = minterm.first;
-		const number_t negativeMask = minterm.second ^ ((1 << BITS) - 1);
-		for (number_t i = 0; i != 1 << BITS; ++i)
+		const number_t negativeMask = minterm.second ^ ((1u << bits) - 1);
+		for (number_t i = 0; i != 1u << bits; ++i)
 			numbers.insert((i | positiveMask) & negativeMask);
 	}
 	std::cout << "best fit:\n";
-	Karnaugh<BITS>::prettyPrintTable(numbers);
+	Karnaugh::prettyPrintTable(bits, numbers);
 }
 
-template<bits_t BITS>
-Karnaugh_Solution<BITS> Karnaugh_Solution<BITS>::solve(const minterms_t &allMinters, const numbers_t &target)
+Karnaugh_Solution Karnaugh_Solution::solve(const bits_t bits, const minterms_t &allMinters, const numbers_t &target)
 {
-	Karnaugh_Solution karnaugh_solver(allMinters, target);
+	Karnaugh_Solution karnaugh_solver(bits, allMinters, target);
 	karnaugh_solver.solve();
 	return karnaugh_solver;
 }
 
-template<bits_t BITS>
-typename Karnaugh_Solution<BITS>::OptimizedSolution Karnaugh_Solution<BITS>::optimizeSolutions(const std::vector<const minterms_t*> &solutions)
+typename Karnaugh_Solution::OptimizedSolution Karnaugh_Solution::optimizeSolutions(const std::vector<const minterms_t*> &solutions)
 {
-	static constexpr auto wipProductsSort = [](const minterm_t x, const minterm_t y) { return Karnaugh<BITS>::compareMinterms(x, y); };
+	static constexpr auto wipProductsSort = [](const minterm_t x, const minterm_t y) { return Karnaugh::compareMinterms(x, y); };
 	static constexpr auto wipSumsSort = [](const std::set<const void*> &x, const std::set<const void*> &y) { return x.size() != y.size() ? x.size() < y.size() : x < y; };
 	std::map<minterm_t, std::vector<const void*>, decltype(wipProductsSort)> wipProducts(wipProductsSort);
 	std::map<std::set<const void*>, std::vector<const void*>, decltype(wipSumsSort)> wipSums(wipSumsSort);
@@ -309,7 +303,7 @@ typename Karnaugh_Solution<BITS>::OptimizedSolution Karnaugh_Solution<BITS>::opt
 		for (auto jiter = std::next(iter); jiter != wipProducts.rend(); ++jiter)
 		{
 			const minterm_t commonInputs = {remainingInputs.first & jiter->first.first, remainingInputs.second & jiter->first.second};
-			if (Karnaugh<BITS>::getOnesCount(commonInputs) > 1)
+			if (Karnaugh::getOnesCount(commonInputs) > 1)
 			{
 				remainingInputs.first &= ~commonInputs.first;
 				remainingInputs.second &= ~commonInputs.second;
@@ -422,22 +416,3 @@ typename Karnaugh_Solution<BITS>::OptimizedSolution Karnaugh_Solution<BITS>::opt
 	}
 	return optimizedSolution;
 }
-
-
-template class Karnaugh_Solution<0>;
-template class Karnaugh_Solution<1>;
-template class Karnaugh_Solution<2>;
-template class Karnaugh_Solution<3>;
-template class Karnaugh_Solution<4>;
-template class Karnaugh_Solution<5>;
-template class Karnaugh_Solution<6>;
-template class Karnaugh_Solution<7>;
-template class Karnaugh_Solution<8>;
-template class Karnaugh_Solution<9>;
-template class Karnaugh_Solution<10>;
-template class Karnaugh_Solution<11>;
-template class Karnaugh_Solution<12>;
-template class Karnaugh_Solution<13>;
-template class Karnaugh_Solution<14>;
-template class Karnaugh_Solution<15>;
-template class Karnaugh_Solution<16>;
