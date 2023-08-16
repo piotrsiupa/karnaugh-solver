@@ -237,7 +237,7 @@ void Karnaugh::printMinterms(minterms_t minterms) const
 
 Karnaugh_Solution Karnaugh::solve() const
 {
-	return Karnaugh_Solution::solve(bits, allMinterms, target);
+	return Karnaugh_Solution::solve(allMinterms, target);
 }
 
 bool Karnaugh::processMultiple(const names_t &inputNames, lines_t &lines)
@@ -247,7 +247,7 @@ bool Karnaugh::processMultiple(const names_t &inputNames, lines_t &lines)
 	std::vector<Karnaugh> karnaughs;
 	while (!lines.empty())
 	{
-		karnaughs.push_back(inputNames);
+		karnaughs.push_back({inputNames, bits});
 		
 		Karnaugh &karnaugh = karnaughs.back();
 		if (!karnaugh.loadData(lines))

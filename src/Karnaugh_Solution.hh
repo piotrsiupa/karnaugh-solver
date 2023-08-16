@@ -31,18 +31,17 @@ public:
 	};
 	
 private:
-	bits_t bits;
 	minterms_t minterms;
 	numbers_t target;
 	std::vector<minterms_t> solutions;
 	
-	Karnaugh_Solution(const bits_t bits, const minterms_t &minterms, const numbers_t &target);
+	Karnaugh_Solution(const minterms_t &minterms, const numbers_t &target);
 	
 	minterms_t removeEssentials();
 	void solve();
 	
 public:
-	static Karnaugh_Solution solve(const bits_t bits, const minterms_t &allMinters, const numbers_t &target);
+	static Karnaugh_Solution solve(const minterms_t &allMinters, const numbers_t &target);
 	
 	static void prettyPrintSolution(const bits_t bits, const minterms_t &solution);
 	const std::vector<minterms_t>& getSolutions() const { return solutions; }

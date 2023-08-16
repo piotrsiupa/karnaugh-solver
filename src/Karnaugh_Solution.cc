@@ -94,8 +94,7 @@ void Karnaugh_Solution::OptimizedSolution::print(const bits_t bits, std::ostream
 	o << "\nGate scores: NOTs = " << getNotCount() << ", ANDs = " << getAndCount() << ", ORs = " << getOrCount() << '\n';
 }
 
-Karnaugh_Solution::Karnaugh_Solution(const bits_t bits, const minterms_t &minterms, const numbers_t &target) :
-	bits(bits),
+Karnaugh_Solution::Karnaugh_Solution(const minterms_t &minterms, const numbers_t &target) :
 	minterms(minterms),
 	target(target)
 {
@@ -104,29 +103,42 @@ Karnaugh_Solution::Karnaugh_Solution(const bits_t bits, const minterms_t &minter
 Karnaugh_Solution::minterms_t Karnaugh_Solution::removeEssentials()
 {
 	minterms_t essentials;
-	for (number_t i = 0; i != 1u << bits; ++i)
+	for (numbers_t::const_iterator iter = target.cbegin(); iter != target.cend();)
 	{
-		if (target.find(i) == target.cend())
-			continue;
 		std::uint_fast8_t count = 0;
 		std::size_t matchingIndex;
 		for (std::size_t j = 0; j != minterms.size(); ++j)
 		{
-			if ((minterms[j].first & i) == minterms[j].first && (minterms[j].second & ~i) == minterms[j].second)
+			if ((minterms[j].first & *iter) == minterms[j].first && (minterms[j].second & ~*iter) == minterms[j].second)
 			{
 				if (++count == 2)
 					break;
 				matchingIndex = j;
 			}
 		}
+		bool removedIter = false;
 		if (count == 1)
 		{
 			essentials.push_back(minterms[matchingIndex]);
-			for (number_t j = 0; j != 1u << bits; ++j)
-				if ((minterms[matchingIndex].first & j) == minterms[matchingIndex].first && (minterms[matchingIndex].second & ~j) == minterms[matchingIndex].second)
-					target.erase(j);
+			for (numbers_t::iterator jiter = target.begin(); jiter != target.end();)
+			{
+				if ((minterms[matchingIndex].first & *jiter) == minterms[matchingIndex].first && (minterms[matchingIndex].second & ~*jiter) == minterms[matchingIndex].second)
+				{
+					const bool removingIter = iter == jiter;
+					removedIter |= removingIter;
+					jiter = target.erase(jiter);
+					if (removingIter)
+						iter = jiter;
+				}
+				else
+				{
+					++jiter;
+				}
+			}
 			minterms.erase(minterms.begin() + matchingIndex);
 		}
+		if (!removedIter)
+			++iter;
 	}
 	return essentials;
 }
@@ -137,15 +149,12 @@ void Karnaugh_Solution::solve()
 	
 	std::vector<std::vector<std::pair<std::set<std::size_t>, bool>>> magic;
 	
-	for (number_t i = 0; i != 1u << bits; ++i)
+	for (const number_t &number : target)
 	{
-		if (target.find(i) != target.cend())
-		{
-			auto &m = magic.emplace_back();
-			for (std::size_t j = 0; j != minterms.size(); ++j)
-				if ((minterms[j].first & i) == minterms[j].first && (minterms[j].second & ~i) == minterms[j].second)
-					m.emplace_back().first.insert(j);
-		}
+		auto &m = magic.emplace_back();
+		for (std::size_t i = 0; i != minterms.size(); ++i)
+			if ((minterms[i].first & number) == minterms[i].first && (minterms[i].second & ~number) == minterms[i].second)
+				m.emplace_back().first.insert(i);
 	}
 	
 	for (auto x = magic.begin(); x != magic.end(); ++x)
@@ -258,11 +267,12 @@ void Karnaugh_Solution::solve()
 
 void Karnaugh_Solution::prettyPrintSolution(const bits_t bits, const minterms_t &solution)
 {
+	const bits_t bitsMask = (1u << bits) - 1;
 	numbers_t numbers;
 	for (const auto &minterm : solution)
 	{
 		const number_t positiveMask = minterm.first;
-		const number_t negativeMask = minterm.second ^ ((1u << bits) - 1);
+		const number_t negativeMask = minterm.second ^ bitsMask;
 		for (number_t i = 0; i != 1u << bits; ++i)
 			numbers.insert((i | positiveMask) & negativeMask);
 	}
@@ -270,9 +280,9 @@ void Karnaugh_Solution::prettyPrintSolution(const bits_t bits, const minterms_t 
 	Karnaugh::prettyPrintTable(bits, numbers);
 }
 
-Karnaugh_Solution Karnaugh_Solution::solve(const bits_t bits, const minterms_t &allMinters, const numbers_t &target)
+Karnaugh_Solution Karnaugh_Solution::solve(const minterms_t &allMinters, const numbers_t &target)
 {
-	Karnaugh_Solution karnaugh_solver(bits, allMinters, target);
+	Karnaugh_Solution karnaugh_solver(allMinters, target);
 	karnaugh_solver.solve();
 	return karnaugh_solver;
 }

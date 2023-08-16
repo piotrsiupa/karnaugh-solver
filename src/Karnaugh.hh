@@ -1,6 +1,5 @@
 #pragma once
 
-#include <bitset>
 #include <cstdint>
 #include <list>
 #include <set>
@@ -36,7 +35,7 @@ class Karnaugh
 	numbers_t target, dontCares, allowed;
 	minterms_t allMinterms;
 	
-	Karnaugh(const names_t &inputNames) : inputNames(inputNames), functionName('f' + std::to_string(nameCount++)), bits(inputNames.size()) {}
+	Karnaugh(const names_t &inputNames, const bits_t bits) : inputNames(inputNames), functionName('f' + std::to_string(nameCount++)), bits(bits) {}
 	
 	static grayCode_t makeGrayCode(const bits_t bits);
 	static void printBits(const number_t number, const bits_t bits);
