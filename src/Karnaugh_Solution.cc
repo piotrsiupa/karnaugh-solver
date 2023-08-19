@@ -40,9 +40,9 @@ void Karnaugh_Solution::OptimizedSolution::print(const bits_t bits, std::ostream
 			o << ",  ";
 		o << '[' << i << "] = ";
 		const auto &product = products[i];
-		bool first = product.first == minterm_t{0, 0};
+		bool first = product.first == PrimeImplicant::all();
 		if (!first || product.second.empty())
-			Karnaugh::printMinterm(bits, o, inputNames, product.first, false);
+			product.first.print(o, bits, inputNames, false);
 		for (const auto &productRef : product.second)
 		{
 			if (first)
@@ -109,7 +109,7 @@ Karnaugh_Solution::minterms_t Karnaugh_Solution::removeEssentials()
 		std::size_t matchingIndex;
 		for (std::size_t j = 0; j != minterms.size(); ++j)
 		{
-			if ((minterms[j].first & *iter) == minterms[j].first && (minterms[j].second & ~*iter) == minterms[j].second)
+			if (minterms[j].covers(*iter))
 			{
 				if (++count == 2)
 					break;
@@ -122,7 +122,7 @@ Karnaugh_Solution::minterms_t Karnaugh_Solution::removeEssentials()
 			essentials.push_back(minterms[matchingIndex]);
 			for (numbers_t::iterator jiter = target.begin(); jiter != target.end();)
 			{
-				if ((minterms[matchingIndex].first & *jiter) == minterms[matchingIndex].first && (minterms[matchingIndex].second & ~*jiter) == minterms[matchingIndex].second)
+				if (minterms[matchingIndex].covers(*jiter))
 				{
 					const bool removingIter = iter == jiter;
 					removedIter |= removingIter;
@@ -153,7 +153,7 @@ void Karnaugh_Solution::solve()
 	{
 		auto &m = magic.emplace_back();
 		for (std::size_t i = 0; i != minterms.size(); ++i)
-			if ((minterms[i].first & number) == minterms[i].first && (minterms[i].second & ~number) == minterms[i].second)
+			if (minterms[i].covers(number))
 				m.emplace_back().first.insert(i);
 	}
 	
@@ -224,7 +224,7 @@ void Karnaugh_Solution::solve()
 		if (!essentials.empty())
 			solutions.emplace_back(essentials);
 		else
-			solutions.emplace_back().emplace_back(~number_t(0), ~number_t(0));
+			solutions.emplace_back().push_back(PrimeImplicant::error());
 	}
 	else
 	{
@@ -267,14 +267,11 @@ void Karnaugh_Solution::solve()
 
 void Karnaugh_Solution::prettyPrintSolution(const bits_t bits, const minterms_t &solution)
 {
-	const bits_t bitsMask = (1u << bits) - 1;
 	numbers_t numbers;
 	for (const auto &minterm : solution)
 	{
-		const number_t positiveMask = minterm.first;
-		const number_t negativeMask = minterm.second ^ bitsMask;
-		for (number_t i = 0; i != 1u << bits; ++i)
-			numbers.insert((i | positiveMask) & negativeMask);
+		const auto x = minterm.findMinterms(bits);
+		numbers.insert(x.cbegin(), x.end());
 	}
 	std::cout << "best fit:\n";
 	Karnaugh::prettyPrintTable(bits, numbers);
@@ -289,9 +286,8 @@ Karnaugh_Solution Karnaugh_Solution::solve(const minterms_t &allMinters, const n
 
 typename Karnaugh_Solution::OptimizedSolution Karnaugh_Solution::optimizeSolutions(const std::vector<const minterms_t*> &solutions)
 {
-	static constexpr auto wipProductsSort = [](const minterm_t x, const minterm_t y) { return Karnaugh::compareMinterms(x, y); };
 	static constexpr auto wipSumsSort = [](const std::set<const void*> &x, const std::set<const void*> &y) { return x.size() != y.size() ? x.size() < y.size() : x < y; };
-	std::map<minterm_t, std::vector<const void*>, decltype(wipProductsSort)> wipProducts(wipProductsSort);
+	std::map<minterm_t, std::vector<const void*>> wipProducts;
 	std::map<std::set<const void*>, std::vector<const void*>, decltype(wipSumsSort)> wipSums(wipSumsSort);
 	std::vector<const void*> wipFinalSums;
 	wipFinalSums.reserve(solutions.size());
@@ -301,7 +297,7 @@ typename Karnaugh_Solution::OptimizedSolution Karnaugh_Solution::optimizeSolutio
 		std::set<const void*> wipSum;
 		for (const auto &x : *solution)
 		{
-			optimizedSolution.negatedInputs |= x.second & (~x.first);
+			optimizedSolution.negatedInputs |= x.getFalseBits();
 			wipSum.insert(&wipProducts[x]);
 		}
 		wipFinalSums.push_back(&wipSums[std::move(wipSum)]);
@@ -312,11 +308,10 @@ typename Karnaugh_Solution::OptimizedSolution Karnaugh_Solution::optimizeSolutio
 		minterm_t remainingInputs = iter->first;
 		for (auto jiter = std::next(iter); jiter != wipProducts.rend(); ++jiter)
 		{
-			const minterm_t commonInputs = {remainingInputs.first & jiter->first.first, remainingInputs.second & jiter->first.second};
-			if (Karnaugh::getOnesCount(commonInputs) > 1)
+			const minterm_t commonInputs = remainingInputs & jiter->first;
+			if (commonInputs.getBitCount() > 1)
 			{
-				remainingInputs.first &= ~commonInputs.first;
-				remainingInputs.second &= ~commonInputs.second;
+				remainingInputs -= commonInputs;
 				const auto &commonProduct = wipProducts[commonInputs];
 				if (&commonProduct != &iter->second)
 					iter->second.push_back(&commonProduct);
@@ -360,13 +355,8 @@ typename Karnaugh_Solution::OptimizedSolution Karnaugh_Solution::optimizeSolutio
 		}
 	}
 	for (auto productIter = optimizedSolution.products.rbegin(); productIter != optimizedSolution.products.rend(); ++productIter)
-	{
 		for (const std::size_t productRef : productIter->second)
-		{
-			productIter->first.first &= ~optimizedSolution.products[productRef].first.first;
-			productIter->first.second &= ~optimizedSolution.products[productRef].first.second;
-		}
-	}
+			productIter->first -= optimizedSolution.products[productRef].first;
 	for (const auto &wipSum : wipSums)
 	{
 		optimizedSolution.sums.emplace_back();

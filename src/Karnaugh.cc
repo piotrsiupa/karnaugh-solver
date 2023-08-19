@@ -124,18 +124,17 @@ void Karnaugh::findMinterms()
 {
 	std::vector<std::pair<minterm_t, bool>> oldMinterms;
 	for (const number_t &number : allowed)
-		oldMinterms.emplace_back(minterm_t{number, number ^ ((1u << bits) - 1)}, false);
+		oldMinterms.emplace_back(minterm_t{number, bits}, false);
 	std::set<minterm_t> newMinterms;
-	for (bits_t oldOnesCount = bits; oldOnesCount != 0; --oldOnesCount)
+	while (!oldMinterms.empty())
 	{
 		for (auto iter = oldMinterms.begin(); iter != oldMinterms.end(); ++iter)
 		{
 			for (auto jiter = std::next(iter); jiter != oldMinterms.end(); ++jiter)
 			{
-				const minterm_t commonPart = {iter->first.first & jiter->first.first, iter->first.second & jiter->first.second};
-				if (getOnesCount(commonPart) == oldOnesCount - 1 && ((~commonPart.first & iter->first.first) | (~commonPart.first & jiter->first.first)) == ((~commonPart.second & iter->first.second) | (~commonPart.second & jiter->first.second)))
+				if (PrimeImplicant::areMergeable(iter->first, jiter->first))
 				{
-					newMinterms.insert(commonPart);
+					newMinterms.insert(PrimeImplicant::merge(iter->first, jiter->first));
 					iter->second = true;
 					jiter->second = true;
 				}
@@ -150,68 +149,11 @@ void Karnaugh::findMinterms()
 			oldMinterms.emplace_back(newMinterm, false);
 		newMinterms.clear();
 	}
-	if (!oldMinterms.empty())
-		allMinterms.push_back(oldMinterms.front().first);
-}
-	
-bool Karnaugh::compareMinterms(const minterm_t x, const minterm_t y)
-{
-	const bits_t xOnes = getOnesCount(x);
-	const bits_t yOnes = getOnesCount(y);
-	if (xOnes != yOnes)
-		return xOnes < yOnes;
-	const number_t xMask = x.first | x.second;
-	const number_t yMask = y.first | y.second;
-	if (xMask != yMask)
-		return xMask > yMask;
-	return x.first > y.first;
-}
-
-Karnaugh::splitMinterm_t Karnaugh::splitMinterm(const bits_t bits, const minterm_t &minterm)
-{
-	splitMinterm_t splitMinterm;
-	for (number_t i = 0; i != bits; ++i)
-	{
-		const bool normal = (minterm.first & (1 << (bits - i - 1))) != 0;
-		const bool negated = (minterm.second & (1 << (bits - i - 1))) != 0;
-		if (normal || negated)
-			splitMinterm.emplace_back(i, negated);
-	}
-	return splitMinterm;
-}
-
-void Karnaugh::printMinterm(const bits_t bits, std::ostream &o, const names_t &inputNames, const minterm_t minterm, const bool parentheses)
-{
-	const bits_t onesCount = getOnesCount(minterm);
-	if (onesCount == 0)
-	{
-		if (minterm == minterm_t{0, 0})
-			o << "<True>";
-		else
-			o << "<False>";
-		return;
-	}
-	const bool needsParentheses = parentheses && onesCount != 1;
-	if (needsParentheses)
-		o << '(';
-	bool first = true;
-	for (const mintermPart_t &mintermPart : splitMinterm(bits, minterm))
-	{
-		if (first)
-			first = false;
-		else
-			o << " && ";
-		if (mintermPart.second)
-			o << '!';
-		o << inputNames[mintermPart.first];
-	}
-	if (needsParentheses)
-		o << ')';
 }
 
 void Karnaugh::printMinterm(const minterm_t minterm, const bool parentheses) const
 {
-	return printMinterm(bits, std::cout, inputNames, minterm, parentheses);
+	return minterm.print(std::cout, bits, inputNames, parentheses);
 }
 
 void Karnaugh::printMinterms(minterms_t minterms) const
@@ -222,7 +164,7 @@ void Karnaugh::printMinterms(minterms_t minterms) const
 	}
 	else
 	{
-		std::sort(minterms.begin(), minterms.end(), compareMinterms);
+		std::sort(minterms.begin(), minterms.end());
 		bool first = true;
 		for (const minterm_t &minterm : minterms)
 		{

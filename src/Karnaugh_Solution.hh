@@ -25,7 +25,7 @@ public:
 		
 		void print(const bits_t bits, std::ostream &o, const names_t &inputNames, const names_t &functionNames) const;
 		std::size_t getNotCount() const { return __builtin_popcount(negatedInputs); }
-		std::size_t getAndCount() const { std::size_t andCount = 0; for (const auto &product : products) andCount += std::max(std::size_t(1), Karnaugh::getOnesCount(product.first) + product.second.size()) - 1; return andCount; }
+		std::size_t getAndCount() const { std::size_t andCount = 0; for (const auto &product : products) andCount += std::max(std::size_t(1), product.first.getBitCount() + product.second.size()) - 1; return andCount; }
 		std::size_t getOrCount() const { std::size_t orCount = 0; for (const auto &sum : sums) orCount += sum.size() - 1; return orCount; }
 		std::size_t getGateScore() const { return getNotCount() + 2 * getAndCount() + 2 * getOrCount(); }
 	};
