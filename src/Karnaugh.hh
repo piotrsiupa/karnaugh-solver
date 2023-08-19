@@ -9,7 +9,9 @@
 
 #include "global.hh"
 #include "Minterm.hh"
+#include "Minterms.hh"
 #include "PrimeImplicant.hh"
+#include "PrimeImplicants.hh"
 
 
 class Karnaugh_Solution;
@@ -17,35 +19,28 @@ class Karnaugh_Solution;
 
 class Karnaugh
 {
-	using number_t = Minterm;
-	using numbers_t = std::set<number_t>;
-	using grayCode_t = std::vector<number_t>;
-	using minterm_t = PrimeImplicant;
-	using minterms_t = std::vector<minterm_t>;
-	using mintermPart_t = std::pair<bits_t, bool>;
-	using splitMinterm_t = std::vector<mintermPart_t>;
+	using grayCode_t = std::vector<Minterm>;
 	
 	static std::size_t nameCount;
 	
 	const names_t &inputNames;
 	std::string functionName;
 	bits_t bits;
-	numbers_t target, dontCares, allowed;
-	minterms_t allMinterms;
+	Minterms target, dontCares, allowed;
+	PrimeImplicants allPrimeImplicants;
 	
 	Karnaugh(const names_t &inputNames, const bits_t bits) : inputNames(inputNames), functionName('f' + std::to_string(nameCount++)), bits(bits) {}
 	
 	static grayCode_t makeGrayCode(const bits_t bits);
-	static void printBits(const number_t number, const bits_t bits);
-	static void prettyPrintTable(const bits_t bits, const numbers_t &target, const numbers_t &allowed = {});
+	static void printBits(const Minterm minterm, const bits_t bits);
+	static void prettyPrintTable(const bits_t bits, const Minterms &target, const Minterms &allowed = {});
 	
-	bool loadNumbers(numbers_t &numbers, std::string &line) const;
+	bool loadMinterms(Minterms &minterms, std::string &line) const;
 	bool loadData(lines_t &lines);
 	
-	void findMinterms();
-	static splitMinterm_t splitMinterm(const bits_t bits, const minterm_t &minterm);
-	void printMinterm(const minterm_t minterm, const bool parentheses) const;
-	void printMinterms(minterms_t minterms) const;
+	void findPrimeImplicants();
+	void printPrimeImplicant(const PrimeImplicant primeImplicant, const bool parentheses) const;
+	void printPrimeImplicants(PrimeImplicants primeImplicants) const;
 	
 	Karnaugh_Solution solve() const;
 	

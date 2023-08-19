@@ -11,7 +11,7 @@ void Karnaugh_Solution::OptimizedSolution::print(const bits_t bits, std::ostream
 {
 	o << "Negated inputs:";
 	bool first = true;
-	for (number_t i = 0; i != bits; ++i)
+	for (Minterm i = 0; i != bits; ++i)
 	{
 		if ((negatedInputs & (1 << (bits - i - 1))) != 0)
 		{
@@ -94,22 +94,22 @@ void Karnaugh_Solution::OptimizedSolution::print(const bits_t bits, std::ostream
 	o << "\nGate scores: NOTs = " << getNotCount() << ", ANDs = " << getAndCount() << ", ORs = " << getOrCount() << '\n';
 }
 
-Karnaugh_Solution::Karnaugh_Solution(const minterms_t &minterms, const numbers_t &target) :
-	minterms(minterms),
+Karnaugh_Solution::Karnaugh_Solution(const PrimeImplicants &primeImplicants, const Minterms &target) :
+	primeImplicants(primeImplicants),
 	target(target)
 {
 }
 
-Karnaugh_Solution::minterms_t Karnaugh_Solution::removeEssentials()
+PrimeImplicants Karnaugh_Solution::removeEssentials()
 {
-	minterms_t essentials;
-	for (numbers_t::const_iterator iter = target.cbegin(); iter != target.cend();)
+	PrimeImplicants essentials;
+	for (Minterms::const_iterator iter = target.cbegin(); iter != target.cend();)
 	{
 		std::uint_fast8_t count = 0;
 		std::size_t matchingIndex;
-		for (std::size_t j = 0; j != minterms.size(); ++j)
+		for (std::size_t j = 0; j != primeImplicants.size(); ++j)
 		{
-			if (minterms[j].covers(*iter))
+			if (primeImplicants[j].covers(*iter))
 			{
 				if (++count == 2)
 					break;
@@ -119,10 +119,10 @@ Karnaugh_Solution::minterms_t Karnaugh_Solution::removeEssentials()
 		bool removedIter = false;
 		if (count == 1)
 		{
-			essentials.push_back(minterms[matchingIndex]);
-			for (numbers_t::iterator jiter = target.begin(); jiter != target.end();)
+			essentials.push_back(primeImplicants[matchingIndex]);
+			for (Minterms::iterator jiter = target.begin(); jiter != target.end();)
 			{
-				if (minterms[matchingIndex].covers(*jiter))
+				if (primeImplicants[matchingIndex].covers(*jiter))
 				{
 					const bool removingIter = iter == jiter;
 					removedIter |= removingIter;
@@ -135,7 +135,7 @@ Karnaugh_Solution::minterms_t Karnaugh_Solution::removeEssentials()
 					++jiter;
 				}
 			}
-			minterms.erase(minterms.begin() + matchingIndex);
+			primeImplicants.erase(primeImplicants.begin() + matchingIndex);
 		}
 		if (!removedIter)
 			++iter;
@@ -145,15 +145,15 @@ Karnaugh_Solution::minterms_t Karnaugh_Solution::removeEssentials()
 
 void Karnaugh_Solution::solve()
 {
-	const minterms_t essentials = removeEssentials();
+	const PrimeImplicants essentials = removeEssentials();
 	
 	std::vector<std::vector<std::pair<std::set<std::size_t>, bool>>> magic;
 	
-	for (const number_t &number : target)
+	for (const Minterm &minterm : target)
 	{
 		auto &m = magic.emplace_back();
-		for (std::size_t i = 0; i != minterms.size(); ++i)
-			if (minterms[i].covers(number))
+		for (std::size_t i = 0; i != primeImplicants.size(); ++i)
+			if (primeImplicants[i].covers(minterm))
 				m.emplace_back().first.insert(i);
 	}
 	
@@ -260,39 +260,39 @@ void Karnaugh_Solution::solve()
 			for (const auto &e : essentials)
 				solutions.back().push_back(e);
 			for (const auto &y : x.first)
-				solutions.back().push_back(minterms[y]);
+				solutions.back().push_back(primeImplicants[y]);
 		}
 	}
 }
 
-void Karnaugh_Solution::prettyPrintSolution(const bits_t bits, const minterms_t &solution)
+void Karnaugh_Solution::prettyPrintSolution(const bits_t bits, const PrimeImplicants &solution)
 {
-	numbers_t numbers;
+	Minterms minterms;
 	for (const auto &minterm : solution)
 	{
 		const auto x = minterm.findMinterms(bits);
-		numbers.insert(x.cbegin(), x.end());
+		minterms.insert(x.cbegin(), x.end());
 	}
 	std::cout << "best fit:\n";
-	Karnaugh::prettyPrintTable(bits, numbers);
+	Karnaugh::prettyPrintTable(bits, minterms);
 }
 
-Karnaugh_Solution Karnaugh_Solution::solve(const minterms_t &allMinters, const numbers_t &target)
+Karnaugh_Solution Karnaugh_Solution::solve(const PrimeImplicants &primeImplicants, const Minterms &target)
 {
-	Karnaugh_Solution karnaugh_solver(allMinters, target);
+	Karnaugh_Solution karnaugh_solver(primeImplicants, target);
 	karnaugh_solver.solve();
 	return karnaugh_solver;
 }
 
-typename Karnaugh_Solution::OptimizedSolution Karnaugh_Solution::optimizeSolutions(const std::vector<const minterms_t*> &solutions)
+typename Karnaugh_Solution::OptimizedSolution Karnaugh_Solution::optimizeSolutions(const std::vector<const PrimeImplicants*> &solutions)
 {
 	static constexpr auto wipSumsSort = [](const std::set<const void*> &x, const std::set<const void*> &y) { return x.size() != y.size() ? x.size() < y.size() : x < y; };
-	std::map<minterm_t, std::vector<const void*>> wipProducts;
+	std::map<PrimeImplicant, std::vector<const void*>> wipProducts;
 	std::map<std::set<const void*>, std::vector<const void*>, decltype(wipSumsSort)> wipSums(wipSumsSort);
 	std::vector<const void*> wipFinalSums;
 	wipFinalSums.reserve(solutions.size());
 	OptimizedSolution optimizedSolution;
-	for (const minterms_t *const solution : solutions)
+	for (const PrimeImplicants *const solution : solutions)
 	{
 		std::set<const void*> wipSum;
 		for (const auto &x : *solution)
@@ -305,10 +305,10 @@ typename Karnaugh_Solution::OptimizedSolution Karnaugh_Solution::optimizeSolutio
 	for (auto iter = wipProducts.rbegin(); iter != wipProducts.rend(); ++iter)
 	{
 		//TODO This approach does not strictly guarantee to find the best solution. Petrick's method could be used here.
-		minterm_t remainingInputs = iter->first;
+		PrimeImplicant remainingInputs = iter->first;
 		for (auto jiter = std::next(iter); jiter != wipProducts.rend(); ++jiter)
 		{
-			const minterm_t commonInputs = remainingInputs & jiter->first;
+			const PrimeImplicant commonInputs = remainingInputs & jiter->first;
 			if (commonInputs.getBitCount() > 1)
 			{
 				remainingInputs -= commonInputs;

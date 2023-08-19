@@ -6,20 +6,19 @@
 #include <vector>
 
 #include "./Karnaugh.hh"
+#include "Minterm.hh"
+#include "Minterms.hh"
+#include "PrimeImplicant.hh"
+#include "PrimeImplicants.hh"
 
 
 class Karnaugh_Solution
 {
-	using minterm_t = Karnaugh::minterm_t;
-	using minterms_t = Karnaugh::minterms_t;
-	using number_t = Karnaugh::number_t;
-	using numbers_t = Karnaugh::numbers_t;
-	
 public:
 	struct OptimizedSolution
 	{
-		number_t negatedInputs = 0;
-		std::vector<std::pair<minterm_t, std::vector<std::size_t>>> products;
+		Minterm negatedInputs = 0;
+		std::vector<std::pair<PrimeImplicant, std::vector<std::size_t>>> products;
 		std::vector<std::vector<std::size_t>> sums;
 		std::vector<std::size_t> finalSums;
 		
@@ -31,20 +30,20 @@ public:
 	};
 	
 private:
-	minterms_t minterms;
-	numbers_t target;
-	std::vector<minterms_t> solutions;
+	PrimeImplicants primeImplicants;
+	Minterms target;
+	std::vector<PrimeImplicants> solutions;
 	
-	Karnaugh_Solution(const minterms_t &minterms, const numbers_t &target);
+	Karnaugh_Solution(const PrimeImplicants &primeImplicants, const Minterms &target);
 	
-	minterms_t removeEssentials();
+	PrimeImplicants removeEssentials();
 	void solve();
 	
 public:
-	static Karnaugh_Solution solve(const minterms_t &allMinters, const numbers_t &target);
+	static Karnaugh_Solution solve(const PrimeImplicants &primeImplicants, const Minterms &target);
 	
-	static void prettyPrintSolution(const bits_t bits, const minterms_t &solution);
-	const std::vector<minterms_t>& getSolutions() const { return solutions; }
+	static void prettyPrintSolution(const bits_t bits, const PrimeImplicants &solution);
+	const std::vector<PrimeImplicants>& getSolutions() const { return solutions; }
 	
-	static OptimizedSolution optimizeSolutions(const std::vector<const minterms_t*> &solutions);
+	static OptimizedSolution optimizeSolutions(const std::vector<const PrimeImplicants*> &solutions);
 };
