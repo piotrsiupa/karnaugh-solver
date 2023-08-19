@@ -14,7 +14,7 @@ class PrimeImplicant
 {
 public:
 	using mask_t = std::uint32_t;
-	static_assert(sizeof(mask_t) * CHAR_BIT >= maxBits);
+	static_assert(sizeof(mask_t) * CHAR_BIT >= ::maxBits);
 	using minterms_t = std::vector<Minterm>;
 	
 	static constexpr PrimeImplicant all() { return {0, 0, 0}; }
@@ -31,10 +31,10 @@ private:
 	
 	void recalculateBits();
 	
-	splitBits_t splitBits(const bits_t bits) const;
+	splitBits_t splitBits() const;
 	
 public:
-	explicit constexpr PrimeImplicant(const Minterm minterm, const bits_t bits) : trueBits(minterm), falseBits(minterm ^ ((1u << bits) - 1)), bitCount(bits) {}
+	explicit PrimeImplicant(const Minterm minterm) : trueBits(minterm), falseBits(minterm ^ ((1u << ::bits) - 1)), bitCount(::bits) {}
 	PrimeImplicant(const PrimeImplicant &) = default;
 	
 	constexpr bool operator==(const PrimeImplicant &other) const { return this->trueBits == other.trueBits && this->falseBits == other.falseBits && this->bitCount == other.bitCount; }
@@ -50,10 +50,10 @@ public:
 	constexpr mask_t getTrueBits() const { return isError() ? 0 : trueBits; }
 	constexpr mask_t getFalseBits() const { return isError() ? 0 : falseBits; }
 	constexpr bits_t getBitCount() const { return bitCount; }
-	minterms_t findMinterms(const bits_t bits) const;
+	minterms_t findMinterms() const;
 	
 	static bool areMergeable(const PrimeImplicant &x, const PrimeImplicant &y);
 	static PrimeImplicant merge(const PrimeImplicant &x, const PrimeImplicant &y);
 	
-	void print(std::ostream &o, const bits_t bits, const names_t &inputNames, const bool parentheses) const;
+	void print(std::ostream &o, const bool parentheses) const;
 };

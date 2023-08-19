@@ -7,13 +7,13 @@
 #include <set>
 
 
-void Karnaugh_Solution::OptimizedSolution::print(const bits_t bits, std::ostream &o, const names_t &inputNames, const names_t &functionNames) const
+void Karnaugh_Solution::OptimizedSolution::print(std::ostream &o, const names_t &functionNames) const
 {
 	o << "Negated inputs:";
 	bool first = true;
-	for (Minterm i = 0; i != bits; ++i)
+	for (Minterm i = 0; i != ::bits; ++i)
 	{
-		if ((negatedInputs & (1 << (bits - i - 1))) != 0)
+		if ((negatedInputs & (1 << (::bits - i - 1))) != 0)
 		{
 			if (first)
 			{
@@ -24,7 +24,7 @@ void Karnaugh_Solution::OptimizedSolution::print(const bits_t bits, std::ostream
 			{
 				o << ", ";
 			}
-			o << inputNames[i];
+			o << ::inputNames[i];
 		}
 	}
 	if (first)
@@ -42,7 +42,7 @@ void Karnaugh_Solution::OptimizedSolution::print(const bits_t bits, std::ostream
 		const auto &product = products[i];
 		bool first = product.first == PrimeImplicant::all();
 		if (!first || product.second.empty())
-			product.first.print(o, bits, inputNames, false);
+			product.first.print(o, false);
 		for (const auto &productRef : product.second)
 		{
 			if (first)
@@ -265,16 +265,16 @@ void Karnaugh_Solution::solve()
 	}
 }
 
-void Karnaugh_Solution::prettyPrintSolution(const bits_t bits, const PrimeImplicants &solution)
+void Karnaugh_Solution::prettyPrintSolution(const PrimeImplicants &solution)
 {
 	Minterms minterms;
 	for (const auto &minterm : solution)
 	{
-		const auto x = minterm.findMinterms(bits);
+		const auto x = minterm.findMinterms();
 		minterms.insert(x.cbegin(), x.end());
 	}
 	std::cout << "best fit:\n";
-	Karnaugh::prettyPrintTable(bits, minterms);
+	Karnaugh::prettyPrintTable(minterms);
 }
 
 Karnaugh_Solution Karnaugh_Solution::solve(const PrimeImplicants &primeImplicants, const Minterms &target)

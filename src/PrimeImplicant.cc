@@ -6,13 +6,13 @@ void PrimeImplicant::recalculateBits()
 	bitCount = __builtin_popcount(trueBits | falseBits);
 }
 
-PrimeImplicant::splitBits_t PrimeImplicant::splitBits(const bits_t bits) const
+PrimeImplicant::splitBits_t PrimeImplicant::splitBits() const
 {
 	splitBits_t splitBits;
-	for (bits_t i = 0; i != bits; ++i)
+	for (bits_t i = 0; i != ::bits; ++i)
 	{
-		const bool trueBit = (trueBits & (1 << (bits - i - 1))) != 0;
-		const bool falseBit = (falseBits & (1 << (bits - i - 1))) != 0;
+		const bool trueBit = (trueBits & (1 << (::bits - i - 1))) != 0;
+		const bool falseBit = (falseBits & (1 << (::bits - i - 1))) != 0;
 		if (trueBit || falseBit)
 			splitBits.emplace_back(i, falseBit);
 	}
@@ -30,11 +30,11 @@ bool PrimeImplicant::operator<(const PrimeImplicant &other) const
 	return this->trueBits > other.trueBits;
 }
 
-PrimeImplicant::minterms_t PrimeImplicant::findMinterms(const bits_t bits) const
+PrimeImplicant::minterms_t PrimeImplicant::findMinterms() const
 {
 	minterms_t minterms;
-	static_assert(sizeof(Minterm) * CHAR_BIT > maxBits);
-	for (Minterm minterm = 0; minterm != Minterm(1) << bits; ++minterm)
+	static_assert(sizeof(Minterm) * CHAR_BIT > ::maxBits);
+	for (Minterm minterm = 0; minterm != Minterm(1) << ::bits; ++minterm)
 		if (covers(minterm))
 			minterms.push_back(minterm);
 	return minterms;
@@ -56,7 +56,7 @@ PrimeImplicant PrimeImplicant::merge(const PrimeImplicant &x, const PrimeImplica
 	return PrimeImplicant(x.trueBits & y.trueBits, x.falseBits & y.falseBits, x.bitCount - 1);
 }
 
-void PrimeImplicant::print(std::ostream &o, const bits_t bits, const names_t &inputNames, const bool parentheses) const
+void PrimeImplicant::print(std::ostream &o, const bool parentheses) const
 {
 	if (bitCount == 0)
 	{
@@ -70,7 +70,7 @@ void PrimeImplicant::print(std::ostream &o, const bits_t bits, const names_t &in
 	if (needsParentheses)
 		o << '(';
 	bool first = true;
-	for (const auto &splitBit : splitBits(bits))
+	for (const auto &splitBit : splitBits())
 	{
 		if (first)
 			first = false;
@@ -78,7 +78,7 @@ void PrimeImplicant::print(std::ostream &o, const bits_t bits, const names_t &in
 			o << " && ";
 		if (splitBit.second)
 			o << '!';
-		o << inputNames[splitBit.first];
+		o << ::inputNames[splitBit.first];
 	}
 	if (needsParentheses)
 		o << ')';

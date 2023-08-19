@@ -17,14 +17,16 @@ int main()
 		std::cerr << "Input names are missing!\n";
 		return 1;
 	}
-	const names_t names = readStrings(lines.front());
-	if (names.size() > maxBits)
+	::inputNames = readStrings(lines.front());
+	if (::inputNames.size() > ::maxBits)
 	{
 		std::cerr << "Too many variables!\n";
 		return false;
 	}
 	lines.pop_front();
 	
-	const bool result = Karnaugh::processMultiple(names, lines);
+	::bits = ::inputNames.size();
+	
+	const bool result = Karnaugh::processMultiple(lines);
 	return result ? 0 : 1;
 }

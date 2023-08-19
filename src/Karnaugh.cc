@@ -32,10 +32,10 @@ void Karnaugh::printBits(const Minterm minterm, const bits_t bits)
 		std::cout << ((minterm & (1 << (i - 1))) != 0 ? '1' : '0');
 }
 
-void Karnaugh::prettyPrintTable(const bits_t bits, const Minterms &target, const Minterms &allowed)
+void Karnaugh::prettyPrintTable(const Minterms &target, const Minterms &allowed)
 {
-	const bits_t vBits = (bits + 1) / 2;
-	const bits_t hBits = bits / 2;
+	const bits_t vBits = (::bits + 1) / 2;
+	const bits_t hBits = ::bits / 2;
 	const grayCode_t vGrayCode = makeGrayCode(vBits);
 	const grayCode_t hGrayCode = makeGrayCode(hBits);
 	for (int i = 0; i != vBits; ++i)
@@ -81,7 +81,7 @@ bool Karnaugh::loadMinterms(Minterms &minterms, std::string &line) const
 				std::cerr << '"' << string << "\" is negative!\n";
 				return false;
 			}
-			else if (n >= (1 << bits))
+			else if (n >= (1 << ::bits))
 			{
 				std::cerr << '"' << string << "\" is too big!\n";
 				return false;
@@ -124,7 +124,7 @@ void Karnaugh::findPrimeImplicants()
 {
 	std::vector<std::pair<PrimeImplicant, bool>> oldPrimeImplicants;
 	for (const Minterm &minterm : allowed)
-		oldPrimeImplicants.emplace_back(PrimeImplicant{minterm, bits}, false);
+		oldPrimeImplicants.emplace_back(PrimeImplicant{minterm}, false);
 	std::set<PrimeImplicant> newPrimeImplicants;
 	while (!oldPrimeImplicants.empty())
 	{
@@ -153,7 +153,7 @@ void Karnaugh::findPrimeImplicants()
 
 void Karnaugh::printPrimeImplicant(const PrimeImplicant primeImplicant, const bool parentheses) const
 {
-	return primeImplicant.print(std::cout, bits, inputNames, parentheses);
+	return primeImplicant.print(std::cout, parentheses);
 }
 
 void Karnaugh::printPrimeImplicants(PrimeImplicants primeImplicants) const
@@ -182,14 +182,12 @@ Karnaugh_Solution Karnaugh::solve() const
 	return Karnaugh_Solution::solve(allPrimeImplicants, target);
 }
 
-bool Karnaugh::processMultiple(const names_t &inputNames, lines_t &lines)
+bool Karnaugh::processMultiple(lines_t &lines)
 {
-	const bits_t bits = inputNames.size();
-	
 	std::vector<Karnaugh> karnaughs;
 	while (!lines.empty())
 	{
-		karnaughs.push_back({inputNames, bits});
+		karnaughs.push_back({});
 		
 		Karnaugh &karnaugh = karnaughs.back();
 		if (!karnaugh.loadData(lines))
@@ -246,9 +244,9 @@ bool Karnaugh::processMultiple(const names_t &inputNames, lines_t &lines)
 		std::cout << "--- " << karnaugh.functionName << " ---\n\n";
 		
 		std::cout << "goal:\n";
-		prettyPrintTable(bits, karnaugh.target, karnaugh.allowed);
+		prettyPrintTable(karnaugh.target, karnaugh.allowed);
 		
-		Karnaugh_Solution::prettyPrintSolution(bits, bestSolution);
+		Karnaugh_Solution::prettyPrintSolution(bestSolution);
 		
 		std::cout << "solution:\n";
 		karnaugh.printPrimeImplicants(bestSolution);
@@ -262,7 +260,7 @@ bool Karnaugh::processMultiple(const names_t &inputNames, lines_t &lines)
 	functionNames.reserve(karnaughs.size());
 	for (const Karnaugh &karnaugh : karnaughs)
 		functionNames.push_back(karnaugh.functionName);
-	bestOptimizedSolution.print(bits, std::cout, inputNames, functionNames);
+	bestOptimizedSolution.print(std::cout, functionNames);
 	std::cout << std::flush;
 	
 	return true;
