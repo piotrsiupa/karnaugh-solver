@@ -7,6 +7,7 @@
 
 #include "./Karnaugh_Solution.hh"
 #include "input.hh"
+#include "OptimizedSolution.hh"
 
 
 std::size_t Karnaugh::nameCount = 0;
@@ -203,7 +204,7 @@ bool Karnaugh::processMultiple(lines_t &lines)
 	
 	std::vector<PrimeImplicants> bestSolutions;
 	bestSolutions.resize(karnaughs.size());
-	typename Karnaugh_Solution::OptimizedSolution bestOptimizedSolution;
+	OptimizedSolution bestOptimizedSolution;
 	std::size_t bestGateScore = SIZE_MAX;
 	if (!karnaughs.empty())
 	{
@@ -213,7 +214,7 @@ bool Karnaugh::processMultiple(lines_t &lines)
 			solutions.reserve(indexes.size());
 			for (std::size_t i = 0; i != indexes.size(); ++i)
 				solutions.push_back(&karnaugh_solutions[i].getSolutions()[indexes[i]]);
-			typename Karnaugh_Solution::OptimizedSolution optimizedSolution = Karnaugh_Solution::optimizeSolutions(solutions);
+			OptimizedSolution optimizedSolution = OptimizedSolution::create(solutions);
 			if (optimizedSolution.getGateScore() < bestGateScore)
 			{
 				bestGateScore = optimizedSolution.getGateScore();
