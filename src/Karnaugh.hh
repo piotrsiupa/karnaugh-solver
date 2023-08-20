@@ -1,10 +1,6 @@
 #pragma once
 
-#include <cstdint>
-#include <list>
-#include <set>
 #include <string>
-#include <utility>
 #include <vector>
 
 #include "global.hh"
@@ -43,7 +39,6 @@ class Karnaugh
 	bool loadMinterms(Minterms &minterms, std::string &line) const;
 	bool loadData(lines_t &lines);
 	static bool loadKarnaughs(lines_t &lines, karnaughs_t &karnaughs);
-	PrimeImplicants findPrimeImplicants() const;
 	solutions_t solve() const;
 	static solutionses_t makeSolutionses(const karnaughs_t &karnaughs);
 	static void findBestSolutions(const solutionses_t &solutionses, solutions_t &bestSolutions, OptimizedSolution &bestOptimizedSolution);

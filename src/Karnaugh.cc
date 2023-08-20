@@ -3,10 +3,9 @@
 #include <algorithm>
 #include <cctype>
 #include <iostream>
-#include <map>
 
 #include "input.hh"
-#include "PetricksMethod.hh"
+#include "QuineMcCluskey.hh"
 
 
 std::size_t Karnaugh::nameCount = 0;
@@ -209,48 +208,9 @@ bool Karnaugh::loadKarnaughs(lines_t &lines, karnaughs_t &karnaughs)
 	return true;
 }
 
-PrimeImplicants Karnaugh::findPrimeImplicants() const
-{
-	std::vector<std::pair<PrimeImplicant, bool>> oldPrimeImplicants;
-	for (const Minterm &minterm : allowedMinterms)
-		oldPrimeImplicants.emplace_back(PrimeImplicant{minterm}, false);
-	
-	PrimeImplicants primeImplicants;
-	
-	while (!oldPrimeImplicants.empty())
-	{
-		std::set<PrimeImplicant> newPrimeImplicants;
-		
-		for (auto iter = oldPrimeImplicants.begin(); iter != oldPrimeImplicants.end(); ++iter)
-		{
-			for (auto jiter = std::next(iter); jiter != oldPrimeImplicants.end(); ++jiter)
-			{
-				if (PrimeImplicant::areMergeable(iter->first, jiter->first))
-				{
-					newPrimeImplicants.insert(PrimeImplicant::merge(iter->first, jiter->first));
-					iter->second = true;
-					jiter->second = true;
-				}
-			}
-		}
-		
-		for (const auto &oldPrimeImplicant : oldPrimeImplicants)
-			if (!oldPrimeImplicant.second)
-				primeImplicants.push_back(oldPrimeImplicant.first);
-		oldPrimeImplicants.clear();
-		
-		oldPrimeImplicants.reserve(newPrimeImplicants.size());
-		for (const auto &newPrimeImplicant : newPrimeImplicants)
-			oldPrimeImplicants.emplace_back(newPrimeImplicant, false);
-	}
-	
-	return primeImplicants;
-}
-
 Karnaugh::solutions_t Karnaugh::solve() const
 {
-	PrimeImplicants primeImplicants = findPrimeImplicants();
-	return PetricksMethod<Minterm, PrimeImplicant>::solve(targetMinterms, std::move(primeImplicants));
+	return QuineMcCluskey().solve(allowedMinterms, targetMinterms);
 }
 
 Karnaugh::solutionses_t Karnaugh::makeSolutionses(const karnaughs_t &karnaughs)
