@@ -14,9 +14,6 @@
 #include "PrimeImplicants.hh"
 
 
-class Karnaugh_Solution;
-
-
 class Karnaugh
 {
 	using grayCode_t = std::vector<Minterm>;
@@ -32,6 +29,7 @@ class Karnaugh
 	static grayCode_t makeGrayCode(const bits_t bits);
 	static void printBits(const Minterm minterm, const bits_t bits);
 	static void prettyPrintTable(const Minterms &target, const Minterms &allowed = {});
+	static void prettyPrintSolution(const PrimeImplicants &solution);
 	
 	bool loadMinterms(Minterms &minterms, std::string &line) const;
 	bool loadData(lines_t &lines);
@@ -40,9 +38,7 @@ class Karnaugh
 	void printPrimeImplicant(const PrimeImplicant primeImplicant, const bool parentheses) const;
 	void printPrimeImplicants(PrimeImplicants primeImplicants) const;
 	
-	Karnaugh_Solution solve() const;
-	
-	friend class Karnaugh_Solution;
+	std::vector<PrimeImplicants> solve() const;
 	
 public:
 	Karnaugh(Karnaugh &&) = default;

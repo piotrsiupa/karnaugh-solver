@@ -5,9 +5,9 @@
 #include <iostream>
 #include <map>
 
-#include "./Karnaugh_Solution.hh"
 #include "input.hh"
 #include "OptimizedSolution.hh"
+#include "PetricksMethod.hh"
 
 
 std::size_t Karnaugh::nameCount = 0;
@@ -68,6 +68,17 @@ void Karnaugh::prettyPrintTable(const Minterms &target, const Minterms &allowed)
 		std::cout << '\n';
 	}
 	std::cout << std::endl;
+}
+
+void Karnaugh::prettyPrintSolution(const PrimeImplicants &solution)
+{
+	Minterms minterms;
+	for (const auto &minterm : solution)
+	{
+		const auto x = minterm.findMinterms();
+		minterms.insert(x.cbegin(), x.end());
+	}
+	prettyPrintTable(minterms);
 }
 
 bool Karnaugh::loadMinterms(Minterms &minterms, std::string &line) const
@@ -178,9 +189,9 @@ void Karnaugh::printPrimeImplicants(PrimeImplicants primeImplicants) const
 	}
 }
 
-Karnaugh_Solution Karnaugh::solve() const
+std::vector<PrimeImplicants> Karnaugh::solve() const
 {
-	return Karnaugh_Solution::solve(allPrimeImplicants, target);
+	return PetricksMethod<Minterm, PrimeImplicant>::solve(target, allPrimeImplicants);
 }
 
 bool Karnaugh::processMultiple(lines_t &lines)
@@ -197,7 +208,7 @@ bool Karnaugh::processMultiple(lines_t &lines)
 		karnaugh.findPrimeImplicants();
 	}
 	
-	std::vector<Karnaugh_Solution> karnaugh_solutions;
+	std::vector<std::vector<PrimeImplicants>> karnaugh_solutions;
 	karnaugh_solutions.reserve(karnaughs.size());
 	for (Karnaugh &karnaugh : karnaughs)
 		karnaugh_solutions.emplace_back(karnaugh.solve());
@@ -213,19 +224,19 @@ bool Karnaugh::processMultiple(lines_t &lines)
 			std::vector<const PrimeImplicants*> solutions;
 			solutions.reserve(indexes.size());
 			for (std::size_t i = 0; i != indexes.size(); ++i)
-				solutions.push_back(&karnaugh_solutions[i].getSolutions()[indexes[i]]);
+				solutions.push_back(&karnaugh_solutions[i][indexes[i]]);
 			OptimizedSolution optimizedSolution = OptimizedSolution::create(solutions);
 			if (optimizedSolution.getGateScore() < bestGateScore)
 			{
 				bestGateScore = optimizedSolution.getGateScore();
 				for (std::size_t i = 0; i != indexes.size(); ++i)
-					bestSolutions[i] = karnaugh_solutions[i].getSolutions()[indexes[i]];
+					bestSolutions[i] = karnaugh_solutions[i][indexes[i]];
 				bestOptimizedSolution = std::move(optimizedSolution);
 			}
 			
 			for (std::size_t i = indexes.size() - 1;; --i)
 			{
-				if (++indexes[i] != karnaugh_solutions[i].getSolutions().size())
+				if (++indexes[i] != karnaugh_solutions[i].size())
 					break;
 				indexes[i] = 0;
 				if (i == 0)
@@ -247,7 +258,8 @@ bool Karnaugh::processMultiple(lines_t &lines)
 		std::cout << "goal:\n";
 		prettyPrintTable(karnaugh.target, karnaugh.allowed);
 		
-		Karnaugh_Solution::prettyPrintSolution(bestSolution);
+		std::cout << "best fit:\n";
+		prettyPrintSolution(bestSolution);
 		
 		std::cout << "solution:\n";
 		karnaugh.printPrimeImplicants(bestSolution);
