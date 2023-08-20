@@ -3,7 +3,7 @@
 
 #include "global.hh"
 #include "input.hh"
-#include "Karnaugh.hh"
+#include "Karnaughs.hh"
 
 
 int main()
@@ -27,6 +27,10 @@ int main()
 	
 	::bits = ::inputNames.size();
 	
-	const bool result = Karnaugh::solveAll(lines);
-	return result ? 0 : 1;
+	Karnaughs karnaughs;
+	if (!karnaughs.loadData(lines))
+		return 1;
+	karnaughs.solve();
+	
+	return 0;
 }
