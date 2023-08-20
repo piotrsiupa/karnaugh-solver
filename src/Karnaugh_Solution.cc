@@ -6,6 +6,8 @@
 #include <map>
 #include <set>
 
+#include "PetricksMethod.hh"
+
 
 void Karnaugh_Solution::OptimizedSolution::print(std::ostream &o, const names_t &functionNames) const
 {
@@ -100,169 +102,9 @@ Karnaugh_Solution::Karnaugh_Solution(const PrimeImplicants &primeImplicants, con
 {
 }
 
-PrimeImplicants Karnaugh_Solution::removeEssentials()
-{
-	PrimeImplicants essentials;
-	for (Minterms::const_iterator iter = target.cbegin(); iter != target.cend();)
-	{
-		std::uint_fast8_t count = 0;
-		std::size_t matchingIndex;
-		for (std::size_t j = 0; j != primeImplicants.size(); ++j)
-		{
-			if (primeImplicants[j].covers(*iter))
-			{
-				if (++count == 2)
-					break;
-				matchingIndex = j;
-			}
-		}
-		bool removedIter = false;
-		if (count == 1)
-		{
-			essentials.push_back(primeImplicants[matchingIndex]);
-			for (Minterms::iterator jiter = target.begin(); jiter != target.end();)
-			{
-				if (primeImplicants[matchingIndex].covers(*jiter))
-				{
-					const bool removingIter = iter == jiter;
-					removedIter |= removingIter;
-					jiter = target.erase(jiter);
-					if (removingIter)
-						iter = jiter;
-				}
-				else
-				{
-					++jiter;
-				}
-			}
-			primeImplicants.erase(primeImplicants.begin() + matchingIndex);
-		}
-		if (!removedIter)
-			++iter;
-	}
-	return essentials;
-}
-
 void Karnaugh_Solution::solve()
 {
-	const PrimeImplicants essentials = removeEssentials();
-	
-	std::vector<std::vector<std::pair<std::set<std::size_t>, bool>>> magic;
-	
-	for (const Minterm &minterm : target)
-	{
-		auto &m = magic.emplace_back();
-		for (std::size_t i = 0; i != primeImplicants.size(); ++i)
-			if (primeImplicants[i].covers(minterm))
-				m.emplace_back().first.insert(i);
-	}
-	
-	for (auto x = magic.begin(); x != magic.end(); ++x)
-	{
-		if (!x->empty())
-		{
-			for (auto y = std::next(x); y != magic.end(); ++y)
-			{
-				if (!y->empty())
-				{
-					if (std::includes(x->cbegin(), x->cend(), y->cbegin(), y->cend()))
-					{
-						x->clear();
-						break;
-					}
-					else if (std::includes(y->cbegin(), y->cend(), x->cbegin(), x->cend()))
-					{
-						y->clear();
-					}
-				}
-			}
-		}
-	}
-	magic.erase(std::remove_if(magic.begin(), magic.end(), [](const auto &x){ return x.empty(); }), magic.end());
-	
-	while (magic.size() >= 2)
-	{
-		auto multiplier0 = std::move(magic.back());
-		magic.pop_back();
-		auto multiplier1 = std::move(magic.back());
-		magic.pop_back();
-		auto &result = magic.emplace_back();
-		
-		for (auto &x : multiplier0)
-		{
-			for (auto &y : multiplier1)
-			{
-				if (std::includes(x.first.begin(), x.first.end(), y.first.begin(), y.first.end()))
-				{
-					result.emplace_back(x.first, false);
-					x.second = true;
-					y.second = true;
-				}
-				else if (std::includes(y.first.begin(), y.first.end(), x.first.begin(), x.first.end()))
-				{
-					result.emplace_back(y.first, false);
-					x.second = true;
-					y.second = true;
-				}
-			}
-		}
-		multiplier0.erase(std::remove_if(multiplier0.begin(), multiplier0.end(), [](auto &x){ return x.second; }), multiplier0.end());
-		multiplier1.erase(std::remove_if(multiplier1.begin(), multiplier1.end(), [](auto &x){ return x.second; }), multiplier1.end());
-		
-		for (const auto &x : multiplier0)
-		{
-			for (const auto &y : multiplier1)
-			{
-				result.push_back(x);
-				result.back().first.insert(y.first.cbegin(), y.first.cend());
-			}
-		}
-	}
-	
-	if (magic.empty())
-	{
-		if (!essentials.empty())
-			solutions.emplace_back(essentials);
-		else
-			solutions.emplace_back().push_back(PrimeImplicant::error());
-	}
-	else
-	{
-		for (auto x = magic.front().begin(); x != magic.front().end(); ++x)
-		{
-			if (!x->second)
-			{
-				for (auto y = std::next(x); y != magic.front().end(); ++y)
-				{
-					if (!y->second)
-					{
-						if (std::includes(x->first.cbegin(), x->first.cend(), y->first.cbegin(), y->first.cend()))
-						{
-							x->second = true;
-							break;
-						}
-						else if (std::includes(y->first.cbegin(), y->first.cend(), x->first.cbegin(), x->first.cend()))
-						{
-							y->second = true;
-						}
-					}
-				}
-			}
-		}
-		magic.front().erase(std::remove_if(magic.front().begin(), magic.front().end(), [](auto &x){ return x.second; }), magic.front().end());
-		magic.front().shrink_to_fit();
-		
-		solutions.reserve(magic.front().size());
-		for (const auto &x : magic.front())
-		{
-			solutions.emplace_back();
-			solutions.back().reserve(essentials.size() + x.first.size());
-			for (const auto &e : essentials)
-				solutions.back().push_back(e);
-			for (const auto &y : x.first)
-				solutions.back().push_back(primeImplicants[y]);
-		}
-	}
+	solutions = PetricksMethod<Minterm, PrimeImplicant>::solve(std::move(target), std::move(primeImplicants));
 }
 
 void Karnaugh_Solution::prettyPrintSolution(const PrimeImplicants &solution)

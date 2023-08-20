@@ -1,7 +1,6 @@
 #pragma once
 
 #include <cstddef>
-#include <cstdint>
 #include <ostream>
 #include <vector>
 
@@ -37,7 +36,6 @@ private:
 	
 	Karnaugh_Solution(const PrimeImplicants &primeImplicants, const Minterms &target);
 	
-	PrimeImplicants removeEssentials();
 	void solve();
 	
 public:
