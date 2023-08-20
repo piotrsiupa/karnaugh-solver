@@ -83,7 +83,7 @@ void OptimizedSolution::printSums(std::ostream &o) const
 	o << '\n';
 }
 
-void OptimizedSolution::printFinalSums(std::ostream &o, const names_t &functionNames) const
+void OptimizedSolution::printFinalSums(std::ostream &o, const strings_t &functionNames) const
 {
 	o << "Final sums:";
 	for (std::size_t i = 0; i != finalSums.size(); ++i)
@@ -246,7 +246,7 @@ void OptimizedSolution::cleanupSums()
 	}
 }
 
-void OptimizedSolution::print(std::ostream &o, const names_t &functionNames) const
+void OptimizedSolution::print(std::ostream &o, const strings_t &functionNames) const
 {
 	printNegatedInputs(o);
 	printProducts(o);

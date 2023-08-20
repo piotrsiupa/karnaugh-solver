@@ -1,6 +1,5 @@
 #include "./input.hh"
 
-#include <algorithm>
 #include <iostream>
 #include <regex>
 

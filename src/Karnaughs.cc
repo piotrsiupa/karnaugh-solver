@@ -16,7 +16,7 @@ void Karnaughs::printSolutions(const solutions_t &solutions) const
 
 void Karnaughs::printOptimizedSolution(const OptimizedSolution &optimizedSolution) const
 {
-	names_t functionNames;
+	strings_t functionNames;
 	functionNames.reserve(karnaughs.size());
 	for (const Karnaugh &karnaugh : karnaughs)
 		functionNames.push_back(karnaugh.getFunctionName());

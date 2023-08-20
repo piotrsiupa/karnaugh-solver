@@ -1,6 +1,6 @@
 #include "./global.hh"
 
 
-names_t inputNames;
+strings_t inputNames;
 
 bits_t bits;

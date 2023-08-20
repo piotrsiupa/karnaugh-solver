@@ -8,9 +8,9 @@
 
 using lines_t = std::list<std::string>;
 
-using names_t = std::vector<std::string>;
+using strings_t = std::vector<std::string>;
 
-extern names_t inputNames;
+extern strings_t inputNames;
 
 using bits_t = std::uint_fast8_t;
 constexpr bits_t maxBits = 32;
