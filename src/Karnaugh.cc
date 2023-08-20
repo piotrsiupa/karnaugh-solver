@@ -6,7 +6,6 @@
 #include <map>
 
 #include "input.hh"
-#include "OptimizedSolution.hh"
 #include "PetricksMethod.hh"
 
 
@@ -70,6 +69,11 @@ void Karnaugh::prettyPrintTable(const Minterms &target, const Minterms &allowed)
 	std::cout << std::endl;
 }
 
+void Karnaugh::prettyPrintTable() const
+{
+	return prettyPrintTable(targetMinterms, allowedMinterms);
+}
+
 void Karnaugh::prettyPrintSolution(const PrimeImplicants &solution)
 {
 	Minterms minterms;
@@ -79,6 +83,63 @@ void Karnaugh::prettyPrintSolution(const PrimeImplicants &solution)
 		minterms.insert(x.cbegin(), x.end());
 	}
 	prettyPrintTable(minterms);
+}
+
+void Karnaugh::printPrimeImplicant(const PrimeImplicant primeImplicant, const bool parentheses) const
+{
+	return primeImplicant.print(std::cout, parentheses);
+}
+
+void Karnaugh::printPrimeImplicants(PrimeImplicants primeImplicants) const
+{
+	if (primeImplicants.size() == 1)
+	{
+		printPrimeImplicant(primeImplicants.front(), false);
+	}
+	else
+	{
+		std::sort(primeImplicants.begin(), primeImplicants.end());
+		for (const PrimeImplicant &primeImplicant : primeImplicants)
+		{
+			if (&primeImplicant != &primeImplicants.front())
+				std::cout << " || ";
+			printPrimeImplicant(primeImplicant, true);
+		}
+	}
+}
+
+void Karnaugh::printSolution(const PrimeImplicants &solution) const
+{
+	std::cout << "--- " << functionName << " ---\n\n";
+	
+	std::cout << "goal:\n";
+	prettyPrintTable();
+	
+	std::cout << "best fit:\n";
+	prettyPrintSolution(solution);
+	
+	std::cout << "solution:\n";
+	printPrimeImplicants(solution);
+	std::cout << std::endl;
+}
+
+void Karnaugh::printSolutions(const karnaughs_t &karnaughs, const solutions_t &solutions)
+{
+	for (std::size_t i = 0; i != karnaughs.size(); ++i)
+	{
+		if (i != 0)
+			std::cout << '\n';
+		karnaughs[i].printSolution(solutions[i]);
+	}
+}
+
+void Karnaugh::printOptimizedSolution(const karnaughs_t &karnaughs, const OptimizedSolution &optimizedSolution)
+{
+	names_t functionNames;
+	functionNames.reserve(karnaughs.size());
+	for (const Karnaugh &karnaugh : karnaughs)
+		functionNames.push_back(karnaugh.functionName);
+	optimizedSolution.print(std::cout, functionNames);
 }
 
 bool Karnaugh::loadMinterms(Minterms &minterms, std::string &line) const
@@ -121,25 +182,45 @@ bool Karnaugh::loadData(lines_t &lines)
 		std::cerr << "A description of a Karnaugh map has to have 2 lines!\n";
 		return false;
 	}
-	if (!loadMinterms(target, lines.front()))
+	
+	if (!loadMinterms(targetMinterms, lines.front()))
 		return false;
 	lines.pop_front();
-	if (!loadMinterms(dontCares, lines.front()))
+	
+	Minterms dontCareMinterms;
+	if (!loadMinterms(dontCareMinterms, lines.front()))
 		return false;
 	lines.pop_front();
-	allowed.insert(target.cbegin(), target.cend());
-	allowed.insert(dontCares.cbegin(), dontCares.cend());
+	
+	allowedMinterms.insert(targetMinterms.cbegin(), targetMinterms.cend());
+	allowedMinterms.insert(dontCareMinterms.cbegin(), dontCareMinterms.cend());
+	
 	return true;
 }
 
-void Karnaugh::findPrimeImplicants()
+bool Karnaugh::loadKarnaughs(lines_t &lines, karnaughs_t &karnaughs)
+{
+	while (!lines.empty())
+	{
+		karnaughs.push_back({});
+		if (!karnaughs.back().loadData(lines))
+			return false;
+	}
+	return true;
+}
+
+PrimeImplicants Karnaugh::findPrimeImplicants() const
 {
 	std::vector<std::pair<PrimeImplicant, bool>> oldPrimeImplicants;
-	for (const Minterm &minterm : allowed)
+	for (const Minterm &minterm : allowedMinterms)
 		oldPrimeImplicants.emplace_back(PrimeImplicant{minterm}, false);
-	std::set<PrimeImplicant> newPrimeImplicants;
+	
+	PrimeImplicants primeImplicants;
+	
 	while (!oldPrimeImplicants.empty())
 	{
+		std::set<PrimeImplicant> newPrimeImplicants;
+		
 		for (auto iter = oldPrimeImplicants.begin(); iter != oldPrimeImplicants.end(); ++iter)
 		{
 			for (auto jiter = std::next(iter); jiter != oldPrimeImplicants.end(); ++jiter)
@@ -152,128 +233,86 @@ void Karnaugh::findPrimeImplicants()
 				}
 			}
 		}
+		
 		for (const auto &oldPrimeImplicant : oldPrimeImplicants)
 			if (!oldPrimeImplicant.second)
-				allPrimeImplicants.push_back(oldPrimeImplicant.first);
+				primeImplicants.push_back(oldPrimeImplicant.first);
 		oldPrimeImplicants.clear();
+		
 		oldPrimeImplicants.reserve(newPrimeImplicants.size());
 		for (const auto &newPrimeImplicant : newPrimeImplicants)
 			oldPrimeImplicants.emplace_back(newPrimeImplicant, false);
-		newPrimeImplicants.clear();
-	}
-}
-
-void Karnaugh::printPrimeImplicant(const PrimeImplicant primeImplicant, const bool parentheses) const
-{
-	return primeImplicant.print(std::cout, parentheses);
-}
-
-void Karnaugh::printPrimeImplicants(PrimeImplicants primeImplicants) const
-{
-	if (primeImplicants.size() == 1)
-	{
-		printPrimeImplicant(primeImplicants.front(), false);
-	}
-	else
-	{
-		std::sort(primeImplicants.begin(), primeImplicants.end());
-		bool first = true;
-		for (const PrimeImplicant &primeImplicant : primeImplicants)
-		{
-			if (first)
-				first = false;
-			else
-				std::cout << " || ";
-			printPrimeImplicant(primeImplicant, true);
-		}
-	}
-}
-
-std::vector<PrimeImplicants> Karnaugh::solve() const
-{
-	return PetricksMethod<Minterm, PrimeImplicant>::solve(target, allPrimeImplicants);
-}
-
-bool Karnaugh::processMultiple(lines_t &lines)
-{
-	std::vector<Karnaugh> karnaughs;
-	while (!lines.empty())
-	{
-		karnaughs.push_back({});
-		
-		Karnaugh &karnaugh = karnaughs.back();
-		if (!karnaugh.loadData(lines))
-			return false;
-		
-		karnaugh.findPrimeImplicants();
 	}
 	
-	std::vector<std::vector<PrimeImplicants>> karnaugh_solutions;
-	karnaugh_solutions.reserve(karnaughs.size());
-	for (Karnaugh &karnaugh : karnaughs)
-		karnaugh_solutions.emplace_back(karnaugh.solve());
+	return primeImplicants;
+}
+
+Karnaugh::solutions_t Karnaugh::solve() const
+{
+	PrimeImplicants primeImplicants = findPrimeImplicants();
+	return PetricksMethod<Minterm, PrimeImplicant>::solve(targetMinterms, std::move(primeImplicants));
+}
+
+Karnaugh::solutionses_t Karnaugh::makeSolutionses(const karnaughs_t &karnaughs)
+{
+	solutionses_t solutionses;
+	solutionses.reserve(karnaughs.size());
+	for (const Karnaugh &karnaugh : karnaughs)
+		solutionses.emplace_back(karnaugh.solve());
+	return solutionses;
+}
+
+void Karnaugh::findBestSolutions(const solutionses_t &solutionses, solutions_t &bestSolutions, OptimizedSolution &bestOptimizedSolution)
+{
+	if (solutionses.empty())
+		return;
 	
-	std::vector<PrimeImplicants> bestSolutions;
-	bestSolutions.resize(karnaughs.size());
-	OptimizedSolution bestOptimizedSolution;
+	bestSolutions.resize(solutionses.size());
 	std::size_t bestGateScore = SIZE_MAX;
-	if (!karnaughs.empty())
+	for (std::vector<std::size_t> indexes(solutionses.size(), 0);;)
 	{
-		for (std::vector<std::size_t> indexes(karnaughs.size(), 0);;)
+		std::vector<const PrimeImplicants*> solutions;
+		solutions.reserve(indexes.size());
+		for (std::size_t i = 0; i != indexes.size(); ++i)
+			solutions.push_back(&solutionses[i][indexes[i]]);
+		OptimizedSolution optimizedSolution = OptimizedSolution::create(solutions);
+		
+		if (optimizedSolution.getGateScore() < bestGateScore)
 		{
-			std::vector<const PrimeImplicants*> solutions;
-			solutions.reserve(indexes.size());
+			bestGateScore = optimizedSolution.getGateScore();
 			for (std::size_t i = 0; i != indexes.size(); ++i)
-				solutions.push_back(&karnaugh_solutions[i][indexes[i]]);
-			OptimizedSolution optimizedSolution = OptimizedSolution::create(solutions);
-			if (optimizedSolution.getGateScore() < bestGateScore)
-			{
-				bestGateScore = optimizedSolution.getGateScore();
-				for (std::size_t i = 0; i != indexes.size(); ++i)
-					bestSolutions[i] = karnaugh_solutions[i][indexes[i]];
-				bestOptimizedSolution = std::move(optimizedSolution);
-			}
-			
-			for (std::size_t i = indexes.size() - 1;; --i)
-			{
-				if (++indexes[i] != karnaugh_solutions[i].size())
-					break;
-				indexes[i] = 0;
-				if (i == 0)
-					goto all_solutions_checked;
-			}
+				bestSolutions[i] = solutionses[i][indexes[i]];
+			bestOptimizedSolution = std::move(optimizedSolution);
 		}
-		all_solutions_checked:;
+		
+		for (std::size_t i = indexes.size() - 1;; --i)
+		{
+			if (++indexes[i] != solutionses[i].size())
+				break;
+			indexes[i] = 0;
+			if (i == 0)
+				return;
+		}
 	}
+}
+
+bool Karnaugh::solveAll(lines_t &lines)
+{
+	karnaughs_t karnaughs;
+	if (!loadKarnaughs(lines, karnaughs))
+		return false;
 	
-	for (std::size_t i = 0; i != karnaughs.size(); ++i)
-	{
-		const Karnaugh &karnaugh = karnaughs[i];
-		const PrimeImplicants &bestSolution = bestSolutions[i];
-		
-		if (i != 0)
-			std::cout << '\n';
-		std::cout << "--- " << karnaugh.functionName << " ---\n\n";
-		
-		std::cout << "goal:\n";
-		prettyPrintTable(karnaugh.target, karnaugh.allowed);
-		
-		std::cout << "best fit:\n";
-		prettyPrintSolution(bestSolution);
-		
-		std::cout << "solution:\n";
-		karnaugh.printPrimeImplicants(bestSolution);
-		std::cout << std::endl;
-	}
+	const std::vector<solutions_t> solutionses = makeSolutionses(karnaughs);
 	
-	if (!karnaughs.empty())
+	solutions_t solutions;
+	OptimizedSolution optimizedSolution;
+	findBestSolutions(solutionses, solutions, optimizedSolution);
+	
+	printSolutions(karnaughs, solutions);
+	if (!solutions.empty())
 		std::cout << '\n';
 	std::cout << "=== optimized solution ===\n\n";
-	names_t functionNames;
-	functionNames.reserve(karnaughs.size());
-	for (const Karnaugh &karnaugh : karnaughs)
-		functionNames.push_back(karnaugh.functionName);
-	bestOptimizedSolution.print(std::cout, functionNames);
+	printOptimizedSolution(karnaughs, optimizedSolution);
 	std::cout << std::flush;
 	
 	return true;

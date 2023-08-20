@@ -27,6 +27,6 @@ int main()
 	
 	::bits = ::inputNames.size();
 	
-	const bool result = Karnaugh::processMultiple(lines);
+	const bool result = Karnaugh::solveAll(lines);
 	return result ? 0 : 1;
 }
