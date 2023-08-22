@@ -2,7 +2,9 @@
 
 import sys
 from pathlib import Path
+import signal
 import subprocess
+import time
 
 
 def find_tests(test_dir: Path) -> list[str]:
@@ -14,19 +16,24 @@ def run_test(test_dir: Path, program: Path, test_name: str) -> bool:
     input_file = test_dir / (test_name + '.input')
     output_file = test_dir / (test_name + '.output')
     with open(input_file, 'r') as f:
-        input_data = f.read()
+        process = subprocess.Popen('./' + str(program), text=True, stdin=f, stdout=subprocess.PIPE)
+        starttime = time.time()
+        while True:
+            try:
+                process.wait()
+                break
+            except KeyboardInterrupt:
+                process.send_signal(signal.SIGINT)
+        endtime = time.time()
+    if process.returncode != 0:
+        print(f'FAIL (return code is {process.returncode})')
+        return False
     with open(output_file, 'r') as f:
         expected_output = f.read()
-    try:
-        actual_output = subprocess.check_output('./' + str(program), text=True, input=input_data)
-    except subprocess.CalledProcessError:
-        print('FAIL')
-        print(f'The program hasn\'t returned 0!', file=sys.stderr)
-        return False
-    if actual_output != expected_output:
+    if process.stdout.read() != expected_output:
         print('FAIL')
         return False
-    print('SUCCESS')
+    print(f'SUCCESS ({endtime-starttime:.2f}s)')
     return True
 
 
