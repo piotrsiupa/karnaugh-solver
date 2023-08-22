@@ -149,15 +149,26 @@ template<typename MINTERM, typename PRIME_IMPLICANT>
 typename PetricksMethod<MINTERM, PRIME_IMPLICANT>::sumOfProducts_t PetricksMethod<MINTERM, PRIME_IMPLICANT>::findSumOfProducts() const
 {
 	productOfSumsOfProducts_t productOfSumsOfProducts = createProductOfSums();
-	while (productOfSumsOfProducts.size() >= 2)
+	if (productOfSumsOfProducts.empty())
+		return sumOfProducts_t{};
+	
+	while (productOfSumsOfProducts.size() != 1)
 	{
-		sumOfProducts_t multiplier0 = std::move(productOfSumsOfProducts.back());
-		productOfSumsOfProducts.pop_back();
-		sumOfProducts_t multiplier1 = std::move(productOfSumsOfProducts.back());
-		productOfSumsOfProducts.pop_back();
-		productOfSumsOfProducts.emplace_back(multiplySumsOfProducts(std::move(multiplier0), std::move(multiplier1)));
+		productOfSumsOfProducts_t newProductOfSumsOfProducts;
+		while (productOfSumsOfProducts.size() >= 2)
+		{
+			sumOfProducts_t multiplier0 = std::move(productOfSumsOfProducts.back());
+			productOfSumsOfProducts.pop_back();
+			sumOfProducts_t multiplier1 = std::move(productOfSumsOfProducts.back());
+			productOfSumsOfProducts.pop_back();
+			newProductOfSumsOfProducts.emplace_back(multiplySumsOfProducts(std::move(multiplier0), std::move(multiplier1)));
+		}
+		if (!productOfSumsOfProducts.empty())
+			newProductOfSumsOfProducts.push_back(std::move(productOfSumsOfProducts.front()));
+		productOfSumsOfProducts = std::move(newProductOfSumsOfProducts);
 	}
-	return productOfSumsOfProducts.empty() ? sumOfProducts_t{} : std::move(productOfSumsOfProducts.front());
+	
+	return std::move(productOfSumsOfProducts.front());
 }
 
 template<typename MINTERM, typename PRIME_IMPLICANT>
