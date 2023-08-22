@@ -10,6 +10,7 @@ def find_tests(test_dir: Path) -> list[str]:
 
 
 def run_test(test_dir: Path, program: Path, test_name: str) -> bool:
+    print(f'Running "{test_name}"...', end=' ', flush=True)
     input_file = test_dir / (test_name + '.input')
     output_file = test_dir / (test_name + '.output')
     with open(input_file, 'r') as f:
@@ -19,11 +20,13 @@ def run_test(test_dir: Path, program: Path, test_name: str) -> bool:
     try:
         actual_output = subprocess.check_output('./' + str(program), text=True, input=input_data)
     except subprocess.CalledProcessError:
-        print(f'The test "{test_name}" didn\'t return 0!', file=sys.stderr)
+        print('FAIL')
+        print(f'The program hasn\'t returned 0!', file=sys.stderr)
         return False
     if actual_output != expected_output:
-        print(f'The output of the test "{test_name}" is incorrect!', file=sys.stderr)
+        print('FAIL')
         return False
+    print('SUCCESS')
     return True
 
 
@@ -39,9 +42,9 @@ def main() -> None:
             success_count += 1;
     print(f'Passed {success_count}/{len(tests)} tests.')
     if success_count == len(tests):
-        print('SUCCESS')
+        print('=== SUCCESS ===')
     else:
-        print('FAIL')
+        print('=== FAIL ===')
         sys.exit(1)
 
 if __name__ == '__main__':
