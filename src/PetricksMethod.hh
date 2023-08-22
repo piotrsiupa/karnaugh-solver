@@ -18,7 +18,7 @@ public:
 	
 private:
 	using product_t = std::set<std::size_t>;
-	using sumOfProducts_t = std::vector<std::pair<product_t, bool>>;
+	using sumOfProducts_t = std::vector<product_t>;
 	using productOfSumsOfProducts_t = std::vector<sumOfProducts_t>;
 	
 	minterms_t minterms;
@@ -31,9 +31,8 @@ private:
 	productOfSumsOfProducts_t createPreliminaryProductOfSums() const;
 	static void removeRedundantSums(productOfSumsOfProducts_t &productOfSums);
 	productOfSumsOfProducts_t createProductOfSums() const;
+	static void removeRedundantProducts(sumOfProducts_t &sumOfProducts);
 	static sumOfProducts_t multiplySumsOfProducts(sumOfProducts_t multiplier0, sumOfProducts_t multiplier1);
-	sumOfProducts_t findPreliminarySumOfProducts() const;
-	static void removeRedundantSums(sumOfProducts_t &sumOfProducts);
 	sumOfProducts_t findSumOfProducts() const;
 	solutions_t solve();
 	
