@@ -99,48 +99,31 @@ typename PetricksMethod<MINTERM, PRIME_IMPLICANT>::productOfSumsOfProducts_t Pet
 }
 
 template<typename MINTERM, typename PRIME_IMPLICANT>
-void PetricksMethod<MINTERM, PRIME_IMPLICANT>::removeRedundantProducts(sumOfProducts_t &sumOfProducts)
+typename PetricksMethod<MINTERM, PRIME_IMPLICANT>::sumOfProducts_t PetricksMethod<MINTERM, PRIME_IMPLICANT>::multiplySumsOfProducts(sumOfProducts_t multiplier0, sumOfProducts_t multiplier1) const
 {
-	for (auto x = sumOfProducts.begin(); x != sumOfProducts.end(); ++x)
-	{
-		if (!x->empty())
-		{
-			for (auto y = std::next(x); y != sumOfProducts.end(); ++y)
-			{
-				if (!y->empty())
-				{
-					if (std::includes(x->cbegin(), x->cend(), y->cbegin(), y->cend()))
-					{
-						x->clear();
-						break;
-					}
-					else if (std::includes(y->cbegin(), y->cend(), x->cbegin(), x->cend()))
-					{
-						y->clear();
-					}
-				}
-			}
-		}
-	}
-	sumOfProducts.erase(std::remove_if(sumOfProducts.begin(), sumOfProducts.end(), [](auto &x){ return x.empty(); }), sumOfProducts.end());
-}
-
-template<typename MINTERM, typename PRIME_IMPLICANT>
-typename PetricksMethod<MINTERM, PRIME_IMPLICANT>::sumOfProducts_t PetricksMethod<MINTERM, PRIME_IMPLICANT>::multiplySumsOfProducts(sumOfProducts_t multiplier0, sumOfProducts_t multiplier1)
-{
+	std::vector<std::vector<std::size_t>> reverseMapping;
+	reverseMapping.resize(primeImplicants.size());
+	
 	sumOfProducts_t result;
 	
-	for (const auto &x : multiplier0)
+	for (const product_t &x : multiplier0)
 	{
-		for (const auto &y : multiplier1)
+		for (const product_t &y : multiplier1)
 		{
-			result.push_back(x);
-			result.back().insert(y.cbegin(), y.cend());
+			product_t newProduct = x;
+			newProduct.insert(y.cbegin(), y.cend());
+			std::set<std::size_t> productsToCheck;
+			for (const std::size_t &z : newProduct)
+				productsToCheck.insert(reverseMapping[z].cbegin(), reverseMapping[z].cend());
+			for (const std::size_t &z : productsToCheck)
+				if (std::includes(result[z].cbegin(), result[z].cend(), newProduct.cbegin(), newProduct.cend()))
+					goto next;
+			for (const std::size_t &z : newProduct)
+				reverseMapping[z].push_back(result.size());
+			result.emplace_back(std::move(newProduct));
 		}
+		next:;
 	}
-	
-	removeRedundantProducts(result);
-	result.shrink_to_fit();
 	
 	return result;
 }
