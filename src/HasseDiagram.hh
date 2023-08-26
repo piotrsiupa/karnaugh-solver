@@ -25,8 +25,6 @@ private:
 	};
 	Node root{{}, 0, nullptr};
 	
-	static Node& findAnyTopNode(Node &startPoint);
-	
 	static bool containsSubset(set_t::const_iterator currentInSet, const set_t::const_iterator &endOfSet, const Node &currentNode);
 	
 	Node& insert(set_t::const_iterator currentInSet, const set_t::const_iterator &endOfSet, Node &currentNode);

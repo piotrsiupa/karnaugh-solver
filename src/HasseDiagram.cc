@@ -3,20 +3,6 @@
 #include <algorithm>
 
 
-HasseDiagram::Node& HasseDiagram::findAnyTopNode(Node &startPoint)
-{
-	Node *curr = &startPoint;
-	while (!curr->children.empty())
-	{
-		auto &firstChild = *curr->children.begin();
-		if (firstChild.first == TOP_NODE)
-			return *std::get<1>(firstChild.second).front();
-		else
-			curr = &std::get<Node>(firstChild.second);
-	}
-	return *curr;
-}
-
 bool HasseDiagram::containsSubset(set_t::const_iterator currentInSet, const set_t::const_iterator &endOfSet, const Node &currentNode)
 {
 	for (; currentInSet != endOfSet; ++currentInSet)
@@ -72,10 +58,33 @@ void HasseDiagram::insertSideBranch(set_t::const_iterator currentInSet, const se
 
 void HasseDiagram::removeChildren(Node &node)
 {
-	while (!node.children.empty() && node.children.find(TOP_NODE) == node.children.cend())
+	while (true)
 	{
-		Node &topNode = findAnyTopNode(node);
-		removeTopNode(topNode);
+		Node *curr = &node;
+		while (true)
+		{
+			auto child = curr->children.begin();
+			fuck_go_back:
+			if (child == curr->children.end())
+				return;
+			switch (child->first)
+			{
+			case TOP_NODE:
+				if (curr == &node)
+				{
+					++child;
+					goto fuck_go_back;
+				}
+				goto end_loop;
+			case REFERENCES:
+				curr = std::get<1>(child->second).front();
+				goto end_loop;
+			default:
+				curr = &std::get<Node>(child->second);
+			}
+		}
+		end_loop:
+		removeTopNode(*curr);
 	}
 }
 
@@ -109,7 +118,7 @@ void HasseDiagram::removeSideBranch(std::vector<std::size_t>::const_reverse_iter
 	}
 	else
 	{
-		std::vector<Node*> sideEnds = std::get<1>(currentNode.children.at(REFERENCES));
+		std::vector<Node*> &sideEnds = std::get<1>(currentNode.children.at(REFERENCES));
 		sideEnds.erase(std::find(sideEnds.begin(), sideEnds.end(), endNode));
 		if (sideEnds.empty())
 			currentNode.children.erase(REFERENCES);
