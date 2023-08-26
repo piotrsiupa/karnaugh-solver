@@ -3,6 +3,8 @@
 #include <algorithm>
 #include <cstdint>
 
+#include "HasseDiagram.hh"
+
 
 template<typename MINTERM, typename PRIME_IMPLICANT>
 std::size_t PetricksMethod<MINTERM, PRIME_IMPLICANT>::findEssentialPrimeImplicantIndex(const minterm_t minterm)
@@ -99,33 +101,19 @@ typename PetricksMethod<MINTERM, PRIME_IMPLICANT>::productOfSumsOfProducts_t Pet
 }
 
 template<typename MINTERM, typename PRIME_IMPLICANT>
-typename PetricksMethod<MINTERM, PRIME_IMPLICANT>::sumOfProducts_t PetricksMethod<MINTERM, PRIME_IMPLICANT>::multiplySumsOfProducts(sumOfProducts_t multiplier0, sumOfProducts_t multiplier1) const
+typename PetricksMethod<MINTERM, PRIME_IMPLICANT>::sumOfProducts_t PetricksMethod<MINTERM, PRIME_IMPLICANT>::multiplySumsOfProducts(sumOfProducts_t multiplier0, sumOfProducts_t multiplier1)
 {
-	std::vector<std::vector<std::size_t>> reverseMapping;
-	reverseMapping.resize(primeImplicants.size());
-	
-	sumOfProducts_t result;
-	
+	HasseDiagram hasseDiagram;
 	for (const product_t &x : multiplier0)
 	{
 		for (const product_t &y : multiplier1)
 		{
 			product_t newProduct = x;
 			newProduct.insert(y.cbegin(), y.cend());
-			std::set<std::size_t> productsToCheck;
-			for (const std::size_t &z : newProduct)
-				productsToCheck.insert(reverseMapping[z].cbegin(), reverseMapping[z].cend());
-			for (const std::size_t &z : productsToCheck)
-				if (std::includes(result[z].cbegin(), result[z].cend(), newProduct.cbegin(), newProduct.cend()))
-					goto next;
-			for (const std::size_t &z : newProduct)
-				reverseMapping[z].push_back(result.size());
-			result.emplace_back(std::move(newProduct));
+			hasseDiagram.insertRemovingSupersets(std::move(newProduct));
 		}
-		next:;
 	}
-	
-	return result;
+	return hasseDiagram.getSets();
 }
 
 template<typename MINTERM, typename PRIME_IMPLICANT>
