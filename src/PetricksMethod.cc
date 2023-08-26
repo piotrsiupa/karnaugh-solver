@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cstdint>
+#include <iostream>
 
 
 template<typename MINTERM, typename PRIME_IMPLICANT>
@@ -139,6 +140,7 @@ typename PetricksMethod<MINTERM, PRIME_IMPLICANT>::sumOfProducts_t PetricksMetho
 		}
 	}
 	
+	std::clog << " => " << result.size() << std::flush;
 	removeRedundantProducts(result);
 	result.shrink_to_fit();
 	
@@ -157,16 +159,20 @@ typename PetricksMethod<MINTERM, PRIME_IMPLICANT>::sumOfProducts_t PetricksMetho
 		productOfSumsOfProducts_t newProductOfSumsOfProducts;
 		while (productOfSumsOfProducts.size() >= 2)
 		{
+			std::clog << '\n' << "remaining products: " << (productOfSumsOfProducts.size() + newProductOfSumsOfProducts.size());
 			sumOfProducts_t multiplier0 = std::move(productOfSumsOfProducts.back());
 			productOfSumsOfProducts.pop_back();
 			sumOfProducts_t multiplier1 = std::move(productOfSumsOfProducts.back());
 			productOfSumsOfProducts.pop_back();
+			std::clog << "  (" << multiplier0.size() << ", " << multiplier1.size() << ')' << std::flush;
 			newProductOfSumsOfProducts.emplace_back(multiplySumsOfProducts(std::move(multiplier0), std::move(multiplier1)));
+			std::clog << " => " << newProductOfSumsOfProducts.back().size() << std::flush;
 		}
 		if (!productOfSumsOfProducts.empty())
 			newProductOfSumsOfProducts.push_back(std::move(productOfSumsOfProducts.front()));
 		productOfSumsOfProducts = std::move(newProductOfSumsOfProducts);
 	}
+	std::clog << '\n' << "remaining products: " << productOfSumsOfProducts.size() << "  (" << productOfSumsOfProducts.front().size() << ')' << std::endl;
 	
 	return std::move(productOfSumsOfProducts.front());
 }
