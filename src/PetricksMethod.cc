@@ -4,6 +4,8 @@
 #include <cstdint>
 #include <iostream>
 
+#include "HasseDiagram.hh"
+
 
 template<typename MINTERM, typename PRIME_IMPLICANT>
 std::size_t PetricksMethod<MINTERM, PRIME_IMPLICANT>::findEssentialPrimeImplicantIndex(const minterm_t minterm)
@@ -100,51 +102,20 @@ typename PetricksMethod<MINTERM, PRIME_IMPLICANT>::productOfSumsOfProducts_t Pet
 }
 
 template<typename MINTERM, typename PRIME_IMPLICANT>
-void PetricksMethod<MINTERM, PRIME_IMPLICANT>::removeRedundantProducts(sumOfProducts_t &sumOfProducts)
-{
-	for (auto x = sumOfProducts.begin(); x != sumOfProducts.end(); ++x)
-	{
-		if (!x->empty())
-		{
-			for (auto y = std::next(x); y != sumOfProducts.end(); ++y)
-			{
-				if (!y->empty())
-				{
-					if (std::includes(x->cbegin(), x->cend(), y->cbegin(), y->cend()))
-					{
-						x->clear();
-						break;
-					}
-					else if (std::includes(y->cbegin(), y->cend(), x->cbegin(), x->cend()))
-					{
-						y->clear();
-					}
-				}
-			}
-		}
-	}
-	sumOfProducts.erase(std::remove_if(sumOfProducts.begin(), sumOfProducts.end(), [](auto &x){ return x.empty(); }), sumOfProducts.end());
-}
-
-template<typename MINTERM, typename PRIME_IMPLICANT>
 typename PetricksMethod<MINTERM, PRIME_IMPLICANT>::sumOfProducts_t PetricksMethod<MINTERM, PRIME_IMPLICANT>::multiplySumsOfProducts(sumOfProducts_t multiplier0, sumOfProducts_t multiplier1)
 {
-	sumOfProducts_t result;
-	
-	for (const auto &x : multiplier0)
+	HasseDiagram hasseDiagram;
+	for (const product_t &x : multiplier0)
 	{
-		for (const auto &y : multiplier1)
+		for (const product_t &y : multiplier1)
 		{
-			result.push_back(x);
-			result.back().insert(y.cbegin(), y.cend());
+			product_t newProduct = x;
+			newProduct.insert(y.cbegin(), y.cend());
+			hasseDiagram.insertRemovingSupersets(std::move(newProduct));
 		}
 	}
-	
-	std::clog << " => " << result.size() << std::flush;
-	removeRedundantProducts(result);
-	result.shrink_to_fit();
-	
-	return result;
+	std::clog << " => " << (multiplier0.size() * multiplier1.size()) << std::flush;
+	return hasseDiagram.getSets();
 }
 
 template<typename MINTERM, typename PRIME_IMPLICANT>
