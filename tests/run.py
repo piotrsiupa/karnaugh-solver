@@ -17,21 +17,21 @@ def run_test(test_dir: Path, program: Path, test_name: str) -> bool:
     output_file = test_dir / (test_name + '.output')
     with open(input_file, 'r') as f:
         process = subprocess.Popen('./' + str(program), text=True, stdin=f, stdout=subprocess.PIPE)
-        starttime = time.time()
+        starttime = time.perf_counter()
         while True:
             try:
                 process.wait()
                 break
             except KeyboardInterrupt:
                 process.send_signal(signal.SIGINT)
-        endtime = time.time()
+        endtime = time.perf_counter()
     if process.returncode != 0:
-        print(f'FAIL (return code is {process.returncode})')
+        print(f'FAIL ({endtime-starttime:.2f}s, return code is {process.returncode})')
         return False
     with open(output_file, 'r') as f:
         expected_output = f.read()
     if process.stdout.read() != expected_output:
-        print('FAIL')
+        print(f'FAIL ({endtime-starttime:.2f}s)')
         return False
     print(f'SUCCESS ({endtime-starttime:.2f}s)')
     return True
