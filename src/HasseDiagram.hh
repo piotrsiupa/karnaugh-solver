@@ -1,8 +1,9 @@
 #pragma once
 
 #include <cstddef>
-#include <map>
+#include <memory>
 #include <set>
+#include <utility>
 #include <variant>
 #include <vector>
 
@@ -17,11 +18,21 @@ public:
 private:
 	static constexpr value_t TOP_NODE = ~value_t(0) - 1, REFERENCES = ~value_t(0);
 	
+	struct Node;
+	using NodeChild = std::variant<std::unique_ptr<Node>, std::vector<Node*>, std::monostate>;
+	class NodeChildren : public std::vector<std::pair<value_t, NodeChild>>
+	{
+		using super = std::vector<std::pair<value_t, NodeChild>>;
+	public:
+		iterator find(const value_t &key) { for (iterator iter = begin(); iter != end(); ++iter) if (iter->first == key) return iter; return end(); }
+		const_iterator find(const value_t &key) const { return const_cast<NodeChildren*>(this)->find(key); }
+		void erase(const value_t &key) { super::erase(find(key)); }
+	};
 	struct Node
 	{
-		std::map<value_t, std::variant<Node, std::vector<Node*>, std::monostate>> children;
+		NodeChildren children;
 		std::size_t value;
-		Node *const parent;
+		Node *parent;
 	};
 	Node root{{}, 0, nullptr};
 	
