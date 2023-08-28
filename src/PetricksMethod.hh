@@ -31,7 +31,7 @@ private:
 	productOfSumsOfProducts_t createPreliminaryProductOfSums() const;
 	static void removeRedundantSums(productOfSumsOfProducts_t &productOfSums);
 	productOfSumsOfProducts_t createProductOfSums() const;
-	static sumOfProducts_t multiplySumsOfProducts(sumOfProducts_t multiplier0, sumOfProducts_t multiplier1);
+	static sumOfProducts_t multiplySumsOfProducts(const sumOfProducts_t &multiplier0, const sumOfProducts_t &multiplier1);
 	sumOfProducts_t findSumOfProducts() const;
 	solutions_t solve();
 	

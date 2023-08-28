@@ -7,18 +7,19 @@ bool HasseDiagram::containsSubset(set_t::const_iterator currentInSet, const set_
 {
 	for (; currentInSet != endOfSet; ++currentInSet)
 		if (const auto foundChild = currentNode.children.find(*currentInSet); foundChild != currentNode.children.end())
-			if (containsSubset(std::next(currentInSet), endOfSet, *std::get<std::unique_ptr<Node>>(foundChild->second)))
+			if (containsSubset(std::next(currentInSet), endOfSet, foundChild->getNode()))
 				return true;
 	return currentNode.children.find(TOP_NODE) != currentNode.children.cend();
 }
 
 HasseDiagram::Node& HasseDiagram::insert(set_t::const_iterator currentInSet, const set_t::const_iterator &endOfSet, Node &currentNode)
 {
+	++size;
 	Node *nextNode;
 	if (const auto foundChild = currentNode.children.find(*currentInSet); foundChild != currentNode.children.end())
-		nextNode = std::get<std::unique_ptr<Node>>(foundChild->second).get();
+		nextNode = &foundChild->getNode();
 	else
-		nextNode = std::get<std::unique_ptr<Node>>(currentNode.children.emplace_back(*currentInSet, std::unique_ptr<Node>(new Node{{}, *currentInSet, &currentNode})).second).get();
+		nextNode = &currentNode.children.emplace_back(*currentInSet, new Node{{}, *currentInSet, &currentNode}).getNode();
 	const set_t::const_iterator nextInSet = std::next(currentInSet);
 	Node *resultNode;
 	if (nextInSet != endOfSet)
@@ -29,7 +30,7 @@ HasseDiagram::Node& HasseDiagram::insert(set_t::const_iterator currentInSet, con
 	else
 	{
 		resultNode = nextNode;
-		nextNode->children.emplace_back(TOP_NODE, std::monostate{});
+		nextNode->children.emplace_back();
 	}
 	return *resultNode;
 }
@@ -38,9 +39,9 @@ void HasseDiagram::insertSideBranch(set_t::const_iterator currentInSet, const se
 {
 	Node *nextNode;
 	if (const auto foundChild = currentNode.children.find(*currentInSet); foundChild != currentNode.children.end())
-		nextNode = std::get<std::unique_ptr<Node>>(foundChild->second).get();
+		nextNode = &foundChild->getNode();
 	else
-		nextNode = std::get<std::unique_ptr<Node>>(currentNode.children.emplace_back(*currentInSet, std::unique_ptr<Node>(new Node{{}, *currentInSet, &currentNode})).second).get();
+		nextNode = &currentNode.children.emplace_back(*currentInSet, new Node{{}, *currentInSet, &currentNode}).getNode();
 	const set_t::const_iterator nextInSet = std::next(currentInSet);
 	if (nextInSet != endOfSet)
 	{
@@ -50,9 +51,9 @@ void HasseDiagram::insertSideBranch(set_t::const_iterator currentInSet, const se
 	else
 	{
 		if (const auto foundChild = nextNode->children.find(REFERENCES); foundChild != nextNode->children.end())
-			std::get<1>(foundChild->second).emplace_back(&resultNode);
+			foundChild->getReferences().emplace_back(&resultNode);
 		else
-			nextNode->children.emplace_back(REFERENCES, std::vector<Node*>{&resultNode});
+			nextNode->children.emplace_back(std::vector<Node*>{&resultNode});
 	}
 }
 
@@ -67,7 +68,7 @@ void HasseDiagram::removeChildren(Node &node)
 			fuck_go_back:
 			if (child == curr->children.end())
 				return;
-			switch (child->first)
+			switch (child->getKey())
 			{
 			case TOP_NODE:
 				if (curr == &node)
@@ -77,10 +78,10 @@ void HasseDiagram::removeChildren(Node &node)
 				}
 				goto end_loop;
 			case REFERENCES:
-				curr = std::get<1>(child->second).front();
+				curr = child->getReferences().front();
 				goto end_loop;
 			default:
-				curr = std::get<std::unique_ptr<Node>>(child->second).get();
+				curr = &child->getNode();
 			}
 		}
 		end_loop:
@@ -90,8 +91,10 @@ void HasseDiagram::removeChildren(Node &node)
 
 void HasseDiagram::removeTopNode(Node &topNode)
 {
+	--size;
 	topNode.children.erase(TOP_NODE);
-	std::vector<std::size_t> reversedSet;
+	std::vector<std::size_t> &reversedSet = workingVector;
+	reversedSet.clear();
 	Node *curr = &topNode;
 	while (curr->parent != nullptr)
 	{
@@ -109,7 +112,7 @@ void HasseDiagram::removeTopNode(Node &topNode)
 
 void HasseDiagram::removeSideBranch(std::vector<std::size_t>::const_reverse_iterator currentInSet, const std::vector<std::size_t>::const_reverse_iterator &endOfSet, Node &startPoint, const Node *const endNode)
 {
-	Node &currentNode = *std::get<std::unique_ptr<Node>>(startPoint.children.find(*currentInSet)->second);
+	Node &currentNode = startPoint.children.find(*currentInSet)->getNode();
 	const std::vector<std::size_t>::const_reverse_iterator nextInSet = std::next(currentInSet);
 	if (nextInSet != endOfSet)
 	{
@@ -118,7 +121,7 @@ void HasseDiagram::removeSideBranch(std::vector<std::size_t>::const_reverse_iter
 	}
 	else
 	{
-		std::vector<Node*> &sideEnds = std::get<1>(currentNode.children.find(REFERENCES)->second);
+		std::vector<Node*> &sideEnds = currentNode.children.find(REFERENCES)->getReferences();
 		sideEnds.erase(std::find(sideEnds.begin(), sideEnds.end(), endNode));
 		if (sideEnds.empty())
 			currentNode.children.erase(REFERENCES);
@@ -127,24 +130,34 @@ void HasseDiagram::removeSideBranch(std::vector<std::size_t>::const_reverse_iter
 		startPoint.children.erase(*currentInSet);
 }
 
-void HasseDiagram::getSets(sets_t &sets, set_t &currentSet, const Node &currentNode)
+void HasseDiagram::getSets(sets_t &sets, const Node &currentNode) const
 {
 	if (currentNode.children.find(TOP_NODE) != currentNode.children.cend())
 	{
-		sets.emplace_back(currentSet);
+		sets.emplace_back(workingVector.cbegin(), workingVector.cend());
 	}
 	else
 	{
 		for (const auto &child : currentNode.children)
 		{
-			if (child.first != REFERENCES)
+			if (child.getKey() != REFERENCES)
 			{
-				currentSet.insert(child.first);
-				getSets(sets, currentSet, *std::get<std::unique_ptr<Node>>(child.second));
-				currentSet.erase(child.first);
+				workingVector.push_back(child.getKey());
+				getSets(sets, child.getNode());
+				workingVector.pop_back();
 			}
 		}
 	}
+}
+
+HasseDiagram::sets_t HasseDiagram::getSets() const
+{
+	workingVector.clear();
+	sets_t sets;
+	sets.reserve(size);
+	getSets(sets, root);
+	sets.shrink_to_fit();
+	return sets;
 }
 
 bool HasseDiagram::insertRemovingSupersets(const set_t &set)
@@ -154,12 +167,4 @@ bool HasseDiagram::insertRemovingSupersets(const set_t &set)
 	Node &added = insert(set.cbegin(), set.cend(), root);
 	removeChildren(added);
 	return true;
-}
-
-HasseDiagram::sets_t HasseDiagram::getSets() const
-{
-	sets_t sets;
-	set_t set;
-	getSets(sets, set, root);
-	return sets;
 }

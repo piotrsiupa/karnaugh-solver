@@ -102,7 +102,7 @@ typename PetricksMethod<MINTERM, PRIME_IMPLICANT>::productOfSumsOfProducts_t Pet
 }
 
 template<typename MINTERM, typename PRIME_IMPLICANT>
-typename PetricksMethod<MINTERM, PRIME_IMPLICANT>::sumOfProducts_t PetricksMethod<MINTERM, PRIME_IMPLICANT>::multiplySumsOfProducts(sumOfProducts_t multiplier0, sumOfProducts_t multiplier1)
+typename PetricksMethod<MINTERM, PRIME_IMPLICANT>::sumOfProducts_t PetricksMethod<MINTERM, PRIME_IMPLICANT>::multiplySumsOfProducts(const sumOfProducts_t &multiplier0, const sumOfProducts_t &multiplier1)
 {
 	HasseDiagram hasseDiagram;
 	for (const product_t &x : multiplier0)
