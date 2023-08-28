@@ -30,9 +30,9 @@ PrimeImplicants QuineMcCluskey::findPrimeImplicants(const Minterms &allowedMinte
 			}
 		}
 		
-		for (const auto &oldPrimeImplicant : oldPrimeImplicants)
-			if (!oldPrimeImplicant.second)
-				primeImplicants.push_back(oldPrimeImplicant.first);
+		for (const auto &[primeImplicant, merged] : oldPrimeImplicants)
+			if (!merged)
+				primeImplicants.push_back(primeImplicant);
 		oldPrimeImplicants.clear();
 		
 		oldPrimeImplicants.reserve(newPrimeImplicants.size());
