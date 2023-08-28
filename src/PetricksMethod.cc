@@ -131,7 +131,7 @@ typename PetricksMethod<MINTERM, PRIME_IMPLICANT>::sumOfProducts_t PetricksMetho
 		while (productOfSumsOfProducts.size() >= 2)
 		{
 			std::clog << '\n' << "remaining products: " << (productOfSumsOfProducts.size() + newProductOfSumsOfProducts.size());
-			if (productOfSumsOfProducts.size() + newProductOfSumsOfProducts.size() == 4)
+			if (productOfSumsOfProducts.size() + newProductOfSumsOfProducts.size() == 3)
 				return std::move(productOfSumsOfProducts.front());
 			sumOfProducts_t multiplier0 = std::move(productOfSumsOfProducts.back());
 			productOfSumsOfProducts.pop_back();
