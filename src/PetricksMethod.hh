@@ -17,7 +17,7 @@ public:
 	using solutions_t = std::vector<primeImplicants_t>;
 	
 private:
-	using product_t = std::set<std::size_t>;
+	using product_t = std::vector<std::size_t>;
 	using sumOfProducts_t = std::vector<product_t>;
 	using productOfSumsOfProducts_t = std::vector<sumOfProducts_t>;
 	

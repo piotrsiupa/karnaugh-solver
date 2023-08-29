@@ -61,7 +61,7 @@ typename PetricksMethod<MINTERM, PRIME_IMPLICANT>::productOfSumsOfProducts_t Pet
 		sumOfProducts_t &sum = productOfSums.emplace_back();
 		for (std::size_t i = 0; i != primeImplicants.size(); ++i)
 			if (primeImplicants[i].covers(minterm))
-				sum.emplace_back().insert(i);
+				sum.emplace_back().push_back(i);
 	}
 	return productOfSums;
 }
@@ -104,13 +104,15 @@ typename PetricksMethod<MINTERM, PRIME_IMPLICANT>::productOfSumsOfProducts_t Pet
 template<typename MINTERM, typename PRIME_IMPLICANT>
 typename PetricksMethod<MINTERM, PRIME_IMPLICANT>::sumOfProducts_t PetricksMethod<MINTERM, PRIME_IMPLICANT>::multiplySumsOfProducts(const sumOfProducts_t &multiplier0, const sumOfProducts_t &multiplier1)
 {
+	product_t newProduct;
+	newProduct.reserve(multiplier0.front().size() + multiplier1.front().size());
 	HasseDiagram hasseDiagram;
 	for (const product_t &x : multiplier0)
 	{
 		for (const product_t &y : multiplier1)
 		{
-			product_t newProduct = x;
-			newProduct.insert(y.cbegin(), y.cend());
+			newProduct.clear();
+			std::set_union(x.cbegin(), x.cend(), y.cbegin(), y.cend(), std::back_inserter(newProduct));
 			hasseDiagram.insertRemovingSupersets(std::move(newProduct));
 		}
 	}

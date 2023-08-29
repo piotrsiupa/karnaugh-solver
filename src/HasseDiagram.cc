@@ -134,7 +134,7 @@ void HasseDiagram::getSets(sets_t &sets, const Node &currentNode) const
 {
 	if (currentNode.children.find(TOP_NODE) != currentNode.children.cend())
 	{
-		sets.emplace_back(workingVector.cbegin(), workingVector.cend());
+		sets.emplace_back(workingVector);
 	}
 	else
 	{

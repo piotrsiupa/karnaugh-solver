@@ -1,7 +1,6 @@
 #pragma once
 
 #include <cstddef>
-#include <set>
 #include <vector>
 
 
@@ -9,7 +8,7 @@ class HasseDiagram
 {
 public:
 	using value_t = std::size_t;
-	using set_t = std::set<std::size_t>;
+	using set_t = std::vector<std::size_t>;
 	using sets_t = std::vector<set_t>;
 	
 private:
