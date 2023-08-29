@@ -4,11 +4,13 @@
 #include <vector>
 
 
+template<typename VALUE_T>
 class HasseDiagram
 {
 public:
-	using value_t = std::size_t;
-	using set_t = std::vector<std::size_t>;
+	using value_t = VALUE_T;
+	static constexpr value_t MAX_VALUE = ~value_t(0) - 2;
+	using set_t = std::vector<value_t>;
 	using sets_t = std::vector<set_t>;
 	
 private:
@@ -85,30 +87,30 @@ private:
 	{
 		using super = std::vector<NodeChild>;
 	public:
-		iterator find(const value_t &key) { for (iterator iter = begin(); iter != end(); ++iter) if (iter->getKey() == key) return iter; return end(); }
-		const_iterator find(const value_t &key) const { return const_cast<NodeChildren*>(this)->find(key); }
+		typename super::iterator find(const value_t &key) { for (typename super::iterator iter = super::begin(); iter != super::end(); ++iter) if (iter->getKey() == key) return iter; return super::end(); }
+		typename super::const_iterator find(const value_t &key) const { return const_cast<NodeChildren*>(this)->find(key); }
 		void erase(const value_t &key) { super::erase(find(key)); }
 	};
 	struct Node
 	{
 		NodeChildren children;
-		std::size_t value;
+		value_t value;
 		Node *parent;
 	};
 	Node root{{}, 0, nullptr};
 	
 	std::size_t size = 0;
 	
-	mutable std::vector<std::size_t> workingVector;
+	mutable std::vector<value_t> workingVector;
 	
-	static bool containsSubset(set_t::const_iterator currentInSet, const set_t::const_iterator &endOfSet, const Node &currentNode);
+	static bool containsSubset(typename set_t::const_iterator currentInSet, const typename set_t::const_iterator &endOfSet, const Node &currentNode);
 	
-	Node& insert(set_t::const_iterator currentInSet, const set_t::const_iterator &endOfSet, Node &currentNode);
-	void insertSideBranch(set_t::const_iterator currentInSet, const set_t::const_iterator &endOfSet, Node &currentNode, Node &result);
+	Node& insert(typename set_t::const_iterator currentInSet, const typename set_t::const_iterator &endOfSet, Node &currentNode);
+	void insertSideBranch(typename set_t::const_iterator currentInSet, const typename set_t::const_iterator &endOfSet, Node &currentNode, Node &result);
 	
 	void removeChildren(Node &node);
 	void removeTopNode(Node &topNode);
-	static void removeSideBranch(std::vector<std::size_t>::const_reverse_iterator currentInSet, const std::vector<std::size_t>::const_reverse_iterator &endOfSet, Node &startPoint, const Node *const endNode);
+	static void removeSideBranch(typename std::vector<value_t>::const_reverse_iterator currentInSet, const typename std::vector<value_t>::const_reverse_iterator &endOfSet, Node &startPoint, const Node *const endNode);
 	
 	void getSets(sets_t &sets, const Node &currentNode) const;
 	

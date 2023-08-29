@@ -4,34 +4,32 @@
 #include <cstdint>
 #include <iostream>
 
-#include "HasseDiagram.hh"
 
-
-template<typename MINTERM, typename PRIME_IMPLICANT>
-std::size_t PetricksMethod<MINTERM, PRIME_IMPLICANT>::findEssentialPrimeImplicantIndex(const minterm_t minterm)
+template<typename MINTERM, typename PRIME_IMPLICANT, typename INDEX_T>
+typename PetricksMethod<MINTERM, PRIME_IMPLICANT, INDEX_T>::index_t PetricksMethod<MINTERM, PRIME_IMPLICANT, INDEX_T>::findEssentialPrimeImplicantIndex(const minterm_t minterm)
 {
 	std::uint_fast8_t count = 0;
-	std::size_t index;
-	for (std::size_t i = 0; i != primeImplicants.size(); ++i)
+	index_t index;
+	for (index_t i = 0; i != primeImplicants.size(); ++i)
 	{
 		if (primeImplicants[i].covers(minterm))
 		{
 			if (++count == 2)
-				return SIZE_MAX;
+				return NO_INDEX;
 			index = i;
 		}
 	}
-	return count != 0 ? index : SIZE_MAX;
+	return count != 0 ? index : NO_INDEX;
 }
 
-template<typename MINTERM, typename PRIME_IMPLICANT>
-typename PetricksMethod<MINTERM, PRIME_IMPLICANT>::primeImplicants_t PetricksMethod<MINTERM, PRIME_IMPLICANT>::extractEssentials()
+template<typename MINTERM, typename PRIME_IMPLICANT, typename INDEX_T>
+typename PetricksMethod<MINTERM, PRIME_IMPLICANT, INDEX_T>::primeImplicants_t PetricksMethod<MINTERM, PRIME_IMPLICANT, INDEX_T>::extractEssentials()
 {
 	primeImplicants_t essentials;
 	for (typename minterms_t::const_iterator iter = minterms.cbegin(); iter != minterms.cend();)
 	{
-		const std::size_t essentialPrimeImplicantIndex = findEssentialPrimeImplicantIndex(*iter);
-		if (essentialPrimeImplicantIndex == SIZE_MAX)
+		const index_t essentialPrimeImplicantIndex = findEssentialPrimeImplicantIndex(*iter);
+		if (essentialPrimeImplicantIndex == NO_INDEX)
 		{
 			++iter;
 			continue;
@@ -52,22 +50,22 @@ typename PetricksMethod<MINTERM, PRIME_IMPLICANT>::primeImplicants_t PetricksMet
 	return essentials;
 }
 
-template<typename MINTERM, typename PRIME_IMPLICANT>
-typename PetricksMethod<MINTERM, PRIME_IMPLICANT>::productOfSumsOfProducts_t PetricksMethod<MINTERM, PRIME_IMPLICANT>::createPreliminaryProductOfSums() const
+template<typename MINTERM, typename PRIME_IMPLICANT, typename INDEX_T>
+typename PetricksMethod<MINTERM, PRIME_IMPLICANT, INDEX_T>::productOfSumsOfProducts_t PetricksMethod<MINTERM, PRIME_IMPLICANT, INDEX_T>::createPreliminaryProductOfSums() const
 {
 	productOfSumsOfProducts_t productOfSums;
 	for (const minterm_t &minterm : minterms)
 	{
 		sumOfProducts_t &sum = productOfSums.emplace_back();
-		for (std::size_t i = 0; i != primeImplicants.size(); ++i)
+		for (index_t i = 0; i != primeImplicants.size(); ++i)
 			if (primeImplicants[i].covers(minterm))
 				sum.emplace_back().push_back(i);
 	}
 	return productOfSums;
 }
 
-template<typename MINTERM, typename PRIME_IMPLICANT>
-void PetricksMethod<MINTERM, PRIME_IMPLICANT>::removeRedundantSums(productOfSumsOfProducts_t &productOfSums)
+template<typename MINTERM, typename PRIME_IMPLICANT, typename INDEX_T>
+void PetricksMethod<MINTERM, PRIME_IMPLICANT, INDEX_T>::removeRedundantSums(productOfSumsOfProducts_t &productOfSums)
 {
 	for (auto x = productOfSums.begin(); x != productOfSums.end(); ++x)
 	{
@@ -93,20 +91,20 @@ void PetricksMethod<MINTERM, PRIME_IMPLICANT>::removeRedundantSums(productOfSums
 	productOfSums.erase(std::remove_if(productOfSums.begin(), productOfSums.end(), [](const auto &x){ return x.empty(); }), productOfSums.end());
 }
 
-template<typename MINTERM, typename PRIME_IMPLICANT>
-typename PetricksMethod<MINTERM, PRIME_IMPLICANT>::productOfSumsOfProducts_t PetricksMethod<MINTERM, PRIME_IMPLICANT>::createProductOfSums() const
+template<typename MINTERM, typename PRIME_IMPLICANT, typename INDEX_T>
+typename PetricksMethod<MINTERM, PRIME_IMPLICANT, INDEX_T>::productOfSumsOfProducts_t PetricksMethod<MINTERM, PRIME_IMPLICANT, INDEX_T>::createProductOfSums() const
 {
 	productOfSumsOfProducts_t productOfSums = createPreliminaryProductOfSums();
 	removeRedundantSums(productOfSums);
 	return productOfSums;
 }
 
-template<typename MINTERM, typename PRIME_IMPLICANT>
-typename PetricksMethod<MINTERM, PRIME_IMPLICANT>::sumOfProducts_t PetricksMethod<MINTERM, PRIME_IMPLICANT>::multiplySumsOfProducts(const sumOfProducts_t &multiplier0, const sumOfProducts_t &multiplier1)
+template<typename MINTERM, typename PRIME_IMPLICANT, typename INDEX_T>
+typename PetricksMethod<MINTERM, PRIME_IMPLICANT, INDEX_T>::sumOfProducts_t PetricksMethod<MINTERM, PRIME_IMPLICANT, INDEX_T>::multiplySumsOfProducts(const sumOfProducts_t &multiplier0, const sumOfProducts_t &multiplier1)
 {
 	product_t newProduct;
 	newProduct.reserve(multiplier0.front().size() + multiplier1.front().size());
-	HasseDiagram hasseDiagram;
+	HasseDiagram<index_t> hasseDiagram;
 	for (const product_t &x : multiplier0)
 	{
 		for (const product_t &y : multiplier1)
@@ -120,8 +118,8 @@ typename PetricksMethod<MINTERM, PRIME_IMPLICANT>::sumOfProducts_t PetricksMetho
 	return hasseDiagram.getSets();
 }
 
-template<typename MINTERM, typename PRIME_IMPLICANT>
-typename PetricksMethod<MINTERM, PRIME_IMPLICANT>::sumOfProducts_t PetricksMethod<MINTERM, PRIME_IMPLICANT>::findSumOfProducts() const
+template<typename MINTERM, typename PRIME_IMPLICANT, typename INDEX_T>
+typename PetricksMethod<MINTERM, PRIME_IMPLICANT, INDEX_T>::sumOfProducts_t PetricksMethod<MINTERM, PRIME_IMPLICANT, INDEX_T>::findSumOfProducts() const
 {
 	productOfSumsOfProducts_t productOfSumsOfProducts = createProductOfSums();
 	if (productOfSumsOfProducts.empty())
@@ -152,8 +150,8 @@ typename PetricksMethod<MINTERM, PRIME_IMPLICANT>::sumOfProducts_t PetricksMetho
 	return std::move(productOfSumsOfProducts.front());
 }
 
-template<typename MINTERM, typename PRIME_IMPLICANT>
-typename PetricksMethod<MINTERM, PRIME_IMPLICANT>::solutions_t PetricksMethod<MINTERM, PRIME_IMPLICANT>::solve()
+template<typename MINTERM, typename PRIME_IMPLICANT, typename INDEX_T>
+typename PetricksMethod<MINTERM, PRIME_IMPLICANT, INDEX_T>::solutions_t PetricksMethod<MINTERM, PRIME_IMPLICANT, INDEX_T>::solve()
 {
 	primeImplicants_t essentials = extractEssentials();
 	sumOfProducts_t sumOfProducts = findSumOfProducts();
@@ -170,7 +168,7 @@ typename PetricksMethod<MINTERM, PRIME_IMPLICANT>::solutions_t PetricksMethod<MI
 		solutions.emplace_back();
 		solutions.back().reserve(essentials.size() + x.size());
 		solutions.back().insert(solutions.back().end(), essentials.begin(), essentials.end());
-		for (const std::size_t &index : x)
+		for (const index_t &index : x)
 			solutions.back().push_back(primeImplicants[index]);
 	}
 	return solutions;
@@ -180,4 +178,7 @@ typename PetricksMethod<MINTERM, PRIME_IMPLICANT>::solutions_t PetricksMethod<MI
 #include "Minterm.hh"
 #include "PrimeImplicant.hh"
 
-template class PetricksMethod<Minterm, PrimeImplicant>;
+template class PetricksMethod<Minterm, PrimeImplicant, std::uint8_t>;
+template class PetricksMethod<Minterm, PrimeImplicant, std::uint16_t>;
+template class PetricksMethod<Minterm, PrimeImplicant, std::uint32_t>;
+template class PetricksMethod<Minterm, PrimeImplicant, std::uint64_t>;
