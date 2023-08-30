@@ -114,7 +114,6 @@ typename PetricksMethod<MINTERM, PRIME_IMPLICANT, INDEX_T>::sumOfProducts_t Petr
 			hasseDiagram.insertRemovingSupersets(std::move(newProduct));
 		}
 	}
-	std::clog << " => " << (multiplier0.size() * multiplier1.size()) << std::flush;
 	return hasseDiagram.getSets();
 }
 
@@ -127,16 +126,12 @@ typename PetricksMethod<MINTERM, PRIME_IMPLICANT, INDEX_T>::sumOfProducts_t Petr
 	
 	while (productOfSumsOfProducts.size() != 1)
 	{
-		std::clog << '\n' << "remaining products: " << productOfSumsOfProducts.size();
 		sumOfProducts_t multiplier0 = std::move(productOfSumsOfProducts.back());
 		productOfSumsOfProducts.pop_back();
 		sumOfProducts_t multiplier1 = std::move(productOfSumsOfProducts.back());
 		productOfSumsOfProducts.pop_back();
-		std::clog << "  (" << multiplier0.size() << ", " << multiplier1.size() << ')' << std::flush;
 		productOfSumsOfProducts.emplace_back(multiplySumsOfProducts(std::move(multiplier0), std::move(multiplier1)));
-		std::clog << " => " << productOfSumsOfProducts.back().size() << std::flush;
 	}
-	std::clog << '\n' << "remaining products: " << productOfSumsOfProducts.size() << "  (" << productOfSumsOfProducts.front().size() << ')' << std::endl;
 	
 	return std::move(productOfSumsOfProducts.front());
 }
