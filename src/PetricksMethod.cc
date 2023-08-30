@@ -127,21 +127,14 @@ typename PetricksMethod<MINTERM, PRIME_IMPLICANT, INDEX_T>::sumOfProducts_t Petr
 	
 	while (productOfSumsOfProducts.size() != 1)
 	{
-		productOfSumsOfProducts_t newProductOfSumsOfProducts;
-		while (productOfSumsOfProducts.size() >= 2)
-		{
-			std::clog << '\n' << "remaining products: " << (productOfSumsOfProducts.size() + newProductOfSumsOfProducts.size());
-			sumOfProducts_t multiplier0 = std::move(productOfSumsOfProducts.back());
-			productOfSumsOfProducts.pop_back();
-			sumOfProducts_t multiplier1 = std::move(productOfSumsOfProducts.back());
-			productOfSumsOfProducts.pop_back();
-			std::clog << "  (" << multiplier0.size() << ", " << multiplier1.size() << ')' << std::flush;
-			newProductOfSumsOfProducts.emplace_back(multiplySumsOfProducts(std::move(multiplier0), std::move(multiplier1)));
-			std::clog << " => " << newProductOfSumsOfProducts.back().size() << std::flush;
-		}
-		if (!productOfSumsOfProducts.empty())
-			newProductOfSumsOfProducts.push_back(std::move(productOfSumsOfProducts.front()));
-		productOfSumsOfProducts = std::move(newProductOfSumsOfProducts);
+		std::clog << '\n' << "remaining products: " << productOfSumsOfProducts.size();
+		sumOfProducts_t multiplier0 = std::move(productOfSumsOfProducts.back());
+		productOfSumsOfProducts.pop_back();
+		sumOfProducts_t multiplier1 = std::move(productOfSumsOfProducts.back());
+		productOfSumsOfProducts.pop_back();
+		std::clog << "  (" << multiplier0.size() << ", " << multiplier1.size() << ')' << std::flush;
+		productOfSumsOfProducts.emplace_back(multiplySumsOfProducts(std::move(multiplier0), std::move(multiplier1)));
+		std::clog << " => " << productOfSumsOfProducts.back().size() << std::flush;
 	}
 	std::clog << '\n' << "remaining products: " << productOfSumsOfProducts.size() << "  (" << productOfSumsOfProducts.front().size() << ')' << std::endl;
 	
