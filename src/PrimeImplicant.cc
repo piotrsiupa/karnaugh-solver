@@ -70,15 +70,15 @@ void PrimeImplicant::print(std::ostream &o, const bool parentheses) const
 	if (needsParentheses)
 		o << '(';
 	bool first = true;
-	for (const auto &splitBit : splitBits())
+	for (const auto &[bitIndex, negated] : splitBits())
 	{
 		if (first)
 			first = false;
 		else
 			o << " && ";
-		if (splitBit.second)
+		if (negated)
 			o << '!';
-		o << ::inputNames[splitBit.first];
+		o << ::inputNames[bitIndex];
 	}
 	if (needsParentheses)
 		o << ')';

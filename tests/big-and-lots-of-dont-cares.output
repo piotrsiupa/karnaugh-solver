@@ -6,9 +6,9 @@ goal:
 0001  -    -    -    -    -    -    -    F    -    -    -    -    -    -    -    -
 0011  -    -    -    F    -    -    -    -    -    -    -    -    -    F    -    -
 0010  -    -    F    -    -    -    -    -    -    -    -    -    -    -    -    -
-0110  -    -    -    -    -    -    -    -    -    -    -    -    -    -    -    -
-0111  -    -    -    -    -    -    F    -    -    -    -    -    -    -    -    -
-0101  -    -    -    -    T    -    -    -    -    T    -    -    -    -    -    -
+0110  -    -    -    -    T    -    -    -    -    -    -    -    -    -    -    -
+0111  -    -    -    -    -    -    F    -    -    T    -    -    -    -    -    -
+0101  -    -    -    -    F    -    -    -    -    F    -    -    -    -    -    -
 0100  -    -    -    -    T    -    F    -    -    T    -    -    -    -    -    -
 1100  -    -    -    -    -    -    -    -    -    -    -    -    -    -    -    -
 1101  -    -    -    -    -    -    -    -    -    -    -    -    -    -    -    -
@@ -21,31 +21,31 @@ goal:
 
 best fit:
      0000 0001 0011 0010 0110 0111 0101 0100 1100 1101 1111 1110 1010 1011 1001 1000 
-0000  F    F    F    F    F    F    F    F    F    F    F    F    F    F    F    F
+0000  T    F    F    T    T    F    F    T    T    T    T    T    T    T    T    T
 0001  F    F    F    F    F    F    F    F    F    F    F    F    F    F    F    F
 0011  F    F    F    F    F    F    F    F    F    F    F    F    F    F    F    F
-0010  F    F    F    F    F    F    F    F    F    F    F    F    F    F    F    F
-0110  F    F    T    T    T    T    F    F    T    T    T    T    T    T    T    T
-0111  F    F    T    T    T    T    F    F    T    T    T    T    T    T    T    T
-0101  F    F    T    T    T    T    F    F    T    T    T    T    T    T    T    T
-0100  F    F    T    T    T    T    F    F    T    T    T    T    T    T    T    T
-1100  F    F    T    T    T    T    F    F    T    T    T    T    T    T    T    T
-1101  F    F    T    T    T    T    F    F    T    T    T    T    T    T    T    T
-1111  F    F    T    T    T    T    F    F    T    T    T    T    T    T    T    T
-1110  F    F    T    T    T    T    F    F    T    T    T    T    T    T    T    T
-1010  F    F    F    F    F    F    F    F    F    F    F    F    F    F    F    F
+0010  T    F    F    T    T    F    F    T    T    T    T    T    T    T    T    T
+0110  T    F    F    T    T    F    F    T    T    T    T    T    T    T    T    T
+0111  F    F    F    F    F    F    F    F    T    T    T    T    T    T    T    T
+0101  F    F    F    F    F    F    F    F    F    F    F    F    F    F    F    F
+0100  T    F    F    T    T    F    F    T    T    T    T    T    T    T    T    T
+1100  T    F    F    T    T    F    F    T    T    T    T    T    T    T    T    T
+1101  F    F    F    F    F    F    F    F    F    F    F    F    F    F    F    F
+1111  F    F    F    F    F    F    F    F    T    T    T    T    T    T    T    T
+1110  T    F    F    T    T    F    F    T    T    T    T    T    T    T    T    T
+1010  T    F    F    T    T    F    F    T    T    T    T    T    T    T    T    T
 1011  F    F    F    F    F    F    F    F    F    F    F    F    F    F    F    F
 1001  F    F    F    F    F    F    F    F    F    F    F    F    F    F    F    F
-1000  F    F    F    F    F    F    F    F    F    F    F    F    F    F    F    F
+1000  T    F    F    T    T    F    F    T    T    T    T    T    T    T    T    T
 
 solution:
-(b && e) || (b && g)
+(!d && e) || (!d && !h) || (b && c && e)
 
 === optimized solution ===
 
-Negated inputs: <none>
-Products: [0] = b && e,  [1] = b && g
-Sums: [2] = [0] || [1]
-Final sums: "f0" = [2]
+Negated inputs: d, h
+Products: [0] = !d && e,  [1] = !d && !h,  [2] = b && c && e
+Sums: [3] = [0] || [1] || [2]
+Final sums: "f0" = [3]
 
-Gate scores: NOTs = 0, ANDs = 2, ORs = 1
+Gate scores: NOTs = 2, ANDs = 4, ORs = 2

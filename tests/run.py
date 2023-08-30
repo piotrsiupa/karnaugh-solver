@@ -2,7 +2,9 @@
 
 import sys
 from pathlib import Path
+import signal
 import subprocess
+import time
 
 
 def find_tests(test_dir: Path) -> list[str]:
@@ -10,20 +12,28 @@ def find_tests(test_dir: Path) -> list[str]:
 
 
 def run_test(test_dir: Path, program: Path, test_name: str) -> bool:
+    print(f'Running "{test_name}"...', end=' ', flush=True)
     input_file = test_dir / (test_name + '.input')
     output_file = test_dir / (test_name + '.output')
     with open(input_file, 'r') as f:
-        input_data = f.read()
+        process = subprocess.Popen('./' + str(program), text=True, stdin=f, stdout=subprocess.PIPE)
+        starttime = time.perf_counter()
+        while True:
+            try:
+                process.wait()
+                break
+            except KeyboardInterrupt:
+                process.send_signal(signal.SIGINT)
+        endtime = time.perf_counter()
+    if process.returncode != 0:
+        print(f'FAIL ({endtime-starttime:.2f}s, return code is {process.returncode})')
+        return False
     with open(output_file, 'r') as f:
         expected_output = f.read()
-    try:
-        actual_output = subprocess.check_output('./' + str(program), text=True, input=input_data)
-    except subprocess.CalledProcessError:
-        print(f'The test "{test_name}" didn\'t return 0!', file=sys.stderr)
+    if process.stdout.read() != expected_output:
+        print(f'FAIL ({endtime-starttime:.2f}s)')
         return False
-    if actual_output != expected_output:
-        print(f'The output of the test "{test_name}" is incorrect!', file=sys.stderr)
-        return False
+    print(f'SUCCESS ({endtime-starttime:.2f}s)')
     return True
 
 
@@ -39,9 +49,9 @@ def main() -> None:
             success_count += 1;
     print(f'Passed {success_count}/{len(tests)} tests.')
     if success_count == len(tests):
-        print('SUCCESS')
+        print('=== SUCCESS ===')
     else:
-        print('FAIL')
+        print('=== FAIL ===')
         sys.exit(1)
 
 if __name__ == '__main__':

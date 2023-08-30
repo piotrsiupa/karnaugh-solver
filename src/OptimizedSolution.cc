@@ -40,11 +40,11 @@ void OptimizedSolution::printProducts(std::ostream &o) const
 		else
 			o << ",  ";
 		o << '[' << i << "] = ";
-		const auto &product = products[i];
-		bool first = product.first == PrimeImplicant::all();
-		if (!first || product.second.empty())
-			product.first.print(o, false);
-		for (const auto &productRef : product.second)
+		const auto &[primeImplicant, references] = products[i];
+		bool first = primeImplicant == PrimeImplicant::all();
+		if (!first || references.empty())
+			primeImplicant.print(o, false);
+		for (const auto &productRef : references)
 		{
 			if (first)
 				first = false;
@@ -195,9 +195,9 @@ void OptimizedSolution::insertWipProducts(const wipProducts_t &wipProducts)
 	for (const auto &wipProduct : wipProducts)
 	{
 		products.push_back({wipProduct.first, {}});
-		auto &product = products.back();
+		auto &[primeImplicant, references] = products.back();
 		for (auto wipProductRefIter = wipProduct.second.crbegin(); wipProductRefIter != wipProduct.second.crend(); ++wipProductRefIter)
-			product.second.push_back(findWipProductRefIndex(wipProducts, *wipProductRefIter));
+			references.push_back(findWipProductRefIndex(wipProducts, *wipProductRefIter));
 	}
 }
 
