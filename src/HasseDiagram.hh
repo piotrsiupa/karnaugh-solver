@@ -27,33 +27,8 @@ private:
 			references_t references;
 		};
 		
-		void moveValue(NodeChild &&other)
-		{
-			switch (other.key)
-			{
-			case TOP_NODE:
-				break;
-			case REFERENCES:
-				new (&references) references_t(std::move(other.references));
-				other.references.~references_t();
-				break;
-			default:
-				node = other.node;
-			}
-		}
-		void deconstructValue()
-		{
-			switch (this->key)
-			{
-			case TOP_NODE:
-				break;
-			case REFERENCES:
-				references.~references_t();
-				break;
-			default:
-				delete node;
-			}
-		}
+		inline void moveValue(NodeChild &&other);
+		inline void deconstructValue();
 		
 	public:
 		NodeChild(const value_t key, Node *const node) : key(key), node(node) {}
@@ -61,20 +36,8 @@ private:
 		NodeChild(std::vector<Node*> &&references) : key(REFERENCES) { new(&this->references) references_t(std::move(references)); }
 		NodeChild(const NodeChild &) = delete;
 		NodeChild& operator=(const NodeChild &) = delete;
-		NodeChild(NodeChild &&other) :
-			key(other.key)
-		{
-			moveValue(std::move(other));
-			other.key = TOP_NODE;
-		}
-		NodeChild& operator=(NodeChild &&other)
-		{
-			deconstructValue();
-			this->key = other.key;
-			moveValue(std::move(other));
-			other.key = TOP_NODE;
-			return *this;
-		}
+		inline NodeChild(NodeChild &&other);
+		inline NodeChild& operator=(NodeChild &&other);
 		~NodeChild() { deconstructValue(); }
 		
 		value_t getKey() const { return key; }
@@ -120,3 +83,53 @@ public:
 	
 	bool insertRemovingSupersets(const set_t &set);
 };
+
+
+template<typename VALUE_T>
+void HasseDiagram<VALUE_T>::NodeChild::moveValue(NodeChild &&other)
+{
+	switch (other.key)
+	{
+	case TOP_NODE:
+		break;
+	case REFERENCES:
+		new (&references) references_t(std::move(other.references));
+		other.references.~references_t();
+		break;
+	default:
+		node = other.node;
+	}
+}
+
+template<typename VALUE_T>
+void HasseDiagram<VALUE_T>::NodeChild::deconstructValue()
+{
+	switch (this->key)
+	{
+	case TOP_NODE:
+		break;
+	case REFERENCES:
+		references.~references_t();
+		break;
+	default:
+		delete node;
+	}
+}
+
+template<typename VALUE_T>
+HasseDiagram<VALUE_T>::NodeChild::NodeChild(NodeChild &&other) :
+	key(other.key)
+{
+	moveValue(std::move(other));
+	other.key = TOP_NODE;
+}
+
+template<typename VALUE_T>
+typename HasseDiagram<VALUE_T>::NodeChild& HasseDiagram<VALUE_T>::NodeChild::operator=(NodeChild &&other)
+{
+	deconstructValue();
+	this->key = other.key;
+	moveValue(std::move(other));
+	other.key = TOP_NODE;
+	return *this;
+}

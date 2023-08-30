@@ -98,50 +98,51 @@ void HasseDiagram<VALUE_T>::removeTopNode(Node &topNode)
 {
 	--size;
 	topNode.children.erase(TOP_NODE);
-	std::vector<value_t> &reversedSet = workingVector;
-	reversedSet.clear();
+	std::vector<value_t> &valuesBackwards = workingVector;
+	valuesBackwards.clear();
 	Node *curr = &topNode;
 	while (curr->parent != nullptr)
 	{
-		if (reversedSet.size() >= 2)
-			removeSideBranch(std::next(reversedSet.crbegin()), reversedSet.crend(), *curr, &topNode);
-		reversedSet.push_back(curr->value);
+		if (valuesBackwards.size() >= 2)
+			removeSideBranch(std::next(valuesBackwards.crbegin()), valuesBackwards.crend(), *curr, &topNode);
+		valuesBackwards.push_back(curr->value);
 		Node *const parent = curr->parent;
 		if (curr->children.empty())
-			parent->children.erase(reversedSet.back());
+			parent->children.erase(valuesBackwards.back());
 		curr = parent;
 	}
-	if (reversedSet.size() >= 2)
-		removeSideBranch(std::next(reversedSet.crbegin()), reversedSet.crend(), *curr, &topNode);
+	if (valuesBackwards.size() >= 2)
+		removeSideBranch(std::next(valuesBackwards.crbegin()), valuesBackwards.crend(), *curr, &topNode);
 }
 
 template<typename VALUE_T>
-void HasseDiagram<VALUE_T>::removeSideBranch(typename std::vector<value_t>::const_reverse_iterator currentInSet, const typename std::vector<value_t>::const_reverse_iterator &endOfSet, Node &startPoint, const Node *const endNode)
+void HasseDiagram<VALUE_T>::removeSideBranch(typename std::vector<value_t>::const_reverse_iterator currentValue, const typename std::vector<value_t>::const_reverse_iterator &endOfValues, Node &startPoint, const Node *const endNode)
 {
-	Node &currentNode = startPoint.children.find(*currentInSet)->getNode();
-	const typename std::vector<value_t>::const_reverse_iterator nextInSet = std::next(currentInSet);
-	if (nextInSet != endOfSet)
+	Node &currentNode = startPoint.children.find(*currentValue)->getNode();
+	const typename std::vector<value_t>::const_reverse_iterator nextValue = std::next(currentValue);
+	if (nextValue != endOfValues)
 	{
-		removeSideBranch(nextInSet, endOfSet, currentNode, endNode);
-		removeSideBranch(nextInSet, endOfSet, startPoint, endNode);
+		removeSideBranch(nextValue, endOfValues, currentNode, endNode);
+		removeSideBranch(nextValue, endOfValues, startPoint, endNode);
 	}
 	else
 	{
-		std::vector<Node*> &sideEnds = currentNode.children.find(REFERENCES)->getReferences();
-		sideEnds.erase(std::find(sideEnds.begin(), sideEnds.end(), endNode));
-		if (sideEnds.empty())
+		std::vector<Node*> &references = currentNode.children.find(REFERENCES)->getReferences();
+		references.erase(std::find(references.begin(), references.end(), endNode));
+		if (references.empty())
 			currentNode.children.erase(REFERENCES);
 	}
 	if (currentNode.children.empty())
-		startPoint.children.erase(*currentInSet);
+		startPoint.children.erase(*currentValue);
 }
 
 template<typename VALUE_T>
 void HasseDiagram<VALUE_T>::getSets(sets_t &sets, const Node &currentNode) const
 {
+	set_t &currentSet = workingVector;
 	if (currentNode.children.find(TOP_NODE) != currentNode.children.cend())
 	{
-		sets.emplace_back(workingVector);
+		sets.emplace_back(currentSet);
 	}
 	else
 	{
@@ -149,9 +150,9 @@ void HasseDiagram<VALUE_T>::getSets(sets_t &sets, const Node &currentNode) const
 		{
 			if (child.getKey() != REFERENCES)
 			{
-				workingVector.push_back(child.getKey());
+				currentSet.push_back(child.getKey());
 				getSets(sets, child.getNode());
-				workingVector.pop_back();
+				currentSet.pop_back();
 			}
 		}
 	}
