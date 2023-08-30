@@ -1,6 +1,6 @@
-# This input is generated randomly and it is about how much the program can handle. (It takes about an hour to finish on my machine.)
+# This input is generated randomly.
 # Apparently random data is the most expensive to process, especially if it has a significant number of ignores.
-# Do not enable this test unless you're specifically testing optimizations.
+# (Not really doable without heuristics.)
 
 A, B, C, D, E, F, G, H
 

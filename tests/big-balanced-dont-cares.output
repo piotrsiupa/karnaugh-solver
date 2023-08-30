@@ -2,50 +2,50 @@
 
 goal:
      0000 0001 0011 0010 0110 0111 0101 0100 1100 1101 1111 1110 1010 1011 1001 1000 
-0000  T    -    -    T    T    -    -    T    T    -    -    T    T    -    -    T
-0001  T    -    T    F    F    -    T    -    -    F    T    F    F    T    -    T
-0011  -    T    -    F    F    T    -    T    T    -    T    F    F    -    T    -
-0010  -    T    T    -    -    T    T    -    -    T    T    -    -    T    T    -
-0110  T    -    -    T    T    -    -    T    T    -    -    T    T    -    -    T
-0111  T    -    T    F    F    -    T    -    -    T    -    F    F    T    -    T
-0101  -    T    -    F    F    T    -    T    T    F    -    F    F    -    T    -
-0100  -    T    T    -    F    -    T    -    T    F    T    -    T    -    -    T
-1100  -    T    T    -    -    T    T    -    -    T    T    -    -    T    T    -
-1101  -    T    T    -    -    T    T    -    -    T    T    -    -    T    T    -
-1111  T    -    -    T    T    -    -    T    T    -    -    T    T    -    -    T
-1110  -    T    T    -    -    T    T    -    -    T    -    F    F    F    F    F
-1010  T    -    -    T    T    -    -    T    T    -    T    F    F    F    F    F
-1011  -    T    T    -    T    -    F    -    T    -    T    F    F    F    F    F
-1001  -    T    T    -    -    T    T    -    -    T    -    F    F    F    F    F
-1000  T    -    -    T    T    -    -    T    T    -    T    F    F    F    F    F
+0000  -    -    T    F    -    -    -    T    -    -    -    -    -    T    T    T
+0001  -    T    -    F    F    T    -    -    -    -    -    F    F    -    T    T
+0011  -    T    T    F    F    T    T    -    T    T    -    F    F    T    T    T
+0010  -    -    T    -    T    T    T    T    T    T    T    T    -    -    T    -
+0110  -    T    T    T    T    T    T    -    T    -    -    T    -    T    -    T
+0111  T    -    T    F    F    -    -    T    -    -    -    F    F    -    -    -
+0101  -    T    -    F    F    T    T    -    T    T    F    F    F    -    T    T
+0100  T    T    -    -    -    -    -    T    T    -    -    -    -    -    T    T
+1100  -    T    -    -    -    -    -    T    -    T    -    -    -    -    -    T
+1101  -    -    -    T    T    -    T    T    -    T    T    -    -    -    T    T
+1111  -    T    T    T    T    -    -    -    -    -    -    -    T    -    T    T
+1110  T    T    F    T    T    F    F    -    T    T    -    F    F    F    F    F
+1010  T    -    F    F    -    -    F    T    -    T    T    F    F    F    F    F
+1011  T    -    T    F    F    F    F    -    T    -    T    F    F    F    F    F
+1001  -    T    T    -    -    T    T    -    T    -    T    F    F    F    F    F
+1000  -    -    -    T    -    T    T    T    -    -    T    F    F    F    F    F
 
 best fit:
      0000 0001 0011 0010 0110 0111 0101 0100 1100 1101 1111 1110 1010 1011 1001 1000 
-0000  T    T    T    T    T    T    T    T    T    F    T    T    T    T    T    T
-0001  T    T    T    F    F    T    T    T    T    F    T    F    F    T    T    T
-0011  T    T    T    F    F    T    T    T    T    T    T    F    F    T    T    T
+0000  T    T    T    F    F    T    T    T    T    T    F    F    F    T    T    T
+0001  T    T    T    F    F    T    T    T    T    T    F    F    F    T    T    T
+0011  T    T    T    F    F    T    T    T    T    T    F    F    F    T    T    T
 0010  T    T    T    T    T    T    T    T    T    T    T    T    T    T    T    T
 0110  T    T    T    T    T    T    T    T    T    T    T    T    T    T    T    T
-0111  T    T    T    F    F    T    T    T    T    T    T    F    F    T    T    T
-0101  T    T    T    F    F    T    T    T    T    F    T    F    F    T    T    T
-0100  T    T    T    T    F    T    T    T    T    F    T    T    T    T    T    T
-1100  T    T    T    T    T    T    T    T    T    T    T    F    T    T    T    T
+0111  T    T    T    F    F    T    T    T    T    T    F    F    F    T    T    T
+0101  T    T    T    F    F    T    T    T    T    T    F    F    F    T    T    T
+0100  T    T    T    F    F    T    T    T    T    T    F    F    F    T    T    T
+1100  T    T    T    T    T    T    T    T    T    T    T    T    T    T    T    T
 1101  T    T    T    T    T    T    T    T    T    T    T    T    T    T    T    T
 1111  T    T    T    T    T    T    T    T    T    T    T    T    T    T    T    T
-1110  T    T    T    T    T    T    T    T    T    T    T    F    F    F    F    F
-1010  T    T    T    T    T    T    T    T    T    T    T    F    F    F    F    F
-1011  T    T    T    T    T    F    F    T    T    T    T    F    F    F    F    F
+1110  T    T    F    T    T    F    F    T    T    T    T    F    F    F    F    F
+1010  T    T    F    F    F    F    F    T    T    T    T    F    F    F    F    F
+1011  T    T    T    F    F    F    F    T    T    T    T    F    F    F    F    F
 1001  T    T    T    T    T    T    T    T    T    T    T    F    F    F    F    F
 1000  T    T    T    T    T    T    T    T    T    T    T    F    F    F    F    F
 
 solution:
-(a && b && d) || (!a && c && !g) || (a && !e && !f) || (a && !e && !h) || (!a && !f && !g) || (!a && g && h) || (!b && !d && !e) || (c && !d && !e) || (!c && !e && h) || (f && !g && !h) || (!a && !d && e && g) || (a && e && f && h) || (b && !c && !d && !f)
+(!a && !g) || (a && b && !c) || (a && b && d) || (!a && c && !d) || (a && !c && !e) || (!a && !e && h) || (!a && !f && h) || (!e && !f && !g) || (f && !g && !h) || (a && b && !e && !h) || (a && e && f && h) || (d && !e && !f && h)
 
 === optimized solution ===
 
-Negated inputs: a, b, c, d, e, f, g, h
-Products: [0] = a && !e,  [1] = !a && g,  [2] = !a && !g,  [3] = !d && !e,  [4] = a && b && d,  [5] = c && [2],  [6] = !f && [0],  [7] = !h && [0],  [8] = !f && [2],  [9] = h && [1],  [10] = !b && [3],  [11] = c && [3],  [12] = !c && !e && h,  [13] = f && !g && !h,  [14] = !d && e && [1],  [15] = a && e && f && h,  [16] = b && !c && !d && !f
-Sums: [17] = [4] || [5] || [6] || [7] || [8] || [9] || [10] || [11] || [12] || [13] || [14] || [15] || [16]
+Negated inputs: a, c, d, e, f, g, h
+Products: [0] = a && b,  [1] = a && !c,  [2] = a && !e,  [3] = !a && !g,  [4] = !a && h,  [5] = !e && !f,  [6] = b && [1],  [7] = d && [0],  [8] = !a && c && !d,  [9] = !e && [1],  [10] = !e && [4],  [11] = !f && [4],  [12] = !g && [5],  [13] = f && !g && !h,  [14] = b && !h && [2],  [15] = a && e && f && h,  [16] = d && h && [5]
+Sums: [17] = [3] || [6] || [7] || [8] || [9] || [10] || [11] || [12] || [13] || [14] || [15] || [16]
 Final sums: "f0" = [17]
 
-Gate scores: NOTs = 8, ANDs = 25, ORs = 12
+Gate scores: NOTs = 7, ANDs = 23, ORs = 11
