@@ -152,13 +152,17 @@ bool Karnaugh::loadData(lines_t &lines)
 		return false;
 	lines.pop_front();
 	
-	Minterms dontCareMinterms;
-	if (!loadMinterms(dontCareMinterms, lines.front()))
+	if (!loadMinterms(allowedMinterms, lines.front()))
 		return false;
 	lines.pop_front();
 	
-	allowedMinterms.insert(targetMinterms.cbegin(), targetMinterms.cend());
-	allowedMinterms.insert(dontCareMinterms.cbegin(), dontCareMinterms.cend());
+	for (const Minterm &targetMinterm : targetMinterms)
+	{
+		if (allowedMinterms.find(targetMinterm) == allowedMinterms.cend())
+			allowedMinterms.insert(targetMinterm);
+		else
+			std::cerr << targetMinterm << " on the \"don't care\" list of \"" << functionName << "\" will be ignored because it is already a minterm!\n";
+	}
 	
 	return true;
 }
