@@ -8,7 +8,7 @@ import time
 
 
 def find_tests(test_dir: Path) -> list[str]:
-    return [x.stem for x in test_dir.glob('*.input')]
+    return sorted(x.stem for x in test_dir.glob('*.input'))
 
 
 def run_test(test_dir: Path, program: Path, test_name: str) -> bool:
