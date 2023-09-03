@@ -7,3 +7,4 @@ SConstruct text
 tests/*.input text
 tests/*.input.disabled text
 tests/*.output text
+*.sh text eol=lf
