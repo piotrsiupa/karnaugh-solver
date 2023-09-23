@@ -2,7 +2,8 @@
 
 #include <algorithm>
 #include <iomanip>
-#include <iostream>
+
+#include "OptimizationHasseDiagram.hh"
 
 
 void OptimizedSolution::printNegatedInputs(std::ostream &o) const
@@ -116,24 +117,183 @@ void OptimizedSolution::initializeWips(const solutions_t &solutions, wipProducts
 	}
 }
 
-void OptimizedSolution::extractCommonParts(wipProducts_t &wipProducts)
+std::pair<OptimizedSolution::productsGraph_t, OptimizedSolution::possibleSubsets_t> OptimizedSolution::buildGraph(const wipProducts_t &wipProducts)
 {
-	for (auto iter = wipProducts.rbegin(); iter != wipProducts.rend(); ++iter)
+	using HasseDiagram = OptimizationHasseDiagram<std::int8_t>;
+	HasseDiagram hasseDiagram;
+	int i = 0;
+	for (const auto &x : wipProducts)
 	{
-		//TODO This approach does not strictly guarantee to find the best solution. Petrick's method could be used here.
-		PrimeImplicant remainingInputs = iter->first;
-		for (auto jiter = std::next(iter); jiter != wipProducts.rend(); ++jiter)
+		if (x.first.getBitCount() != 0)
 		{
-			const PrimeImplicant commonInputs = remainingInputs & jiter->first;
-			if (commonInputs.getBitCount() > 1)
-			{
-				remainingInputs -= commonInputs;
-				const auto &commonProduct = wipProducts[commonInputs];
-				if (&commonProduct != &iter->second)
-					iter->second.push_back(&commonProduct);
-			}
+			OptimizationHasseDiagram<std::int8_t>::set_t set;
+			for (const auto &bit : x.first.splitBits())
+				set.push_back(bit.second ? -bit.first - 1 : bit.first);
+			hasseDiagram.insert(set, i++);
 		}
 	}
+	HasseDiagram::setHierarchy_t setHierarchy = hasseDiagram.makeSetHierarchy();
+	productsGraph_t productsGraph;
+	productsGraph.reserve(setHierarchy.size());
+	for (auto &setHierarchyEntry : setHierarchy)
+	{
+		PrimeImplicant primeImplicant = PrimeImplicant::all();
+		for (const auto &value : setHierarchyEntry.values)
+			if (value >= 0)
+				primeImplicant.setBit(value, false);
+			else
+				primeImplicant.setBit(-value - 1, true);
+		productsGraph.emplace_back(primeImplicant, std::move(setHierarchyEntry.subsets));
+	}
+	possibleSubsets_t possibleSubsets(wipProducts.size());
+	for (std::size_t i = 0; i != setHierarchy.size(); ++i)
+		for (const auto &setId : setHierarchy[i].setIds)
+			possibleSubsets[setId].push_back(i);
+	return {productsGraph, possibleSubsets};
+}
+
+bool OptimizedSolution::chooseNextSubsets(const possibleSubsets_t &possibleSubsets, chosenSubsets_t &chosenSubsets, usageCounts_t &usageCounts)
+{
+	try_again:
+	for (std::size_t i = 0; i != chosenSubsets.size(); ++i)
+	{
+		if (chosenSubsets[i].empty())
+		{
+			if (possibleSubsets[i].empty())
+				goto next;
+			chosenSubsets[i].push_back(0);
+			++usageCounts[possibleSubsets[i][0]];
+		}
+		else
+		{
+			chosenSubsets[i].push_back(chosenSubsets[i].back() + 1);
+			if (chosenSubsets[i].back() == possibleSubsets[i].size())
+			{
+				chosenSubsets[i].pop_back();
+				--usageCounts[possibleSubsets[i][chosenSubsets[i].back()]];
+				chosenSubsets[i].pop_back();
+				if (chosenSubsets[i].empty())
+					goto next;
+				--usageCounts[possibleSubsets[i][chosenSubsets[i].back()]];
+				++chosenSubsets[i].back();
+				++usageCounts[possibleSubsets[i][chosenSubsets[i].back()]];
+			}
+			else
+			{
+				++usageCounts[possibleSubsets[i][chosenSubsets[i].back()]];
+			}
+		}
+		for (const std::size_t &usageCount : usageCounts)
+			if (usageCount == 1)
+				goto try_again;
+		break;
+		next:;
+		if (i == chosenSubsets.size() - 1)
+			return false;
+	}
+	return true;
+}
+
+OptimizedSolution::gateCount_t OptimizedSolution::countGates(const wipProducts_t &wipProducts, const productsGraph_t &graph, const possibleSubsets_t &possibleSubsets, const chosenSubsets_t &chosenSubsets, const usageCounts_t &usageCounts)
+{
+	gateCount_t gates = 0;
+	int i = 0;
+	for (const auto &product : wipProducts)
+	{
+		gates += chosenSubsets[i].size();
+		PrimeImplicant reducedPrimeImplicant = product.first;
+		for (const std::size_t &subset : chosenSubsets[i])
+			reducedPrimeImplicant -= graph[possibleSubsets[i][subset]].first;
+		gates += reducedPrimeImplicant.getBitCount();
+		if (chosenSubsets[i].size() != 0 || reducedPrimeImplicant.getBitCount() != 0)
+			--gates;
+		++i;
+	}
+	for (std::size_t i = 0; i != graph.size(); ++i)
+	{
+		if (usageCounts[i] == 0)
+			continue;
+		gates += graph[i].second.size();
+		PrimeImplicant reducedPrimeImplicant = graph[i].first;
+		for (const std::size_t &subset : graph[i].second)
+			reducedPrimeImplicant -= graph[subset].first;
+		gates += reducedPrimeImplicant.getBitCount();
+		--gates;
+	}
+	return gates;
+}
+
+std::pair<OptimizedSolution::chosenSubsets_t, OptimizedSolution::usageCounts_t> OptimizedSolution::findBestSubsets(const wipProducts_t &wipProducts, const productsGraph_t &graph, const possibleSubsets_t &possibleSubsets)
+{
+	chosenSubsets_t chosenSubsets(wipProducts.size()), bestChosenSubsets(wipProducts.size());
+	usageCounts_t usageCounts(graph.size()), bestUsageCounts(graph.size());
+	std::size_t bestGates = SIZE_MAX;
+	while (true)
+	{
+		usageCounts_t candidateUsageCounts = usageCounts;
+		std::vector<std::size_t> usageCountsToPropagate; //TODO this may also need brute-force approach?
+		for (std::size_t i = 0; i != candidateUsageCounts.size(); ++i)
+			if (candidateUsageCounts[i] != 0)
+				usageCountsToPropagate.push_back(i);
+		while (!usageCountsToPropagate.empty())
+		{
+			const std::size_t i = usageCountsToPropagate.back();
+			usageCountsToPropagate.pop_back();
+			for (const std::size_t &subset : graph[i].second)
+				if (candidateUsageCounts[subset]++ == 0)
+					usageCountsToPropagate.push_back(subset);
+		}
+		const gateCount_t gates = countGates(wipProducts, graph, possibleSubsets, chosenSubsets, usageCounts);
+		if (gates < bestGates)
+		{
+			bestChosenSubsets = chosenSubsets;
+			bestUsageCounts = std::move(candidateUsageCounts);
+			bestGates = gates;
+		}
+		if (!chooseNextSubsets(possibleSubsets, chosenSubsets, usageCounts))
+			break;
+	}
+	return {bestChosenSubsets, bestUsageCounts};
+}
+
+void OptimizedSolution::putChosenSubsetsBackToWips(wipProducts_t &wipProducts, const productsGraph_t &graph, const possibleSubsets_t &possibleSubsets, const chosenSubsets_t &chosenSubsets, const usageCounts_t &usageCounts)
+{
+	std::vector<PrimeImplicant> mainProducts;
+	mainProducts.reserve(wipProducts.size());
+	for (const auto &x : wipProducts)
+		mainProducts.push_back(x.first);
+	std::vector<ref_t> refsrefs(graph.size());
+	for (std::size_t i = 0; i != graph.size(); ++i)
+		if (usageCounts[i] != 0)
+			refsrefs[i] = &wipProducts[graph[i].first];
+	for (std::size_t i = 0; i != graph.size(); ++i)
+	{
+		if (usageCounts[i] != 0)
+		{
+			auto &refs = wipProducts[graph[i].first];
+			refs.reserve(graph[i].second.size());
+			for (const std::size_t &subset : graph[i].second)
+				refs.push_back(refsrefs[subset]);
+		}
+	}
+	for (std::size_t i = 0; i != mainProducts.size(); ++i)
+	{
+		auto &refs = wipProducts[mainProducts[i]];
+		refs.reserve(chosenSubsets[i].size());
+		for (const std::size_t &subset : chosenSubsets[i])
+		{
+			const ref_t ref = refsrefs[possibleSubsets[i][subset]];
+			if (&refs != ref)
+				refs.push_back(ref);
+		}
+	}
+}
+
+void OptimizedSolution::extractCommonParts(wipProducts_t &wipProducts)
+{
+	const auto [graph, possibleSubsets] = buildGraph(wipProducts);
+	const auto [chosenSubsets, usageCounts] = findBestSubsets(wipProducts, graph, possibleSubsets);
+	putChosenSubsetsBackToWips(wipProducts, graph, possibleSubsets, chosenSubsets, usageCounts);
 }
 
 void OptimizedSolution::extractCommonParts(wipSums_t &wipSums)
@@ -193,9 +353,11 @@ void OptimizedSolution::insertWipProducts(const wipProducts_t &wipProducts)
 {
 	products.reserve(wipProducts.size());
 	for (const auto &wipProduct : wipProducts)
-	{
 		products.push_back({wipProduct.first, {}});
-		auto &[primeImplicant, references] = products.back();
+	std::size_t i = 0;
+	for (const auto &wipProduct : wipProducts)
+	{
+		auto &references = products[i++].second;
 		for (auto wipProductRefIter = wipProduct.second.crbegin(); wipProductRefIter != wipProduct.second.crend(); ++wipProductRefIter)
 			references.push_back(findWipProductRefIndex(wipProducts, *wipProductRefIter));
 	}

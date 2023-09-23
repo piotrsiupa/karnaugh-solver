@@ -104,7 +104,7 @@ typename PetricksMethod<MINTERM, PRIME_IMPLICANT, INDEX_T>::sumOfProducts_t Petr
 {
 	product_t newProduct;
 	newProduct.reserve(multiplier0.front().size() + multiplier1.front().size());
-	HasseDiagram<index_t> hasseDiagram;
+	PetricksHasseDiagram<index_t> hasseDiagram;
 	for (const product_t &x : multiplier0)
 	{
 		for (const product_t &y : multiplier1)

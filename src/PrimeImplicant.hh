@@ -16,13 +16,12 @@ public:
 	using mask_t = std::uint32_t;
 	static_assert(sizeof(mask_t) * CHAR_BIT >= ::maxBits);
 	using minterms_t = std::vector<Minterm>;
+	using splitBits_t = std::vector<std::pair<bits_t, bool>>;
 	
 	static constexpr PrimeImplicant all() { return {0, 0, 0}; }
 	static constexpr PrimeImplicant error() { return {~mask_t(0), ~mask_t(0), 0}; }
 	
 private:
-	using splitBits_t = std::vector<std::pair<bits_t, bool>>;
-	
 	mask_t trueBits, falseBits;
 	bits_t bitCount;
 	
@@ -30,8 +29,6 @@ private:
 	constexpr PrimeImplicant(const mask_t trueBits, const mask_t falseBits, const bits_t bitCount) : trueBits(trueBits), falseBits(falseBits), bitCount(bitCount) {}
 	
 	void recalculateBits();
-	
-	splitBits_t splitBits() const;
 	
 public:
 	explicit PrimeImplicant(const Minterm minterm) : trueBits(minterm), falseBits(minterm ^ ((1u << ::bits) - 1)), bitCount(::bits) {}
@@ -45,11 +42,13 @@ public:
 	PrimeImplicant operator&(const PrimeImplicant &other) { PrimeImplicant copy = *this; copy &= other; return copy; }
 	PrimeImplicant& operator-=(const PrimeImplicant &other) { this->trueBits &= ~other.trueBits; this->falseBits &= ~other.falseBits; recalculateBits(); return *this; }
 	PrimeImplicant operator-(const PrimeImplicant &other) { PrimeImplicant copy = *this; copy -= other; return copy; }
+	PrimeImplicant& setBit(const bits_t bit, const bool negated) { const mask_t mask = 1 << (::bits - bit - 1); if (negated) falseBits |= mask; else trueBits |= mask; ++bitCount; return *this; }
 	
 	constexpr bool isError() const { return falseBits != 0 && bitCount == 0; }
 	constexpr mask_t getTrueBits() const { return isError() ? 0 : trueBits; }
 	constexpr mask_t getFalseBits() const { return isError() ? 0 : falseBits; }
 	constexpr bits_t getBitCount() const { return bitCount; }
+	splitBits_t splitBits() const;
 	minterms_t findMinterms() const;
 	
 	static bool areMergeable(const PrimeImplicant &x, const PrimeImplicant &y);

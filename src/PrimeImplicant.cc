@@ -6,6 +6,17 @@ void PrimeImplicant::recalculateBits()
 	bitCount = __builtin_popcount(trueBits | falseBits);
 }
 
+bool PrimeImplicant::operator<(const PrimeImplicant &other) const
+{
+	if (this->bitCount != other.bitCount)
+		return this->bitCount < other.bitCount;
+	const mask_t thisMask = this->trueBits | this->falseBits;
+	const mask_t otherMask = other.trueBits | other.falseBits;
+	if (thisMask != otherMask)
+		return thisMask > otherMask;
+	return this->trueBits > other.trueBits;
+}
+
 PrimeImplicant::splitBits_t PrimeImplicant::splitBits() const
 {
 	splitBits_t splitBits;
@@ -17,17 +28,6 @@ PrimeImplicant::splitBits_t PrimeImplicant::splitBits() const
 			splitBits.emplace_back(i, falseBit);
 	}
 	return splitBits;
-}
-
-bool PrimeImplicant::operator<(const PrimeImplicant &other) const
-{
-	if (this->bitCount != other.bitCount)
-		return this->bitCount < other.bitCount;
-	const mask_t thisMask = this->trueBits | this->falseBits;
-	const mask_t otherMask = other.trueBits | other.falseBits;
-	if (thisMask != otherMask)
-		return thisMask > otherMask;
-	return this->trueBits > other.trueBits;
 }
 
 PrimeImplicant::minterms_t PrimeImplicant::findMinterms() const

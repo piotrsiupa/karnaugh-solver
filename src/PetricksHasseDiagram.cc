@@ -1,10 +1,10 @@
-#include "./HasseDiagram.hh"
+#include "./PetricksHasseDiagram.hh"
 
 #include <algorithm>
 
 
 template<typename VALUE_T>
-bool HasseDiagram<VALUE_T>::containsSubset(typename set_t::const_iterator currentInSet, const typename set_t::const_iterator &endOfSet, const Node &currentNode)
+bool PetricksHasseDiagram<VALUE_T>::containsSubset(typename set_t::const_iterator currentInSet, const typename set_t::const_iterator &endOfSet, const Node &currentNode)
 {
 	for (; currentInSet != endOfSet; ++currentInSet)
 		if (const auto foundChild = currentNode.children.find(*currentInSet); foundChild != currentNode.children.end())
@@ -14,7 +14,7 @@ bool HasseDiagram<VALUE_T>::containsSubset(typename set_t::const_iterator curren
 }
 
 template<typename VALUE_T>
-typename HasseDiagram<VALUE_T>::Node& HasseDiagram<VALUE_T>::insert(typename set_t::const_iterator currentInSet, const typename set_t::const_iterator &endOfSet, Node &currentNode)
+typename PetricksHasseDiagram<VALUE_T>::Node& PetricksHasseDiagram<VALUE_T>::insert(typename set_t::const_iterator currentInSet, const typename set_t::const_iterator &endOfSet, Node &currentNode)
 {
 	++size;
 	Node *nextNode;
@@ -38,7 +38,7 @@ typename HasseDiagram<VALUE_T>::Node& HasseDiagram<VALUE_T>::insert(typename set
 }
 
 template<typename VALUE_T>
-void HasseDiagram<VALUE_T>::insertSideBranch(typename set_t::const_iterator currentInSet, const typename set_t::const_iterator &endOfSet, Node &currentNode, Node &resultNode)
+void PetricksHasseDiagram<VALUE_T>::insertSideBranch(typename set_t::const_iterator currentInSet, const typename set_t::const_iterator &endOfSet, Node &currentNode, Node &resultNode)
 {
 	Node *nextNode;
 	if (const auto foundChild = currentNode.children.find(*currentInSet); foundChild != currentNode.children.end())
@@ -61,7 +61,7 @@ void HasseDiagram<VALUE_T>::insertSideBranch(typename set_t::const_iterator curr
 }
 
 template<typename VALUE_T>
-void HasseDiagram<VALUE_T>::removeChildren(Node &node)
+void PetricksHasseDiagram<VALUE_T>::removeChildren(Node &node)
 {
 	while (true)
 	{
@@ -94,7 +94,7 @@ void HasseDiagram<VALUE_T>::removeChildren(Node &node)
 }
 
 template<typename VALUE_T>
-void HasseDiagram<VALUE_T>::removeTopNode(Node &topNode)
+void PetricksHasseDiagram<VALUE_T>::removeTopNode(Node &topNode)
 {
 	--size;
 	topNode.children.erase(TOP_NODE);
@@ -116,7 +116,7 @@ void HasseDiagram<VALUE_T>::removeTopNode(Node &topNode)
 }
 
 template<typename VALUE_T>
-void HasseDiagram<VALUE_T>::removeSideBranch(typename std::vector<value_t>::const_reverse_iterator currentValue, const typename std::vector<value_t>::const_reverse_iterator &endOfValues, Node &startPoint, const Node *const endNode)
+void PetricksHasseDiagram<VALUE_T>::removeSideBranch(typename std::vector<value_t>::const_reverse_iterator currentValue, const typename std::vector<value_t>::const_reverse_iterator &endOfValues, Node &startPoint, const Node *const endNode)
 {
 	Node &currentNode = startPoint.children.find(*currentValue)->getNode();
 	const typename std::vector<value_t>::const_reverse_iterator nextValue = std::next(currentValue);
@@ -137,7 +137,7 @@ void HasseDiagram<VALUE_T>::removeSideBranch(typename std::vector<value_t>::cons
 }
 
 template<typename VALUE_T>
-void HasseDiagram<VALUE_T>::getSets(sets_t &sets, const Node &currentNode) const
+void PetricksHasseDiagram<VALUE_T>::getSets(sets_t &sets, const Node &currentNode) const
 {
 	set_t &currentSet = workingVector;
 	if (currentNode.children.find(TOP_NODE) != currentNode.children.cend())
@@ -159,7 +159,7 @@ void HasseDiagram<VALUE_T>::getSets(sets_t &sets, const Node &currentNode) const
 }
 
 template<typename VALUE_T>
-typename HasseDiagram<VALUE_T>::sets_t HasseDiagram<VALUE_T>::getSets() const
+typename PetricksHasseDiagram<VALUE_T>::sets_t PetricksHasseDiagram<VALUE_T>::getSets() const
 {
 	workingVector.clear();
 	sets_t sets;
@@ -170,7 +170,7 @@ typename HasseDiagram<VALUE_T>::sets_t HasseDiagram<VALUE_T>::getSets() const
 }
 
 template<typename VALUE_T>
-bool HasseDiagram<VALUE_T>::insertRemovingSupersets(const set_t &set)
+bool PetricksHasseDiagram<VALUE_T>::insertRemovingSupersets(const set_t &set)
 {
 	if (containsSubset(set.cbegin(), set.cend(), root))
 		return false;
@@ -182,7 +182,7 @@ bool HasseDiagram<VALUE_T>::insertRemovingSupersets(const set_t &set)
 
 #include <cstdint>
 
-template class HasseDiagram<std::uint8_t>;
-template class HasseDiagram<std::uint16_t>;
-template class HasseDiagram<std::uint32_t>;
-template class HasseDiagram<std::uint64_t>;
+template class PetricksHasseDiagram<std::uint8_t>;
+template class PetricksHasseDiagram<std::uint16_t>;
+template class PetricksHasseDiagram<std::uint32_t>;
+template class PetricksHasseDiagram<std::uint64_t>;
