@@ -127,6 +127,4 @@ typename OptimizationHasseDiagram<VALUE_T>::setHierarchy_t OptimizationHasseDiag
 }
 
 
-#include <cstdint>
-
 template class OptimizationHasseDiagram<std::int8_t>;
