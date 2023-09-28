@@ -5,7 +5,7 @@
 
 
 template<typename VALUE_T>
-void OptimizationHasseDiagram<VALUE_T>::insert(typename set_t::const_iterator currentInSet, const typename set_t::const_iterator &endOfSet, Node &currentNode, const setId_t setId)
+void OptimizationHasseDiagram<VALUE_T>::insert(typename set_t::const_iterator currentInSet, const typename set_t::const_iterator &endOfSet, Node &currentNode, const setId_t setId, const bool primaryBranch)
 {
 	Node *nextNode;
 	if (const auto foundChild = currentNode.children.find(*currentInSet); foundChild != currentNode.children.end())
@@ -16,23 +16,26 @@ void OptimizationHasseDiagram<VALUE_T>::insert(typename set_t::const_iterator cu
 	}
 	else
 	{
-		nextNode = &currentNode.children.emplace_back(*currentInSet, new Node{{}, *currentInSet, {setId}}).getNode();
+		nextNode = &currentNode.children.emplace_back(*currentInSet, new Node{{}, *currentInSet, {setId}, false}).getNode();
 	}
 	const typename set_t::const_iterator nextInSet = std::next(currentInSet);
-	if (nextInSet != endOfSet)
+	if (nextInSet == endOfSet)
 	{
-		insert(nextInSet, endOfSet, *nextNode, setId);
-		insert(nextInSet, endOfSet, currentNode, setId);
+		if (primaryBranch)
+			nextNode->isOriginalSet = true;
+	}
+	else
+	{
+		insert(nextInSet, endOfSet, *nextNode, setId, primaryBranch);
+		insert(nextInSet, endOfSet, currentNode, setId, false);
 	}
 }
 
 template<typename VALUE_T>
 void OptimizationHasseDiagram<VALUE_T>::makeSetHierarchy(setHierarchy_t &setHierarchy, const Node &node, const std::size_t subset) const
 {
-	if (node.setIds.size() == 1)
-		return;
 	currentValues.push_back(node.value);
-	if (currentValues.size() == 1)
+	if (!node.isOriginalSet && (node.setIds.size() == 1 || currentValues.size() == 1))
 	{
 		for (const NodeChild &child : node.children)
 			makeSetHierarchy(setHierarchy, child.getNode(), SIZE_MAX);
@@ -42,11 +45,11 @@ void OptimizationHasseDiagram<VALUE_T>::makeSetHierarchy(setHierarchy_t &setHier
 		const std::size_t addedSet = setHierarchy.size();
 		if (subset == SIZE_MAX)
 		{
-			setHierarchy.push_back({currentValues, {}, node.setIds, 0});
+			setHierarchy.push_back({currentValues, {}, node.setIds, 0, node.isOriginalSet});
 		}
 		else
 		{
-			setHierarchy.push_back({currentValues, {subset}, node.setIds, 0});
+			setHierarchy.push_back({currentValues, {subset}, node.setIds, 0, node.isOriginalSet});
 			++setHierarchy[subset].supersetCount;
 		}
 		for (const NodeChild &child : node.children)
@@ -61,25 +64,33 @@ void OptimizationHasseDiagram<VALUE_T>::trimSetHierarchy(setHierarchy_t &setHier
 	std::vector<std::size_t> offsets(setHierarchy.size());
 	for (SetHierarchyEntry &entry : setHierarchy)
 	{
-		if (!entry.subsets.empty())
+		for (std::size_t i = 0; i != entry.subsets.size();)
 		{
-			SetHierarchyEntry &subset = setHierarchy[entry.subsets[0]];
-			if (subset.supersetCount == 1)
+			const std::size_t subsetIndex = entry.subsets[i];
+			SetHierarchyEntry &subset = setHierarchy[subsetIndex];
+			if (subset.supersetCount == 1 && !subset.isOriginalSet)
 			{
-				offsets[entry.subsets[0]] = 1;
-				entry.subsets = std::move(subset.subsets);
+				offsets[subsetIndex] = 1;
+				entry.subsets.erase(entry.subsets.begin() + i);
+				entry.subsets.insert(entry.subsets.end(), subset.subsets.begin(), subset.subsets.end());
+				subset.subsets.clear();
 				subset.setIds.clear();
+			}
+			else
+			{
+				++i;
 			}
 		}
 	}
+	setHierarchy.erase(std::remove_if(setHierarchy.begin(), setHierarchy.end(), [](const SetHierarchyEntry &entry){ return entry.setIds.empty(); }), setHierarchy.end());
+	setHierarchy.shrink_to_fit();
+	
 	std::size_t previousOffset = 0;
 	for (std::size_t &offset : offsets)
 	{
 		offset += previousOffset;
 		previousOffset = offset;
 	}
-	setHierarchy.erase(std::remove_if(setHierarchy.begin(), setHierarchy.end(), [](const SetHierarchyEntry &entry){ return entry.setIds.empty(); }), setHierarchy.end());
-	setHierarchy.shrink_to_fit();
 	for (SetHierarchyEntry &entry : setHierarchy)
 		for (std::size_t &subset : entry.subsets)
 			subset -= offsets[subset];

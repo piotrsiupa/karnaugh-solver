@@ -19,10 +19,12 @@ public:
 		std::vector<std::size_t> subsets;
 		std::vector<setId_t> setIds;
 		std::size_t supersetCount;
+		bool isOriginalSet;
 	};
 	using setHierarchy_t = std::vector<SetHierarchyEntry>;
 	
 private:
+	std::size_t currentSetId = 0;
 	struct Node;
 	using setIds_t = std::vector<setId_t>;
 	class NodeChild
@@ -60,10 +62,11 @@ private:
 		NodeChildren children;
 		value_t value;
 		setIds_t setIds;
+		bool isOriginalSet;
 	};
-	Node root{{}, 0, {}};
+	Node root{{}, 0, {}, false};
 	
-	void insert(typename set_t::const_iterator currentInSet, const typename set_t::const_iterator &endOfSet, Node &currentNode, const setId_t setId);
+	void insert(typename set_t::const_iterator currentInSet, const typename set_t::const_iterator &endOfSet, Node &currentNode, const setId_t setId, const bool primaryBranch);
 	mutable std::vector<value_t> currentValues;
 	
 	void makeSetHierarchy(setHierarchy_t &setHierarchy, const Node &node, const std::size_t subset) const;
@@ -72,7 +75,7 @@ private:
 	static void removeRedundantEdgesFromSetHierarchy(setHierarchy_t &setHierarchy);
 	
 public:
-	void insert(const set_t &set, const setId_t setId) { insert(set.cbegin(), set.cend(), root, setId); }
+	void insert(const set_t &set) { insert(set.cbegin(), set.cend(), root, currentSetId++, true); }
 	
 	setHierarchy_t makeSetHierarchy() const;
 };

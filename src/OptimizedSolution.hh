@@ -21,8 +21,8 @@ private:
 	static bool wipSumsLess(const std::set<ref_t> &x, const std::set<ref_t> &y) { return x.size() != y.size() ? x.size() < y.size() : x < y; }
 	using wipProducts_t = std::map<PrimeImplicant, std::vector<ref_t>>;
 	using productsGraph_t = std::vector<std::pair<PrimeImplicant, std::vector<std::size_t>>>;
-	using possibleSubsets_t = std::vector<std::vector<std::size_t>>;
-	using chosenSubsets_t = possibleSubsets_t;
+	using endNodes_t = std::set<std::size_t>;
+	using chosenSubsets_t = std::vector<std::vector<std::size_t>>;
 	using usageCounts_t = std::vector<std::size_t>;
 	using gateCount_t = std::size_t;
 	using wipSums_t = std::map<std::set<ref_t>, std::vector<ref_t>, decltype(wipSumsLess)&>;
@@ -40,13 +40,11 @@ private:
 	void printGateScores(std::ostream &o) const;
 	
 	static void initializeWips(const solutions_t &solutions, wipProducts_t &wipProducts, wipSums_t &wipSums, wipFinalSums_t &wipFinalSums);
-	static std::pair<productsGraph_t, possibleSubsets_t> buildGraph(const wipProducts_t &wipProducts);
-	static bool chooseNextSubsets(const possibleSubsets_t &possibleSubsets, chosenSubsets_t &chosenSubsets, usageCounts_t &usageCounts);
+	static std::pair<productsGraph_t, endNodes_t> buildGraph(const wipProducts_t &wipProducts);
 	static void extractCommonParts(wipProducts_t &wipProducts);
 	static void extractCommonParts(wipSums_t &wipSums);
-	static gateCount_t countGates(const wipProducts_t &wipProducts, const productsGraph_t &graph, const possibleSubsets_t &possibleSubsets, const chosenSubsets_t &chosenSubsets, const usageCounts_t &usageCounts);
-	static std::pair<chosenSubsets_t, usageCounts_t> findBestSubsets(const wipProducts_t &wipProducts, const productsGraph_t &graph, const possibleSubsets_t &possibleSubsets);
-	static void putChosenSubsetsBackToWips(wipProducts_t &wipProducts, const productsGraph_t &graph, const possibleSubsets_t &possibleSubsets, const chosenSubsets_t &chosenSubsets, const usageCounts_t &usageCounts);
+	static std::pair<chosenSubsets_t, usageCounts_t> findBestSubsets(const productsGraph_t &graph, const endNodes_t &endNodes);
+	static void putChosenSubsetsBackToWips(wipProducts_t &wipProducts, const productsGraph_t &graph, const chosenSubsets_t &chosenSubsets, const usageCounts_t &usageCounts);
 	void createNegatedInputs(const solutions_t &solutions);
 	static std::size_t findWipProductRefIndex(const wipProducts_t &wipProducts, const ref_t wipProductRef);
 	std::size_t findWipSumRefIndex(const wipSums_t &wipSums, const ref_t wipSumRef) const;
