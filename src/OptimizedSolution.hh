@@ -41,8 +41,11 @@ private:
 	
 	static void initializeWips(const solutions_t &solutions, wipProducts_t &wipProducts, wipSums_t &wipSums, wipFinalSums_t &wipFinalSums);
 	static std::pair<productsGraph_t, endNodes_t> buildGraph(const wipProducts_t &wipProducts);
+	static bool chooseNextSubsets(const productsGraph_t &graph, chosenSubsets_t &chosenSubsets, usageCounts_t &usageCounts);
 	static void extractCommonParts(wipProducts_t &wipProducts);
 	static void extractCommonParts(wipSums_t &wipSums);
+	static void removeRedundantNodes(const endNodes_t &endNodes, chosenSubsets_t &chosenSubsets, usageCounts_t &usageCounts);
+	static gateCount_t countGates(const productsGraph_t &graph, const chosenSubsets_t &chosenSubsets, const usageCounts_t &usageCounts);
 	static std::pair<chosenSubsets_t, usageCounts_t> findBestSubsets(const productsGraph_t &graph, const endNodes_t &endNodes);
 	static void putChosenSubsetsBackToWips(wipProducts_t &wipProducts, const productsGraph_t &graph, const chosenSubsets_t &chosenSubsets, const usageCounts_t &usageCounts);
 	void createNegatedInputs(const solutions_t &solutions);
