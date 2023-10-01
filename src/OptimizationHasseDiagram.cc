@@ -38,7 +38,7 @@ void OptimizationHasseDiagram<VALUE_T>::makeSetHierarchy(setHierarchy_t &setHier
 	if (!node.isOriginalSet && (node.setIds.size() == 1 || currentValues.size() == 1))
 	{
 		for (const NodeChild &child : node.children)
-			makeSetHierarchy(setHierarchy, child.getNode(), SIZE_MAX);
+			makeSetHierarchy(setHierarchy, child.getNode(), subset);
 	}
 	else
 	{
@@ -100,12 +100,10 @@ template<typename VALUE_T>
 void OptimizationHasseDiagram<VALUE_T>::addMoreEdgesToSetHierarchy(setHierarchy_t &setHierarchy)
 {
 	for (SetHierarchyEntry &entry0 : setHierarchy)
-		if (!entry0.setIds.empty())
-			for (std::size_t j = 0; j != setHierarchy.size(); ++j)
-				if (!setHierarchy[j].setIds.empty())
-					if (entry0.values.size() > setHierarchy[j].values.size())
-						if (std::find(entry0.subsets.cbegin(), entry0.subsets.cend(), j) == entry0.subsets.cend() && std::includes(entry0.values.cbegin(), entry0.values.cend(), setHierarchy[j].values.cbegin(), setHierarchy[j].values.cend()))
-							entry0.subsets.push_back(j);
+		for (std::size_t j = 0; j != setHierarchy.size(); ++j)
+			if (entry0.values.size() > setHierarchy[j].values.size())
+				if (std::find(entry0.subsets.cbegin(), entry0.subsets.cend(), j) == entry0.subsets.cend() && std::includes(entry0.values.cbegin(), entry0.values.cend(), setHierarchy[j].values.cbegin(), setHierarchy[j].values.cend()))
+					entry0.subsets.push_back(j);
 }
 
 template<typename VALUE_T>

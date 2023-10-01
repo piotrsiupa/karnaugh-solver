@@ -129,6 +129,7 @@ std::pair<OptimizedSolution::productsGraph_t, OptimizedSolution::endNodes_t> Opt
 			OptimizationHasseDiagram<std::int8_t>::set_t set;
 			for (const auto &bit : x.first.splitBits())
 				set.push_back(bit.second ? -bit.first - 1 : bit.first);
+			std::sort(set.begin(), set.end());
 			hasseDiagram.insert(set);
 		}
 	}
