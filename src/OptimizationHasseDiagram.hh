@@ -73,6 +73,7 @@ private:
 	static void trimSetHierarchy(setHierarchy_t &setHierarchy);
 	static void addMoreEdgesToSetHierarchy(setHierarchy_t &setHierarchy);
 	static void removeRedundantEdgesFromSetHierarchy(setHierarchy_t &setHierarchy);
+	static void sortSetHierarchy(setHierarchy_t &setHierarchy);
 	
 public:
 	void insert(const set_t &set) { insert(set.cbegin(), set.cend(), root, currentSetId++, true); }

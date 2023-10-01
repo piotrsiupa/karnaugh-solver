@@ -123,6 +123,58 @@ void OptimizationHasseDiagram<VALUE_T>::removeRedundantEdgesFromSetHierarchy(set
 }
 
 template<typename VALUE_T>
+void OptimizationHasseDiagram<VALUE_T>::sortSetHierarchy(setHierarchy_t &setHierarchy)
+{
+	std::vector<std::size_t> sortOrder;
+	sortOrder.reserve(setHierarchy.size());
+	std::vector<std::size_t> entriesToProcess;
+	entriesToProcess.reserve(setHierarchy.size() * 2);
+	for (std::size_t i = 0; i != setHierarchy.size(); ++i)
+		entriesToProcess.push_back(setHierarchy.size() - 1 - i);
+	std::vector<bool> processedEntries(setHierarchy.size(), false);
+	while (!entriesToProcess.empty())
+	{
+		const std::size_t currentEntry = entriesToProcess.back();
+		if (processedEntries[currentEntry])
+		{
+			entriesToProcess.pop_back();
+		}
+		else
+		{
+			bool allSubsetsReady = true;
+			for (const std::size_t &subset : setHierarchy[currentEntry].subsets)
+			{
+				if (!processedEntries[subset])
+				{
+					allSubsetsReady = false;
+					entriesToProcess.push_back(subset);
+				}
+			}
+			if (allSubsetsReady)
+			{
+				sortOrder.push_back(currentEntry);
+				entriesToProcess.pop_back();
+				processedEntries[currentEntry] = true;
+			}
+		}
+	}
+	
+	std::vector<std::size_t> reverseSortOrder(sortOrder.size());
+	for (std::size_t i = 0; i != sortOrder.size(); ++i)
+		reverseSortOrder[sortOrder[i]] = i;
+	
+	setHierarchy_t sortedSetHierarchy;
+	sortedSetHierarchy.reserve(setHierarchy.size());
+	for (const std::size_t &index : sortOrder)
+	{
+		sortedSetHierarchy.push_back(std::move(setHierarchy[index]));
+		for (std::size_t &subset : sortedSetHierarchy.back().subsets)
+			subset = reverseSortOrder[subset];
+	}
+	setHierarchy = std::move(sortedSetHierarchy);
+}
+
+template<typename VALUE_T>
 typename OptimizationHasseDiagram<VALUE_T>::setHierarchy_t OptimizationHasseDiagram<VALUE_T>::makeSetHierarchy() const
 {
 	currentValues.clear();
@@ -132,6 +184,7 @@ typename OptimizationHasseDiagram<VALUE_T>::setHierarchy_t OptimizationHasseDiag
 	trimSetHierarchy(setHierarchy);
 	addMoreEdgesToSetHierarchy(setHierarchy);
 	removeRedundantEdgesFromSetHierarchy(setHierarchy);
+	sortSetHierarchy(setHierarchy);
 	return setHierarchy;
 }
 
