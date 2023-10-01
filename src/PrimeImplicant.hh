@@ -28,7 +28,7 @@ private:
 	explicit PrimeImplicant(const mask_t trueBits, const mask_t falseBits) : trueBits(trueBits), falseBits(falseBits) { recalculateBits(); }
 	constexpr PrimeImplicant(const mask_t trueBits, const mask_t falseBits, const bits_t bitCount) : trueBits(trueBits), falseBits(falseBits), bitCount(bitCount) {}
 	
-	void recalculateBits();
+	void recalculateBits() { bitCount = __builtin_popcount(trueBits | falseBits); }
 	
 public:
 	explicit PrimeImplicant(const Minterm minterm) : trueBits(minterm), falseBits(minterm ^ ((1u << ::bits) - 1)), bitCount(::bits) {}

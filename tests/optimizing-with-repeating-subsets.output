@@ -44,8 +44,8 @@ solution:
 === optimized solution ===
 
 Negated inputs: <none>
-Products: [0] = a && b,  [1] = f && [0],  [2] = f && g && h,  [3] = e && g && h && [0],  [4] = c && [3],  [5] = d && [3]
-Sums: [6] = [1] || [2] || [4] || [5]
-Final sums: "f0" = [6]
+Products: [0] = a && b,  [1] = g && h,  [2] = f && [0],  [3] = f && [1],  [4] = e && [1] && [0],  [5] = c && [4],  [6] = d && [4]
+Sums: [7] = [2] || [3] || [5] || [6]
+Final sums: "f0" = [7]
 
-Gate scores: NOTs = 0, ANDs = 9, ORs = 3
+Gate scores: NOTs = 0, ANDs = 8, ORs = 3

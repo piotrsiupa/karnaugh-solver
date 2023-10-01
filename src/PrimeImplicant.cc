@@ -1,11 +1,6 @@
 #include "PrimeImplicant.hh"
 
 
-void PrimeImplicant::recalculateBits()
-{
-	bitCount = __builtin_popcount(trueBits | falseBits);
-}
-
 bool PrimeImplicant::operator<(const PrimeImplicant &other) const
 {
 	if (this->bitCount != other.bitCount)
