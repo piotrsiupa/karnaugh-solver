@@ -1,48 +1,12 @@
 #include "./SetOptimizer.hh"
 
-#include <algorithm>
-#include <cstdint>
-
-#include "OptimizationHasseDiagram.hh"
-
 
 template<typename SET>
-SetOptimizer<SET>::SetOptimizer(const sets_t &sets)
+typename SetOptimizer<SET>::result_t SetOptimizer<SET>::extractCommonParts(const sets_t &sets)
 {
-	using HasseDiagram = OptimizationHasseDiagram<std::int8_t>;
-	HasseDiagram hasseDiagram;
-	for (const SET &set : sets)
-	{
-		if (set.getBitCount() != 0)
-		{
-			OptimizationHasseDiagram<std::int8_t>::set_t convertedSet;
-			for (const auto &bit : set.splitBits())
-				convertedSet.push_back(bit.second ? -bit.first - 1 : bit.first);
-			std::sort(convertedSet.begin(), convertedSet.end());
-			hasseDiagram.insert(convertedSet);
-		}
-	}
-	HasseDiagram::setHierarchy_t setHierarchy = hasseDiagram.makeSetHierarchy();
-	graph.reserve(setHierarchy.size());
-	std::size_t i = 0;
-	for (auto &setHierarchyEntry : setHierarchy)
-	{
-		SET set = SET::all();
-		for (const auto &value : setHierarchyEntry.values)
-			if (value >= 0)
-				set.setBit(value, false);
-			else
-				set.setBit(-value - 1, true);
-		graph.emplace_back(set, std::move(setHierarchyEntry.subsets));
-		if (setHierarchyEntry.isOriginalSet)
-			endNodes.insert(i);
-		++i;
-	}
-}
-
-template<typename SET>
-typename SetOptimizer<SET>::result_t SetOptimizer<SET>::extractCommonParts()
-{
+	const HasseDiagram hasseDiagram = makeHasseDiagram(sets);
+	const HasseDiagram::setHierarchy_t setHierarchy = hasseDiagram.makeSetHierarchy();
+	makeGraph(setHierarchy);
 	auto [subsetSelections, usageCounts] = findBestSubsets();
 	removeUnusedSubsets(subsetSelections, usageCounts);
 	return {makeSets(), subsetSelections};
@@ -200,16 +164,6 @@ void SetOptimizer<SET>::removeUnusedSubsets(subsetSelections_t &subsetSelections
 	for (std::vector<std::size_t> &x : subsetSelections)
 		for (std::size_t &subset : x)
 			subset = indexMap[subset];
-}
-
-template<typename SET>
-typename SetOptimizer<SET>::sets_t SetOptimizer<SET>::makeSets() const
-{
-	sets_t sets;
-	sets.reserve(graph.size());
-	for (const auto &graphNode : graph)
-		sets.push_back(graphNode.first);
-	return sets;
 }
 
 

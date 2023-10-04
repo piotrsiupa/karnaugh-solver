@@ -4,7 +4,7 @@
 #include <iomanip>
 
 #include "OptimizationHasseDiagram.hh"
-#include "SetOptimizer.hh"
+#include "SetOptimizerForPrimeImplicants.hh"
 
 
 void OptimizedSolution::printNegatedInputs(std::ostream &o) const
@@ -124,7 +124,7 @@ void OptimizedSolution::extractCommonParts(wipProducts_t &wipProducts)
 	oldPrimeImplicants.reserve(wipProducts.size());
 	for (const auto &wipProduct : wipProducts)
 		oldPrimeImplicants.push_back(wipProduct.first);
-	const auto [newPrimeImplicants, chosenSubsets] = SetOptimizer<PrimeImplicant>(oldPrimeImplicants).extractCommonParts();
+	const auto [newPrimeImplicants, chosenSubsets] = SetOptimizerForPrimeImplicants().extractCommonParts(oldPrimeImplicants);
 	
 	std::vector<ref_t> refsrefs(chosenSubsets.size());
 	for (std::size_t i = 0; i != chosenSubsets.size(); ++i)
