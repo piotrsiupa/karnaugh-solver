@@ -4,7 +4,8 @@
 #include <iomanip>
 
 #include "OptimizationHasseDiagram.hh"
-#include "SetOptimizerForPrimeImplicants.hh"
+#include "SetOptimizerForProducts.hh"
+#include "SetOptimizerForSums.hh"
 
 
 void OptimizedSolution::printNegatedInputs(std::ostream &o) const
@@ -124,7 +125,7 @@ void OptimizedSolution::extractCommonParts(wipProducts_t &wipProducts)
 	oldPrimeImplicants.reserve(wipProducts.size());
 	for (const auto &wipProduct : wipProducts)
 		oldPrimeImplicants.push_back(wipProduct.first);
-	const auto [newPrimeImplicants, chosenSubsets] = SetOptimizerForPrimeImplicants().extractCommonParts(oldPrimeImplicants);
+	const auto [newPrimeImplicants, chosenSubsets] = SetOptimizerForProducts().extractCommonParts(oldPrimeImplicants);
 	
 	std::vector<ref_t> refsrefs(chosenSubsets.size());
 	for (std::size_t i = 0; i != chosenSubsets.size(); ++i)
@@ -139,23 +140,20 @@ void OptimizedSolution::extractCommonParts(wipProducts_t &wipProducts)
 
 void OptimizedSolution::extractCommonParts(wipSums_t &wipSums)
 {
-	for (auto iter = wipSums.rbegin(); iter != wipSums.rend(); ++iter)
+	std::vector<std::set<const void*>> oldPointerSets;
+	oldPointerSets.reserve(wipSums.size());
+	for (const auto &wipSum : wipSums)
+		oldPointerSets.push_back(wipSum.first);
+	const auto [newPointerSets, chosenSubsets] = SetOptimizerForSums().extractCommonParts(oldPointerSets);
+	
+	std::vector<ref_t> refsrefs(chosenSubsets.size());
+	for (std::size_t i = 0; i != chosenSubsets.size(); ++i)
 	{
-		//TODO This approach does not strictly guarantee to find the best solution. Petrick's method could be used here.
-		std::set<ref_t> remainingProducts = iter->first;
-		for (auto jiter = std::next(iter); jiter != wipSums.rend(); ++jiter)
-		{
-			std::set<ref_t> commonProducts;
-			std::set_intersection(remainingProducts.cbegin(), remainingProducts.cend(), jiter->first.cbegin(), jiter->first.cend(), std::inserter(commonProducts, commonProducts.begin()));
-			if (commonProducts.size() > 1)
-			{
-				for (const ref_t commonProduct : commonProducts)
-					remainingProducts.erase(commonProduct);
-				const auto &commonSum = wipSums[commonProducts];
-				if (&commonSum != &iter->second)
-					iter->second.push_back(&commonSum);
-			}
-		}
+		auto &refs = wipSums[newPointerSets[i]];
+		refs.reserve(chosenSubsets[i].size());
+		for (const std::size_t &subset : chosenSubsets[i])
+			refs.push_back(refsrefs[subset]);
+		refsrefs[i] = &refs;
 	}
 }
 

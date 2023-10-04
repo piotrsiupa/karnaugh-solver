@@ -1,19 +1,21 @@
 #include "./SetOptimizer.hh"
 
+#include <cstdint>
 
-template<typename SET>
-typename SetOptimizer<SET>::result_t SetOptimizer<SET>::extractCommonParts(const sets_t &sets)
+
+template<typename SET, typename HASSE_VALUE>
+typename SetOptimizer<SET, HASSE_VALUE>::result_t SetOptimizer<SET, HASSE_VALUE>::extractCommonParts(const sets_t &sets)
 {
 	const HasseDiagram hasseDiagram = makeHasseDiagram(sets);
-	const HasseDiagram::setHierarchy_t setHierarchy = hasseDiagram.makeSetHierarchy();
+	const typename HasseDiagram::setHierarchy_t setHierarchy = hasseDiagram.makeSetHierarchy();
 	makeGraph(setHierarchy);
 	auto [subsetSelections, usageCounts] = findBestSubsets();
 	removeUnusedSubsets(subsetSelections, usageCounts);
 	return {makeSets(), subsetSelections};
 }
 
-template<typename SET>
-bool SetOptimizer<SET>::chooseNextSubsets(subsetSelections_t &subsetSelections, usageCounts_t &usageCounts) const
+template<typename SET, typename HASSE_VALUE>
+bool SetOptimizer<SET, HASSE_VALUE>::chooseNextSubsets(subsetSelections_t &subsetSelections, usageCounts_t &usageCounts) const
 {
 	try_again:
 	// Don't let the familiar sight of the loop make an impression that control flow of this function is in any way understandable without analyzing specific paths.
@@ -57,8 +59,8 @@ bool SetOptimizer<SET>::chooseNextSubsets(subsetSelections_t &subsetSelections, 
 	return false;
 }
 
-template<typename SET>
-void SetOptimizer<SET>::removeRedundantNodes(subsetSelections_t &subsetSelections, usageCounts_t &usageCounts) const
+template<typename SET, typename HASSE_VALUE>
+void SetOptimizer<SET, HASSE_VALUE>::removeRedundantNodes(subsetSelections_t &subsetSelections, usageCounts_t &usageCounts) const
 {
 	for (std::size_t nodeIndex = 0; nodeIndex != subsetSelections.size(); ++nodeIndex)
 	{
@@ -81,27 +83,8 @@ void SetOptimizer<SET>::removeRedundantNodes(subsetSelections_t &subsetSelection
 	}
 }
 
-template<typename SET>
-typename SetOptimizer<SET>::gateCount_t SetOptimizer<SET>::countGates(const subsetSelections_t &subsetSelections, const usageCounts_t &usageCounts) const
-{
-	gateCount_t gates = 0;
-	for (std::size_t i = 0; i != graph.size(); ++i)
-	{
-		if (usageCounts[i] == 0)
-			continue;
-		gates += subsetSelections[i].size();
-		SET reducedPrimeImplicant = graph[i].first;
-		for (const std::size_t &subset : subsetSelections[i])
-			reducedPrimeImplicant -= graph[subset].first;
-		gates += reducedPrimeImplicant.getBitCount();
-		if (subsetSelections[i].size() != 0 || reducedPrimeImplicant.getBitCount() != 0)
-			--gates;
-	}
-	return gates;
-}
-
-template<typename SET>
-std::pair<typename SetOptimizer<SET>::subsetSelections_t, typename SetOptimizer<SET>::usageCounts_t> SetOptimizer<SET>::findBestSubsets() const
+template<typename SET, typename HASSE_VALUE>
+std::pair<typename SetOptimizer<SET, HASSE_VALUE>::subsetSelections_t, typename SetOptimizer<SET, HASSE_VALUE>::usageCounts_t> SetOptimizer<SET, HASSE_VALUE>::findBestSubsets() const
 {
 	subsetSelections_t subsetSelections(graph.size()), bestSubsetSelections(graph.size());
 	usageCounts_t usageCounts(graph.size()), bestUsageCounts(graph.size());
@@ -134,8 +117,8 @@ std::pair<typename SetOptimizer<SET>::subsetSelections_t, typename SetOptimizer<
 	return {bestSubsetSelections, bestUsageCounts};
 }
 
-template<typename SET>
-void SetOptimizer<SET>::removeUnusedSubsets(subsetSelections_t &subsetSelections, usageCounts_t &usageCounts)
+template<typename SET, typename HASSE_VALUE>
+void SetOptimizer<SET, HASSE_VALUE>::removeUnusedSubsets(subsetSelections_t &subsetSelections, usageCounts_t &usageCounts)
 {
 	std::size_t i = 0;
 	for (i = 0; i != graph.size(); ++i)
@@ -169,4 +152,5 @@ void SetOptimizer<SET>::removeUnusedSubsets(subsetSelections_t &subsetSelections
 
 #include "PrimeImplicant.hh"
 
-template class SetOptimizer<PrimeImplicant>;
+template class SetOptimizer<PrimeImplicant, std::int_fast8_t>;
+template class SetOptimizer<std::set<const void*>, std::uintptr_t>;

@@ -190,3 +190,4 @@ typename OptimizationHasseDiagram<VALUE_T>::setHierarchy_t OptimizationHasseDiag
 
 
 template class OptimizationHasseDiagram<std::int8_t>;
+template class OptimizationHasseDiagram<std::uintptr_t>;
