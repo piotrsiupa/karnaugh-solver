@@ -40,6 +40,8 @@ public:
 	
 	PrimeImplicant& operator&=(const PrimeImplicant &other) { this->trueBits &= other.trueBits; this->falseBits &= other.falseBits; recalculateBits(); if (bitCount == 0) *this = error(); return *this; }
 	PrimeImplicant operator&(const PrimeImplicant &other) const { PrimeImplicant copy = *this; copy &= other; return copy; }
+	PrimeImplicant& operator|=(const PrimeImplicant &other) { this->trueBits |= other.trueBits; this->falseBits |= other.falseBits; recalculateBits(); return *this; }
+	PrimeImplicant operator|(const PrimeImplicant &other) const { PrimeImplicant copy = *this; copy |= other; return copy; }
 	PrimeImplicant& operator-=(const PrimeImplicant &other) { this->trueBits &= ~other.trueBits; this->falseBits &= ~other.falseBits; recalculateBits(); return *this; }
 	PrimeImplicant operator-(const PrimeImplicant &other) const { PrimeImplicant copy = *this; copy -= other; return copy; }
 	PrimeImplicant& setBit(const bits_t bit, const bool negated) { const mask_t mask = 1 << (::bits - bit - 1); if (negated) falseBits |= mask; else trueBits |= mask; ++bitCount; return *this; }
