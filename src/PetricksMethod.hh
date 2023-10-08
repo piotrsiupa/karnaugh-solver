@@ -5,18 +5,17 @@
 #include <utility>
 #include <vector>
 
+#include "Minterm.hh"
 #include "PetricksHasseDiagram.hh"
+#include "PrimeImplicants.hh"
 
 
-template<typename MINTERM, typename PRIME_IMPLICANT, typename INDEX_T>
+template<typename INDEX_T>
 class PetricksMethod
 {
 public:
-	using minterm_t = MINTERM;
-	using minterms_t = std::set<minterm_t>;
-	using primeImplicant_t = PRIME_IMPLICANT;
-	using primeImplicants_t = std::vector<primeImplicant_t>;
-	using solutions_t = std::vector<primeImplicants_t>;
+	using minterms_t = std::set<Minterm>;
+	using solutions_t = std::vector<PrimeImplicants>;
 	
 private:
 	using index_t = INDEX_T;
@@ -26,12 +25,12 @@ private:
 	using productOfSumsOfProducts_t = std::vector<sumOfProducts_t>;
 	
 	minterms_t minterms;
-	primeImplicants_t primeImplicants;
+	PrimeImplicants primeImplicants;
 	
-	PetricksMethod(minterms_t &&minterms, primeImplicants_t &&primeImplicants) : minterms(std::move(minterms)), primeImplicants(std::move(primeImplicants)) {}
+	PetricksMethod(minterms_t &&minterms, PrimeImplicants &&primeImplicants) : minterms(std::move(minterms)), primeImplicants(std::move(primeImplicants)) {}
 	
-	index_t findEssentialPrimeImplicantIndex(const minterm_t minterm);
-	primeImplicants_t extractEssentials();
+	index_t findEssentialPrimeImplicantIndex(const Minterm minterm);
+	PrimeImplicants extractEssentials();
 	productOfSumsOfProducts_t createPreliminaryProductOfSums() const;
 	static void removeRedundantSums(productOfSumsOfProducts_t &productOfSums);
 	productOfSumsOfProducts_t createProductOfSums() const;
@@ -42,5 +41,5 @@ private:
 public:
 	static constexpr std::size_t MAX_PRIME_IMPL_COUNT = PetricksHasseDiagram<index_t>::MAX_VALUE;
 	
-	static solutions_t solve(minterms_t minterms, primeImplicants_t primeImplicants) { return PetricksMethod(std::move(minterms), std::move(primeImplicants)).solve(); }
+	static solutions_t solve(minterms_t minterms, PrimeImplicants primeImplicants) { return PetricksMethod(std::move(minterms), std::move(primeImplicants)).solve(); }
 };

@@ -5,8 +5,8 @@
 #include <iostream>
 
 
-template<typename MINTERM, typename PRIME_IMPLICANT, typename INDEX_T>
-typename PetricksMethod<MINTERM, PRIME_IMPLICANT, INDEX_T>::index_t PetricksMethod<MINTERM, PRIME_IMPLICANT, INDEX_T>::findEssentialPrimeImplicantIndex(const minterm_t minterm)
+template<typename INDEX_T>
+typename PetricksMethod<INDEX_T>::index_t PetricksMethod<INDEX_T>::findEssentialPrimeImplicantIndex(const Minterm minterm)
 {
 	std::uint_fast8_t count = 0;
 	index_t index;
@@ -22,10 +22,10 @@ typename PetricksMethod<MINTERM, PRIME_IMPLICANT, INDEX_T>::index_t PetricksMeth
 	return count != 0 ? index : NO_INDEX;
 }
 
-template<typename MINTERM, typename PRIME_IMPLICANT, typename INDEX_T>
-typename PetricksMethod<MINTERM, PRIME_IMPLICANT, INDEX_T>::primeImplicants_t PetricksMethod<MINTERM, PRIME_IMPLICANT, INDEX_T>::extractEssentials()
+template<typename INDEX_T>
+PrimeImplicants PetricksMethod<INDEX_T>::extractEssentials()
 {
-	primeImplicants_t essentials;
+	PrimeImplicants essentials;
 	for (typename minterms_t::const_iterator iter = minterms.cbegin(); iter != minterms.cend();)
 	{
 		const index_t essentialPrimeImplicantIndex = findEssentialPrimeImplicantIndex(*iter);
@@ -36,7 +36,7 @@ typename PetricksMethod<MINTERM, PRIME_IMPLICANT, INDEX_T>::primeImplicants_t Pe
 		}
 		essentials.emplace_back(std::move(primeImplicants[essentialPrimeImplicantIndex]));
 		primeImplicants.erase(primeImplicants.begin() + essentialPrimeImplicantIndex);
-		for (const minterm_t &coveredMinterm : essentials.back().findMinterms())
+		for (const Minterm &coveredMinterm : essentials.back().findMinterms())
 		{
 			const typename minterms_t::iterator iterToRemove = minterms.find(coveredMinterm);
 			if (iterToRemove == minterms.end())
@@ -50,11 +50,11 @@ typename PetricksMethod<MINTERM, PRIME_IMPLICANT, INDEX_T>::primeImplicants_t Pe
 	return essentials;
 }
 
-template<typename MINTERM, typename PRIME_IMPLICANT, typename INDEX_T>
-typename PetricksMethod<MINTERM, PRIME_IMPLICANT, INDEX_T>::productOfSumsOfProducts_t PetricksMethod<MINTERM, PRIME_IMPLICANT, INDEX_T>::createPreliminaryProductOfSums() const
+template<typename INDEX_T>
+typename PetricksMethod<INDEX_T>::productOfSumsOfProducts_t PetricksMethod<INDEX_T>::createPreliminaryProductOfSums() const
 {
 	productOfSumsOfProducts_t productOfSums;
-	for (const minterm_t &minterm : minterms)
+	for (const Minterm &minterm : minterms)
 	{
 		sumOfProducts_t &sum = productOfSums.emplace_back();
 		for (index_t i = 0; i != primeImplicants.size(); ++i)
@@ -64,8 +64,8 @@ typename PetricksMethod<MINTERM, PRIME_IMPLICANT, INDEX_T>::productOfSumsOfProdu
 	return productOfSums;
 }
 
-template<typename MINTERM, typename PRIME_IMPLICANT, typename INDEX_T>
-void PetricksMethod<MINTERM, PRIME_IMPLICANT, INDEX_T>::removeRedundantSums(productOfSumsOfProducts_t &productOfSums)
+template<typename INDEX_T>
+void PetricksMethod<INDEX_T>::removeRedundantSums(productOfSumsOfProducts_t &productOfSums)
 {
 	for (auto x = productOfSums.begin(); x != productOfSums.end(); ++x)
 	{
@@ -91,16 +91,16 @@ void PetricksMethod<MINTERM, PRIME_IMPLICANT, INDEX_T>::removeRedundantSums(prod
 	productOfSums.erase(std::remove_if(productOfSums.begin(), productOfSums.end(), [](const auto &x){ return x.empty(); }), productOfSums.end());
 }
 
-template<typename MINTERM, typename PRIME_IMPLICANT, typename INDEX_T>
-typename PetricksMethod<MINTERM, PRIME_IMPLICANT, INDEX_T>::productOfSumsOfProducts_t PetricksMethod<MINTERM, PRIME_IMPLICANT, INDEX_T>::createProductOfSums() const
+template<typename INDEX_T>
+typename PetricksMethod<INDEX_T>::productOfSumsOfProducts_t PetricksMethod<INDEX_T>::createProductOfSums() const
 {
 	productOfSumsOfProducts_t productOfSums = createPreliminaryProductOfSums();
 	removeRedundantSums(productOfSums);
 	return productOfSums;
 }
 
-template<typename MINTERM, typename PRIME_IMPLICANT, typename INDEX_T>
-typename PetricksMethod<MINTERM, PRIME_IMPLICANT, INDEX_T>::sumOfProducts_t PetricksMethod<MINTERM, PRIME_IMPLICANT, INDEX_T>::multiplySumsOfProducts(const sumOfProducts_t &multiplier0, const sumOfProducts_t &multiplier1)
+template<typename INDEX_T>
+typename PetricksMethod<INDEX_T>::sumOfProducts_t PetricksMethod<INDEX_T>::multiplySumsOfProducts(const sumOfProducts_t &multiplier0, const sumOfProducts_t &multiplier1)
 {
 	product_t newProduct;
 	newProduct.reserve(multiplier0.front().size() + multiplier1.front().size());
@@ -117,8 +117,8 @@ typename PetricksMethod<MINTERM, PRIME_IMPLICANT, INDEX_T>::sumOfProducts_t Petr
 	return hasseDiagram.getSets();
 }
 
-template<typename MINTERM, typename PRIME_IMPLICANT, typename INDEX_T>
-typename PetricksMethod<MINTERM, PRIME_IMPLICANT, INDEX_T>::sumOfProducts_t PetricksMethod<MINTERM, PRIME_IMPLICANT, INDEX_T>::findSumOfProducts() const
+template<typename INDEX_T>
+typename PetricksMethod<INDEX_T>::sumOfProducts_t PetricksMethod<INDEX_T>::findSumOfProducts() const
 {
 	productOfSumsOfProducts_t productOfSumsOfProducts = createProductOfSums();
 	if (productOfSumsOfProducts.empty())
@@ -136,16 +136,16 @@ typename PetricksMethod<MINTERM, PRIME_IMPLICANT, INDEX_T>::sumOfProducts_t Petr
 	return std::move(productOfSumsOfProducts.front());
 }
 
-template<typename MINTERM, typename PRIME_IMPLICANT, typename INDEX_T>
-typename PetricksMethod<MINTERM, PRIME_IMPLICANT, INDEX_T>::solutions_t PetricksMethod<MINTERM, PRIME_IMPLICANT, INDEX_T>::solve()
+template<typename INDEX_T>
+typename PetricksMethod<INDEX_T>::solutions_t PetricksMethod<INDEX_T>::solve()
 {
-	primeImplicants_t essentials = extractEssentials();
+	PrimeImplicants essentials = extractEssentials();
 	sumOfProducts_t sumOfProducts = findSumOfProducts();
 	
 	if (sumOfProducts.empty())
 		return !essentials.empty()
 			? solutions_t{std::move(essentials)}
-			: solutions_t{{primeImplicant_t::error()}};
+			: solutions_t{{PrimeImplicant::error()}};
 	
 	solutions_t solutions;
 	solutions.reserve(sumOfProducts.size());
@@ -164,7 +164,7 @@ typename PetricksMethod<MINTERM, PRIME_IMPLICANT, INDEX_T>::solutions_t Petricks
 #include "Minterm.hh"
 #include "PrimeImplicant.hh"
 
-template class PetricksMethod<Minterm, PrimeImplicant, std::uint8_t>;
-template class PetricksMethod<Minterm, PrimeImplicant, std::uint16_t>;
-template class PetricksMethod<Minterm, PrimeImplicant, std::uint32_t>;
-template class PetricksMethod<Minterm, PrimeImplicant, std::uint64_t>;
+template class PetricksMethod<std::uint8_t>;
+template class PetricksMethod<std::uint16_t>;
+template class PetricksMethod<std::uint32_t>;
+template class PetricksMethod<std::uint64_t>;
