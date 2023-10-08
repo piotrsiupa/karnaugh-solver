@@ -1,6 +1,7 @@
 #include "./Karnaugh.hh"
 
 #include <algorithm>
+#include <cassert>
 #include <cctype>
 #include <iostream>
 
@@ -135,6 +136,24 @@ bool Karnaugh::loadMinterms(Minterms &minterms, std::string &line) const
 	return true;
 }
 
+#ifndef NDEBUG
+void Karnaugh::validate(const solutions_t &solutions) const
+{
+	const Minterm maxMinterm = bits == 0 ? 0 : (((Minterm(1) << (bits - 1)) - 1) * 2) + 1;
+	for (Minterm i = 0;; ++i)
+	{
+		if (targetMinterms.find(i) != targetMinterms.cend())
+			for (const PrimeImplicants &solution : solutions)
+				assert(solution.covers(i));
+		else if (allowedMinterms.find(i) == allowedMinterms.cend())
+			for (const PrimeImplicants &solution : solutions)
+				assert(!solution.covers(i));
+		if (i == maxMinterm)
+			break;
+	}
+}
+#endif
+
 bool Karnaugh::loadData(lines_t &lines)
 {
 	if (!lines.empty() && lines.front() != "-" && !std::all_of(lines.front().cbegin(), lines.front().cend(), [](const char c){ return std::isdigit(c) || std::iswspace(c) || c == ','; }))
@@ -169,7 +188,11 @@ bool Karnaugh::loadData(lines_t &lines)
 
 Karnaugh::solutions_t Karnaugh::solve() const
 {
-	return QuineMcCluskey().solve(allowedMinterms, targetMinterms);
+	const Karnaugh::solutions_t solutions = QuineMcCluskey().solve(allowedMinterms, targetMinterms);
+#ifndef NDEBUG
+	validate(solutions);
+#endif
+	return solutions;
 }
 
 void Karnaugh::printSolution(const PrimeImplicants &solution) const

@@ -2,7 +2,16 @@
 
 #include <vector>
 
+#include "Minterm.hh"
 #include "PrimeImplicant.hh"
 
 
-using PrimeImplicants = std::vector<PrimeImplicant>;
+class PrimeImplicants : public std::vector<PrimeImplicant>
+{
+public:
+	using std::vector<PrimeImplicant>::vector;
+	
+#ifndef NDEBUG
+	bool covers(const Minterm minterm) const;
+#endif
+};

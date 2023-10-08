@@ -32,6 +32,9 @@ private:
 	void printPrimeImplicants(PrimeImplicants primeImplicants) const;
 	
 	bool loadMinterms(Minterms &minterms, std::string &line) const;
+#ifndef NDEBUG
+	void validate(const solutions_t &solutions) const;
+#endif
 	
 public:
 	Karnaugh() : functionName('f' + std::to_string(nameCount++)) {}
