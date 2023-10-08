@@ -5,7 +5,7 @@
 #include <utility>
 #include <vector>
 
-#include "HasseDiagram.hh"
+#include "PetricksHasseDiagram.hh"
 
 
 template<typename MINTERM, typename PRIME_IMPLICANT, typename INDEX_T>
@@ -40,7 +40,7 @@ private:
 	solutions_t solve();
 	
 public:
-	static constexpr std::size_t MAX_PRIME_IMPL_COUNT = HasseDiagram<index_t>::MAX_VALUE;
+	static constexpr std::size_t MAX_PRIME_IMPL_COUNT = PetricksHasseDiagram<index_t>::MAX_VALUE;
 	
 	static solutions_t solve(minterms_t minterms, primeImplicants_t primeImplicants) { return PetricksMethod(std::move(minterms), std::move(primeImplicants)).solve(); }
 };

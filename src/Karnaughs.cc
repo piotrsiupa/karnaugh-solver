@@ -45,7 +45,7 @@ void Karnaughs::findBestSolutions(const solutionses_t &solutionses, solutions_t 
 		solutions.reserve(indexes.size());
 		for (std::size_t i = 0; i != indexes.size(); ++i)
 			solutions.push_back(&solutionses[i][indexes[i]]);
-		OptimizedSolution optimizedSolution = OptimizedSolution::create(solutions);
+		OptimizedSolution optimizedSolution(solutions);
 		
 		if (optimizedSolution.getGateScore() < bestGateScore)
 		{

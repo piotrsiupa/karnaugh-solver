@@ -20,7 +20,7 @@ solution:
 === optimized solution ===
 
 Negated inputs: <none>
-Products: [0] = b && d,  [1] = a && c && d
+Products: [0] = a && c && d,  [1] = b && d
 Sums: [2] = [0] || [1]
 Final sums: "tricky function" = [2]
 

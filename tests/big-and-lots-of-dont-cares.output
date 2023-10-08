@@ -44,7 +44,7 @@ solution:
 === optimized solution ===
 
 Negated inputs: d, h
-Products: [0] = !d && e,  [1] = !d && !h,  [2] = b && c && e
+Products: [0] = !d && e,  [1] = b && c && e,  [2] = !d && !h
 Sums: [3] = [0] || [1] || [2]
 Final sums: "f0" = [3]
 

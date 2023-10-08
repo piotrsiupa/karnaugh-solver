@@ -61,8 +61,8 @@ solution:
 === optimized solution ===
 
 Negated inputs: the_only_input
-Products: [0] = <False>,  [1] = <True>,  [2] = the_only_input,  [3] = !the_only_input
-Sums: [4] = [1],  [5] = [2],  [6] = [3],  [7] = [0]
+Products: [0] = <True>,  [1] = the_only_input,  [2] = !the_only_input,  [3] = <False>
+Sums: [4] = [0],  [5] = [1],  [6] = [2],  [7] = [3]
 Final sums: "true" = [4], "pass_though" = [5], "negate" = [6], "false" = [7]
 
 Gate scores: NOTs = 1, ANDs = 0, ORs = 0
