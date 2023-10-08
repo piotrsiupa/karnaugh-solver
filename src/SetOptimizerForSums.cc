@@ -47,11 +47,17 @@ SetOptimizerForSums::gateCount_t SetOptimizerForSums::countGates(const subsetSel
 	return gates;
 }
 
-SetOptimizerForSums::sets_t SetOptimizerForSums::makeSets() const
+void SetOptimizerForSums::substractSubsets(sets_t &sets, const subsetSelections_t &subsetSelections)
 {
-	sets_t sets;
-	sets.reserve(graph.size());
-	for (const auto &graphNode : graph)
-		sets.push_back(graphNode.first);
-	return sets;
+	for (std::size_t i = sets.size(); i --> 0;)
+	{
+		set_t &set = sets[i];
+		for (const std::size_t subsetIndex : subsetSelections[i])
+		{
+			const set_t &subset = sets[subsetIndex];
+			std::set<std::size_t> setDifference;
+			std::set_difference(set.cbegin(), set.cend(), subset.cbegin(), subset.cend(), std::inserter(setDifference, setDifference.end()));
+			set = std::move(setDifference);
+		}
+	}
 }

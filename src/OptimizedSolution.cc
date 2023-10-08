@@ -161,29 +161,6 @@ void OptimizedSolution::extractCommonParts(const solutions_t &solutions, const f
 		finalSums.push_back(makeSumId(finalIdSet));
 }
 
-void OptimizedSolution::cleanupProducts()
-{
-	for (auto productIter = products.rbegin(); productIter != products.rend(); ++productIter)
-		for (const id_t productId : productIter->second)
-			productIter->first -= getProduct(productId).first;
-}
-
-void OptimizedSolution::cleanupSums()
-{
-	for (auto sumIter = sums.rbegin(); sumIter != sums.rend(); ++sumIter)
-	{
-		for (const id_t id : *sumIter)
-		{
-			if (!isProduct(id))
-			{
-				const auto &referedSum = getSum(id);
-				sumIter->erase(std::remove_if(sumIter->begin(), sumIter->end(), [&referedSum](const id_t x){ return std::find(referedSum.cbegin(), referedSum.cend(), x) != referedSum.cend(); }), sumIter->end());
-			}
-		}
-		std::sort(sumIter->begin(), sumIter->end());
-	}
-}
-
 #ifndef NDEBUG
 OptimizedSolution::normalizedSolution_t OptimizedSolution::normalizeSolution(const id_t finalSumId) const
 {
@@ -256,13 +233,8 @@ OptimizedSolution OptimizedSolution::create(const solutions_t &solutions)
 	os.createNegatedInputs(solutions);
 	const finalPrimeImplicants_t finalPrimeImplicants = os.extractCommonParts(solutions);
 	os.extractCommonParts(solutions, finalPrimeImplicants);
-	
-	os.cleanupProducts();
-	os.cleanupSums();
-	
 #ifndef NDEBUG
 	os.validate(solutions);
 #endif
-	
 	return os;
 }

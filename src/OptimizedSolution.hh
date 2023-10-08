@@ -36,8 +36,6 @@ private:
 	void createNegatedInputs(const solutions_t &solutions);
 	finalPrimeImplicants_t extractCommonParts(const solutions_t &solutions);
 	void extractCommonParts(const solutions_t &solutions, const finalPrimeImplicants_t &finalPrimeImplicants);
-	void cleanupProducts();
-	void cleanupSums();
 	
 	static id_t makeProductId(const std::size_t index) { return index; }
 	id_t makeSumId(const std::size_t index) const { return index + products.size(); }

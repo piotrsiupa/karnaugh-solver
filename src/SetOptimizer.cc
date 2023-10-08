@@ -12,8 +12,9 @@ typename SetOptimizer<SET, HASSE_VALUE, HASSE_CONTAINER>::Result SetOptimizer<SE
 	makeGraph(setHierarchy);
 	auto [subsetSelections, usageCounts] = findBestSubsets();
 	removeUnusedSubsets(subsetSelections, usageCounts);
-	const sets_t newSets = makeSets();
+	sets_t newSets = makeSets();
 	const finalSets_t finalSets = makeFinalSets(oldSets, newSets);
+	substractSubsets(newSets, subsetSelections);
 	return {newSets, finalSets, subsetSelections};
 }
 
@@ -155,6 +156,16 @@ void SetOptimizer<SET, HASSE_VALUE, HASSE_CONTAINER>::removeUnusedSubsets(subset
 	for (const std::size_t &oldEndNode : endNodes)
 		newEndNodes.insert(indexMap[oldEndNode]);
 	endNodes = std::move(newEndNodes);
+}
+
+template<typename SET, typename HASSE_VALUE, template<typename> class HASSE_CONTAINER>
+typename SetOptimizer<SET, HASSE_VALUE, HASSE_CONTAINER>::sets_t SetOptimizer<SET, HASSE_VALUE, HASSE_CONTAINER>::makeSets() const
+{
+	sets_t sets;
+	sets.reserve(graph.size());
+	for (const auto &graphNode : graph)
+		sets.push_back(graphNode.first);
+	return sets;
 }
 
 template<typename SET, typename HASSE_VALUE, template<typename> class HASSE_CONTAINER>

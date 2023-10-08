@@ -78,11 +78,9 @@ SetOptimizerForProducts::gateCount_t SetOptimizerForProducts::countGates(const s
 	return gates;
 }
 
-SetOptimizerForProducts::sets_t SetOptimizerForProducts::makeSets() const
+void SetOptimizerForProducts::substractSubsets(sets_t &sets, const subsetSelections_t &subsetSelections)
 {
-	sets_t sets;
-	sets.reserve(graph.size());
-	for (const auto &graphNode : graph)
-		sets.push_back(graphNode.first);
-	return sets;
+	for (std::size_t i = sets.size(); i --> 0;)
+		for (const std::size_t subsetIndex : subsetSelections[i])
+			sets[i] -= sets[subsetIndex];
 }
