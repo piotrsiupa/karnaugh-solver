@@ -6,7 +6,7 @@
 #include "SetOptimizer.hh"
 
 
-class SetOptimizerForSums : public SetOptimizer<std::set<const void*>, std::uintptr_t>
+class SetOptimizerForSums : public SetOptimizer<std::set<std::size_t>, std::size_t, std::set>
 {
 protected:
 	HasseDiagram makeHasseDiagram(const sets_t &sets) const final;

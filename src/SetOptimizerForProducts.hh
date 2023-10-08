@@ -1,12 +1,13 @@
 #pragma once
 
 #include <cstdint>
+#include <vector>
 
 #include "PrimeImplicant.hh"
 #include "SetOptimizer.hh"
 
 
-class SetOptimizerForProducts : public SetOptimizer<PrimeImplicant, std::int_fast8_t>
+class SetOptimizerForProducts : public SetOptimizer<PrimeImplicant, std::int_fast8_t, std::vector>
 {
 protected:
 	HasseDiagram makeHasseDiagram(const sets_t &sets) const final;

@@ -1,6 +1,7 @@
 #include "./SetOptimizerForProducts.hh"
 
 #include <algorithm>
+#include <limits>
 
 
 SetOptimizerForProducts::HasseDiagram SetOptimizerForProducts::makeHasseDiagram(const sets_t &sets) const
@@ -8,14 +9,22 @@ SetOptimizerForProducts::HasseDiagram SetOptimizerForProducts::makeHasseDiagram(
 	HasseDiagram hasseDiagram;
 	for (const PrimeImplicant &set : sets)
 	{
-		if (set.getBitCount() != 0)
+		HasseDiagram::set_t convertedSet;
+		if (set == PrimeImplicant::all())
 		{
-			HasseDiagram::set_t convertedSet;
+			convertedSet.push_back(std::numeric_limits<hasseValue_t>::max());
+		}
+		else if (set == PrimeImplicant::error())
+		{
+			convertedSet.push_back(std::numeric_limits<hasseValue_t>::min());
+		}
+		else
+		{
 			for (const auto &bit : set.splitBits())
 				convertedSet.push_back(bit.second ? -bit.first - 1 : bit.first);
 			std::sort(convertedSet.begin(), convertedSet.end());
-			hasseDiagram.insert(convertedSet);
 		}
+		hasseDiagram.insert(convertedSet);
 	}
 	return hasseDiagram;
 }
@@ -27,11 +36,23 @@ void SetOptimizerForProducts::makeGraph(const HasseDiagram::setHierarchy_t &setH
 	for (auto &setHierarchyEntry : setHierarchy)
 	{
 		PrimeImplicant set = PrimeImplicant::all();
-		for (const auto &value : setHierarchyEntry.values)
-			if (value >= 0)
-				set.setBit(value, false);
-			else
-				set.setBit(-value - 1, true);
+		const auto &values = setHierarchyEntry.values;
+		if (values.size() == 1 && values[0] == std::numeric_limits<hasseValue_t>::max())
+		{
+			set = PrimeImplicant::all();
+		}
+		else if (values.size() == 1 && values[0] == std::numeric_limits<hasseValue_t>::min())
+		{
+			set = PrimeImplicant::error();
+		}
+		else
+		{
+			for (const auto &value : values)
+				if (value >= 0)
+					set.setBit(value, false);
+				else
+					set.setBit(-value - 1, true);
+		}
 		graph.emplace_back(set, std::move(setHierarchyEntry.subsets));
 		if (setHierarchyEntry.isOriginalSet)
 			endNodes.insert(i);

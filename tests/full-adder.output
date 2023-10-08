@@ -39,8 +39,8 @@ solution:
 === optimized solution ===
 
 Negated inputs: in0, in1, carry-in
-Products: [0] = in0 && in1,  [1] = in0 && carry-in,  [2] = in1 && carry-in,  [3] = carry-in && [0],  [4] = in0 && !in1 && !carry-in,  [5] = !in0 && in1 && !carry-in,  [6] = !in0 && !in1 && carry-in
-Sums: [7] = [0] || [1] || [2],  [8] = [3] || [4] || [5] || [6]
-Final sums: "sum" = [8], "carry-out" = [7]
+Products: [0] = !in0 && !in1 && carry-in,  [1] = !in0 && in1 && !carry-in,  [2] = in0 && !in1 && !carry-in,  [3] = in1 && carry-in,  [4] = in0 && in1,  [5] = in0 && carry-in,  [6] = carry-in && [4]
+Sums: [7] = [0] || [1] || [2] || [6],  [8] = [3] || [4] || [5]
+Final sums: "sum" = [7], "carry-out" = [8]
 
 Gate scores: NOTs = 3, ANDs = 10, ORs = 5

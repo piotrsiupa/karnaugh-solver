@@ -108,56 +108,6 @@ void OptimizedSolution::printGateScores(std::ostream &o) const
 	o << "Gate scores: NOTs = " << getNotCount() << ", ANDs = " << getAndCount() << ", ORs = " << getOrCount() << '\n';
 }
 
-void OptimizedSolution::initializeWips(const solutions_t &solutions, wipProducts_t &wipProducts, wipSums_t &wipSums, wipFinalSums_t &wipFinalSums)
-{
-	wipFinalSums.reserve(solutions.size());
-	for (const PrimeImplicants *const solution : solutions)
-	{
-		std::set<ref_t> wipSum;
-		for (const auto &x : *solution)
-			wipSum.insert(&wipProducts[x]);
-		wipFinalSums.push_back(&wipSums[std::move(wipSum)]);
-	}
-}
-
-void OptimizedSolution::extractCommonParts(wipProducts_t &wipProducts)
-{
-	std::vector<PrimeImplicant> oldPrimeImplicants;
-	oldPrimeImplicants.reserve(wipProducts.size());
-	for (const auto &wipProduct : wipProducts)
-		oldPrimeImplicants.push_back(wipProduct.first);
-	const auto [newPrimeImplicants, chosenSubsets] = SetOptimizerForProducts().extractCommonParts(oldPrimeImplicants);
-	
-	std::vector<ref_t> refsrefs(chosenSubsets.size());
-	for (std::size_t i = 0; i != chosenSubsets.size(); ++i)
-	{
-		auto &refs = wipProducts[newPrimeImplicants[i]];
-		refs.reserve(chosenSubsets[i].size());
-		for (const std::size_t &subset : chosenSubsets[i])
-			refs.push_back(refsrefs[subset]);
-		refsrefs[i] = &refs;
-	}
-}
-
-void OptimizedSolution::extractCommonParts(wipSums_t &wipSums)
-{
-	std::vector<std::set<const void*>> oldPointerSets;
-	oldPointerSets.reserve(wipSums.size());
-	for (const auto &wipSum : wipSums)
-		oldPointerSets.push_back(wipSum.first);
-	const auto [newPointerSets, chosenSubsets] = SetOptimizerForSums().extractCommonParts(oldPointerSets);
-	
-	std::vector<ref_t> refsrefs(chosenSubsets.size());
-	for (std::size_t i = 0; i != chosenSubsets.size(); ++i)
-	{
-		auto &refs = wipSums[newPointerSets[i]];
-		refs.reserve(chosenSubsets[i].size());
-		for (const std::size_t &subset : chosenSubsets[i])
-			refs.push_back(refsrefs[subset]);
-		refsrefs[i] = &refs;
-	}
-}
-
 void OptimizedSolution::createNegatedInputs(const solutions_t &solutions)
 {
 	for (const PrimeImplicants *const solution : solutions)
@@ -165,64 +115,50 @@ void OptimizedSolution::createNegatedInputs(const solutions_t &solutions)
 			negatedInputs |= x.getFalseBits();
 }
 
-OptimizedSolution::id_t OptimizedSolution::findWipProductId(const wipProducts_t &wipProducts, const ref_t wipProductRef)
+OptimizedSolution::finalPrimeImplicants_t OptimizedSolution::extractCommonParts(const solutions_t &solutions)
 {
-	std::size_t i = 0;
-	for (const auto &wipProduct : wipProducts)
-	{
-		if (&wipProduct.second == wipProductRef)
-			return makeProductId(i);
-		++i;
-	}
-	__builtin_unreachable();
+	std::vector<PrimeImplicant> oldPrimeImplicants;
+	for (const PrimeImplicants *const solution : solutions)
+		for (const auto &product: *solution)
+			oldPrimeImplicants.push_back(product);
+	const auto [newPrimeImplicants, finalPrimeImplicants, subsetSelections] = SetOptimizerForProducts().extractCommonParts(oldPrimeImplicants);
+	
+	products.reserve(subsetSelections.size());
+	for (std::size_t i = 0; i != subsetSelections.size(); ++i)
+		products.emplace_back(newPrimeImplicants[i], subsetSelections[i]);
+	
+	return finalPrimeImplicants;
 }
 
-OptimizedSolution::id_t OptimizedSolution::findWipSumId(const wipSums_t &wipSums, const ref_t wipSumRef) const
+void OptimizedSolution::extractCommonParts(const solutions_t &solutions, const finalPrimeImplicants_t &finalPrimeImplicants)
 {
+	std::vector<std::set<std::size_t>> oldIdSets;
 	std::size_t i = 0;
-	for (const auto &wipSum : wipSums)
+	for (const PrimeImplicants *const solution : solutions)
 	{
-		if (&wipSum.second == wipSumRef)
-			return makeSumId(i);
-		++i;
+		oldIdSets.emplace_back();
+		auto &oldIdSet = oldIdSets.back();
+		for (std::size_t j = 0; j != solution->size(); ++j)
+			oldIdSet.insert(finalPrimeImplicants[i++]);
 	}
-	__builtin_unreachable();
-}
-
-void OptimizedSolution::insertWipProducts(const wipProducts_t &wipProducts)
-{
-	products.reserve(wipProducts.size());
-	for (const auto &wipProduct : wipProducts)
-		products.push_back({wipProduct.first, {}});
-	std::size_t i = 0;
-	for (const auto &wipProduct : wipProducts)
+	const auto [newIdSets, finalIdSets, subsetSelections] = SetOptimizerForSums().extractCommonParts(oldIdSets);
+	
+	sums.reserve(subsetSelections.size());
+	for (std::size_t i = 0; i != subsetSelections.size(); ++i)
 	{
-		auto &ids = products[i++].second;
-		for (auto wipProductRefIter = wipProduct.second.crbegin(); wipProductRefIter != wipProduct.second.crend(); ++wipProductRefIter)
-			ids.push_back(findWipProductId(wipProducts, *wipProductRefIter));
-	}
-}
-
-void OptimizedSolution::insertWipSums(const wipProducts_t &wipProducts, const wipSums_t &wipSums)
-{
-	sums.reserve(wipSums.size());
-	for (const auto &wipSum : wipSums)
-	{
+		const auto &newIdSet = newIdSets[i];
+		const auto &subsetSelection = subsetSelections[i];
 		sums.emplace_back();
 		auto &sum = sums.back();
-		sum.reserve(wipSum.first.size() + wipSum.second.size());
-		for (const auto &wipProductRef : wipSum.first)
-			sum.push_back(findWipProductId(wipProducts, wipProductRef));
-		for (auto wipSumRefIter = wipSum.second.crbegin(); wipSumRefIter != wipSum.second.crend(); ++wipSumRefIter)
-			sum.push_back(findWipSumId(wipSums, *wipSumRefIter));
+		sum.insert(sum.end(), newIdSet.begin(), newIdSet.end());
+		sum.reserve(newIdSet.size() + subsetSelection.size());
+		for (const std::size_t &subsetSelections : subsetSelection)
+			sum.push_back(makeSumId(subsetSelections));
 	}
-}
-
-void OptimizedSolution::insertWipFinalSums(const wipSums_t &wipSums, const wipFinalSums_t &wipFinalSums)
-{
-	finalSums.reserve(wipFinalSums.size());
-	for (ref_t wipFinalSum : wipFinalSums)
-		finalSums.push_back(findWipSumId(wipSums, wipFinalSum));
+	
+	finalSums.reserve(finalIdSets.size());
+	for (const std::size_t &finalIdSet : finalIdSets)
+		finalSums.push_back(makeSumId(finalIdSet));
 }
 
 void OptimizedSolution::cleanupProducts()
@@ -316,20 +252,10 @@ void OptimizedSolution::print(std::ostream &o, const strings_t &functionNames) c
 
 OptimizedSolution OptimizedSolution::create(const solutions_t &solutions)
 {
-	wipProducts_t wipProducts;
-	wipSums_t wipSums(wipSumsLess);
-	wipFinalSums_t wipFinalSums;
-	initializeWips(solutions, wipProducts, wipSums, wipFinalSums);
-	
-	extractCommonParts(wipProducts);
-	extractCommonParts(wipSums);
-	
 	OptimizedSolution os;
-	
 	os.createNegatedInputs(solutions);
-	os.insertWipProducts(wipProducts);
-	os.insertWipSums(wipProducts, wipSums);
-	os.insertWipFinalSums(wipSums, wipFinalSums);
+	const finalPrimeImplicants_t finalPrimeImplicants = os.extractCommonParts(solutions);
+	os.extractCommonParts(solutions, finalPrimeImplicants);
 	
 	os.cleanupProducts();
 	os.cleanupSums();

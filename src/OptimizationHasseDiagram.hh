@@ -4,14 +4,14 @@
 #include <vector>
 
 
-template<typename VALUE_T>
+template<typename VALUE_T, template<typename> class CONTAINER>
 class OptimizationHasseDiagram
 {
 public:
 	using value_t = VALUE_T;
 	using setId_t = int;
 	static constexpr value_t MAX_VALUE = ~value_t(0);
-	using set_t = std::vector<value_t>;
+	using set_t = CONTAINER<value_t>;
 	using sets_t = std::vector<set_t>;
 	struct SetHierarchyEntry
 	{
@@ -66,6 +66,7 @@ private:
 	};
 	Node root{{}, 0, {}, false};
 	
+	bool contains(const set_t &set) const;
 	void insert(typename set_t::const_iterator currentInSet, const typename set_t::const_iterator &endOfSet, Node &currentNode, const setId_t setId, const bool primaryBranch);
 	mutable std::vector<value_t> currentValues;
 	
@@ -76,7 +77,7 @@ private:
 	static void sortSetHierarchy(setHierarchy_t &setHierarchy);
 	
 public:
-	void insert(const set_t &set) { insert(set.cbegin(), set.cend(), root, currentSetId++, true); }
+	void insert(const set_t &set) { if (!contains(set)) insert(set.cbegin(), set.cend(), root, currentSetId++, true); }
 	
 	setHierarchy_t makeSetHierarchy() const;
 };

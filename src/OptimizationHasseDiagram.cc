@@ -4,8 +4,22 @@
 #include <cstdint>
 
 
-template<typename VALUE_T>
-void OptimizationHasseDiagram<VALUE_T>::insert(typename set_t::const_iterator currentInSet, const typename set_t::const_iterator &endOfSet, Node &currentNode, const setId_t setId, const bool primaryBranch)
+template<typename VALUE_T, template<typename> class CONTAINER>
+bool OptimizationHasseDiagram<VALUE_T, CONTAINER>::contains(const set_t &set) const
+{
+	const Node *node = &root;
+	for (const VALUE_T &value : set)
+	{
+		const auto foundChild = node->children.find(value);
+		if (foundChild == node->children.cend())
+			return false;
+		node = &foundChild->getNode();
+	}
+	return node->isOriginalSet;
+}
+
+template<typename VALUE_T, template<typename> class CONTAINER>
+void OptimizationHasseDiagram<VALUE_T, CONTAINER>::insert(typename set_t::const_iterator currentInSet, const typename set_t::const_iterator &endOfSet, Node &currentNode, const setId_t setId, const bool primaryBranch)
 {
 	Node *nextNode;
 	if (const auto foundChild = currentNode.children.find(*currentInSet); foundChild != currentNode.children.end())
@@ -31,8 +45,8 @@ void OptimizationHasseDiagram<VALUE_T>::insert(typename set_t::const_iterator cu
 	}
 }
 
-template<typename VALUE_T>
-void OptimizationHasseDiagram<VALUE_T>::makeSetHierarchy(setHierarchy_t &setHierarchy, const Node &node, const std::size_t subset) const
+template<typename VALUE_T, template<typename> class CONTAINER>
+void OptimizationHasseDiagram<VALUE_T, CONTAINER>::makeSetHierarchy(setHierarchy_t &setHierarchy, const Node &node, const std::size_t subset) const
 {
 	currentValues.push_back(node.value);
 	if (!node.isOriginalSet && (node.setIds.size() == 1 || currentValues.size() == 1))
@@ -58,8 +72,8 @@ void OptimizationHasseDiagram<VALUE_T>::makeSetHierarchy(setHierarchy_t &setHier
 	currentValues.pop_back();
 }
 
-template<typename VALUE_T>
-void OptimizationHasseDiagram<VALUE_T>::trimSetHierarchy(setHierarchy_t &setHierarchy)
+template<typename VALUE_T, template<typename> class CONTAINER>
+void OptimizationHasseDiagram<VALUE_T, CONTAINER>::trimSetHierarchy(setHierarchy_t &setHierarchy)
 {
 	std::vector<std::size_t> offsets(setHierarchy.size());
 	for (SetHierarchyEntry &entry : setHierarchy)
@@ -96,8 +110,8 @@ void OptimizationHasseDiagram<VALUE_T>::trimSetHierarchy(setHierarchy_t &setHier
 			subset -= offsets[subset];
 }
 
-template<typename VALUE_T>
-void OptimizationHasseDiagram<VALUE_T>::addMoreEdgesToSetHierarchy(setHierarchy_t &setHierarchy)
+template<typename VALUE_T, template<typename> class CONTAINER>
+void OptimizationHasseDiagram<VALUE_T, CONTAINER>::addMoreEdgesToSetHierarchy(setHierarchy_t &setHierarchy)
 {
 	for (SetHierarchyEntry &entry0 : setHierarchy)
 		for (std::size_t j = 0; j != setHierarchy.size(); ++j)
@@ -106,8 +120,8 @@ void OptimizationHasseDiagram<VALUE_T>::addMoreEdgesToSetHierarchy(setHierarchy_
 					entry0.subsets.push_back(j);
 }
 
-template<typename VALUE_T>
-void OptimizationHasseDiagram<VALUE_T>::removeRedundantEdgesFromSetHierarchy(setHierarchy_t &setHierarchy)
+template<typename VALUE_T, template<typename> class CONTAINER>
+void OptimizationHasseDiagram<VALUE_T, CONTAINER>::removeRedundantEdgesFromSetHierarchy(setHierarchy_t &setHierarchy)
 {
 	for (auto iter = setHierarchy.rbegin(); iter != setHierarchy.rend(); ++iter)
 	{
@@ -122,8 +136,8 @@ void OptimizationHasseDiagram<VALUE_T>::removeRedundantEdgesFromSetHierarchy(set
 	}
 }
 
-template<typename VALUE_T>
-void OptimizationHasseDiagram<VALUE_T>::sortSetHierarchy(setHierarchy_t &setHierarchy)
+template<typename VALUE_T, template<typename> class CONTAINER>
+void OptimizationHasseDiagram<VALUE_T, CONTAINER>::sortSetHierarchy(setHierarchy_t &setHierarchy)
 {
 	std::vector<std::size_t> sortOrder;
 	sortOrder.reserve(setHierarchy.size());
@@ -174,8 +188,8 @@ void OptimizationHasseDiagram<VALUE_T>::sortSetHierarchy(setHierarchy_t &setHier
 	setHierarchy = std::move(sortedSetHierarchy);
 }
 
-template<typename VALUE_T>
-typename OptimizationHasseDiagram<VALUE_T>::setHierarchy_t OptimizationHasseDiagram<VALUE_T>::makeSetHierarchy() const
+template<typename VALUE_T, template<typename> class CONTAINER>
+typename OptimizationHasseDiagram<VALUE_T, CONTAINER>::setHierarchy_t OptimizationHasseDiagram<VALUE_T, CONTAINER>::makeSetHierarchy() const
 {
 	currentValues.clear();
 	setHierarchy_t setHierarchy;
@@ -189,5 +203,7 @@ typename OptimizationHasseDiagram<VALUE_T>::setHierarchy_t OptimizationHasseDiag
 }
 
 
-template class OptimizationHasseDiagram<std::int8_t>;
-template class OptimizationHasseDiagram<std::uintptr_t>;
+#include <set>
+
+template class OptimizationHasseDiagram<std::int8_t, std::vector>;
+template class OptimizationHasseDiagram<std::size_t, std::set>;

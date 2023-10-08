@@ -2,7 +2,6 @@
 
 #include <cstddef>
 #include <ostream>
-#include <map>
 #include <set>
 #include <utility>
 #include <vector>
@@ -17,16 +16,11 @@ public:
 	using solutions_t = std::vector<const PrimeImplicants*>;
 	
 private:
-	using ref_t = const void*;
-	static bool wipSumsLess(const std::set<ref_t> &x, const std::set<ref_t> &y) { return x.size() != y.size() ? x.size() < y.size() : x < y; }
-	using wipProducts_t = std::map<PrimeImplicant, std::vector<ref_t>>;
-	using wipSums_t = std::map<std::set<ref_t>, std::vector<ref_t>, decltype(wipSumsLess)&>;
-	using wipFinalSums_t = std::vector<ref_t>;
-	
 	using id_t = std::size_t;
 	using ids_t = std::vector<id_t>;
 	using product_t = std::pair<PrimeImplicant, ids_t>;
 	using sum_t = ids_t;
+	using finalPrimeImplicants_t = std::vector<std::size_t>;
 	
 	Minterm negatedInputs = 0;
 	std::vector<product_t> products;
@@ -39,15 +33,9 @@ private:
 	void printFinalSums(std::ostream &o, const strings_t &functionNames) const;
 	void printGateScores(std::ostream &o) const;
 	
-	static void initializeWips(const solutions_t &solutions, wipProducts_t &wipProducts, wipSums_t &wipSums, wipFinalSums_t &wipFinalSums);
-	static void extractCommonParts(wipProducts_t &wipProducts);
-	static void extractCommonParts(wipSums_t &wipSums);
 	void createNegatedInputs(const solutions_t &solutions);
-	static id_t findWipProductId(const wipProducts_t &wipProducts, const ref_t wipProductRef);
-	id_t findWipSumId(const wipSums_t &wipSums, const ref_t wipSumRef) const;
-	void insertWipProducts(const wipProducts_t &wipProducts);
-	void insertWipSums(const wipProducts_t &wipProducts, const wipSums_t &wipSums);
-	void insertWipFinalSums(const wipSums_t &wipSums, const wipFinalSums_t &wipFinalSums);
+	finalPrimeImplicants_t extractCommonParts(const solutions_t &solutions);
+	void extractCommonParts(const solutions_t &solutions, const finalPrimeImplicants_t &finalPrimeImplicants);
 	void cleanupProducts();
 	void cleanupSums();
 	
