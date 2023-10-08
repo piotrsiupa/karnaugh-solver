@@ -27,10 +27,8 @@ int main()
 	
 	::bits = ::inputNames.size();
 	
-	Karnaughs karnaughs;
-	if (!karnaughs.loadData(lines))
+	if (!Karnaughs::solve(lines))
 		return 1;
-	karnaughs.solve();
 	
 	return 0;
 }

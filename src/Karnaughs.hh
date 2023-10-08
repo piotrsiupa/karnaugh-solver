@@ -3,7 +3,7 @@
 #include <vector>
 
 #include "Karnaugh.hh"
-#include "OptimizedSolution.hh"
+#include "OptimizedSolutions.hh"
 #include "PrimeImplicants.hh"
 
 
@@ -14,14 +14,16 @@ class Karnaughs
 	using solutionses_t = std::vector<solutions_t>;
 	
 	karnaughs_t karnaughs;
+	OptimizedSolutions optimizedSolutions;
 	
 	void printSolutions(const solutions_t &solutions) const;
-	void printOptimizedSolution(const OptimizedSolution &optimizedSolution) const;
+	void printOptimizedSolution() const;
 	
+	bool loadData(lines_t &lines);
 	solutionses_t makeSolutionses() const;
-	static void findBestSolutions(const solutionses_t &solutionses, solutions_t &bestSolutions, OptimizedSolution &bestOptimizedSolution);
+	void findBestSolutions(const solutionses_t &solutionses, solutions_t &bestSolutions);
+	void solve();
 	
 public:
-	bool loadData(lines_t &lines);
-	void solve() const;
+	static bool solve(lines_t &lines);
 };

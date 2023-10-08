@@ -1,4 +1,4 @@
-#include "./OptimizedSolution.hh"
+#include "./OptimizedSolutions.hh"
 
 #include <algorithm>
 #include <cassert>
@@ -9,7 +9,7 @@
 #include "SetOptimizerForSums.hh"
 
 
-void OptimizedSolution::printNegatedInputs(std::ostream &o) const
+void OptimizedSolutions::printNegatedInputs(std::ostream &o) const
 {
 	o << "Negated inputs:";
 	bool first = true;
@@ -34,7 +34,7 @@ void OptimizedSolution::printNegatedInputs(std::ostream &o) const
 	o << '\n';
 }
 
-void OptimizedSolution::printProducts(std::ostream &o) const
+void OptimizedSolutions::printProducts(std::ostream &o) const
 {
 	o << "Products:";
 	for (std::size_t i = 0; i != products.size(); ++i)
@@ -62,7 +62,7 @@ void OptimizedSolution::printProducts(std::ostream &o) const
 	o << '\n';
 }
 
-void OptimizedSolution::printSums(std::ostream &o) const
+void OptimizedSolutions::printSums(std::ostream &o) const
 {
 	o << "Sums:";
 	for (std::size_t i = 0; i != sums.size(); ++i)
@@ -87,7 +87,7 @@ void OptimizedSolution::printSums(std::ostream &o) const
 	o << '\n';
 }
 
-void OptimizedSolution::printFinalSums(std::ostream &o, const strings_t &functionNames) const
+void OptimizedSolutions::printFinalSums(std::ostream &o, const strings_t &functionNames) const
 {
 	o << "Final sums:";
 	for (std::size_t i = 0; i != finalSums.size(); ++i)
@@ -103,19 +103,19 @@ void OptimizedSolution::printFinalSums(std::ostream &o, const strings_t &functio
 	o << '\n';
 }
 
-void OptimizedSolution::printGateScores(std::ostream &o) const
+void OptimizedSolutions::printGateScores(std::ostream &o) const
 {
 	o << "Gate scores: NOTs = " << getNotCount() << ", ANDs = " << getAndCount() << ", ORs = " << getOrCount() << '\n';
 }
 
-void OptimizedSolution::createNegatedInputs(const solutions_t &solutions)
+void OptimizedSolutions::createNegatedInputs(const solutions_t &solutions)
 {
 	for (const PrimeImplicants *const solution : solutions)
 		for (const auto &x : *solution)
 			negatedInputs |= x.getFalseBits();
 }
 
-OptimizedSolution::finalPrimeImplicants_t OptimizedSolution::extractCommonParts(const solutions_t &solutions)
+OptimizedSolutions::finalPrimeImplicants_t OptimizedSolutions::extractCommonParts(const solutions_t &solutions)
 {
 	std::vector<PrimeImplicant> oldPrimeImplicants;
 	for (const PrimeImplicants *const solution : solutions)
@@ -130,7 +130,7 @@ OptimizedSolution::finalPrimeImplicants_t OptimizedSolution::extractCommonParts(
 	return finalPrimeImplicants;
 }
 
-void OptimizedSolution::extractCommonParts(const solutions_t &solutions, const finalPrimeImplicants_t &finalPrimeImplicants)
+void OptimizedSolutions::extractCommonParts(const solutions_t &solutions, const finalPrimeImplicants_t &finalPrimeImplicants)
 {
 	std::vector<std::set<std::size_t>> oldIdSets;
 	std::size_t i = 0;
@@ -162,7 +162,7 @@ void OptimizedSolution::extractCommonParts(const solutions_t &solutions, const f
 }
 
 #ifndef NDEBUG
-OptimizedSolution::normalizedSolution_t OptimizedSolution::normalizeSolution(const id_t finalSumId) const
+OptimizedSolutions::normalizedSolution_t OptimizedSolutions::normalizeSolution(const id_t finalSumId) const
 {
 	ids_t rootProductIds, idsToProcess(1, finalSumId);
 	while (!idsToProcess.empty())
@@ -204,7 +204,7 @@ OptimizedSolution::normalizedSolution_t OptimizedSolution::normalizeSolution(con
 	return normalizedSolution;
 }
 
-void OptimizedSolution::validate(const solutions_t &solutions) const
+void OptimizedSolutions::validate(const solutions_t &solutions) const
 {
 	assert(solutions.size() == finalSums.size());
 	
@@ -217,7 +217,7 @@ void OptimizedSolution::validate(const solutions_t &solutions) const
 }
 #endif
 
-OptimizedSolution::OptimizedSolution(const solutions_t &solutions)
+OptimizedSolutions::OptimizedSolutions(const solutions_t &solutions)
 {
 	createNegatedInputs(solutions);
 	const finalPrimeImplicants_t finalPrimeImplicants = extractCommonParts(solutions);
@@ -227,7 +227,7 @@ OptimizedSolution::OptimizedSolution(const solutions_t &solutions)
 #endif
 }
 
-void OptimizedSolution::print(std::ostream &o, const strings_t &functionNames) const
+void OptimizedSolutions::print(std::ostream &o, const strings_t &functionNames) const
 {
 	printNegatedInputs(o);
 	printProducts(o);

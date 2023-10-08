@@ -10,7 +10,7 @@
 #include "PrimeImplicants.hh"
 
 
-class OptimizedSolution
+class OptimizedSolutions
 {
 public:
 	using solutions_t = std::vector<const PrimeImplicants*>;
@@ -50,8 +50,10 @@ private:
 #endif
 	
 public:
-	OptimizedSolution() = default;
-	OptimizedSolution(const solutions_t &solutions);
+	OptimizedSolutions() = default;
+	OptimizedSolutions(const solutions_t &solutions);
+	
+	std::size_t getSize() const { return finalSums.size(); }
 	
 	std::size_t getNotCount() const { return __builtin_popcount(negatedInputs); }
 	std::size_t getAndCount() const { std::size_t andCount = 0; for (const auto &[primeImplicant, ids] : products) andCount += std::max(std::size_t(1), primeImplicant.getBitCount() + ids.size()) - 1; return andCount; }
