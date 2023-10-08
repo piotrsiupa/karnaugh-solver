@@ -121,7 +121,7 @@ OptimizedSolution::finalPrimeImplicants_t OptimizedSolution::extractCommonParts(
 	for (const PrimeImplicants *const solution : solutions)
 		for (const auto &product: *solution)
 			oldPrimeImplicants.push_back(product);
-	const auto [newPrimeImplicants, finalPrimeImplicants, subsetSelections] = SetOptimizerForProducts().extractCommonParts(oldPrimeImplicants);
+	const auto [newPrimeImplicants, finalPrimeImplicants, subsetSelections] = SetOptimizerForProducts::optimizeSet(oldPrimeImplicants);
 	
 	products.reserve(subsetSelections.size());
 	for (std::size_t i = 0; i != subsetSelections.size(); ++i)
@@ -141,7 +141,7 @@ void OptimizedSolution::extractCommonParts(const solutions_t &solutions, const f
 		for (std::size_t j = 0; j != solution->size(); ++j)
 			oldIdSet.insert(finalPrimeImplicants[i++]);
 	}
-	const auto [newIdSets, finalIdSets, subsetSelections] = SetOptimizerForSums().extractCommonParts(oldIdSets);
+	const auto [newIdSets, finalIdSets, subsetSelections] = SetOptimizerForSums::optimizeSet(oldIdSets);
 	
 	sums.reserve(subsetSelections.size());
 	for (std::size_t i = 0; i != subsetSelections.size(); ++i)
@@ -217,6 +217,16 @@ void OptimizedSolution::validate(const solutions_t &solutions) const
 }
 #endif
 
+OptimizedSolution::OptimizedSolution(const solutions_t &solutions)
+{
+	createNegatedInputs(solutions);
+	const finalPrimeImplicants_t finalPrimeImplicants = extractCommonParts(solutions);
+	extractCommonParts(solutions, finalPrimeImplicants);
+#ifndef NDEBUG
+	validate(solutions);
+#endif
+}
+
 void OptimizedSolution::print(std::ostream &o, const strings_t &functionNames) const
 {
 	printNegatedInputs(o);
@@ -225,16 +235,4 @@ void OptimizedSolution::print(std::ostream &o, const strings_t &functionNames) c
 	printFinalSums(o, functionNames);
 	o << '\n';
 	printGateScores(o);
-}
-
-OptimizedSolution OptimizedSolution::create(const solutions_t &solutions)
-{
-	OptimizedSolution os;
-	os.createNegatedInputs(solutions);
-	const finalPrimeImplicants_t finalPrimeImplicants = os.extractCommonParts(solutions);
-	os.extractCommonParts(solutions, finalPrimeImplicants);
-#ifndef NDEBUG
-	os.validate(solutions);
-#endif
-	return os;
 }

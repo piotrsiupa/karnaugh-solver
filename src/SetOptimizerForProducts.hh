@@ -9,6 +9,9 @@
 
 class SetOptimizerForProducts : public SetOptimizer<PrimeImplicant, std::int_fast8_t, std::vector>
 {
+public:
+	static Result optimizeSet(const sets_t &sets) { return SetOptimizerForProducts().extractCommonParts(sets); }
+	
 protected:
 	HasseDiagram makeHasseDiagram(const sets_t &sets) const final;
 	void makeGraph(const HasseDiagram::setHierarchy_t &setHierarchy) final;

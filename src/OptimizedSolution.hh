@@ -50,12 +50,13 @@ private:
 #endif
 	
 public:
+	OptimizedSolution() = default;
+	OptimizedSolution(const solutions_t &solutions);
+	
 	std::size_t getNotCount() const { return __builtin_popcount(negatedInputs); }
 	std::size_t getAndCount() const { std::size_t andCount = 0; for (const auto &[primeImplicant, ids] : products) andCount += std::max(std::size_t(1), primeImplicant.getBitCount() + ids.size()) - 1; return andCount; }
 	std::size_t getOrCount() const { std::size_t orCount = 0; for (const auto &sum : sums) orCount += sum.size() - 1; return orCount; }
 	std::size_t getGateScore() const { return getNotCount() + 2 * getAndCount() + 2 * getOrCount(); }
 	
 	void print(std::ostream &o, const strings_t &functionNames) const;
-	
-	static OptimizedSolution create(const solutions_t &solutions);
 };

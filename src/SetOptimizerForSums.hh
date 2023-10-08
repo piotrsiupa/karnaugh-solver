@@ -8,6 +8,9 @@
 
 class SetOptimizerForSums : public SetOptimizer<std::set<std::size_t>, std::size_t, std::set>
 {
+public:
+	static Result optimizeSet(const sets_t &sets) { return SetOptimizerForSums().extractCommonParts(sets); }
+	
 protected:
 	HasseDiagram makeHasseDiagram(const sets_t &sets) const final;
 	void makeGraph(const HasseDiagram::setHierarchy_t &setHierarchy) final;

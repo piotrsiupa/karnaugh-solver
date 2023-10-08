@@ -35,9 +35,11 @@ public:
 		subsetSelections_t subsets;
 	};
 	
+protected:
+	SetOptimizer() = default;
+	
 	Result extractCommonParts(const sets_t &sets);
 	
-protected:
 	virtual HasseDiagram makeHasseDiagram(const sets_t &sets) const = 0;
 	virtual void makeGraph(const typename HasseDiagram::setHierarchy_t &setHierarchy) = 0;
 	virtual gateCount_t countGates(const subsetSelections_t &subsetSelections, const usageCounts_t &usageCounts) const = 0;
