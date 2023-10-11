@@ -16,19 +16,25 @@ void Karnaughs::printSolutions(const solutions_t &solutions) const
 
 void Karnaughs::printOptimizedSolution() const
 {
-	strings_t functionNames;
+	std::vector<std::string> functionNames;
 	functionNames.reserve(karnaughs.size());
 	for (const Karnaugh &karnaugh : karnaughs)
 		functionNames.push_back(karnaugh.getFunctionName());
 	optimizedSolutions.print(std::cout, functionNames);
 }
 
-bool Karnaughs::loadData(lines_t &lines)
+bool Karnaughs::loadData(Input &input)
 {
-	while (!lines.empty())
+	while (true)
 	{
+		if (::inputTerminal)
+			std::cerr << "Either end the input or enter a name of the next function (optional) or a list of its minterms:\n";
+		if (input.hasError())
+			return false;
+		if (input.isEmpty())
+			break;
 		karnaughs.push_back({});
-		if (!karnaughs.back().loadData(lines))
+		if (!karnaughs.back().loadData(input))
 			return false;
 	}
 	return true;
@@ -92,10 +98,10 @@ void Karnaughs::solve()
 	std::cout << std::flush;
 }
 
-bool Karnaughs::solve(lines_t &lines)
+bool Karnaughs::solve(Input &input)
 {
 	Karnaughs karnaughs;
-	if (!karnaughs.loadData(lines))
+	if (!karnaughs.loadData(input))
 		return false;
 	karnaughs.solve();
 	return true;

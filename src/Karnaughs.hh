@@ -2,6 +2,7 @@
 
 #include <vector>
 
+#include "Input.hh"
 #include "Karnaugh.hh"
 #include "OptimizedSolutions.hh"
 #include "PrimeImplicants.hh"
@@ -19,11 +20,11 @@ class Karnaughs
 	void printSolutions(const solutions_t &solutions) const;
 	void printOptimizedSolution() const;
 	
-	bool loadData(lines_t &lines);
+	bool loadData(Input &input);
 	solutionses_t makeSolutionses() const;
 	void findBestSolutions(const solutionses_t &solutionses, solutions_t &bestSolutions);
 	void solve();
 	
 public:
-	static bool solve(lines_t &lines);
+	static bool solve(Input &input);
 };

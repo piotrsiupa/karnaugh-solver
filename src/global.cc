@@ -1,6 +1,8 @@
 #include "./global.hh"
 
 
-strings_t inputNames;
+bool inputTerminal;
+
+std::vector<std::string> inputNames;
 
 bits_t bits;

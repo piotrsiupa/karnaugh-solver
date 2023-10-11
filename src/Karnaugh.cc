@@ -5,7 +5,6 @@
 #include <cctype>
 #include <iostream>
 
-#include "input.hh"
 #include "QuineMcCluskey.hh"
 
 
@@ -108,9 +107,9 @@ void Karnaugh::printPrimeImplicants(PrimeImplicants primeImplicants) const
 	}
 }
 
-bool Karnaugh::loadMinterms(Minterms &minterms, std::string &line) const
+bool Karnaugh::loadMinterms(Minterms &minterms, Input &input) const
 {
-	for (const std::string &string : readStrings(line))
+	for (const std::string &string : input.popParts())
 	{
 		try
 		{
@@ -154,26 +153,40 @@ void Karnaugh::validate(const solutions_t &solutions) const
 }
 #endif
 
-bool Karnaugh::loadData(lines_t &lines)
+bool Karnaugh::loadData(Input &input)
 {
-	if (!lines.empty() && lines.front() != "-" && !std::all_of(lines.front().cbegin(), lines.front().cend(), [](const char c){ return std::isdigit(c) || std::iswspace(c) || c == ','; }))
-	{
-		functionName = std::move(lines.front());
-		lines.pop_front();
-	}
-	if (lines.size() < 2)
-	{
-		std::cerr << "A description of a Karnaugh map has to have 2 lines!\n";
+	if (input.hasError())
 		return false;
-	}
+	const bool hasName = input.isName();
+	if (hasName)
+		functionName = input.popLine();
 	
-	if (!loadMinterms(targetMinterms, lines.front()))
-		return false;
-	lines.pop_front();
 	
-	if (!loadMinterms(allowedMinterms, lines.front()))
+	if (hasName && ::inputTerminal)
+		std::cerr << "Enter a list of minterms of the function \"" << functionName << "\":\n";
+	if (input.hasError())
 		return false;
-	lines.pop_front();
+	if (input.isEmpty())
+	{
+		std::cerr << "A list of minterms is mandatory!\n";
+		return false;
+	}
+	if (!loadMinterms(targetMinterms, input))
+		return false;
+	
+	if (::inputTerminal)
+	{
+		std::cerr << "Enter a list of don't-cares of the function";
+		if (hasName)
+			std::cerr << " \"" << functionName << "\":\n";
+		else
+			std::cerr << ":\n";
+	}
+	if (input.hasError())
+		return false;
+	if (!input.isEmpty())
+		if (!loadMinterms(allowedMinterms, input))
+			return false;
 	
 	for (const Minterm &targetMinterm : targetMinterms)
 	{

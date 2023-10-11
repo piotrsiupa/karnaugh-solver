@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "global.hh"
+#include "Input.hh"
 #include "Minterm.hh"
 #include "Minterms.hh"
 #include "PrimeImplicant.hh"
@@ -31,7 +32,7 @@ private:
 	void printPrimeImplicant(const PrimeImplicant primeImplicant, const bool parentheses) const;
 	void printPrimeImplicants(PrimeImplicants primeImplicants) const;
 	
-	bool loadMinterms(Minterms &minterms, std::string &line) const;
+	bool loadMinterms(Minterms &minterms, Input &input) const;
 #ifndef NDEBUG
 	void validate(const solutions_t &solutions) const;
 #endif
@@ -43,7 +44,7 @@ public:
 	
 	std::string getFunctionName() const { return functionName; }
 	
-	bool loadData(lines_t &lines);
+	bool loadData(Input &input);
 	solutions_t solve() const;
 	
 	void printSolution(const PrimeImplicants &solution) const;

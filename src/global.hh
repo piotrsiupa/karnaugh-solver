@@ -6,11 +6,9 @@
 #include <vector>
 
 
-using lines_t = std::list<std::string>;
+extern bool inputTerminal;
 
-using strings_t = std::vector<std::string>;
-
-extern strings_t inputNames;
+extern std::vector<std::string> inputNames;
 
 using bits_t = std::uint_fast8_t;
 constexpr bits_t maxBits = 32;

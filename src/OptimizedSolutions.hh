@@ -30,7 +30,7 @@ private:
 	void printNegatedInputs(std::ostream &o) const;
 	void printProducts(std::ostream &o) const;
 	void printSums(std::ostream &o) const;
-	void printFinalSums(std::ostream &o, const strings_t &functionNames) const;
+	void printFinalSums(std::ostream &o, const std::vector<std::string> &functionNames) const;
 	void printGateScores(std::ostream &o) const;
 	
 	void createNegatedInputs(const solutions_t &solutions);
@@ -60,5 +60,5 @@ public:
 	std::size_t getOrCount() const { std::size_t orCount = 0; for (const auto &sum : sums) orCount += sum.size() - 1; return orCount; }
 	std::size_t getGateScore() const { return getNotCount() + 2 * getAndCount() + 2 * getOrCount(); }
 	
-	void print(std::ostream &o, const strings_t &functionNames) const;
+	void print(std::ostream &o, const std::vector<std::string> &functionNames) const;
 };
