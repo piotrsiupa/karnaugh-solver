@@ -26,7 +26,8 @@ static void printHelp()
 	std::cout << '\n';
 	
 	std::cout << "Input:\n";
-	std::cout << "The input is read from the stdin and has the following format:\nLIST_OF_INPUT_NAMES <line-break> LIST_OF_FUNCTIONS\n";
+	std::cout << "The input is read from the stdin and has the following format:\nINPUTS_DESCRIPTION <line-break> LIST_OF_FUNCTIONS\n";
+	std::cout << "The description of inputs is either a list of their names or just their count.\n";
 	std::cout << "The functions are separated by line breaks and have the following format:\n[NAME <line-break>] LIST_OF_MINTERMS <line-break> LIST_OF_DONT_CARES\n";
 	std::cout << "Input names, minterms and don't-cares are lists of numbers separated by\nwhitespaces and/or and punctation charaters except \"-\" and \"_\".\n(A single dash may be used to indicate an empty list.)\n";
 	std::cout << "Lines with any letters in them are considered to contain names.\n";
@@ -63,31 +64,68 @@ static bool isInputTerminal()
 	return isatty(STDIN_FILENO);
 }
 
-static bool solveInput(std::istream &istream)
+static bool parseInputBits(Input &input)
 {
-	Input input(istream);
-	
 	if (::inputTerminal)
-		std::cerr << "Enter a list of input variables:\n";
+		std::cerr << "Enter a list of input variables or their count:\n";
 	if (input.hasError())
 		return false;
 	if (input.isEmpty())
 	{
-		std::cerr << "Input names are missing!\n";
+		std::cerr << "The description of inputs is missing!\n";
 		return false;
 	}
-	::inputNames = input.popParts();
-	if (::inputNames.size() > ::maxBits)
+	if (input.isName())
 	{
-		std::cerr << "Too many variables!\n";
-		return false;
+		::inputNames = input.popParts();
+		if (::inputNames.size() > ::maxBits)
+		{
+			std::cerr << "Too many input variables!\n";
+			return false;
+		}
+		::bits = ::inputNames.size();
 	}
-	
-	::bits = ::inputNames.size();
-	
+	else
+	{
+		const std::string line = input.popLine();
+		if (line == "-")
+		{
+			::bits = 0;
+			return true;
+		}
+		try
+		{
+			const int n = std::stoi(line);
+			if (n < 0)
+			{
+				std::cerr << '"' << line << "\" is negative!\n";
+				return false;
+			}
+			else if (n > ::maxBits)
+			{
+				std::cerr << "Too many input variables!\n";
+				return false;
+			}
+			::bits = n;
+		}
+		catch (std::invalid_argument &e)
+		{
+			std::cerr << '"' << line << "\" is not a number!\n";
+			return false;
+		}
+		for (bits_t i = 0; i != ::bits; ++i)
+			::inputNames.push_back("i" + std::to_string(i));
+	}
+	return true;
+}
+
+static bool solveInput(std::istream &istream)
+{
+	Input input(istream);
+	if (!parseInputBits(input))
+		return false;
 	if (!Karnaughs::solve(input))
 		return false;
-	
 	return true;
 }
 
