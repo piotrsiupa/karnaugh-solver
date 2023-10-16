@@ -29,9 +29,11 @@ PrimeImplicant::minterms_t PrimeImplicant::findMinterms() const
 {
 	minterms_t minterms;
 	static_assert(sizeof(Minterm) * CHAR_BIT > ::maxBits);
-	for (Minterm minterm = 0; minterm != Minterm(1) << ::bits; ++minterm)
+	for (Minterm minterm = 0; minterm != ::maxMinterm; ++minterm)
 		if (covers(minterm))
 			minterms.push_back(minterm);
+	if (covers(maxMinterm)) // This is not handled by the loop in case `::maxMinterm` is really the max value of underlying type of `Minterm`.
+		minterms.push_back(maxMinterm);
 	return minterms;
 }
 

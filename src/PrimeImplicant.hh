@@ -31,7 +31,7 @@ private:
 	void recalculateBits() { bitCount = __builtin_popcount(trueBits | falseBits); }
 	
 public:
-	explicit PrimeImplicant(const Minterm minterm) : trueBits(minterm), falseBits(minterm ^ ((1u << ::bits) - 1)), bitCount(::bits) {}
+	explicit PrimeImplicant(const Minterm minterm) : trueBits(minterm), falseBits(minterm ^ maxMinterm), bitCount(::bits) {}
 	PrimeImplicant(const PrimeImplicant &) = default;
 	
 	constexpr bool operator==(const PrimeImplicant &other) const { return this->trueBits == other.trueBits && this->falseBits == other.falseBits && this->bitCount == other.bitCount; }

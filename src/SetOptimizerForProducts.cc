@@ -4,9 +4,9 @@
 #include <limits>
 
 
-SetOptimizerForProducts::HasseDiagram SetOptimizerForProducts::makeHasseDiagram(const sets_t &sets) const
+SetOptimizerForProducts::HasseDiagram::sets_t SetOptimizerForProducts::convertSets(const sets_t &sets) const
 {
-	HasseDiagram hasseDiagram;
+	HasseDiagram::sets_t convertedSets;
 	for (const PrimeImplicant &set : sets)
 	{
 		HasseDiagram::set_t convertedSet;
@@ -24,9 +24,9 @@ SetOptimizerForProducts::HasseDiagram SetOptimizerForProducts::makeHasseDiagram(
 				convertedSet.push_back(bit.second ? -bit.first - 1 : bit.first);
 			std::sort(convertedSet.begin(), convertedSet.end());
 		}
-		hasseDiagram.insert(convertedSet);
+		convertedSets.push_back(std::move(convertedSet));
 	}
-	return hasseDiagram;
+	return convertedSets;
 }
 
 void SetOptimizerForProducts::makeGraph(const HasseDiagram::setHierarchy_t &setHierarchy)

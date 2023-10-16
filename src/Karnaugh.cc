@@ -76,10 +76,10 @@ void Karnaugh::prettyPrintTable() const
 void Karnaugh::prettyPrintSolution(const PrimeImplicants &solution)
 {
 	Minterms minterms;
-	for (const auto &minterm : solution)
+	for (const auto &primeImplicant : solution)
 	{
-		const auto x = minterm.findMinterms();
-		minterms.insert(x.cbegin(), x.end());
+		const auto newMinterms = primeImplicant.findMinterms();
+		minterms.insert(newMinterms.cbegin(), newMinterms.end());
 	}
 	prettyPrintTable(minterms);
 }
@@ -113,13 +113,9 @@ bool Karnaugh::loadMinterms(Minterms &minterms, Input &input) const
 	{
 		try
 		{
-			const auto n = std::stoi(string);
-			if (n < 0)
-			{
-				std::cerr << '"' << string << "\" is negative!\n";
-				return false;
-			}
-			else if (n >= (1 << ::bits))
+			const unsigned long n = std::stoul(string);
+			static_assert(sizeof(unsigned long) * CHAR_BIT >= ::maxBits);
+			if (n > ::maxMinterm)
 			{
 				std::cerr << '"' << string << "\" is too big!\n";
 				return false;
@@ -131,6 +127,11 @@ bool Karnaugh::loadMinterms(Minterms &minterms, Input &input) const
 			std::cerr << '"' << string << "\" is not a number!\n";
 			return false;
 		}
+		catch (std::out_of_range &e)
+		{
+			std::cerr << '"' << string << "\" is out of range!\n";
+			return false;
+		}
 	}
 	return true;
 }
@@ -138,7 +139,6 @@ bool Karnaugh::loadMinterms(Minterms &minterms, Input &input) const
 #ifndef NDEBUG
 void Karnaugh::validate(const solutions_t &solutions) const
 {
-	const Minterm maxMinterm = bits == 0 ? 0 : (((Minterm(1) << (bits - 1)) - 1) * 2) + 1;
 	for (Minterm i = 0;; ++i)
 	{
 		if (targetMinterms.find(i) != targetMinterms.cend())
@@ -147,7 +147,7 @@ void Karnaugh::validate(const solutions_t &solutions) const
 		else if (allowedMinterms.find(i) == allowedMinterms.cend())
 			for (const PrimeImplicants &solution : solutions)
 				assert(!solution.covers(i));
-		if (i == maxMinterm)
+		if (i == ::maxMinterm)
 			break;
 	}
 }
@@ -210,11 +210,18 @@ Karnaugh::solutions_t Karnaugh::solve() const
 
 void Karnaugh::printSolution(const PrimeImplicants &solution) const
 {
-	std::cout << "goal:\n";
-	prettyPrintTable();
-	
-	std::cout << "best fit:\n";
-	prettyPrintSolution(solution);
+	if (::bits <= 8)
+	{
+		std::cout << "goal:\n";
+		prettyPrintTable();
+		
+		std::cout << "best fit:\n";
+		prettyPrintSolution(solution);
+	}
+	else
+	{
+		std::cout << "The Karnaugh map is too big to be displayed.\n\n";
+	}
 	
 	std::cout << "solution:\n";
 	printPrimeImplicants(solution);

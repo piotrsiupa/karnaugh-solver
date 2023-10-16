@@ -7,8 +7,7 @@
 template<typename SET, typename HASSE_VALUE, template<typename> class HASSE_CONTAINER>
 typename SetOptimizer<SET, HASSE_VALUE, HASSE_CONTAINER>::Result SetOptimizer<SET, HASSE_VALUE, HASSE_CONTAINER>::extractCommonParts(const sets_t &oldSets)
 {
-	const HasseDiagram hasseDiagram = makeHasseDiagram(oldSets);
-	const typename HasseDiagram::setHierarchy_t setHierarchy = hasseDiagram.makeSetHierarchy();
+	const typename HasseDiagram::setHierarchy_t setHierarchy = HasseDiagram::makeSetHierarchy(convertSets(oldSets));
 	makeGraph(setHierarchy);
 	auto [subsetSelections, usageCounts] = findBestSubsets();
 	removeUnusedSubsets(subsetSelections, usageCounts);

@@ -3,12 +3,12 @@
 #include <algorithm>
 
 
-SetOptimizerForSums::HasseDiagram SetOptimizerForSums::makeHasseDiagram(const sets_t &sets) const
+SetOptimizerForSums::HasseDiagram::sets_t SetOptimizerForSums::convertSets(const sets_t &sets) const
 {
-	HasseDiagram hasseDiagram;
+	HasseDiagram::sets_t convertedSets;
 	for (const std::set<std::size_t> &set : sets)
-		hasseDiagram.insert(set);
-	return hasseDiagram;
+		convertedSets.push_back(set);
+	return convertedSets;
 }
 
 void SetOptimizerForSums::makeGraph(const HasseDiagram::setHierarchy_t &setHierarchy)

@@ -40,7 +40,7 @@ protected:
 	
 	Result extractCommonParts(const sets_t &sets);
 	
-	virtual HasseDiagram makeHasseDiagram(const sets_t &sets) const = 0;
+	virtual typename HasseDiagram::sets_t convertSets(const sets_t &sets) const = 0;
 	virtual void makeGraph(const typename HasseDiagram::setHierarchy_t &setHierarchy) = 0;
 	virtual gateCount_t countGates(const subsetSelections_t &subsetSelections, const usageCounts_t &usageCounts) const = 0;
 	virtual void substractSubsets(sets_t &sets, const subsetSelections_t &subsetSelections) = 0;

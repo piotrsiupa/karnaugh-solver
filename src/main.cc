@@ -113,9 +113,15 @@ static bool parseInputBits(Input &input)
 			std::cerr << '"' << line << "\" is not a number!\n";
 			return false;
 		}
+		catch (std::out_of_range &e)
+		{
+			std::cerr << '"' << line << "\" is out of range!\n";
+			return false;
+		}
 		for (bits_t i = 0; i != ::bits; ++i)
 			::inputNames.push_back("i" + std::to_string(i));
 	}
+	::maxMinterm = ::bits == 0 ? 0 : ((Minterm(1) << (::bits - 1)) - 1) * 2 + 1;
 	return true;
 }
 

@@ -39,7 +39,7 @@ solution:
 === optimized solution ===
 
 Negated inputs: in0, in1, carry-in
-Products: [0] = !in0 && !in1 && carry-in,  [1] = !in0 && in1 && !carry-in,  [2] = in0 && !in1 && !carry-in,  [3] = in1 && carry-in,  [4] = in0 && in1,  [5] = in0 && carry-in,  [6] = carry-in && [4]
+Products: [0] = !in0 && !in1 && carry-in,  [1] = !in0 && in1 && !carry-in,  [2] = in0 && !in1 && !carry-in,  [3] = in0 && carry-in,  [4] = in1 && carry-in,  [5] = in0 && in1,  [6] = in0 && [4]
 Sums: [7] = [0] || [1] || [2] || [6],  [8] = [3] || [4] || [5]
 Final sums: "sum" = [7], "carry-out" = [8]
 

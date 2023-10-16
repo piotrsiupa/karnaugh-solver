@@ -36,16 +36,18 @@ PrimeImplicants PetricksMethod<INDEX_T>::extractEssentials()
 		}
 		essentials.emplace_back(std::move(primeImplicants[essentialPrimeImplicantIndex]));
 		primeImplicants.erase(primeImplicants.begin() + essentialPrimeImplicantIndex);
-		for (const Minterm &coveredMinterm : essentials.back().findMinterms())
-		{
-			const typename minterms_t::iterator iterToRemove = minterms.find(coveredMinterm);
-			if (iterToRemove == minterms.end())
-				continue;
-			if (*iter == coveredMinterm)
-				iter = minterms.erase(iterToRemove);
+		const PrimeImplicant &primeImplicant = essentials.back();
+		for (typename minterms_t::const_iterator jiter = minterms.cbegin(); jiter != iter;)
+			if (primeImplicant.covers(*jiter))
+				jiter = minterms.erase(jiter);
 			else
-				minterms.erase(iterToRemove);
-		}
+				++jiter;
+		for (typename minterms_t::const_iterator jiter = std::next(iter); jiter != minterms.cend();)
+			if (primeImplicant.covers(*jiter))
+				jiter = minterms.erase(jiter);
+			else
+				++jiter;
+		iter = minterms.erase(iter);
 	}
 	return essentials;
 }
