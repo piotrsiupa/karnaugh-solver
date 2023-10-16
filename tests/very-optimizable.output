@@ -78,7 +78,7 @@ solution:
 
 Negated inputs: a, b, c, d
 Products: [0] = !a && b,  [1] = !c && d,  [2] = [1] && [0],  [3] = a && !b,  [4] = [1] && [3],  [5] = c && !d,  [6] = [0] && [5],  [7] = [5] && [3],  [8] = !a && !b && !c && !d,  [9] = a && b && c && d
-Sums: [10] = [2] || [4] || [6],  [11] = [7] || [10],  [12] = [9] || [10],  [13] = [4] || [6] || [8]
-Final sums: "first" = [11], "second" = [12], "third" = [10], "fourth" = [13]
+Sums: [10] = [4] || [6],  [11] = [2] || [10],  [12] = [7] || [11],  [13] = [9] || [11],  [14] = [8] || [10]
+Final sums: "first" = [12], "second" = [13], "third" = [11], "fourth" = [14]
 
-Gate scores: NOTs = 4, ANDs = 14, ORs = 6
+Gate scores: NOTs = 4, ANDs = 14, ORs = 5

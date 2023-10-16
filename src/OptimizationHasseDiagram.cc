@@ -114,10 +114,19 @@ template<typename VALUE_T, template<typename> class CONTAINER>
 void OptimizationHasseDiagram<VALUE_T, CONTAINER>::addMoreEdgesToSetHierarchy(setHierarchy_t &setHierarchy)
 {
 	for (SetHierarchyEntry &entry0 : setHierarchy)
+	{
 		for (std::size_t j = 0; j != setHierarchy.size(); ++j)
+		{
 			if (entry0.values.size() > setHierarchy[j].values.size())
+			{
 				if (std::find(entry0.subsets.cbegin(), entry0.subsets.cend(), j) == entry0.subsets.cend() && std::includes(entry0.values.cbegin(), entry0.values.cend(), setHierarchy[j].values.cbegin(), setHierarchy[j].values.cend()))
+				{
 					entry0.subsets.push_back(j);
+					++setHierarchy[j].supersetCount;
+				}
+			}
+		}
+	}
 }
 
 template<typename VALUE_T, template<typename> class CONTAINER>
@@ -195,8 +204,8 @@ typename OptimizationHasseDiagram<VALUE_T, CONTAINER>::setHierarchy_t Optimizati
 	setHierarchy_t setHierarchy;
 	for (const NodeChild &child : root.children)
 		makeSetHierarchy(setHierarchy, child.getNode(), SIZE_MAX);
-	trimSetHierarchy(setHierarchy);
 	addMoreEdgesToSetHierarchy(setHierarchy);
+	trimSetHierarchy(setHierarchy);
 	removeRedundantEdgesFromSetHierarchy(setHierarchy);
 	sortSetHierarchy(setHierarchy);
 	return setHierarchy;
