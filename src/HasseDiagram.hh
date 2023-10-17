@@ -5,7 +5,7 @@
 
 
 template<typename VALUE_T>
-class PetricksHasseDiagram
+class HasseDiagram
 {
 public:
 	using value_t = VALUE_T;
@@ -86,7 +86,7 @@ public:
 
 
 template<typename VALUE_T>
-void PetricksHasseDiagram<VALUE_T>::NodeChild::moveValue(NodeChild &&other)
+void HasseDiagram<VALUE_T>::NodeChild::moveValue(NodeChild &&other)
 {
 	switch (other.key)
 	{
@@ -102,7 +102,7 @@ void PetricksHasseDiagram<VALUE_T>::NodeChild::moveValue(NodeChild &&other)
 }
 
 template<typename VALUE_T>
-void PetricksHasseDiagram<VALUE_T>::NodeChild::deconstructValue()
+void HasseDiagram<VALUE_T>::NodeChild::deconstructValue()
 {
 	switch (this->key)
 	{
@@ -117,7 +117,7 @@ void PetricksHasseDiagram<VALUE_T>::NodeChild::deconstructValue()
 }
 
 template<typename VALUE_T>
-PetricksHasseDiagram<VALUE_T>::NodeChild::NodeChild(NodeChild &&other) :
+HasseDiagram<VALUE_T>::NodeChild::NodeChild(NodeChild &&other) :
 	key(other.key)
 {
 	moveValue(std::move(other));
@@ -125,7 +125,7 @@ PetricksHasseDiagram<VALUE_T>::NodeChild::NodeChild(NodeChild &&other) :
 }
 
 template<typename VALUE_T>
-typename PetricksHasseDiagram<VALUE_T>::NodeChild& PetricksHasseDiagram<VALUE_T>::NodeChild::operator=(NodeChild &&other)
+typename HasseDiagram<VALUE_T>::NodeChild& HasseDiagram<VALUE_T>::NodeChild::operator=(NodeChild &&other)
 {
 	deconstructValue();
 	this->key = other.key;

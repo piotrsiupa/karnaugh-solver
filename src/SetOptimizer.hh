@@ -5,7 +5,7 @@
 #include <utility>
 #include <vector>
 
-#include "OptimizationHasseDiagram.hh"
+#include "SubsetGraph.hh"
 
 
 template<typename SET, typename HASSE_VALUE, template<typename> class HASSE_CONTAINER>
@@ -13,7 +13,7 @@ class SetOptimizer
 {
 protected:
 	using hasseValue_t = HASSE_VALUE;
-	using HasseDiagram = OptimizationHasseDiagram<hasseValue_t, HASSE_CONTAINER>;
+	using HasseDiagram = SubsetGraph<hasseValue_t, HASSE_CONTAINER>;
 	using graph_t = std::vector<std::pair<SET, std::vector<std::size_t>>>;
 	using endNodes_t = std::set<std::size_t>;
 	using gateCount_t = std::size_t;

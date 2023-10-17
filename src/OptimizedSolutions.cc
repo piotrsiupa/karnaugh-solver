@@ -4,7 +4,6 @@
 #include <cassert>
 #include <iomanip>
 
-#include "OptimizationHasseDiagram.hh"
 #include "SetOptimizerForProducts.hh"
 #include "SetOptimizerForSums.hh"
 

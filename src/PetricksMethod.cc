@@ -106,7 +106,7 @@ typename PetricksMethod<INDEX_T>::sumOfProducts_t PetricksMethod<INDEX_T>::multi
 {
 	product_t newProduct;
 	newProduct.reserve(multiplier0.front().size() + multiplier1.front().size());
-	PetricksHasseDiagram<index_t> hasseDiagram;
+	HasseDiagram<index_t> hasseDiagram;
 	for (const product_t &x : multiplier0)
 	{
 		for (const product_t &y : multiplier1)

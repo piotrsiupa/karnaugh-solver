@@ -1,11 +1,11 @@
-#include "./OptimizationHasseDiagram.hh"
+#include "./SubsetGraph.hh"
 
 #include <algorithm>
-#include <cstdint>
+#include <set>
 
 
 template<typename VALUE_T, template<typename> class CONTAINER>
-typename OptimizationHasseDiagram<VALUE_T, CONTAINER>::groupsMap_t OptimizationHasseDiagram<VALUE_T, CONTAINER>::createGroups(const sets_t &sets)
+typename SubsetGraph<VALUE_T, CONTAINER>::groupsMap_t SubsetGraph<VALUE_T, CONTAINER>::createGroups(const sets_t &sets)
 {
 	groupsMap_t groupsMap;
 	for (const set_t &set : sets)
@@ -48,89 +48,66 @@ typename OptimizationHasseDiagram<VALUE_T, CONTAINER>::groupsMap_t OptimizationH
 }
 
 template<typename VALUE_T, template<typename> class CONTAINER>
-bool OptimizationHasseDiagram<VALUE_T, CONTAINER>::contains(const groupedSet_t &set) const
+typename SubsetGraph<VALUE_T, CONTAINER>::groupedSets_t SubsetGraph<VALUE_T, CONTAINER>::groupSets(const sets_t &sets, const groupsMap_t &groupsMap) const
 {
-	const Node *node = &root;
-	for (const groupId_t &group : set)
-	{
-		const auto foundChild = node->children.find(group);
-		if (foundChild == node->children.cend())
-			return false;
-		node = &foundChild->getNode();
-	}
-	return node->isOriginalSet;
-}
-
-template<typename VALUE_T, template<typename> class CONTAINER>
-void OptimizationHasseDiagram<VALUE_T, CONTAINER>::insert(typename groupedSet_t::const_iterator currentInSet, const typename groupedSet_t::const_iterator &endOfSet, Node &currentNode, const setId_t setId, const bool primaryBranch)
-{
-	Node *nextNode;
-	if (const auto foundChild = currentNode.children.find(*currentInSet); foundChild != currentNode.children.end())
-	{
-		nextNode = &foundChild->getNode();
-		if (std::find(nextNode->setIds.cbegin(), nextNode->setIds.cend(), setId) == nextNode->setIds.cend())
-			nextNode->setIds.emplace_back(setId);
-	}
-	else
-	{
-		nextNode = &currentNode.children.emplace_back(*currentInSet, new Node{{}, *currentInSet, {setId}, false}).getNode();
-	}
-	const typename groupedSet_t::const_iterator nextInSet = std::next(currentInSet);
-	if (nextInSet == endOfSet)
-	{
-		if (primaryBranch)
-			nextNode->isOriginalSet = true;
-	}
-	else
-	{
-		insert(nextInSet, endOfSet, *nextNode, setId, primaryBranch);
-		insert(nextInSet, endOfSet, currentNode, setId, false);
-	}
-}
-
-template<typename VALUE_T, template<typename> class CONTAINER>
-void OptimizationHasseDiagram<VALUE_T, CONTAINER>::insertGrouped(const groupsMap_t &groupsMap, const sets_t &sets)
-{
-	setId_t currentSetId = 0;
+	groupedSets_t groupedSets;
 	for (const set_t &set : sets)
 	{
-		groupedSet_t groupedSet;
+		std::set<groupId_t> groupIds;
 		for (const VALUE_T &value : set)
-			groupedSet.insert(groupsMap.at(value));
-		if (!contains(groupedSet))
-			insert(groupedSet.cbegin(), groupedSet.cend(), root, currentSetId++, true);
+			groupIds.insert(groupsMap.at(value));
+		groupedSets.emplace_back(groupIds.begin(), groupIds.end());
 	}
+	return groupedSets;
 }
 
 template<typename VALUE_T, template<typename> class CONTAINER>
-void OptimizationHasseDiagram<VALUE_T, CONTAINER>::makeSetHierarchy(groupedSetHierarchy_t &setHierarchy, const Node &node, const std::size_t subset) const
+typename SubsetGraph<VALUE_T, CONTAINER>::groupedSetHierarchy_t SubsetGraph<VALUE_T, CONTAINER>::makeInitialSetHierarchy(const groupedSets_t &groupedSets) const
 {
-	currentGroupIds.push_back(node.value);
-	if (!node.isOriginalSet && (node.setIds.size() == 1 || (currentGroupIds.size() == 1 && groups[currentGroupIds[0]].size() == 1)))
+	std::map<groupedSet_t, GroupedSetHierarchyEntry> partialSets;
+	for (std::size_t i = 0; i != groupedSets.size(); ++i)
 	{
-		for (const NodeChild &child : node.children)
-			makeSetHierarchy(setHierarchy, child.getNode(), subset);
-	}
-	else
-	{
-		const std::size_t addedSet = setHierarchy.size();
-		if (subset == SIZE_MAX)
+		if (const auto foundPartialSet = partialSets.find(groupedSets[i]); foundPartialSet != partialSets.end())
 		{
-			setHierarchy.push_back({currentGroupIds, {}, node.setIds, 0, node.isOriginalSet});
+			foundPartialSet->second.setIds.push_back(i);
+			foundPartialSet->second.isOriginalSet = true;
 		}
 		else
 		{
-			setHierarchy.push_back({currentGroupIds, {subset}, node.setIds, 0, node.isOriginalSet});
-			++setHierarchy[subset].supersetCount;
+			partialSets[groupedSets[i]] = GroupedSetHierarchyEntry{groupedSets[i], {}, {i}, 0, true};
 		}
-		for (const NodeChild &child : node.children)
-			makeSetHierarchy(setHierarchy, child.getNode(), addedSet);
+		for (std::size_t j = i + 1; j != groupedSets.size(); ++j)
+		{
+			groupedSet_t partialSet;
+			std::set_intersection(groupedSets[i].cbegin(), groupedSets[i].cend(), groupedSets[j].cbegin(), groupedSets[j].cend(), std::back_inserter(partialSet));
+			if (partialSet.size() > 1 || (partialSet.size() == 1 && groups[partialSet[0]].size() > 1))
+			{
+				if (const auto foundPartialSet = partialSets.find(partialSet); foundPartialSet != partialSets.end())
+				{
+					if (groupedSets[i].size() != partialSet.size())
+						foundPartialSet->second.setIds.push_back(i);
+					if (groupedSets[j].size() != partialSet.size())
+						foundPartialSet->second.setIds.push_back(j);
+				}
+				else
+				{
+					partialSets[partialSet] = GroupedSetHierarchyEntry{partialSet, {}, {i, j}, 0, false};
+				}
+			}
+		}
 	}
-	currentGroupIds.pop_back();
+	groupedSetHierarchy_t setHierarchy;
+	for (auto &partialSet : partialSets)
+	{
+		std::set<setId_t> setIds(partialSet.second.setIds.begin(), partialSet.second.setIds.end());
+		partialSet.second.setIds = {setIds.begin(), setIds.end()};
+		setHierarchy.push_back(std::move(partialSet.second));
+	}
+	return setHierarchy;
 }
 
 template<typename VALUE_T, template<typename> class CONTAINER>
-void OptimizationHasseDiagram<VALUE_T, CONTAINER>::trimSetHierarchy(groupedSetHierarchy_t &setHierarchy)
+void SubsetGraph<VALUE_T, CONTAINER>::trimSetHierarchy(groupedSetHierarchy_t &setHierarchy)
 {
 	std::vector<std::size_t> offsets(setHierarchy.size());
 	for (GroupedSetHierarchyEntry &entry : setHierarchy)
@@ -168,7 +145,7 @@ void OptimizationHasseDiagram<VALUE_T, CONTAINER>::trimSetHierarchy(groupedSetHi
 }
 
 template<typename VALUE_T, template<typename> class CONTAINER>
-void OptimizationHasseDiagram<VALUE_T, CONTAINER>::addMoreEdgesToSetHierarchy(groupedSetHierarchy_t &setHierarchy)
+void SubsetGraph<VALUE_T, CONTAINER>::addMoreEdgesToSetHierarchy(groupedSetHierarchy_t &setHierarchy)
 {
 	for (GroupedSetHierarchyEntry &entry0 : setHierarchy)
 	{
@@ -187,7 +164,7 @@ void OptimizationHasseDiagram<VALUE_T, CONTAINER>::addMoreEdgesToSetHierarchy(gr
 }
 
 template<typename VALUE_T, template<typename> class CONTAINER>
-void OptimizationHasseDiagram<VALUE_T, CONTAINER>::removeRedundantEdgesFromSetHierarchy(groupedSetHierarchy_t &setHierarchy)
+void SubsetGraph<VALUE_T, CONTAINER>::removeRedundantEdgesFromSetHierarchy(groupedSetHierarchy_t &setHierarchy)
 {
 	for (auto iter = setHierarchy.rbegin(); iter != setHierarchy.rend(); ++iter)
 	{
@@ -203,7 +180,7 @@ void OptimizationHasseDiagram<VALUE_T, CONTAINER>::removeRedundantEdgesFromSetHi
 }
 
 template<typename VALUE_T, template<typename> class CONTAINER>
-void OptimizationHasseDiagram<VALUE_T, CONTAINER>::sortSetHierarchy(groupedSetHierarchy_t &setHierarchy)
+void SubsetGraph<VALUE_T, CONTAINER>::sortSetHierarchy(groupedSetHierarchy_t &setHierarchy)
 {
 	std::vector<std::size_t> sortOrder;
 	sortOrder.reserve(setHierarchy.size());
@@ -255,7 +232,7 @@ void OptimizationHasseDiagram<VALUE_T, CONTAINER>::sortSetHierarchy(groupedSetHi
 }
 
 template<typename VALUE_T, template<typename> class CONTAINER>
-typename OptimizationHasseDiagram<VALUE_T, CONTAINER>::setHierarchy_t OptimizationHasseDiagram<VALUE_T, CONTAINER>::ungroupSetHierarchy(groupedSetHierarchy_t &groupedSetHierarchy) const
+typename SubsetGraph<VALUE_T, CONTAINER>::setHierarchy_t SubsetGraph<VALUE_T, CONTAINER>::ungroupSetHierarchy(groupedSetHierarchy_t &groupedSetHierarchy) const
 {
 	setHierarchy_t setHierarchy;
 	for (GroupedSetHierarchyEntry &groupedSetHierarchyEntry : groupedSetHierarchy)
@@ -270,19 +247,11 @@ typename OptimizationHasseDiagram<VALUE_T, CONTAINER>::setHierarchy_t Optimizati
 }
 
 template<typename VALUE_T, template<typename> class CONTAINER>
-OptimizationHasseDiagram<VALUE_T, CONTAINER>::OptimizationHasseDiagram(const sets_t &sets)
+typename SubsetGraph<VALUE_T, CONTAINER>::setHierarchy_t SubsetGraph<VALUE_T, CONTAINER>::_makeSetHierarchy(const sets_t &sets)
 {
 	const groupsMap_t groupsMap = createGroups(sets);
-	insertGrouped(groupsMap, sets);
-}
-
-template<typename VALUE_T, template<typename> class CONTAINER>
-typename OptimizationHasseDiagram<VALUE_T, CONTAINER>::setHierarchy_t OptimizationHasseDiagram<VALUE_T, CONTAINER>::makeSetHierarchy() const
-{
-	currentGroupIds.clear();
-	groupedSetHierarchy_t setHierarchy;
-	for (const NodeChild &child : root.children)
-		makeSetHierarchy(setHierarchy, child.getNode(), SIZE_MAX);
+	const groupedSets_t groupedSets = groupSets(sets, groupsMap);
+	groupedSetHierarchy_t setHierarchy = makeInitialSetHierarchy(groupedSets);
 	addMoreEdgesToSetHierarchy(setHierarchy);
 	trimSetHierarchy(setHierarchy);
 	removeRedundantEdgesFromSetHierarchy(setHierarchy);
@@ -291,7 +260,8 @@ typename OptimizationHasseDiagram<VALUE_T, CONTAINER>::setHierarchy_t Optimizati
 }
 
 
+#include <cstdint>
 #include <set>
 
-template class OptimizationHasseDiagram<std::int8_t, std::vector>;
-template class OptimizationHasseDiagram<std::size_t, std::set>;
+template class SubsetGraph<std::int8_t, std::vector>;
+template class SubsetGraph<std::size_t, std::set>;

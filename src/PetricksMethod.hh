@@ -6,7 +6,7 @@
 #include <vector>
 
 #include "Minterm.hh"
-#include "PetricksHasseDiagram.hh"
+#include "HasseDiagram.hh"
 #include "PrimeImplicants.hh"
 
 
@@ -39,7 +39,7 @@ private:
 	solutions_t solve();
 	
 public:
-	static constexpr std::size_t MAX_PRIME_IMPL_COUNT = PetricksHasseDiagram<index_t>::MAX_VALUE;
+	static constexpr std::size_t MAX_PRIME_IMPL_COUNT = HasseDiagram<index_t>::MAX_VALUE;
 	
 	static solutions_t solve(minterms_t minterms, PrimeImplicants primeImplicants) { return PetricksMethod(std::move(minterms), std::move(primeImplicants)).solve(); }
 };
