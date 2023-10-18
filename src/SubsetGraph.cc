@@ -48,7 +48,7 @@ typename SubsetGraph<VALUE_T, CONTAINER>::groupsMap_t SubsetGraph<VALUE_T, CONTA
 }
 
 template<typename VALUE_T, template<typename> class CONTAINER>
-typename SubsetGraph<VALUE_T, CONTAINER>::groupedSets_t SubsetGraph<VALUE_T, CONTAINER>::groupSets(const sets_t &sets, const groupsMap_t &groupsMap) const
+typename SubsetGraph<VALUE_T, CONTAINER>::groupedSets_t SubsetGraph<VALUE_T, CONTAINER>::groupSets(const sets_t &sets, const groupsMap_t &groupsMap)
 {
 	groupedSets_t groupedSets;
 	for (const set_t &set : sets)
@@ -62,7 +62,7 @@ typename SubsetGraph<VALUE_T, CONTAINER>::groupedSets_t SubsetGraph<VALUE_T, CON
 }
 
 template<typename VALUE_T, template<typename> class CONTAINER>
-typename SubsetGraph<VALUE_T, CONTAINER>::groupedSetHierarchy_t SubsetGraph<VALUE_T, CONTAINER>::makeInitialSetHierarchy(const groupedSets_t &groupedSets) const
+void SubsetGraph<VALUE_T, CONTAINER>::makeInitialSetHierarchy(const groupedSets_t &groupedSets)
 {
 	std::map<groupedSet_t, GroupedSetHierarchyEntry> partialSets;
 	for (std::size_t i = 0; i != groupedSets.size(); ++i)
@@ -96,26 +96,24 @@ typename SubsetGraph<VALUE_T, CONTAINER>::groupedSetHierarchy_t SubsetGraph<VALU
 			}
 		}
 	}
-	groupedSetHierarchy_t setHierarchy;
 	for (auto &partialSet : partialSets)
 	{
 		std::set<setId_t> setIds(partialSet.second.setIds.begin(), partialSet.second.setIds.end());
 		partialSet.second.setIds = {setIds.begin(), setIds.end()};
-		setHierarchy.push_back(std::move(partialSet.second));
+		groupedSetHierarchy.push_back(std::move(partialSet.second));
 	}
-	return setHierarchy;
 }
 
 template<typename VALUE_T, template<typename> class CONTAINER>
-void SubsetGraph<VALUE_T, CONTAINER>::trimSetHierarchy(groupedSetHierarchy_t &setHierarchy)
+void SubsetGraph<VALUE_T, CONTAINER>::trimSetHierarchy()
 {
-	std::vector<std::size_t> offsets(setHierarchy.size());
-	for (GroupedSetHierarchyEntry &entry : setHierarchy)
+	std::vector<std::size_t> offsets(groupedSetHierarchy.size());
+	for (GroupedSetHierarchyEntry &entry : groupedSetHierarchy)
 	{
 		for (std::size_t i = 0; i != entry.subsets.size();)
 		{
 			const std::size_t subsetIndex = entry.subsets[i];
-			GroupedSetHierarchyEntry &subset = setHierarchy[subsetIndex];
+			GroupedSetHierarchyEntry &subset = groupedSetHierarchy[subsetIndex];
 			if (subset.supersetCount == 1 && !subset.isOriginalSet)
 			{
 				offsets[subsetIndex] = 1;
@@ -130,8 +128,8 @@ void SubsetGraph<VALUE_T, CONTAINER>::trimSetHierarchy(groupedSetHierarchy_t &se
 			}
 		}
 	}
-	setHierarchy.erase(std::remove_if(setHierarchy.begin(), setHierarchy.end(), [](const GroupedSetHierarchyEntry &entry){ return entry.setIds.empty(); }), setHierarchy.end());
-	setHierarchy.shrink_to_fit();
+	groupedSetHierarchy.erase(std::remove_if(groupedSetHierarchy.begin(), groupedSetHierarchy.end(), [](const GroupedSetHierarchyEntry &entry){ return entry.setIds.empty(); }), groupedSetHierarchy.end());
+	groupedSetHierarchy.shrink_to_fit();
 	
 	std::size_t previousOffset = 0;
 	for (std::size_t &offset : offsets)
@@ -139,24 +137,24 @@ void SubsetGraph<VALUE_T, CONTAINER>::trimSetHierarchy(groupedSetHierarchy_t &se
 		offset += previousOffset;
 		previousOffset = offset;
 	}
-	for (GroupedSetHierarchyEntry &entry : setHierarchy)
+	for (GroupedSetHierarchyEntry &entry : groupedSetHierarchy)
 		for (std::size_t &subset : entry.subsets)
 			subset -= offsets[subset];
 }
 
 template<typename VALUE_T, template<typename> class CONTAINER>
-void SubsetGraph<VALUE_T, CONTAINER>::addMoreEdgesToSetHierarchy(groupedSetHierarchy_t &setHierarchy)
+void SubsetGraph<VALUE_T, CONTAINER>::addMoreEdgesToSetHierarchy()
 {
-	for (GroupedSetHierarchyEntry &entry0 : setHierarchy)
+	for (GroupedSetHierarchyEntry &entry0 : groupedSetHierarchy)
 	{
-		for (std::size_t j = 0; j != setHierarchy.size(); ++j)
+		for (std::size_t j = 0; j != groupedSetHierarchy.size(); ++j)
 		{
-			if (entry0.groupIds.size() > setHierarchy[j].groupIds.size())
+			if (entry0.groupIds.size() > groupedSetHierarchy[j].groupIds.size())
 			{
-				if (std::find(entry0.subsets.cbegin(), entry0.subsets.cend(), j) == entry0.subsets.cend() && std::includes(entry0.groupIds.cbegin(), entry0.groupIds.cend(), setHierarchy[j].groupIds.cbegin(), setHierarchy[j].groupIds.cend()))
+				if (std::find(entry0.subsets.cbegin(), entry0.subsets.cend(), j) == entry0.subsets.cend() && std::includes(entry0.groupIds.cbegin(), entry0.groupIds.cend(), groupedSetHierarchy[j].groupIds.cbegin(), groupedSetHierarchy[j].groupIds.cend()))
 				{
 					entry0.subsets.push_back(j);
-					++setHierarchy[j].supersetCount;
+					++groupedSetHierarchy[j].supersetCount;
 				}
 			}
 		}
@@ -164,15 +162,15 @@ void SubsetGraph<VALUE_T, CONTAINER>::addMoreEdgesToSetHierarchy(groupedSetHiera
 }
 
 template<typename VALUE_T, template<typename> class CONTAINER>
-void SubsetGraph<VALUE_T, CONTAINER>::removeRedundantEdgesFromSetHierarchy(groupedSetHierarchy_t &setHierarchy)
+void SubsetGraph<VALUE_T, CONTAINER>::removeRedundantEdgesFromSetHierarchy()
 {
-	for (auto iter = setHierarchy.rbegin(); iter != setHierarchy.rend(); ++iter)
+	for (auto iter = groupedSetHierarchy.rbegin(); iter != groupedSetHierarchy.rend(); ++iter)
 	{
 		if (!iter->setIds.empty())
 		{
 			std::vector<std::size_t> subsetsOfSubsets;
 			for (const std::size_t &subset : iter->subsets)
-				subsetsOfSubsets.insert(subsetsOfSubsets.end(), setHierarchy[subset].subsets.cbegin(), setHierarchy[subset].subsets.cend());
+				subsetsOfSubsets.insert(subsetsOfSubsets.end(), groupedSetHierarchy[subset].subsets.cbegin(), groupedSetHierarchy[subset].subsets.cend());
 			iter->subsets.erase(std::remove_if(iter->subsets.begin(), iter->subsets.end(), [&subsetsOfSubsets = std::as_const(subsetsOfSubsets)](const std::size_t x) { return std::find(subsetsOfSubsets.cbegin(), subsetsOfSubsets.cend(), x) != subsetsOfSubsets.cend(); }), iter->subsets.end());
 			iter->subsets.shrink_to_fit();
 		}
@@ -180,15 +178,15 @@ void SubsetGraph<VALUE_T, CONTAINER>::removeRedundantEdgesFromSetHierarchy(group
 }
 
 template<typename VALUE_T, template<typename> class CONTAINER>
-void SubsetGraph<VALUE_T, CONTAINER>::sortSetHierarchy(groupedSetHierarchy_t &setHierarchy)
+void SubsetGraph<VALUE_T, CONTAINER>::sortSetHierarchy()
 {
 	std::vector<std::size_t> sortOrder;
-	sortOrder.reserve(setHierarchy.size());
+	sortOrder.reserve(groupedSetHierarchy.size());
 	std::vector<std::size_t> entriesToProcess;
-	entriesToProcess.reserve(setHierarchy.size() * 2);
-	for (std::size_t i = 0; i != setHierarchy.size(); ++i)
-		entriesToProcess.push_back(setHierarchy.size() - 1 - i);
-	std::vector<bool> processedEntries(setHierarchy.size(), false);
+	entriesToProcess.reserve(groupedSetHierarchy.size() * 2);
+	for (std::size_t i = 0; i != groupedSetHierarchy.size(); ++i)
+		entriesToProcess.push_back(groupedSetHierarchy.size() - 1 - i);
+	std::vector<bool> processedEntries(groupedSetHierarchy.size(), false);
 	while (!entriesToProcess.empty())
 	{
 		const std::size_t currentEntry = entriesToProcess.back();
@@ -199,7 +197,7 @@ void SubsetGraph<VALUE_T, CONTAINER>::sortSetHierarchy(groupedSetHierarchy_t &se
 		else
 		{
 			bool allSubsetsReady = true;
-			for (const std::size_t &subset : setHierarchy[currentEntry].subsets)
+			for (const std::size_t &subset : groupedSetHierarchy[currentEntry].subsets)
 			{
 				if (!processedEntries[subset])
 				{
@@ -221,21 +219,21 @@ void SubsetGraph<VALUE_T, CONTAINER>::sortSetHierarchy(groupedSetHierarchy_t &se
 		reverseSortOrder[sortOrder[i]] = i;
 	
 	groupedSetHierarchy_t sortedSetHierarchy;
-	sortedSetHierarchy.reserve(setHierarchy.size());
+	sortedSetHierarchy.reserve(groupedSetHierarchy.size());
 	for (const std::size_t &index : sortOrder)
 	{
-		sortedSetHierarchy.push_back(std::move(setHierarchy[index]));
+		sortedSetHierarchy.push_back(std::move(groupedSetHierarchy[index]));
 		for (std::size_t &subset : sortedSetHierarchy.back().subsets)
 			subset = reverseSortOrder[subset];
 	}
-	setHierarchy = std::move(sortedSetHierarchy);
+	groupedSetHierarchy = std::move(sortedSetHierarchy);
 }
 
 template<typename VALUE_T, template<typename> class CONTAINER>
-typename SubsetGraph<VALUE_T, CONTAINER>::setHierarchy_t SubsetGraph<VALUE_T, CONTAINER>::ungroupSetHierarchy(groupedSetHierarchy_t &groupedSetHierarchy) const
+typename SubsetGraph<VALUE_T, CONTAINER>::setHierarchy_t SubsetGraph<VALUE_T, CONTAINER>::ungroupSetHierarchy() const
 {
 	setHierarchy_t setHierarchy;
-	for (GroupedSetHierarchyEntry &groupedSetHierarchyEntry : groupedSetHierarchy)
+	for (const GroupedSetHierarchyEntry &groupedSetHierarchyEntry : groupedSetHierarchy)
 	{
 		std::vector<value_t> ungroupedValues;
 		for (const groupId_t groupId : groupedSetHierarchyEntry.groupIds)
@@ -247,16 +245,16 @@ typename SubsetGraph<VALUE_T, CONTAINER>::setHierarchy_t SubsetGraph<VALUE_T, CO
 }
 
 template<typename VALUE_T, template<typename> class CONTAINER>
-typename SubsetGraph<VALUE_T, CONTAINER>::setHierarchy_t SubsetGraph<VALUE_T, CONTAINER>::_makeSetHierarchy(const sets_t &sets)
+typename SubsetGraph<VALUE_T, CONTAINER>::setHierarchy_t SubsetGraph<VALUE_T, CONTAINER>::makeSetHierarchy_(const sets_t &sets)
 {
 	const groupsMap_t groupsMap = createGroups(sets);
 	const groupedSets_t groupedSets = groupSets(sets, groupsMap);
-	groupedSetHierarchy_t setHierarchy = makeInitialSetHierarchy(groupedSets);
-	addMoreEdgesToSetHierarchy(setHierarchy);
-	trimSetHierarchy(setHierarchy);
-	removeRedundantEdgesFromSetHierarchy(setHierarchy);
-	sortSetHierarchy(setHierarchy);
-	return ungroupSetHierarchy(setHierarchy);
+	makeInitialSetHierarchy(groupedSets);
+	addMoreEdgesToSetHierarchy();
+	trimSetHierarchy();
+	removeRedundantEdgesFromSetHierarchy();
+	sortSetHierarchy();
+	return ungroupSetHierarchy();
 }
 
 
