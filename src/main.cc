@@ -11,8 +11,9 @@
 
 static void printHelp()
 {
-	std::cout << "This program solves Karnough maps using a brute-force approach, searching for a\nsolution that uses a minimal number of logic gates. (This includes searching\nfor repeating parts of the resulting circuit to reuse them in multiple places.)\n";
-	std::cout << "It can accept many functions at once to make the most of the deduplication.\n";
+	std::cout << "This performs logic function minimization of a function described as a list of\nminterms and don't-cares to a SOP form followed by common subexpression\nelimination, using a brute-force approach.\n";
+	std::cout << "It searches for a solution that uses a minimal number of logic gates.\n";
+	std::cout << "It can accept many functions at once to make the most of the CSE.\n";
 	std::cout << "The input format is flexible and easy to generate by a script.\n";
 	std::cout << "The solution is printed in a human readable format.\n";
 	
@@ -29,9 +30,9 @@ static void printHelp()
 	std::cout << "The input is read from the stdin and has the following format:\nINPUTS_DESCRIPTION <line-break> LIST_OF_FUNCTIONS\n";
 	std::cout << "The description of inputs is either a list of their names or just their count.\n";
 	std::cout << "The functions are separated by line breaks and have the following format:\n[NAME <line-break>] LIST_OF_MINTERMS <line-break> LIST_OF_DONT_CARES\n";
-	std::cout << "Input names, minterms and don't-cares are lists of numbers separated by\nwhitespaces and/or and punctation charaters except \"-\" and \"_\".\n(A single dash may be used to indicate an empty list.)\n";
+	std::cout << "Input names, minterms and don't-cares are lists of numbers separated by\nwhitespaces and/or and punctuation characters except \"-\" and \"_\".\n(A single dash may be used to indicate an empty list.)\n";
 	std::cout << "Lines with any letters in them are considered to contain names.\n";
-	std::cout << "Leading and traling whitespaces are stripped.\n";
+	std::cout << "Leading and trailing whitespaces are stripped.\n";
 	std::cout << "Empty lines and lines starting with \"#\" are ignored.\n";
 	
 	std::cout << '\n';

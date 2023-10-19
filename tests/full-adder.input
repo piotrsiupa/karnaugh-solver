@@ -1,4 +1,4 @@
-# A real life example, although, not a very good one.
+# Implementing a full adder as SOP is not the best way but it makes for a good, readable example.
 
 in0 in1 carry-in
 
