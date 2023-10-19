@@ -1,0 +1,5 @@
+# Corner case - output can be whatever.
+
+x y
+-
+0 1 2 3

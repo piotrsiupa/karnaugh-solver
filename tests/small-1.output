@@ -1,0 +1,20 @@
+--- short 1 ---
+
+goal:
+   00 01 11 10 
+00 F  F  F  T
+01 F  F  F  F
+11 F  F  F  F
+10 F  F  F  F
+
+solution:
+!a && !b && c && !d
+
+=== optimized solution ===
+
+Negated inputs: a, b, d
+Products:
+	[0] = !a && !b && c && !d
+Sums:
+	"short 1" = [0]
+Gate scores: NOTs = 3, ANDs = 3, ORs = 0

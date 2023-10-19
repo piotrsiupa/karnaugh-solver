@@ -1,0 +1,22 @@
+--- f0 ---
+
+goal:
+  0 1 
+0 - T
+1 - -
+
+best fit:
+  0 1 
+0 T T
+1 T T
+
+solution:
+<True>
+
+=== optimized solution ===
+
+Negated inputs: <none>
+Products:
+Sums:
+	"f0" = <True>
+Gate scores: NOTs = 0, ANDs = 0, ORs = 0

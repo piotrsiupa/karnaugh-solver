@@ -1,0 +1,48 @@
+--- short with don't cares 0 ---
+
+goal:
+   00 01 11 10 
+00 -  T  T  -
+01 F  -  -  F
+11 F  F  F  F
+10 F  F  F  F
+
+best fit:
+   00 01 11 10 
+00 T  T  T  T
+01 F  F  F  F
+11 F  F  F  F
+10 F  F  F  F
+
+solution:
+!a && !b
+
+--- short with don't cares 1 ---
+
+goal:
+   00 01 11 10 
+00 F  F  -  T
+01 F  F  F  -
+11 F  F  F  F
+10 F  F  F  F
+
+best fit:
+   00 01 11 10 
+00 F  F  T  T
+01 F  F  F  F
+11 F  F  F  F
+10 F  F  F  F
+
+solution:
+!a && !b && c
+
+=== optimized solution ===
+
+Negated inputs: a, b
+Products:
+	[0] = !a && !b
+	[1] = c && [0]
+Sums:
+	"short with don't cares 0" = [0]
+	"short with don't cares 1" = [1]
+Gate scores: NOTs = 2, ANDs = 2, ORs = 0

@@ -1,0 +1,5 @@
+# I would need to dive deep into the implementation to try to explain why,
+# but this example seems to be particularly hard for solvers to get right.
+4
+5;11;15
+4;7;10;13

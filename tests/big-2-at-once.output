@@ -1,0 +1,56 @@
+--- mostly 0s ---
+
+goal:
+     0000 0001 0011 0010 0110 0111 0101 0100 1100 1101 1111 1110 1010 1011 1001 1000 
+0000  F    F    F    T    F    F    F    F    F    F    F    F    F    F    F    F
+0001  F    F    F    T    T    F    F    F    F    F    F    T    T    F    F    F
+0011  F    F    F    T    T    F    F    F    F    F    F    T    T    F    F    F
+0010  F    F    F    F    F    F    F    F    F    F    F    F    F    F    F    F
+0110  F    F    F    F    F    F    F    F    F    F    F    F    F    F    F    F
+0111  F    F    F    T    T    F    F    F    F    F    F    T    T    F    F    F
+0101  F    F    F    T    T    F    F    F    F    F    T    T    T    F    F    F
+0100  F    F    F    F    F    F    F    F    F    F    F    F    F    F    F    F
+1100  F    F    F    F    F    F    F    F    F    F    F    F    F    F    F    F
+1101  F    F    F    F    F    F    F    F    F    F    F    F    F    F    F    F
+1111  F    F    F    F    F    F    F    F    F    F    F    F    F    F    F    F
+1110  F    F    T    F    F    T    T    F    F    F    F    T    T    T    T    T
+1010  F    F    T    T    F    F    T    F    F    F    F    T    T    T    T    T
+1011  F    F    F    T    T    T    T    F    F    F    F    T    T    T    T    T
+1001  F    F    F    F    F    F    F    F    F    F    F    T    T    T    T    T
+1000  F    F    F    F    F    F    F    F    F    F    F    T    T    T    T    T
+
+solution:
+(a && !b && e && !f) || (!a && d && g && !h) || (a && !b && e && g && !h) || (a && c && !d && e && !f) || (!b && c && d && g && !h) || (a && !b && c && !d && !f && g) || (a && c && !d && e && g && !h) || (a && c && !d && !f && g && h) || (!a && b && !c && d && e && f && g) || (a && b && c && !d && !e && f && h) || (a && !b && c && d && !e && f && h) || (a && !b && c && !e && f && !g && h) || (!a && !b && !c && !e && !f && g && !h)
+
+--- mostly 1s ---
+
+goal:
+     0000 0001 0011 0010 0110 0111 0101 0100 1100 1101 1111 1110 1010 1011 1001 1000 
+0000  T    T    T    F    T    T    T    T    T    T    T    T    T    T    T    T
+0001  T    T    T    F    F    T    T    T    T    T    T    F    F    T    T    T
+0011  T    T    T    F    F    T    T    T    T    T    T    F    F    T    T    T
+0010  T    T    T    T    T    T    T    T    T    T    T    T    T    T    T    T
+0110  T    T    T    T    T    T    T    T    T    T    T    T    T    T    T    T
+0111  T    T    T    F    F    T    T    T    T    T    T    F    F    T    T    T
+0101  T    T    T    F    F    T    T    T    T    T    F    F    F    T    T    T
+0100  T    T    T    T    T    T    T    T    T    T    T    T    T    T    T    T
+1100  T    T    T    T    T    T    T    T    T    T    T    T    T    T    T    T
+1101  T    T    T    T    T    T    T    T    T    T    T    T    T    T    T    T
+1111  T    T    T    T    T    T    T    T    T    T    T    T    T    T    T    T
+1110  T    T    F    T    T    F    F    T    T    T    T    F    F    F    F    F
+1010  T    T    F    F    T    T    F    T    T    T    T    F    F    F    F    F
+1011  T    T    T    F    F    F    F    T    T    T    T    F    F    F    F    F
+1001  T    T    T    T    T    T    T    T    T    T    T    F    F    F    F    F
+1000  T    T    T    T    T    T    T    T    T    T    T    F    F    F    F    F
+
+solution:
+(!a && !g) || (a && b && !c) || (a && b && d) || (!a && c && !d) || (a && !c && !e) || (!a && !d && e) || (!a && !e && h) || (!a && !f && h) || (!e && !f && !g) || (f && !g && !h) || (!b && !c && f && h) || (b && !d && !e && !h) || (c && e && f && h) || (d && !e && !f && h) || (!b && !d && !e && f && g)
+
+=== optimized solution ===
+
+Negated inputs: a, b, c, d, e, f, g, h
+Products: [0] = a && c,  [1] = !a && !g,  [2] = b && !c,  [3] = !b && g,  [4] = !d && !e,  [5] = !e && h,  [6] = g && !h,  [7] = a && [2],  [8] = a && b && d,  [9] = !d && [0],  [10] = !a && c && !d,  [11] = a && !c && !e,  [12] = !a && !d && e,  [13] = !a && [5],  [14] = !a && !f && h,  [15] = !a && [6],  [16] = b && [4],  [17] = !e && !f && !g,  [18] = f && !g && !h,  [19] = a && !b && e && !f,  [20] = !f && [9],  [21] = d && [15],  [22] = a && e && [6],  [23] = !b && !c && f && h,  [24] = !h && [16],  [25] = c && e && f && h,  [26] = d && !f && [5],  [27] = !b && [22],  [28] = e && [20],  [29] = !e && f && h && [0],  [30] = c && d && [3] && [6],  [31] = f && [4] && [3],  [32] = !f && [3] && [9],  [33] = !b && [29],  [34] = [9] && [22],  [35] = g && h && [20],  [36] = !a && d && e && f && g && [2],  [37] = [16] && [29],  [38] = d && [33],  [39] = !g && [33],  [40] = !c && !e && !f && [3] && [15]
+Sums: [41] = [19] || [21] || [27] || [28] || [30] || [32] || [34] || [35] || [36] || [37] || [38] || [39] || [40],  [42] = [1] || [7] || [8] || [10] || [11] || [12] || [13] || [14] || [17] || [18] || [23] || [24] || [25] || [26] || [31]
+Final sums: "mostly 0s" = [41], "mostly 1s" = [42]
+
+Gate scores: NOTs = 8, ANDs = 70, ORs = 26

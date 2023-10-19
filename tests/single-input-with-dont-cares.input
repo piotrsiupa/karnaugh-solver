@@ -1,0 +1,23 @@
+# A corner case - only one input and don't-cares.
+
+the_only_input
+
+don't care
+-
+0 1
+
+0 must be F
+-
+1
+
+1 must be F
+-
+0
+
+0 must be T
+0
+1
+
+1 must be T
+1
+0

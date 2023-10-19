@@ -1,0 +1,5 @@
+/.sconsign.dblite
+*.o
+/karnaugh
+/benchmark-result.new
+/benchmark-result.old
