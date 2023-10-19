@@ -8,6 +8,21 @@
 #include "SetOptimizerForSums.hh"
 
 
+void OptimizedSolutions::generateHumanIds() const
+{
+	const id_t idCount = products.size() + sums.size();
+	humanIds.resize(idCount);
+	id_t currentHumanId = 0;
+	for (id_t id = 0; id != idCount; ++id)
+		if (isWorthPrinting(id))
+			humanIds[id] = currentHumanId++;
+}
+
+void OptimizedSolutions::printHumanId(std::ostream &o, const id_t id) const
+{
+	o << '[' << humanIds[id] << ']';
+}
+
 void OptimizedSolutions::printNegatedInputs(std::ostream &o) const
 {
 	o << "Negated inputs:";
@@ -33,73 +48,90 @@ void OptimizedSolutions::printNegatedInputs(std::ostream &o) const
 	o << '\n';
 }
 
+void OptimizedSolutions::printProductBody(std::ostream &o, const id_t id) const
+{
+	const auto &[primeImplicant, ids] = getProduct(id);
+	bool first = primeImplicant == PrimeImplicant::all();
+	if (!first || ids.empty())
+		primeImplicant.print(o, false);
+	for (const auto &id : ids)
+	{
+		if (first)
+			first = false;
+		else
+			o << " && ";
+		printHumanId(o, id);
+	}
+}
+
+void OptimizedSolutions::printProduct(std::ostream &o, const id_t id) const
+{
+	o << '\t';
+	printHumanId(o, id);
+	o << " = ";
+	printProductBody(o, id);
+	o << '\n';
+}
+
 void OptimizedSolutions::printProducts(std::ostream &o) const
 {
-	o << "Products:";
+	o << "Products:\n";
 	for (std::size_t i = 0; i != products.size(); ++i)
 	{
-		if (i == 0)
-			o << ' ';
-		else
-			o << ",  ";
-		o << '[' << i << "] = ";
-		const auto &[primeImplicant, ids] = products[i];
-		bool first = primeImplicant == PrimeImplicant::all();
-		if (!first || ids.empty())
-			primeImplicant.print(o, false);
-		for (const auto &id : ids)
-		{
-			if (first)
-				first = false;
-			else
-				o << " && ";
-			o << '[' << id << ']';
-		}
+		if (!isProductWorthPrinting(makeProductId(i)))
+			continue;
+		printProduct(o, makeProductId(i));
 	}
-	if (products.empty())
-		o << " <none>";
+}
+
+void OptimizedSolutions::printSumBody(std::ostream &o, const id_t id) const
+{
+	bool first = true;
+	for (const auto &partId : getSum(id))
+	{
+		if (first)
+			first = false;
+		else
+			o << " || ";
+		if (!isProduct(partId) || isProductWorthPrinting(partId))
+			printHumanId(o, partId);
+		else
+			getProduct(partId).first.print(o, false);
+	}
+}
+
+void OptimizedSolutions::printSum(std::ostream &o, const id_t id) const
+{
+	o << '\t';
+	printHumanId(o, id);
+	o << " = ";
+	printSumBody(o, id);
 	o << '\n';
 }
 
 void OptimizedSolutions::printSums(std::ostream &o) const
 {
-	o << "Sums:";
+	o << "Sums:\n";
 	for (std::size_t i = 0; i != sums.size(); ++i)
 	{
-		if (i == 0)
-			o << ' ';
-		else
-			o << ",  ";
-		o << '[' << makeSumId(i) << "] = ";
-		bool first = true;
-		for (const auto &id : sums[i])
-		{
-			if (first)
-				first = false;
-			else
-				o << " || ";
-			o << '[' << id << ']';
-		}
+		if (!isSumWorthPrinting(makeSumId(i)))
+			continue;
+		printSum(o, makeSumId(i));
 	}
-	if (sums.empty())
-		o << " <none>";
-	o << '\n';
 }
 
 void OptimizedSolutions::printFinalSums(std::ostream &o, const std::vector<std::string> &functionNames) const
 {
-	o << "Final sums:";
 	for (std::size_t i = 0; i != finalSums.size(); ++i)
 	{
-		if (i == 0)
-			o << ' ';
+		o << "\t\"" << functionNames[i] << "\" = ";
+		const id_t sumId = finalSums[i];
+		if (isSumWorthPrinting(sumId))
+			printHumanId(o, sumId);
 		else
-			o << ", ";
-		o << '"' << functionNames[i] << "\" = [" << finalSums[i] << ']';
+			printSumBody(o, sumId);
+		o << '\n';
 	}
-	if (finalSums.empty())
-		o << " <none>";
-	o << '\n';
 }
 
 void OptimizedSolutions::printGateScores(std::ostream &o) const
@@ -228,10 +260,10 @@ OptimizedSolutions::OptimizedSolutions(const solutions_t &solutions)
 
 void OptimizedSolutions::print(std::ostream &o, const std::vector<std::string> &functionNames) const
 {
+	generateHumanIds();
 	printNegatedInputs(o);
 	printProducts(o);
 	printSums(o);
 	printFinalSums(o, functionNames);
-	o << '\n';
 	printGateScores(o);
 }

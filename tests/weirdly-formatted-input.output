@@ -13,8 +13,9 @@ solution:
 === optimized solution ===
 
 Negated inputs: w, x, y
-Products: [0] = !w && !x && y,  [1] = !w && !y && z
-Sums: [2] = [0] || [1]
-Final sums: "my-function" = [2]
-
+Products:
+	[0] = !w && !x && y
+	[1] = !w && !y && z
+Sums:
+	"my-function" = [0] || [1]
 Gate scores: NOTs = 3, ANDs = 4, ORs = 1

@@ -103,8 +103,6 @@ Empty lines and lines starting with `#` (comments) are ignored.
 
 ## Examples
 
-(You can find more examples in the directory `tests`.)
-
 ### SR latch
 
 Input:
@@ -120,14 +118,14 @@ Output:
 --- f0 ---
 
 goal:
-   0 1
+   0 1 
 00 F T
 01 F F
 11 - -
 10 T T
 
 best fit:
-   0 1
+   0 1 
 00 F T
 01 F F
 11 T T
@@ -139,10 +137,10 @@ set || (!reset && output)
 === optimized solution ===
 
 Negated inputs: reset
-Products: [0] = !reset && output,  [1] = set
-Sums: [2] = [0] || [1]
-Final sums: "f0" = [2]
-
+Products:
+	[0] = !reset && output
+Sums:
+	"f0" = [0] || set
 Gate scores: NOTs = 1, ANDs = 1, ORs = 1
 ```
 
@@ -168,7 +166,7 @@ Output:
 --- sum ---
 
 goal:
-   0 1
+   0 1 
 00 F T
 01 T F
 11 F T
@@ -180,7 +178,7 @@ solution:
 --- carry-out ---
 
 goal:
-   0 1
+   0 1 
 00 F F
 01 F T
 11 T T
@@ -192,10 +190,17 @@ solution:
 === optimized solution ===
 
 Negated inputs: in0, in1, carry-in
-Products: [0] = !in0 && !in1 && carry-in,  [1] = !in0 && in1 && !carry-in,  [2] = in0 && !in1 && !carry-in,  [3] = in1 && carry-in,  [4] = in0 && carry-in,  [5] = in0 && in1,  [6] = in0 && [3]
-Sums: [7] = [0] || [1] || [2] || [6],  [8] = [3] || [4] || [5]
-Final sums: "sum" = [7], "carry-out" = [8]
-
+Products:
+	[0] = !in0 && !in1 && carry-in
+	[1] = !in0 && in1 && !carry-in
+	[2] = in0 && !in1 && !carry-in
+	[3] = in1 && carry-in
+	[4] = in0 && carry-in
+	[5] = in0 && in1
+	[6] = in0 && [3]
+Sums:
+	"sum" = [0] || [1] || [2] || [6]
+	"carry-out" = [3] || [4] || [5]
 Gate scores: NOTs = 3, ANDs = 10, ORs = 5
 ```
 
@@ -215,14 +220,14 @@ Output:
 --- f0 ---
 
 goal:
-   00 01 11 10
+   00 01 11 10 
 00 F  F  F  F
 01 -  T  -  F
 11 F  -  T  F
 10 F  F  T  -
 
 best fit:
-   00 01 11 10
+   00 01 11 10 
 00 F  F  F  F
 01 F  T  T  F
 11 F  T  T  F
@@ -234,9 +239,14 @@ solution:
 === optimized solution ===
 
 Negated inputs: <none>
-Products: [0] = i0 && i2 && i3,  [1] = i1 && i3
-Sums: [2] = [0] || [1]
-Final sums: "f0" = [2]
-
+Products:
+	[0] = i0 && i2 && i3
+	[1] = i1 && i3
+Sums:
+	"f0" = [0] || [1]
 Gate scores: NOTs = 0, ANDs = 3, ORs = 1
 ```
+
+### More examples...
+
+You can find more examples in the directory `tests`.

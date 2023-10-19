@@ -39,8 +39,10 @@ solution:
 === optimized solution ===
 
 Negated inputs: a, b
-Products: [0] = !a && !b,  [1] = c && [0]
-Sums: [2] = [0],  [3] = [1]
-Final sums: "f0" = [2], "f1" = [3]
-
+Products:
+	[0] = !a && !b
+	[1] = c && [0]
+Sums:
+	"f0" = [0]
+	"f1" = [1]
 Gate scores: NOTs = 2, ANDs = 2, ORs = 0
