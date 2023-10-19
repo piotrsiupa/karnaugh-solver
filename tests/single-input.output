@@ -5,22 +5,12 @@ goal:
 0 T
 1 T
 
-best fit:
-   
-0 T
-1 T
-
 solution:
 <True>
 
 --- pass_though ---
 
 goal:
-   
-0 F
-1 T
-
-best fit:
    
 0 F
 1 T
@@ -35,22 +25,12 @@ goal:
 0 T
 1 F
 
-best fit:
-   
-0 T
-1 F
-
 solution:
 !the_only_input
 
 --- false ---
 
 goal:
-   
-0 F
-1 F
-
-best fit:
    
 0 F
 1 F

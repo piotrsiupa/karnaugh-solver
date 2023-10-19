@@ -19,25 +19,6 @@ goal:
 1001  T    F    T    F    T    -    T    -    T    F    T    F    T    -    T    -
 1000  F    T    F    T    F    T    -    T    F    T    F    T    F    T    -    T
 
-best fit:
-     0000 0001 0011 0010 0110 0111 0101 0100 1100 1101 1111 1110 1010 1011 1001 1000 
-0000  T    F    T    F    T    F    T    F    T    F    T    F    T    F    T    F
-0001  F    T    T    T    F    T    F    T    F    T    T    T    F    T    F    T
-0011  T    T    T    T    T    F    T    F    T    T    T    T    T    F    T    F
-0010  F    T    T    T    F    T    F    T    F    T    T    T    F    T    F    T
-0110  T    F    T    F    T    F    T    F    T    F    T    F    T    F    T    F
-0111  F    T    F    T    F    T    T    T    F    T    F    T    F    T    T    T
-0101  T    F    T    F    T    T    T    T    T    F    T    F    T    T    T    T
-0100  F    T    F    T    F    T    T    T    F    T    F    T    F    T    T    T
-1100  T    F    T    F    T    F    T    F    T    F    T    F    T    F    T    F
-1101  F    T    T    T    F    T    F    T    F    T    T    T    F    T    F    T
-1111  T    T    T    T    T    F    T    F    T    T    T    T    T    F    T    F
-1110  F    T    T    T    F    T    F    T    F    T    T    T    F    T    F    T
-1010  T    F    T    F    T    F    T    F    T    F    T    F    T    F    T    F
-1011  F    T    F    T    F    T    T    T    F    T    F    T    F    T    T    T
-1001  T    F    T    F    T    T    T    T    T    F    T    F    T    T    T    T
-1000  F    T    F    T    F    T    T    T    F    T    F    T    F    T    T    T
-
 solution:
 (c && d && !g && h) || (!c && d && g && h) || (a && b && c && d && e && f) || (a && b && c && d && !e && !f) || (a && !b && !c && d && e && !f) || (a && !b && !c && d && !e && f) || (!a && b && !c && d && e && !f) || (!a && b && !c && d && !e && f) || (!a && !b && c && d && e && f) || (!a && !b && c && d && !e && !f) || (a && b && c && d && g && !h) || (a && b && c && !d && g && h) || (a && !b && !c && d && !g && !h) || (a && !b && !c && !d && !g && h) || (!a && b && !c && d && !g && !h) || (!a && b && !c && !d && !g && h) || (!a && !b && c && d && g && !h) || (!a && !b && c && !d && g && h) || (a && b && c && e && f && g) || (a && b && c && !e && !f && g) || (a && !b && !c && e && !f && !g) || (a && !b && !c && !e && f && !g) || (!a && b && !c && e && !f && !g) || (!a && b && !c && !e && f && !g) || (!a && !b && c && e && f && g) || (!a && !b && c && !e && !f && g) || (a && b && c && e && f && h) || (a && b && c && !e && !f && h) || (a && !b && !c && e && !f && h) || (a && !b && !c && !e && f && h) || (!a && b && !c && e && !f && h) || (!a && b && !c && !e && f && h) || (!a && !b && c && e && f && h) || (!a && !b && c && !e && !f && h) || (a && b && d && e && f && g) || (a && b && d && !e && !f && g) || (a && !b && d && e && !f && !g) || (a && !b && d && !e && f && !g) || (!a && b && d && e && !f && !g) || (!a && b && d && !e && f && !g) || (!a && !b && d && e && f && g) || (!a && !b && d && !e && !f && g) || (a && b && d && e && f && h) || (a && b && d && !e && !f && h) || (a && !b && d && e && !f && h) || (a && !b && d && !e && f && h) || (!a && b && d && e && !f && h) || (!a && b && d && !e && f && h) || (!a && !b && d && e && f && h) || (!a && !b && d && !e && !f && h) || (a && b && e && f && g && h) || (a && b && !e && !f && g && h) || (a && !b && e && !f && !g && h) || (a && !b && !e && f && !g && h) || (!a && b && e && !f && !g && h) || (!a && b && !e && f && !g && h) || (!a && !b && e && f && g && h) || (!a && !b && !e && !f && g && h) || (c && d && e && f && g && !h) || (c && d && !e && !f && g && !h) || (c && !d && e && f && g && h) || (c && !d && !e && !f && g && h) || (!c && d && e && !f && !g && !h) || (!c && d && !e && f && !g && !h) || (!c && !d && e && !f && !g && h) || (!c && !d && !e && f && !g && h) || (a && b && c && !d && e && !f && !g && !h) || (a && b && c && !d && !e && f && !g && !h) || (a && b && !c && !d && e && f && !g && !h) || (a && b && !c && !d && e && !f && g && !h) || (a && b && !c && !d && !e && f && g && !h) || (a && b && !c && !d && !e && !f && !g && !h) || (a && !b && c && !d && e && f && !g && !h) || (a && !b && c && !d && e && !f && g && !h) || (a && !b && c && !d && !e && f && g && !h) || (a && !b && c && !d && !e && !f && !g && !h) || (a && !b && !c && !d && e && f && g && !h) || (a && !b && !c && !d && !e && !f && g && !h) || (!a && b && c && !d && e && f && !g && !h) || (!a && b && c && !d && e && !f && g && !h) || (!a && b && c && !d && !e && f && g && !h) || (!a && b && c && !d && !e && !f && !g && !h) || (!a && b && !c && !d && e && f && g && !h) || (!a && b && !c && !d && !e && !f && g && !h) || (!a && !b && c && !d && e && !f && !g && !h) || (!a && !b && c && !d && !e && f && !g && !h) || (!a && !b && !c && !d && e && f && !g && !h) || (!a && !b && !c && !d && e && !f && g && !h) || (!a && !b && !c && !d && !e && f && g && !h) || (!a && !b && !c && !d && !e && !f && !g && !h)
 

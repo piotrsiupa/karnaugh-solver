@@ -19,50 +19,12 @@ goal:
 1001  F    F    F    F    F    F    F    F    F    F    F    T    T    T    T    T
 1000  F    F    F    F    F    F    F    F    F    F    F    T    T    T    T    T
 
-best fit:
-     0000 0001 0011 0010 0110 0111 0101 0100 1100 1101 1111 1110 1010 1011 1001 1000 
-0000  F    F    F    T    F    F    F    F    F    F    F    F    F    F    F    F
-0001  F    F    F    T    T    F    F    F    F    F    F    T    T    F    F    F
-0011  F    F    F    T    T    F    F    F    F    F    F    T    T    F    F    F
-0010  F    F    F    F    F    F    F    F    F    F    F    F    F    F    F    F
-0110  F    F    F    F    F    F    F    F    F    F    F    F    F    F    F    F
-0111  F    F    F    T    T    F    F    F    F    F    F    T    T    F    F    F
-0101  F    F    F    T    T    F    F    F    F    F    T    T    T    F    F    F
-0100  F    F    F    F    F    F    F    F    F    F    F    F    F    F    F    F
-1100  F    F    F    F    F    F    F    F    F    F    F    F    F    F    F    F
-1101  F    F    F    F    F    F    F    F    F    F    F    F    F    F    F    F
-1111  F    F    F    F    F    F    F    F    F    F    F    F    F    F    F    F
-1110  F    F    T    F    F    T    T    F    F    F    F    T    T    T    T    T
-1010  F    F    T    T    F    F    T    F    F    F    F    T    T    T    T    T
-1011  F    F    F    T    T    T    T    F    F    F    F    T    T    T    T    T
-1001  F    F    F    F    F    F    F    F    F    F    F    T    T    T    T    T
-1000  F    F    F    F    F    F    F    F    F    F    F    T    T    T    T    T
-
 solution:
 (a && !b && e && !f) || (!a && d && g && !h) || (a && !b && e && g && !h) || (a && c && !d && e && !f) || (!b && c && d && g && !h) || (a && !b && c && !d && !f && g) || (a && c && !d && e && g && !h) || (a && c && !d && !f && g && h) || (!a && b && !c && d && e && f && g) || (a && b && c && !d && !e && f && h) || (a && !b && c && d && !e && f && h) || (a && !b && c && !e && f && !g && h) || (!a && !b && !c && !e && !f && g && !h)
 
 --- mostly 1s ---
 
 goal:
-     0000 0001 0011 0010 0110 0111 0101 0100 1100 1101 1111 1110 1010 1011 1001 1000 
-0000  T    T    T    F    T    T    T    T    T    T    T    T    T    T    T    T
-0001  T    T    T    F    F    T    T    T    T    T    T    F    F    T    T    T
-0011  T    T    T    F    F    T    T    T    T    T    T    F    F    T    T    T
-0010  T    T    T    T    T    T    T    T    T    T    T    T    T    T    T    T
-0110  T    T    T    T    T    T    T    T    T    T    T    T    T    T    T    T
-0111  T    T    T    F    F    T    T    T    T    T    T    F    F    T    T    T
-0101  T    T    T    F    F    T    T    T    T    T    F    F    F    T    T    T
-0100  T    T    T    T    T    T    T    T    T    T    T    T    T    T    T    T
-1100  T    T    T    T    T    T    T    T    T    T    T    T    T    T    T    T
-1101  T    T    T    T    T    T    T    T    T    T    T    T    T    T    T    T
-1111  T    T    T    T    T    T    T    T    T    T    T    T    T    T    T    T
-1110  T    T    F    T    T    F    F    T    T    T    T    F    F    F    F    F
-1010  T    T    F    F    T    T    F    T    T    T    T    F    F    F    F    F
-1011  T    T    T    F    F    F    F    T    T    T    T    F    F    F    F    F
-1001  T    T    T    T    T    T    T    T    T    T    T    F    F    F    F    F
-1000  T    T    T    T    T    T    T    T    T    T    T    F    F    F    F    F
-
-best fit:
      0000 0001 0011 0010 0110 0111 0101 0100 1100 1101 1111 1110 1010 1011 1001 1000 
 0000  T    T    T    F    T    T    T    T    T    T    T    T    T    T    T    T
 0001  T    T    T    F    F    T    T    T    T    T    T    F    F    T    T    T

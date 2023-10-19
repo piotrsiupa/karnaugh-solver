@@ -215,8 +215,11 @@ void Karnaugh::printSolution(const PrimeImplicants &solution) const
 		std::cout << "goal:\n";
 		prettyPrintTable();
 		
-		std::cout << "best fit:\n";
-		prettyPrintSolution(solution);
+		if (targetMinterms.size() != allowedMinterms.size())
+		{
+			std::cout << "best fit:\n";
+			prettyPrintSolution(solution);
+		}
 	}
 	else
 	{

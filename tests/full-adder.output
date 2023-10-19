@@ -7,26 +7,12 @@ goal:
 11 F T
 10 T F
 
-best fit:
-   0 1 
-00 F T
-01 T F
-11 F T
-10 T F
-
 solution:
 (in0 && in1 && carry-in) || (in0 && !in1 && !carry-in) || (!in0 && in1 && !carry-in) || (!in0 && !in1 && carry-in)
 
 --- carry-out ---
 
 goal:
-   0 1 
-00 F F
-01 F T
-11 T T
-10 F T
-
-best fit:
    0 1 
 00 F F
 01 F T

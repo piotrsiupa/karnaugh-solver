@@ -7,26 +7,12 @@ goal:
 11 F  F  F  F
 10 F  T  F  T
 
-best fit:
-   00 01 11 10 
-00 F  F  F  F
-01 F  T  F  T
-11 F  F  F  F
-10 F  T  F  T
-
 solution:
 (a && !b && c && !d) || (a && !b && !c && d) || (!a && b && c && !d) || (!a && b && !c && d)
 
 --- second ---
 
 goal:
-   00 01 11 10 
-00 F  F  F  F
-01 F  T  F  T
-11 F  F  T  F
-10 F  T  F  F
-
-best fit:
    00 01 11 10 
 00 F  F  F  F
 01 F  T  F  T
@@ -45,26 +31,12 @@ goal:
 11 F  F  F  F
 10 F  T  F  F
 
-best fit:
-   00 01 11 10 
-00 F  F  F  F
-01 F  T  F  T
-11 F  F  F  F
-10 F  T  F  F
-
 solution:
 (a && !b && !c && d) || (!a && b && c && !d) || (!a && b && !c && d)
 
 --- fourth ---
 
 goal:
-   00 01 11 10 
-00 T  F  F  F
-01 F  F  F  T
-11 F  F  F  F
-10 F  T  F  F
-
-best fit:
    00 01 11 10 
 00 T  F  F  F
 01 F  F  F  T
