@@ -163,9 +163,6 @@ typename PetricksMethod<INDEX_T>::solutions_t PetricksMethod<INDEX_T>::solve()
 }
 
 
-#include "Minterm.hh"
-#include "PrimeImplicant.hh"
-
 template class PetricksMethod<std::uint8_t>;
 template class PetricksMethod<std::uint16_t>;
 template class PetricksMethod<std::uint32_t>;
