@@ -2,11 +2,10 @@
 #include <iostream>
 #include <string>
 
-#include <unistd.h>
-
 #include "global.hh"
 #include "Input.hh"
 #include "Karnaughs.hh"
+#include "non-stdlib-stuff.hh"
 
 
 static void printHelp()
@@ -56,11 +55,6 @@ static void printVersion()
 			"This is a development build which contains additional assertions. This may slow down the execution.\n"
 #endif
 			;
-}
-
-static bool isInputTerminal()
-{
-	return isatty(STDIN_FILENO);
 }
 
 static bool parseInputBits(Input &input)

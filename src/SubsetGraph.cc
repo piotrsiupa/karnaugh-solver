@@ -1,6 +1,7 @@
 #include "./SubsetGraph.hh"
 
 #include <algorithm>
+#include <iterator>
 #include <set>
 
 

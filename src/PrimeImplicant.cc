@@ -28,7 +28,6 @@ PrimeImplicant::splitBits_t PrimeImplicant::splitBits() const
 PrimeImplicant::minterms_t PrimeImplicant::findMinterms() const
 {
 	minterms_t minterms;
-	static_assert(sizeof(Minterm) * CHAR_BIT > ::maxBits);
 	for (Minterm minterm = 0; minterm != ::maxMinterm; ++minterm)
 		if (covers(minterm))
 			minterms.push_back(minterm);
@@ -45,7 +44,7 @@ bool PrimeImplicant::areMergeable(const PrimeImplicant &x, const PrimeImplicant 
 	const mask_t falseBitsDiff = x.falseBits ^ y.falseBits;
 	if (trueBitsDiff != falseBitsDiff)
 		return false;
-	return __builtin_popcount(trueBitsDiff) == 1;
+	return std::bitset<32>(trueBitsDiff).count() == 1;
 }
 
 PrimeImplicant PrimeImplicant::merge(const PrimeImplicant &x, const PrimeImplicant &y)
