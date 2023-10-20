@@ -1,3 +1,5 @@
+import sys
+
 env = Environment()
 
 if 'msvc' in env['TOOLS']:
@@ -8,5 +10,6 @@ env.Append(CPPDEFINES=['NDEBUG'])
 program = env.Program('karnaugh', env.Glob('./src/*.cc'))
 env.Alias('build', program)
 
-test = env.Alias('test', program, 'tests/run.py $SOURCE')
+env.Replace(PYTHON_EXECUTABLE=sys.executable)
+test = env.Alias('test', program, '${ESCAPE(PYTHON_EXECUTABLE)} tests/run.py $SOURCE')
 env.AlwaysBuild(test)
