@@ -19,7 +19,7 @@ public:
 	
 private:
 	using index_t = INDEX_T;
-	static constexpr index_t NO_INDEX = ~index_t(0);
+	static constexpr index_t NO_INDEX = static_cast<index_t>(~index_t(0));
 	using product_t = std::vector<index_t>;
 	using sumOfProducts_t = std::vector<product_t>;
 	using productOfSumsOfProducts_t = std::vector<sumOfProducts_t>;

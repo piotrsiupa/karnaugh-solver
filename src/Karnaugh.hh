@@ -24,8 +24,8 @@ private:
 	std::string functionName;
 	Minterms targetMinterms, allowedMinterms;
 	
-	static grayCode_t makeGrayCode(const bits_t bits);
-	static void printBits(const Minterm minterm, const bits_t bits);
+	static grayCode_t makeGrayCode(const bits_t bitCount);
+	static void printBits(const Minterm minterm, const bits_t bitCount);
 	static void prettyPrintTable(const Minterms &target, const Minterms &allowed = {});
 	void prettyPrintTable() const;
 	static void prettyPrintSolution(const PrimeImplicants &solution);

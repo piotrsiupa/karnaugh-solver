@@ -35,12 +35,12 @@ private:
 	void generateHumanIds() const;
 	void printNegatedInputs(std::ostream &o) const;
 	bool isProductWorthPrinting(const id_t productId) const { const product_t &product = getProduct(productId); return product.first.getBitCount() >= 2 || !product.second.empty(); }
-	void printProductBody(std::ostream &o, const id_t id) const;
-	void printProduct(std::ostream &o, const id_t id) const;
+	void printProductBody(std::ostream &o, const id_t productId) const;
+	void printProduct(std::ostream &o, const id_t productId) const;
 	void printProducts(std::ostream &o) const;
 	bool isSumWorthPrinting(const id_t sumId) const { for (const sum_t &sum : sums) for (const id_t &id : sum) if (id == sumId) return true; return false; }
-	void printSumBody(std::ostream &o, const id_t id) const;
-	void printSum(std::ostream &o, const id_t id) const;
+	void printSumBody(std::ostream &o, const id_t sumId) const;
+	void printSum(std::ostream &o, const id_t sumId) const;
 	void printSums(std::ostream &o) const;
 	void printFinalSums(std::ostream &o, const std::vector<std::string> &functionNames) const;
 	void printGateScores(std::ostream &o) const;

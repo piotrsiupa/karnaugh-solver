@@ -1,6 +1,7 @@
 #include "./PetricksMethod.hh"
 
 #include <algorithm>
+#include <cassert>
 #include <cstdint>
 #include <iostream>
 
@@ -9,7 +10,8 @@ template<typename INDEX_T>
 typename PetricksMethod<INDEX_T>::index_t PetricksMethod<INDEX_T>::findEssentialPrimeImplicantIndex(const Minterm minterm)
 {
 	std::uint_fast8_t count = 0;
-	index_t index;
+	assert(!primeImplicants.empty());
+	index_t index = 0;  // Initialized only to avoid a compiler warning.
 	for (index_t i = 0; i != primeImplicants.size(); ++i)
 	{
 		if (primeImplicants[i].covers(minterm))

@@ -76,7 +76,7 @@ static bool parseInputBits(Input &input)
 			std::cerr << "Too many input variables!\n";
 			return false;
 		}
-		::bits = ::inputNames.size();
+		::bits = static_cast<::bits_t>(::inputNames.size());
 	}
 	else
 	{
@@ -99,14 +99,14 @@ static bool parseInputBits(Input &input)
 				std::cerr << "Too many input variables!\n";
 				return false;
 			}
-			::bits = n;
+			::bits = static_cast<::bits_t>(n);
 		}
-		catch (std::invalid_argument &e)
+		catch (std::invalid_argument &)
 		{
 			std::cerr << '"' << line << "\" is not a number!\n";
 			return false;
 		}
-		catch (std::out_of_range &e)
+		catch (std::out_of_range &)
 		{
 			std::cerr << '"' << line << "\" is out of range!\n";
 			return false;

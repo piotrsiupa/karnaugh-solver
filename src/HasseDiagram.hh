@@ -9,12 +9,12 @@ class HasseDiagram
 {
 public:
 	using value_t = VALUE_T;
-	static constexpr value_t MAX_VALUE = ~value_t(0) - 2;
+	static constexpr value_t MAX_VALUE = static_cast<value_t>(~value_t(0) - 2);
 	using set_t = std::vector<value_t>;
 	using sets_t = std::vector<set_t>;
 	
 private:
-	static constexpr value_t TOP_NODE = ~value_t(0) - 1, REFERENCES = ~value_t(0);
+	static constexpr value_t TOP_NODE = static_cast<value_t>(~value_t(0) - 1), REFERENCES = static_cast<value_t>(~value_t(0));
 	
 	struct Node;
 	using references_t = std::vector<Node*>;
