@@ -34,6 +34,7 @@ private:
 public:
 	explicit PrimeImplicant(const Minterm minterm) : trueBits(minterm), falseBits(minterm ^ maxMinterm), bitCount(::bits) {}
 	PrimeImplicant(const PrimeImplicant &) = default;
+	PrimeImplicant& operator=(const PrimeImplicant &) = default;
 	
 	constexpr bool operator==(const PrimeImplicant &other) const { return this->trueBits == other.trueBits && this->falseBits == other.falseBits && this->bitCount == other.bitCount; }
 	bool operator<(const PrimeImplicant &other) const;
