@@ -1,5 +1,6 @@
 #pragma once
 
+#include <bitset>
 #include <cstddef>
 #include <ostream>
 #include <set>
@@ -34,12 +35,12 @@ private:
 	void generateHumanIds() const;
 	void printNegatedInputs(std::ostream &o) const;
 	bool isProductWorthPrinting(const id_t productId) const { const product_t &product = getProduct(productId); return product.first.getBitCount() >= 2 || !product.second.empty(); }
-	void printProductBody(std::ostream &o, const id_t id) const;
-	void printProduct(std::ostream &o, const id_t id) const;
+	void printProductBody(std::ostream &o, const id_t productId) const;
+	void printProduct(std::ostream &o, const id_t productId) const;
 	void printProducts(std::ostream &o) const;
 	bool isSumWorthPrinting(const id_t sumId) const { for (const sum_t &sum : sums) for (const id_t &id : sum) if (id == sumId) return true; return false; }
-	void printSumBody(std::ostream &o, const id_t id) const;
-	void printSum(std::ostream &o, const id_t id) const;
+	void printSumBody(std::ostream &o, const id_t sumId) const;
+	void printSum(std::ostream &o, const id_t sumId) const;
 	void printSums(std::ostream &o) const;
 	void printFinalSums(std::ostream &o, const std::vector<std::string> &functionNames) const;
 	void printGateScores(std::ostream &o) const;
@@ -66,7 +67,7 @@ public:
 	
 	std::size_t getSize() const { return finalSums.size(); }
 	
-	std::size_t getNotCount() const { return __builtin_popcount(negatedInputs); }
+	std::size_t getNotCount() const { return std::bitset<32>(negatedInputs).count(); }
 	std::size_t getAndCount() const { std::size_t andCount = 0; for (const auto &[primeImplicant, ids] : products) andCount += std::max(std::size_t(1), primeImplicant.getBitCount() + ids.size()) - 1; return andCount; }
 	std::size_t getOrCount() const { std::size_t orCount = 0; for (const auto &sum : sums) orCount += sum.size() - 1; return orCount; }
 	std::size_t getGateScore() const { return getNotCount() + 2 * getAndCount() + 2 * getOrCount(); }

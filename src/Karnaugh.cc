@@ -10,24 +10,24 @@
 
 std::size_t Karnaugh::nameCount = 0;
 
-Karnaugh::grayCode_t Karnaugh::makeGrayCode(const bits_t bits)
+Karnaugh::grayCode_t Karnaugh::makeGrayCode(const bits_t bitCount)
 {
 	grayCode_t grayCode;
-	grayCode.reserve(1u << bits);
+	grayCode.reserve(static_cast<unsigned>(1u << bitCount));
 	grayCode.push_back(0);
-	if (bits != 0)
+	if (bitCount != 0)
 	{
 		grayCode.push_back(1);
-		for (bits_t i = 1; i != bits; ++i)
+		for (bits_t i = 1; i != bitCount; ++i)
 			for (Minterm j = 0; j != unsigned(1) << i; ++j)
 				grayCode.push_back(grayCode[j ^ ((1 << i) - 1)] | (1 << i));
 	}
 	return grayCode;
 }
 
-void Karnaugh::printBits(const Minterm minterm, const bits_t bits)
+void Karnaugh::printBits(const Minterm minterm, const bits_t bitCount)
 {
-	for (bits_t i = bits; i != 0; --i)
+	for (bits_t i = bitCount; i != 0; --i)
 		std::cout << ((minterm & (1 << (i - 1))) != 0 ? '1' : '0');
 }
 
@@ -122,12 +122,12 @@ bool Karnaugh::loadMinterms(Minterms &minterms, Input &input) const
 			}
 			minterms.insert(n);
 		}
-		catch (std::invalid_argument &e)
+		catch (std::invalid_argument &)
 		{
 			std::cerr << '"' << string << "\" is not a number!\n";
 			return false;
 		}
-		catch (std::out_of_range &e)
+		catch (std::out_of_range &)
 		{
 			std::cerr << '"' << string << "\" is out of range!\n";
 			return false;

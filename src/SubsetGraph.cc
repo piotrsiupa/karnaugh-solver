@@ -1,7 +1,9 @@
 #include "./SubsetGraph.hh"
 
 #include <algorithm>
+#include <iterator>
 #include <set>
+#include <utility>
 
 
 template<typename VALUE_T, template<typename> class CONTAINER>

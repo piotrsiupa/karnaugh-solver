@@ -1,6 +1,7 @@
 #include "./SetOptimizerForSums.hh"
 
 #include <algorithm>
+#include <iterator>
 
 
 SetOptimizerForSums::HasseDiagram::sets_t SetOptimizerForSums::convertSets(const sets_t &sets) const

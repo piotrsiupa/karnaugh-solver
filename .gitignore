@@ -1,5 +1,7 @@
 /.sconsign.dblite
 *.o
+*.obj
 /karnaugh
+/karnaugh.exe
 /benchmark-result.new
 /benchmark-result.old

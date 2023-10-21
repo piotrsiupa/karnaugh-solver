@@ -1,5 +1,6 @@
 #pragma once
 
+#include <bitset>
 #include <climits>
 #include <cstdint>
 #include <ostream>
@@ -28,11 +29,12 @@ private:
 	explicit PrimeImplicant(const mask_t trueBits, const mask_t falseBits) : trueBits(trueBits), falseBits(falseBits) { recalculateBits(); }
 	constexpr PrimeImplicant(const mask_t trueBits, const mask_t falseBits, const bits_t bitCount) : trueBits(trueBits), falseBits(falseBits), bitCount(bitCount) {}
 	
-	void recalculateBits() { bitCount = __builtin_popcount(trueBits | falseBits); }
+	void recalculateBits() { bitCount = static_cast<bits_t>(std::bitset<32>(trueBits | falseBits).count()); }
 	
 public:
 	explicit PrimeImplicant(const Minterm minterm) : trueBits(minterm), falseBits(minterm ^ maxMinterm), bitCount(::bits) {}
 	PrimeImplicant(const PrimeImplicant &) = default;
+	PrimeImplicant& operator=(const PrimeImplicant &) = default;
 	
 	constexpr bool operator==(const PrimeImplicant &other) const { return this->trueBits == other.trueBits && this->falseBits == other.falseBits && this->bitCount == other.bitCount; }
 	bool operator<(const PrimeImplicant &other) const;

@@ -48,9 +48,9 @@ void OptimizedSolutions::printNegatedInputs(std::ostream &o) const
 	o << '\n';
 }
 
-void OptimizedSolutions::printProductBody(std::ostream &o, const id_t id) const
+void OptimizedSolutions::printProductBody(std::ostream &o, const id_t productId) const
 {
-	const auto &[primeImplicant, ids] = getProduct(id);
+	const auto &[primeImplicant, ids] = getProduct(productId);
 	bool first = primeImplicant == PrimeImplicant::all();
 	if (!first || ids.empty())
 		primeImplicant.print(o, false);
@@ -64,12 +64,12 @@ void OptimizedSolutions::printProductBody(std::ostream &o, const id_t id) const
 	}
 }
 
-void OptimizedSolutions::printProduct(std::ostream &o, const id_t id) const
+void OptimizedSolutions::printProduct(std::ostream &o, const id_t productId) const
 {
 	o << '\t';
-	printHumanId(o, id);
+	printHumanId(o, productId);
 	o << " = ";
-	printProductBody(o, id);
+	printProductBody(o, productId);
 	o << '\n';
 }
 
@@ -84,10 +84,10 @@ void OptimizedSolutions::printProducts(std::ostream &o) const
 	}
 }
 
-void OptimizedSolutions::printSumBody(std::ostream &o, const id_t id) const
+void OptimizedSolutions::printSumBody(std::ostream &o, const id_t sumId) const
 {
 	bool first = true;
-	for (const auto &partId : getSum(id))
+	for (const auto &partId : getSum(sumId))
 	{
 		if (first)
 			first = false;
@@ -100,12 +100,12 @@ void OptimizedSolutions::printSumBody(std::ostream &o, const id_t id) const
 	}
 }
 
-void OptimizedSolutions::printSum(std::ostream &o, const id_t id) const
+void OptimizedSolutions::printSum(std::ostream &o, const id_t sumId) const
 {
 	o << '\t';
-	printHumanId(o, id);
+	printHumanId(o, sumId);
 	o << " = ";
-	printSumBody(o, id);
+	printSumBody(o, sumId);
 	o << '\n';
 }
 
@@ -164,13 +164,15 @@ OptimizedSolutions::finalPrimeImplicants_t OptimizedSolutions::extractCommonPart
 void OptimizedSolutions::extractCommonParts(const solutions_t &solutions, const finalPrimeImplicants_t &finalPrimeImplicants)
 {
 	std::vector<std::set<std::size_t>> oldIdSets;
-	std::size_t i = 0;
-	for (const PrimeImplicants *const solution : solutions)
 	{
-		oldIdSets.emplace_back();
-		auto &oldIdSet = oldIdSets.back();
-		for (std::size_t j = 0; j != solution->size(); ++j)
-			oldIdSet.insert(finalPrimeImplicants[i++]);
+		std::size_t i = 0;
+		for (const PrimeImplicants *const solution : solutions)
+		{
+			oldIdSets.emplace_back();
+			auto &oldIdSet = oldIdSets.back();
+			for (std::size_t j = 0; j != solution->size(); ++j)
+				oldIdSet.insert(finalPrimeImplicants[i++]);
+		}
 	}
 	const auto [newIdSets, finalIdSets, subsetSelections] = SetOptimizerForSums::optimizeSet(oldIdSets);
 	
@@ -183,8 +185,8 @@ void OptimizedSolutions::extractCommonParts(const solutions_t &solutions, const 
 		auto &sum = sums.back();
 		sum.insert(sum.end(), newIdSet.begin(), newIdSet.end());
 		sum.reserve(newIdSet.size() + subsetSelection.size());
-		for (const std::size_t &subsetSelections : subsetSelection)
-			sum.push_back(makeSumId(subsetSelections));
+		for (const std::size_t &subset : subsetSelection)
+			sum.push_back(makeSumId(subset));
 	}
 	
 	finalSums.reserve(finalIdSets.size());

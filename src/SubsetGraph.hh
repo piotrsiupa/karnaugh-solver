@@ -25,9 +25,9 @@ public:
 	using setHierarchy_t = std::vector<SetHierarchyEntry>;
 	
 private:
-	using group_t = std::vector<VALUE_T>;
+	using group_t = std::vector<value_t>;
 	using groupId_t = std::size_t;
-	using groupsMap_t = std::map<VALUE_T, std::size_t>;
+	using groupsMap_t = std::map<value_t, std::size_t>;
 	using groupedSet_t = std::vector<groupId_t>;
 	using groupedSets_t = std::vector<groupedSet_t>;
 	struct GroupedSetHierarchyEntry
