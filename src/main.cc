@@ -59,7 +59,7 @@ static void printVersion()
 
 static bool parseInputBits(Input &input)
 {
-	if (::inputTerminal)
+	if (::terminalStdin)
 		std::cerr << "Enter a list of input variables or their count:\n";
 	if (input.hasError())
 		return false;
@@ -141,7 +141,8 @@ int main(const int argc, const char *const *const argv)
 		return 0;
 	}
 	
-	::inputTerminal = isInputTerminal();
+	::terminalStdin = isStdinTerminal();
+	::terminalStderr = isStderrTerminal();
 	
 	if (!solveInput(std::cin))
 		return 1;

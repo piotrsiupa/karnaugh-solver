@@ -162,7 +162,7 @@ bool Karnaugh::loadData(Input &input)
 		functionName = input.popLine();
 	
 	
-	if (hasName && ::inputTerminal)
+	if (hasName && ::terminalStdin)
 		std::cerr << "Enter a list of minterms of the function \"" << functionName << "\":\n";
 	if (input.hasError())
 		return false;
@@ -174,7 +174,7 @@ bool Karnaugh::loadData(Input &input)
 	if (!loadMinterms(targetMinterms, input))
 		return false;
 	
-	if (::inputTerminal)
+	if (::terminalStdin)
 	{
 		std::cerr << "Enter a list of don't-cares of the function";
 		if (hasName)
@@ -201,8 +201,12 @@ bool Karnaugh::loadData(Input &input)
 
 Karnaugh::solutions_t Karnaugh::solve() const
 {
+	if (::terminalStderr)
+		std::clog << "Searching for solutions for the function \"" << functionName << "\"..." << std::endl;
 	const Karnaugh::solutions_t solutions = QuineMcCluskey().solve(allowedMinterms, targetMinterms);
 #ifndef NDEBUG
+	if (::terminalStderr)
+		std::clog << "Validating the found solutions for the function \"" << functionName << "\" (development build)..." << std::endl;
 	validate(solutions);
 #endif
 	return solutions;

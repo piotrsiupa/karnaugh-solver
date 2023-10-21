@@ -8,12 +8,20 @@
 
 
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
-bool isInputTerminal()
+static bool isTerminal(const DWORD stream)
 {
-	const HANDLE inputHandle = GetStdHandle(STD_INPUT_HANDLE);
-	if (inputHandle == INVALID_HANDLE_VALUE)
+	const HANDLE handle = GetStdHandle(stream);
+	if (handle == INVALID_HANDLE_VALUE)
 		return false;
 	DWORD consoleMode;
-	return GetConsoleMode(inputHandle, &consoleMode);
+	return GetConsoleMode(handle, &consoleMode);
+}
+bool isStdinTerminal()
+{
+	return isTerminal(STD_INPUT_HANDLE);
+}
+bool isStderrTerminal()
+{
+	return isTerminal(STD_ERROR_HANDLE);
 }
 #endif
