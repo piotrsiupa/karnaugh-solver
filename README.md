@@ -114,6 +114,8 @@ Empty lines and lines starting with `#` (comments) are ignored.
 Input:
 ```
 set, reset, output
+# Note that `output` is considered by the solver to be a normal input.
+# IDN, maybe I should pick a clearer first example, whatever.
 
 1, 4, 5
 6, 7
