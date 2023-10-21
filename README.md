@@ -42,7 +42,8 @@ Currently there is quite a few limitations both because the program is still in 
 ## Compilation
 
 The program is written in pure C++, without use of any external libraries, which makes the compilation pretty straightforward.
-(It does use some built-in *GCC* functions, which enforces usage of this specific compiler. This will be fixed in the future.)
+Any compiler conforming to the C++17 standard should be able to handle it.
+(Clang will also work because it can be made conforming by using command line flags.)
 
 You can built it in two ways:
 
@@ -66,7 +67,8 @@ scons test
 
 If you don't want to install any additional software, you can just build all `*.cc` files in the directory `src` and link them together, using your favorite toolchain.
 Default options (with optimization turned on) should work fine; there is no libraries to be linked or anything like that.
-However, defining the preprocessor macro `NDEBUG` for all files is strongly recommended because assertions can significantly increase the runtime of the resulting program, especially with high number of input variables. (In *GCC* it is done with the flag `-DNDEBUG`.)
+However, defining the preprocessor macro `NDEBUG` for all files is strongly recommended because assertions can significantly increase the runtime of the resulting program, especially with high number of input variables.
+(In most compilers, this is done with the flag `-DNDEBUG`.)
 
 
 ## License
@@ -94,9 +96,13 @@ DONT_CARES_OF_THE_SECOND_FUNCTION
 ```
 
 The description of inputs is either a list of their names or just their count.
+
 Input names, minterms and don't-cares are lists of numbers separated by whitespaces and/or and punctuation characters except `-` and `_`. (A single dash may be used to indicate an empty list.)
+
 Lines with any letters in them are considered to contain names.
+
 Leading and trailing whitespaces are stripped.
+
 Empty lines and lines starting with `#` (comments) are ignored.
 
 (See [examples](#examples).)
