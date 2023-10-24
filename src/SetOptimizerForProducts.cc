@@ -4,19 +4,19 @@
 #include <limits>
 
 
-SetOptimizerForProducts::HasseDiagram::sets_t SetOptimizerForProducts::convertSets(const sets_t &sets) const
+SetOptimizerForProducts::SubsetFinder::sets_t SetOptimizerForProducts::convertSets(const sets_t &sets) const
 {
-	HasseDiagram::sets_t convertedSets;
+	SubsetFinder::sets_t convertedSets;
 	for (const PrimeImplicant &set : sets)
 	{
-		HasseDiagram::set_t convertedSet;
+		SubsetFinder::set_t convertedSet;
 		if (set == PrimeImplicant::all())
 		{
-			convertedSet.push_back(std::numeric_limits<hasseValue_t>::max());
+			convertedSet.push_back(std::numeric_limits<valueId_t>::max());
 		}
 		else if (set == PrimeImplicant::error())
 		{
-			convertedSet.push_back(std::numeric_limits<hasseValue_t>::min());
+			convertedSet.push_back(std::numeric_limits<valueId_t>::min());
 		}
 		else
 		{
@@ -29,7 +29,7 @@ SetOptimizerForProducts::HasseDiagram::sets_t SetOptimizerForProducts::convertSe
 	return convertedSets;
 }
 
-void SetOptimizerForProducts::makeGraph(const HasseDiagram::setHierarchy_t &setHierarchy)
+void SetOptimizerForProducts::makeGraph(const SubsetFinder::setHierarchy_t &setHierarchy)
 {
 	graph.reserve(setHierarchy.size());
 	std::size_t i = 0;
@@ -37,11 +37,11 @@ void SetOptimizerForProducts::makeGraph(const HasseDiagram::setHierarchy_t &setH
 	{
 		PrimeImplicant set = PrimeImplicant::all();
 		const auto &values = setHierarchyEntry.values;
-		if (values.size() == 1 && values[0] == std::numeric_limits<hasseValue_t>::max())
+		if (values.size() == 1 && values[0] == std::numeric_limits<valueId_t>::max())
 		{
 			set = PrimeImplicant::all();
 		}
-		else if (values.size() == 1 && values[0] == std::numeric_limits<hasseValue_t>::min())
+		else if (values.size() == 1 && values[0] == std::numeric_limits<valueId_t>::min())
 		{
 			set = PrimeImplicant::error();
 		}

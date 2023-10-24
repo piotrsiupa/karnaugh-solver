@@ -12,8 +12,8 @@ public:
 	static Result optimizeSet(const sets_t &sets) { return SetOptimizerForSums().extractCommonParts(sets); }
 	
 protected:
-	HasseDiagram::sets_t convertSets(const sets_t &sets) const final;
-	void makeGraph(const HasseDiagram::setHierarchy_t &setHierarchy) final;
+	SubsetFinder::sets_t convertSets(const sets_t &sets) const final;
+	void makeGraph(const SubsetFinder::setHierarchy_t &setHierarchy) final;
 	gateCount_t countGates(const subsetSelections_t &subsetSelections, const usageCounts_t &usageCounts) const final;
 	void substractSubsets(sets_t &sets, const subsetSelections_t &subsetSelections) final;
 };

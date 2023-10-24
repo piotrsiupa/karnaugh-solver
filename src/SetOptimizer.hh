@@ -8,12 +8,12 @@
 #include "SubsetGraph.hh"
 
 
-template<typename SET, typename HASSE_VALUE, template<typename> class HASSE_CONTAINER>
+template<typename SET, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
 class SetOptimizer
 {
 protected:
-	using hasseValue_t = HASSE_VALUE;
-	using HasseDiagram = SubsetGraph<hasseValue_t, HASSE_CONTAINER>;
+	using valueId_t = VALUE_ID;
+	using SubsetFinder = SubsetGraph<valueId_t, FINDER_CONTAINER>;
 	using graph_t = std::vector<std::pair<SET, std::vector<std::size_t>>>;
 	using endNodes_t = std::set<std::size_t>;
 	using gateCount_t = std::size_t;
@@ -40,8 +40,8 @@ protected:
 	
 	Result extractCommonParts(const sets_t &sets);
 	
-	virtual typename HasseDiagram::sets_t convertSets(const sets_t &sets) const = 0;
-	virtual void makeGraph(const typename HasseDiagram::setHierarchy_t &setHierarchy) = 0;
+	virtual typename SubsetFinder::sets_t convertSets(const sets_t &sets) const = 0;
+	virtual void makeGraph(const typename SubsetFinder::setHierarchy_t &setHierarchy) = 0;
 	virtual gateCount_t countGates(const subsetSelections_t &subsetSelections, const usageCounts_t &usageCounts) const = 0;
 	virtual void substractSubsets(sets_t &sets, const subsetSelections_t &subsetSelections) = 0;
 	
