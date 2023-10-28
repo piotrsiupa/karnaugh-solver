@@ -8,20 +8,19 @@
 
 Progress::calcSubstepCompletion_t Progress::calc0SubstepCompletion = [](){ return 0.0; };
 
-Progress::steps_t Progress::calcConservativeStepsToSkip(const double secondsToSkip, const double secondsPerStep) const
+Progress::steps_t Progress::calcStepsToSkip(const double secondsToSkip, const double secondsPerStep) const
 {
-	static constexpr double initialErrorMargin = 16.0, finalErrorMargin = 2.0;
-	static steps_t substepsToReachFinalErrorMargin = 128;
-	// Error margin will slowly drop, making the the result a lot more conservative at the beginning than later on.
-	const double errorMargin = substepsSoFar <= substepsToReachFinalErrorMargin
-		? initialErrorMargin / ((static_cast<double>(substepsSoFar) / static_cast<double>(substepsToReachFinalErrorMargin) * (initialErrorMargin / finalErrorMargin - 1.0)) + 1.0)
-		: finalErrorMargin;
-	const steps_t newSubstepsToSkip = static_cast<steps_t>(secondsToSkip / secondsPerStep / errorMargin);
+	const steps_t newSubstepsToSkip = static_cast<steps_t>(secondsToSkip / secondsPerStep);
 	return std::max<steps_t>(1, newSubstepsToSkip);
 }
 
 bool Progress::checkReportInterval(const bool force)
 {
+	if (substepsSoFar == 0)
+	{
+		substepsToSkip = 1;
+		return false;
+	}
 	const timePoint_t currentTime = std::chrono::steady_clock::now();
 	const double secondsSinceStart = std::chrono::duration<double>(currentTime - startTime).count();
 	const double secondsSinceLastReport = std::chrono::duration<double>(currentTime - lastReportTime).count();
@@ -29,13 +28,13 @@ bool Progress::checkReportInterval(const bool force)
 	const double secondsPerStep = secondsSinceStart / substepsSoFar;
 	if (secondsSinceStart < 1.0 || (!force && remainingSeconds > secondsPerStep)) // Not even `force` can show progress before 1 second has passed. This is by design.
 	{
-		substepsToSkip = calcConservativeStepsToSkip(remainingSeconds, secondsPerStep);
+		substepsToSkip = calcStepsToSkip(remainingSeconds, secondsPerStep);
 		return false;
 	}
 	else
 	{
 		lastReportTime = currentTime;
-		substepsToSkip = calcConservativeStepsToSkip(reportInterval, secondsPerStep);
+		substepsToSkip = calcStepsToSkip(reportInterval, secondsPerStep);
 		return true;
 	}
 }

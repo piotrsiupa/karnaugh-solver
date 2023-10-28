@@ -29,7 +29,7 @@ private:
 	std::vector<const char*> subtaskNames;
 	bool reportVisible = false;
 	
-	steps_t calcConservativeStepsToSkip(const double secondsToSkip, const double secondsPerStep) const;
+	steps_t calcStepsToSkip(const double secondsToSkip, const double secondsPerStep) const;
 	bool checkReportInterval(const bool force);
 	static void printTime(const double seconds);
 	void clearReport();
