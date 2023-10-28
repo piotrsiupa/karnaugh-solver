@@ -113,7 +113,7 @@ inline typename PetricksMethod<INDEX_T>::sumOfProducts_t PetricksMethod<INDEX_T>
 	product_t newProduct;
 	newProduct.reserve(multiplier0.front().size() + multiplier1.front().size());
 	HasseDiagram<index_t> hasseDiagram;
-	const auto estimateCompletion = [&actualOperations = std::as_const(actualOperations), expectedOperations](){ return static_cast<Progress::completion_t>(actualOperations) / expectedOperations; };
+	const auto estimateCompletion = [&actualOperations = std::as_const(actualOperations), expectedOperations](){ return static_cast<Progress::completion_t>(actualOperations / expectedOperations); };
 	{
 		Progress::SubtaskGuard progressSubtask = progress.enterSubtask("expanding");
 		std::size_t operationsThisTime = 0;
@@ -162,7 +162,7 @@ typename PetricksMethod<INDEX_T>::sumOfProducts_t PetricksMethod<INDEX_T>::findS
 		{
 			expectedSolutions = 0.0;
 			expectedSolutions = 0.0;
-			expectedSolutions = productOfSumsOfProducts.back().size();
+			expectedSolutions = static_cast<long double>(productOfSumsOfProducts.back().size());
 			for (auto iter = std::next(productOfSumsOfProducts.crbegin()); iter != productOfSumsOfProducts.crend(); ++iter)
 			{
 				expectedSolutions *= iter->size();

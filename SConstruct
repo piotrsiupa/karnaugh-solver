@@ -5,6 +5,7 @@ env = Environment()
 if 'msvc' in env['TOOLS']:
     # Flags for MSVC.
     env.Append(CCFLAGS=['/O2', '/W4', '/std:c++17', '/FS', '/EHsc'])
+    env.Append(CPPDEFINES=['_CRT_SECURE_NO_WARNINGS'])
 else:
     # Other compilers tends to use these flags.
     env.Append(CCFLAGS=['-O3', '-Wall', '-Wextra', '-pedantic', '-std=c++17'])

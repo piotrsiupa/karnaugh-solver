@@ -16,8 +16,8 @@ Progress::steps_t Progress::calcConservativeStepsToSkip(const double secondsToSk
 	const double errorMargin = substepsSoFar <= substepsToReachFinalErrorMargin
 		? initialErrorMargin / ((static_cast<double>(substepsSoFar) / static_cast<double>(substepsToReachFinalErrorMargin) * (initialErrorMargin / finalErrorMargin - 1.0)) + 1.0)
 		: finalErrorMargin;
-	const steps_t substepsToSkip = secondsToSkip / secondsPerStep / errorMargin;
-	return std::max<steps_t>(1, substepsToSkip);
+	const steps_t newSubstepsToSkip = static_cast<steps_t>(secondsToSkip / secondsPerStep / errorMargin);
+	return std::max<steps_t>(1, newSubstepsToSkip);
 }
 
 bool Progress::checkReportInterval(const bool force)
@@ -42,15 +42,15 @@ bool Progress::checkReportInterval(const bool force)
 
 void Progress::printTime(double time)
 {
-	std::uintmax_t x = time;
-	const std::uint_fast8_t seconds = x % 60;
+	std::uintmax_t x = static_cast<std::uintmax_t>(time);
+	const std::uint_fast8_t seconds = static_cast<std::uint_fast8_t>(x % 60);
 	x /= 60;
 	time -= x * 60 + seconds / 10 * 10;
-	const std::uint_fast8_t minutes = x % 60;
+	const std::uint_fast8_t minutes = static_cast<std::uint_fast8_t>(x % 60);
 	x /= 60;
-	const uint_fast8_t hours = x % 24;
+	const uint_fast8_t hours = static_cast<std::uint_fast8_t>(x % 24);
 	x /= 24;
-	const uint_fast8_t days = x % 365;
+	const uint_fast8_t days = static_cast<std::uint_fast8_t>(x % 365);
 	x /= 365;
 	const uintmax_t years = x;
 	if (years != 0)
@@ -95,7 +95,7 @@ void Progress::reportProgress(const calcSubstepCompletion_t &calcSubstepCompleti
 		std::clog << " -> " << subtaskName;
 	std::clog << "...\n";
 	
-	const std::uint_fast8_t progressBarLenght = 78 * completion;
+	const std::uint_fast8_t progressBarLenght = static_cast<std::uint_fast8_t>(78 * completion);
 	std::clog << '[' << std::setfill('#') << std::setw(progressBarLenght) << "" << std::setfill('.') << std::setw(78 - progressBarLenght) << "" << ']' << '\n';
 	
 	const timePoint_t currentTime = std::chrono::steady_clock::now();
