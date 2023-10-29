@@ -19,3 +19,9 @@ It takes one argument which is the path to the program which will be tested.
 
 It's just some script I use for benchmarking.
 You can run it with the option `--help` if you're interested.
+
+
+# `tests/gen-random-input.py`
+
+It's a simple script for generating random inputs for the program.
+You can run it with the option `--help` if you're interested.
