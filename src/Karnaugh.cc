@@ -5,6 +5,7 @@
 #include <cctype>
 #include <iostream>
 
+#include "Progress.hh"
 #include "QuineMcCluskey.hh"
 
 
@@ -139,16 +140,21 @@ bool Karnaugh::loadMinterms(Minterms &minterms, Input &input) const
 #ifndef NDEBUG
 void Karnaugh::validate(const solutions_t &solutions) const
 {
-	for (Minterm i = 0;; ++i)
+	const std::string progressName = "Validating solutions for \"" + functionName + "\" (development build)";
+	Progress progress(progressName.c_str(), solutions.size());
+	for (const PrimeImplicants &solution : solutions)
 	{
-		if (targetMinterms.find(i) != targetMinterms.cend())
-			for (const PrimeImplicants &solution : solutions)
+		progress.step();
+		for (Minterm i = 0;; ++i)
+		{
+			progress.substep([i = std::as_const(i)](){ return static_cast<Progress::completion_t>(i) / (static_cast<Progress::completion_t>(::maxMinterm) + 1.0); });
+			if (targetMinterms.find(i) != targetMinterms.cend())
 				assert(solution.covers(i));
-		else if (allowedMinterms.find(i) == allowedMinterms.cend())
-			for (const PrimeImplicants &solution : solutions)
+			else if (allowedMinterms.find(i) == allowedMinterms.cend())
 				assert(!solution.covers(i));
-		if (i == ::maxMinterm)
-			break;
+			if (i == ::maxMinterm)
+				break;
+		}
 	}
 }
 #endif
@@ -205,8 +211,6 @@ Karnaugh::solutions_t Karnaugh::solve() const
 		std::clog << "Searching for solutions for the function \"" << functionName << "\"..." << std::endl;
 	const Karnaugh::solutions_t solutions = QuineMcCluskey().solve(allowedMinterms, targetMinterms);
 #ifndef NDEBUG
-	if (::terminalStderr)
-		std::clog << "Validating the found solutions for the function \"" << functionName << "\" (development build)..." << std::endl;
 	validate(solutions);
 #endif
 	return solutions;
