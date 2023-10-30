@@ -51,7 +51,7 @@ void OptimizedSolutions::printNegatedInputs(std::ostream &o) const
 void OptimizedSolutions::printProductBody(std::ostream &o, const id_t productId) const
 {
 	const auto &[primeImplicant, ids] = getProduct(productId);
-	bool first = primeImplicant == PrimeImplicant::all();
+	bool first = primeImplicant == Implicant::all();
 	if (!first || ids.empty())
 		primeImplicant.print(o, false);
 	for (const auto &id : ids)
@@ -141,15 +141,15 @@ void OptimizedSolutions::printGateScores(std::ostream &o) const
 
 void OptimizedSolutions::createNegatedInputs(const solutions_t &solutions)
 {
-	for (const PrimeImplicants *const solution : solutions)
+	for (const Implicants *const solution : solutions)
 		for (const auto &x : *solution)
 			negatedInputs |= x.getFalseBits();
 }
 
 OptimizedSolutions::finalPrimeImplicants_t OptimizedSolutions::extractCommonProductParts(const solutions_t &solutions, Progress &progress)
 {
-	std::vector<PrimeImplicant> oldPrimeImplicants;
-	for (const PrimeImplicants *const solution : solutions)
+	std::vector<Implicant> oldPrimeImplicants;
+	for (const Implicants *const solution : solutions)
 		for (const auto &product: *solution)
 			oldPrimeImplicants.push_back(product);
 	const auto [newPrimeImplicants, finalPrimeImplicants, subsetSelections] = SetOptimizerForProducts::optimizeSet(oldPrimeImplicants, progress);
@@ -166,7 +166,7 @@ void OptimizedSolutions::extractCommonSumParts(const solutions_t &solutions, con
 	std::vector<std::set<std::size_t>> oldIdSets;
 	{
 		std::size_t i = 0;
-		for (const PrimeImplicants *const solution : solutions)
+		for (const Implicants *const solution : solutions)
 		{
 			oldIdSets.emplace_back();
 			auto &oldIdSet = oldIdSets.back();
@@ -223,11 +223,11 @@ OptimizedSolutions::normalizedSolution_t OptimizedSolutions::normalizeSolution(c
 	for (const id_t &rootProductId : rootProductIds)
 	{
 		idsToProcess.push_back(rootProductId);
-		PrimeImplicant resultingProduct = PrimeImplicant::all();
+		Implicant resultingProduct = Implicant::all();
 		while (!idsToProcess.empty())
 		{
 			const product_t &product = getProduct(idsToProcess.back());
-			assert(product.first.getBitCount() != 0 || (product.first == PrimeImplicant::all() && !product.second.empty()));
+			assert(product.first.getBitCount() != 0 || (product.first == Implicant::all() && !product.second.empty()));
 			idsToProcess.pop_back();
 			resultingProduct |= product.first;
 			idsToProcess.insert(idsToProcess.end(), product.second.cbegin(), product.second.cend());

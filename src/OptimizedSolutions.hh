@@ -7,20 +7,20 @@
 #include <utility>
 #include <vector>
 
-#include "PrimeImplicant.hh"
-#include "PrimeImplicants.hh"
+#include "Implicant.hh"
+#include "Implicants.hh"
 #include "Progress.hh"
 
 
 class OptimizedSolutions
 {
 public:
-	using solutions_t = std::vector<const PrimeImplicants*>;
+	using solutions_t = std::vector<const Implicants*>;
 	
 private:
 	using id_t = std::size_t;
 	using ids_t = std::vector<id_t>;
-	using product_t = std::pair<PrimeImplicant, ids_t>;
+	using product_t = std::pair<Implicant, ids_t>;
 	using sum_t = ids_t;
 	using finalPrimeImplicants_t = std::vector<std::size_t>;
 	
@@ -57,7 +57,7 @@ private:
 	const sum_t& getSum(const id_t id) const { return sums[id - products.size()]; }
 	
 #ifndef NDEBUG
-	using normalizedSolution_t = std::set<PrimeImplicant>;
+	using normalizedSolution_t = std::set<Implicant>;
 	normalizedSolution_t normalizeSolution(const id_t finalSumId) const;
 	void validate(const solutions_t &solutions) const;
 #endif

@@ -222,7 +222,7 @@ typename SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::finalSets_t SetOptimizer
 }
 
 
-#include "PrimeImplicant.hh"
+#include "Implicant.hh"
 
-template class SetOptimizer<PrimeImplicant, std::int_fast8_t, std::vector>;
+template class SetOptimizer<Implicant, std::int_fast8_t, std::vector>;
 template class SetOptimizer<std::set<std::size_t>, std::size_t, std::set>;

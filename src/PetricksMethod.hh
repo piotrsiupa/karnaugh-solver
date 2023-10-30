@@ -5,9 +5,9 @@
 #include <utility>
 #include <vector>
 
+#include "Implicants.hh"
 #include "Minterm.hh"
 #include "HasseDiagram.hh"
-#include "PrimeImplicants.hh"
 #include "Progress.hh"
 
 
@@ -16,7 +16,7 @@ class PetricksMethod
 {
 public:
 	using minterms_t = std::set<Minterm>;
-	using solutions_t = std::vector<PrimeImplicants>;
+	using solutions_t = std::vector<Implicants>;
 	
 private:
 	using index_t = INDEX_T;
@@ -26,12 +26,12 @@ private:
 	using productOfSumsOfProducts_t = std::vector<sumOfProducts_t>;
 	
 	minterms_t minterms;
-	PrimeImplicants primeImplicants;
+	Implicants primeImplicants;
 	
-	PetricksMethod(minterms_t &&minterms, PrimeImplicants &&primeImplicants) : minterms(std::move(minterms)), primeImplicants(std::move(primeImplicants)) {}
+	PetricksMethod(minterms_t &&minterms, Implicants &&primeImplicants) : minterms(std::move(minterms)), primeImplicants(std::move(primeImplicants)) {}
 	
 	index_t findEssentialPrimeImplicantIndex(const Minterm minterm);
-	PrimeImplicants extractEssentials();
+	Implicants extractEssentials();
 	productOfSumsOfProducts_t createPreliminaryProductOfSums() const;
 	static void removeRedundantSums(productOfSumsOfProducts_t &productOfSums);
 	productOfSumsOfProducts_t createProductOfSums() const;
@@ -43,5 +43,5 @@ private:
 public:
 	static constexpr std::size_t MAX_PRIME_IMPL_COUNT = HasseDiagram<index_t>::MAX_VALUE;
 	
-	static solutions_t solve(minterms_t minterms, PrimeImplicants primeImplicants, Progress &progress) { return PetricksMethod(std::move(minterms), std::move(primeImplicants)).solve(progress); }
+	static solutions_t solve(minterms_t minterms, Implicants primeImplicants, Progress &progress) { return PetricksMethod(std::move(minterms), std::move(primeImplicants)).solve(progress); }
 };

@@ -7,14 +7,14 @@
 SetOptimizerForProducts::SubsetFinder::sets_t SetOptimizerForProducts::convertSets(const sets_t &sets) const
 {
 	SubsetFinder::sets_t convertedSets;
-	for (const PrimeImplicant &set : sets)
+	for (const Implicant &set : sets)
 	{
 		SubsetFinder::set_t convertedSet;
-		if (set == PrimeImplicant::all())
+		if (set == Implicant::all())
 		{
 			convertedSet.push_back(std::numeric_limits<valueId_t>::max());
 		}
-		else if (set == PrimeImplicant::error())
+		else if (set == Implicant::error())
 		{
 			convertedSet.push_back(std::numeric_limits<valueId_t>::min());
 		}
@@ -35,15 +35,15 @@ void SetOptimizerForProducts::makeGraph(const SubsetFinder::setHierarchy_t &setH
 	std::size_t i = 0;
 	for (auto &setHierarchyEntry : setHierarchy)
 	{
-		PrimeImplicant set = PrimeImplicant::all();
+		Implicant set = Implicant::all();
 		const auto &values = setHierarchyEntry.values;
 		if (values.size() == 1 && values[0] == std::numeric_limits<valueId_t>::max())
 		{
-			set = PrimeImplicant::all();
+			set = Implicant::all();
 		}
 		else if (values.size() == 1 && values[0] == std::numeric_limits<valueId_t>::min())
 		{
-			set = PrimeImplicant::error();
+			set = Implicant::error();
 		}
 		else
 		{
@@ -68,7 +68,7 @@ SetOptimizerForProducts::gateCount_t SetOptimizerForProducts::countGates(const s
 		if (usageCounts[i] == 0)
 			continue;
 		gates += subsetSelections[i].size();
-		PrimeImplicant reducedProduct = graph[i].first;
+		Implicant reducedProduct = graph[i].first;
 		for (const std::size_t &subset : subsetSelections[i])
 			reducedProduct -= graph[subset].first;
 		gates += reducedProduct.getBitCount();

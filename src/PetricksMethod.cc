@@ -29,9 +29,9 @@ typename PetricksMethod<INDEX_T>::index_t PetricksMethod<INDEX_T>::findEssential
 }
 
 template<typename INDEX_T>
-PrimeImplicants PetricksMethod<INDEX_T>::extractEssentials()
+Implicants PetricksMethod<INDEX_T>::extractEssentials()
 {
-	PrimeImplicants essentials;
+	Implicants essentials;
 	for (typename minterms_t::const_iterator iter = minterms.cbegin(); iter != minterms.cend();)
 	{
 		const index_t essentialPrimeImplicantIndex = findEssentialPrimeImplicantIndex(*iter);
@@ -42,7 +42,7 @@ PrimeImplicants PetricksMethod<INDEX_T>::extractEssentials()
 		}
 		essentials.emplace_back(std::move(primeImplicants[essentialPrimeImplicantIndex]));
 		primeImplicants.erase(primeImplicants.begin() + essentialPrimeImplicantIndex);
-		const PrimeImplicant &primeImplicant = essentials.back();
+		const Implicant &primeImplicant = essentials.back();
 		for (typename minterms_t::const_iterator jiter = minterms.cbegin(); jiter != iter;)
 			if (primeImplicant.covers(*jiter))
 				jiter = minterms.erase(jiter);
@@ -195,13 +195,13 @@ typename PetricksMethod<INDEX_T>::sumOfProducts_t PetricksMethod<INDEX_T>::findS
 template<typename INDEX_T>
 typename PetricksMethod<INDEX_T>::solutions_t PetricksMethod<INDEX_T>::solve(Progress &progress)
 {
-	PrimeImplicants essentials = extractEssentials();
+	Implicants essentials = extractEssentials();
 	sumOfProducts_t sumOfProducts = findSumOfProducts(progress);
 	
 	if (sumOfProducts.empty())
 		return !essentials.empty()
 			? solutions_t{std::move(essentials)}
-			: solutions_t{{PrimeImplicant::error()}};
+			: solutions_t{{Implicant::error()}};
 	
 	solutions_t solutions;
 	solutions.reserve(sumOfProducts.size());

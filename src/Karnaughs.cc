@@ -66,7 +66,7 @@ void Karnaughs::findBestSolutions(const solutionses_t &solutionses, solutions_t 
 	for (std::vector<std::size_t> indexes(solutionses.size(), 0);;)
 	{
 		progress.step();
-		std::vector<const PrimeImplicants*> solutions;
+		std::vector<const Implicants*> solutions;
 		solutions.reserve(indexes.size());
 		for (std::size_t i = 0; i != indexes.size(); ++i)
 			solutions.push_back(&solutionses[i][indexes[i]]);

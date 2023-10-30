@@ -74,36 +74,36 @@ void Karnaugh::prettyPrintTable() const
 	return prettyPrintTable(targetMinterms, allowedMinterms);
 }
 
-void Karnaugh::prettyPrintSolution(const PrimeImplicants &solution)
+void Karnaugh::prettyPrintSolution(const Implicants &solution)
 {
 	Minterms minterms;
-	for (const auto &primeImplicant : solution)
+	for (const auto &implicant : solution)
 	{
-		const auto newMinterms = primeImplicant.findMinterms();
+		const auto newMinterms = implicant.findMinterms();
 		minterms.insert(newMinterms.cbegin(), newMinterms.end());
 	}
 	prettyPrintTable(minterms);
 }
 
-void Karnaugh::printPrimeImplicant(const PrimeImplicant primeImplicant, const bool parentheses) const
+void Karnaugh::printPrimeImplicant(const Implicant implicant, const bool parentheses) const
 {
-	return primeImplicant.print(std::cout, parentheses);
+	return implicant.print(std::cout, parentheses);
 }
 
-void Karnaugh::printPrimeImplicants(PrimeImplicants primeImplicants) const
+void Karnaugh::printPrimeImplicants(Implicants implicants) const
 {
-	if (primeImplicants.size() == 1)
+	if (implicants.size() == 1)
 	{
-		printPrimeImplicant(primeImplicants.front(), false);
+		printPrimeImplicant(implicants.front(), false);
 	}
 	else
 	{
-		std::sort(primeImplicants.begin(), primeImplicants.end());
-		for (const PrimeImplicant &primeImplicant : primeImplicants)
+		std::sort(implicants.begin(), implicants.end());
+		for (const Implicant &implicant : implicants)
 		{
-			if (&primeImplicant != &primeImplicants.front())
+			if (&implicant != &implicants.front())
 				std::cout << " || ";
-			printPrimeImplicant(primeImplicant, true);
+			printPrimeImplicant(implicant, true);
 		}
 	}
 }
@@ -142,7 +142,7 @@ void Karnaugh::validate(const solutions_t &solutions) const
 {
 	const std::string progressName = "Validating solutions for \"" + functionName + "\" (development build)";
 	Progress progress(progressName.c_str(), solutions.size());
-	for (const PrimeImplicants &solution : solutions)
+	for (const Implicants &solution : solutions)
 	{
 		progress.step();
 		for (Minterm i = 0;; ++i)
@@ -217,7 +217,7 @@ Karnaugh::solutions_t Karnaugh::solve() const
 	return solutions;
 }
 
-void Karnaugh::printSolution(const PrimeImplicants &solution) const
+void Karnaugh::printSolution(const Implicants &solution) const
 {
 	if (::bits <= 8)
 	{

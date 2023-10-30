@@ -3,13 +3,13 @@
 #include <vector>
 
 #include "Minterm.hh"
-#include "PrimeImplicant.hh"
+#include "Implicant.hh"
 
 
-class PrimeImplicants : public std::vector<PrimeImplicant>
+class Implicants : public std::vector<Implicant>
 {
 public:
-	using std::vector<PrimeImplicant>::vector;
+	using std::vector<Implicant>::vector;
 	
 #ifndef NDEBUG
 	bool covers(const Minterm minterm) const;

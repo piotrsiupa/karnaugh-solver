@@ -3,12 +3,12 @@
 #include <cstdint>
 #include <vector>
 
-#include "PrimeImplicant.hh"
+#include "Implicant.hh"
 #include "Progress.hh"
 #include "SetOptimizer.hh"
 
 
-class SetOptimizerForProducts : public SetOptimizer<PrimeImplicant, std::int_fast8_t, std::vector>
+class SetOptimizerForProducts : public SetOptimizer<Implicant, std::int_fast8_t, std::vector>
 {
 public:
 	static Result optimizeSet(const sets_t &sets, Progress &progress) { const auto subtaskGuard = progress.enterSubtask("Products"); return SetOptimizerForProducts().extractCommonParts(sets, progress); }

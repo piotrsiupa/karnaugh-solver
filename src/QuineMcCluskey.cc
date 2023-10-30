@@ -7,39 +7,39 @@
 #include "PetricksMethod.hh"
 
 
-PrimeImplicants QuineMcCluskey::findPrimeImplicants(const Minterms &allowedMinterms) const
+Implicants QuineMcCluskey::findPrimeImplicants(const Minterms &allowedMinterms) const
 {
-	std::vector<std::pair<PrimeImplicant, bool>> oldPrimeImplicants;
+	std::vector<std::pair<Implicant, bool>> oldImplicants;
 	for (const Minterm &minterm : allowedMinterms)
-		oldPrimeImplicants.emplace_back(PrimeImplicant{minterm}, false);
+		oldImplicants.emplace_back(Implicant{minterm}, false);
 	
-	PrimeImplicants primeImplicants;
+	Implicants primeImplicants;
 	
-	while (!oldPrimeImplicants.empty())
+	while (!oldImplicants.empty())
 	{
-		std::set<PrimeImplicant> newPrimeImplicants;
+		std::set<Implicant> newImplicants;
 		
-		for (auto iter = oldPrimeImplicants.begin(); iter != oldPrimeImplicants.end(); ++iter)
+		for (auto iter = oldImplicants.begin(); iter != oldImplicants.end(); ++iter)
 		{
-			for (auto jiter = std::next(iter); jiter != oldPrimeImplicants.end(); ++jiter)
+			for (auto jiter = std::next(iter); jiter != oldImplicants.end(); ++jiter)
 			{
-				if (PrimeImplicant::areMergeable(iter->first, jiter->first))
+				if (Implicant::areMergeable(iter->first, jiter->first))
 				{
-					newPrimeImplicants.insert(PrimeImplicant::merge(iter->first, jiter->first));
+					newImplicants.insert(Implicant::merge(iter->first, jiter->first));
 					iter->second = true;
 					jiter->second = true;
 				}
 			}
 		}
 		
-		for (const auto &[primeImplicant, merged] : oldPrimeImplicants)
+		for (const auto &[implicant, merged] : oldImplicants)
 			if (!merged)
-				primeImplicants.push_back(primeImplicant);
-		oldPrimeImplicants.clear();
+				primeImplicants.push_back(implicant);
+		oldImplicants.clear();
 		
-		oldPrimeImplicants.reserve(newPrimeImplicants.size());
-		for (const auto &newPrimeImplicant : newPrimeImplicants)
-			oldPrimeImplicants.emplace_back(newPrimeImplicant, false);
+		oldImplicants.reserve(newImplicants.size());
+		for (const auto &newImplicant : newImplicants)
+			oldImplicants.emplace_back(newImplicant, false);
 	}
 	
 	return primeImplicants;
@@ -47,7 +47,7 @@ PrimeImplicants QuineMcCluskey::findPrimeImplicants(const Minterms &allowedMinte
 
 QuineMcCluskey::solutions_t QuineMcCluskey::solve(const Minterms &allowedMinterms, const Minterms &targetMinterms, Progress &progress) const
 {
-	PrimeImplicants primeImplicants = findPrimeImplicants(allowedMinterms);
+	Implicants primeImplicants = findPrimeImplicants(allowedMinterms);
 	if (primeImplicants.size() <= PetricksMethod<std::uint8_t>::MAX_PRIME_IMPL_COUNT)
 		return PetricksMethod<std::uint8_t>::solve(targetMinterms, std::move(primeImplicants), progress);
 	else if (primeImplicants.size() <= PetricksMethod<std::uint16_t>::MAX_PRIME_IMPL_COUNT)

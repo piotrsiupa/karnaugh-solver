@@ -4,17 +4,17 @@
 #include <vector>
 
 #include "global.hh"
+#include "Implicant.hh"
+#include "Implicants.hh"
 #include "Input.hh"
 #include "Minterm.hh"
 #include "Minterms.hh"
-#include "PrimeImplicant.hh"
-#include "PrimeImplicants.hh"
 
 
 class Karnaugh
 {
 public:
-	using solutions_t = std::vector<PrimeImplicants>;
+	using solutions_t = std::vector<Implicants>;
 	
 private:
 	using grayCode_t = std::vector<Minterm>;
@@ -28,9 +28,9 @@ private:
 	static void printBits(const Minterm minterm, const bits_t bitCount);
 	static void prettyPrintTable(const Minterms &target, const Minterms &allowed = {});
 	void prettyPrintTable() const;
-	static void prettyPrintSolution(const PrimeImplicants &solution);
-	void printPrimeImplicant(const PrimeImplicant primeImplicant, const bool parentheses) const;
-	void printPrimeImplicants(PrimeImplicants primeImplicants) const;
+	static void prettyPrintSolution(const Implicants &solution);
+	void printPrimeImplicant(const Implicant implicant, const bool parentheses) const;
+	void printPrimeImplicants(Implicants implicants) const;
 	
 	bool loadMinterms(Minterms &minterms, Input &input) const;
 #ifndef NDEBUG
@@ -47,5 +47,5 @@ public:
 	bool loadData(Input &input);
 	solutions_t solve() const;
 	
-	void printSolution(const PrimeImplicants &solution) const;
+	void printSolution(const Implicants &solution) const;
 };

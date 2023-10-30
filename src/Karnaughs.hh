@@ -2,16 +2,16 @@
 
 #include <vector>
 
+#include "Implicants.hh"
 #include "Input.hh"
 #include "Karnaugh.hh"
 #include "OptimizedSolutions.hh"
-#include "PrimeImplicants.hh"
 
 
 class Karnaughs
 {
 	using karnaughs_t = std::vector<Karnaugh>;
-	using solutions_t = std::vector<PrimeImplicants>;
+	using solutions_t = std::vector<Implicants>;
 	using solutionses_t = std::vector<solutions_t>;
 	
 	karnaughs_t karnaughs;

@@ -1,7 +1,7 @@
-#include "PrimeImplicant.hh"
+#include "Implicant.hh"
 
 
-bool PrimeImplicant::operator<(const PrimeImplicant &other) const
+bool Implicant::operator<(const Implicant &other) const
 {
 	if (this->bitCount != other.bitCount)
 		return this->bitCount < other.bitCount;
@@ -12,7 +12,7 @@ bool PrimeImplicant::operator<(const PrimeImplicant &other) const
 	return this->trueBits > other.trueBits;
 }
 
-PrimeImplicant::splitBits_t PrimeImplicant::splitBits() const
+Implicant::splitBits_t Implicant::splitBits() const
 {
 	splitBits_t splitBits;
 	for (bits_t i = 0; i != ::bits; ++i)
@@ -25,7 +25,7 @@ PrimeImplicant::splitBits_t PrimeImplicant::splitBits() const
 	return splitBits;
 }
 
-PrimeImplicant::minterms_t PrimeImplicant::findMinterms() const
+Implicant::minterms_t Implicant::findMinterms() const
 {
 	minterms_t minterms;
 	for (Minterm minterm = 0; minterm != ::maxMinterm; ++minterm)
@@ -36,7 +36,7 @@ PrimeImplicant::minterms_t PrimeImplicant::findMinterms() const
 	return minterms;
 }
 
-bool PrimeImplicant::areMergeable(const PrimeImplicant &x, const PrimeImplicant &y)
+bool Implicant::areMergeable(const Implicant &x, const Implicant &y)
 {
 	if (x.bitCount != y.bitCount)
 		return false;
@@ -47,12 +47,12 @@ bool PrimeImplicant::areMergeable(const PrimeImplicant &x, const PrimeImplicant 
 	return std::bitset<32>(trueBitsDiff).count() == 1;
 }
 
-PrimeImplicant PrimeImplicant::merge(const PrimeImplicant &x, const PrimeImplicant &y)
+Implicant Implicant::merge(const Implicant &x, const Implicant &y)
 {
-	return PrimeImplicant(x.trueBits & y.trueBits, x.falseBits & y.falseBits, x.bitCount - 1);
+	return Implicant(x.trueBits & y.trueBits, x.falseBits & y.falseBits, x.bitCount - 1);
 }
 
-void PrimeImplicant::print(std::ostream &o, const bool parentheses) const
+void Implicant::print(std::ostream &o, const bool parentheses) const
 {
 	if (bitCount == 0)
 	{
