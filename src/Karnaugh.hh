@@ -29,8 +29,6 @@ private:
 	static void prettyPrintTable(const Minterms &target, const Minterms &allowed = {});
 	void prettyPrintTable() const;
 	static void prettyPrintSolution(const Implicants &solution);
-	void printPrimeImplicant(const Implicant implicant, const bool parentheses) const;
-	void printPrimeImplicants(Implicants implicants) const;
 	
 	bool loadMinterms(Minterms &minterms, Input &input) const;
 #ifndef NDEBUG

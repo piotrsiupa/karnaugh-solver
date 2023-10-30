@@ -1,6 +1,5 @@
 #include "./Karnaugh.hh"
 
-#include <algorithm>
 #include <cassert>
 #include <cctype>
 #include <iostream>
@@ -83,29 +82,6 @@ void Karnaugh::prettyPrintSolution(const Implicants &solution)
 		minterms.insert(newMinterms.cbegin(), newMinterms.end());
 	}
 	prettyPrintTable(minterms);
-}
-
-void Karnaugh::printPrimeImplicant(const Implicant implicant, const bool parentheses) const
-{
-	return implicant.print(std::cout, parentheses);
-}
-
-void Karnaugh::printPrimeImplicants(Implicants implicants) const
-{
-	if (implicants.size() == 1)
-	{
-		printPrimeImplicant(implicants.front(), false);
-	}
-	else
-	{
-		std::sort(implicants.begin(), implicants.end());
-		for (const Implicant &implicant : implicants)
-		{
-			if (&implicant != &implicants.front())
-				std::cout << " || ";
-			printPrimeImplicant(implicant, true);
-		}
-	}
 }
 
 bool Karnaugh::loadMinterms(Minterms &minterms, Input &input) const
@@ -236,6 +212,6 @@ void Karnaugh::printSolution(const Implicants &solution) const
 	}
 	
 	std::cout << "solution:\n";
-	printPrimeImplicants(solution);
+	Implicants(solution).sort().print(std::cout);
 	std::cout << std::endl;
 }
