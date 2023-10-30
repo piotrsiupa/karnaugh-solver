@@ -1,20 +1,55 @@
 #include "./SetOptimizer.hh"
 
 #include <algorithm>
+#include <cmath>
 #include <cstdint>
 
 
 template<typename SET, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
-typename SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::Result SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::extractCommonParts(const sets_t &oldSets)
+typename SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::Result SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::extractCommonParts(const sets_t &oldSets, Progress &progress)
 {
 	const typename SubsetFinder::setHierarchy_t setHierarchy = SubsetFinder::makeSetHierarchy(convertSets(oldSets));
 	makeGraph(setHierarchy);
-	auto [subsetSelections, usageCounts] = findBestSubsets();
+	auto [subsetSelections, usageCounts] = findBestSubsets(progress);
 	removeUnusedSubsets(subsetSelections, usageCounts);
 	sets_t newSets = makeSets();
 	const finalSets_t finalSets = makeFinalSets(oldSets, newSets);
 	substractSubsets(newSets, subsetSelections);
 	return {newSets, finalSets, subsetSelections};
+}
+
+template<typename SET, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
+std::pair<Progress::completion_t, Progress::completion_t> SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::estimateCompletion(const subsetSelection_t &subsetSelection, const possibleSubsets_t &possibleSubsets)
+{
+	const Progress::completion_t stepCompletion = 1.0 / std::pow(2.0, possibleSubsets.size());
+	Progress::completion_t completion = 0.0, currentPositionWeight = 1.0;
+	std::size_t lastSubset = 0;
+	for (const std::size_t &subset : subsetSelection)
+	{
+		currentPositionWeight /= 2.0;
+		while (++lastSubset != subset + 1)
+		{
+			completion += currentPositionWeight;
+			currentPositionWeight /= 2.0;
+		}
+		completion += stepCompletion;
+	}
+	return {stepCompletion, completion};
+}
+
+template<typename SET, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
+Progress::completion_t SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::estimateCompletion(const subsetSelections_t &subsetSelections, const usageCounts_t &usageCounts) const
+{
+	Progress::completion_t completion = 0.0;
+	for (std::size_t i = 0; i != subsetSelections.size(); ++i)
+	{
+		if (usageCounts[i] == 0)
+			continue;
+		const auto [partialStepCompletion, partialCompletion] = estimateCompletion(subsetSelections[i], graph[i].second);
+		completion *= partialStepCompletion;
+		completion += partialCompletion;
+	}
+	return completion;
 }
 
 template<typename SET, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
@@ -26,7 +61,7 @@ bool SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::chooseNextSubsets(subsetSele
 	{
 		if (usageCounts[i] == 0)
 			continue;
-		const std::vector<std::size_t> &possibleSubsets = graph[i].second;
+		const possibleSubsets_t &possibleSubsets = graph[i].second;
 		if (possibleSubsets.empty())
 			continue;
 		subsetSelection_t &subsetSelection = subsetSelections[i];
@@ -87,15 +122,17 @@ void SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::removeRedundantNodes(subsetS
 }
 
 template<typename SET, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
-std::pair<typename SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::subsetSelections_t, typename SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::usageCounts_t> SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::findBestSubsets() const
+std::pair<typename SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::subsetSelections_t, typename SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::usageCounts_t> SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::findBestSubsets(Progress &progress) const
 {
 	subsetSelections_t subsetSelections(graph.size()), bestSubsetSelections(graph.size());
 	usageCounts_t usageCounts(graph.size()), bestUsageCounts(graph.size());
 	for (const std::size_t endNode : endNodes)
 		usageCounts[endNode] = SIZE_MAX - graph.size();
 	std::size_t bestGates = SIZE_MAX;
+	const auto estimateCompletion = [this, &subsetSelections = std::as_const(subsetSelections), &usageCounts = std::as_const(usageCounts)](){ return SetOptimizer::estimateCompletion(subsetSelections, usageCounts); };
 	while (true)
 	{
+		progress.substep(estimateCompletion);
 		subsetSelections_t candidateSubsetSelections(subsetSelections.size());
 		for (std::size_t i = 0; i != subsetSelections.size(); ++i)
 		{

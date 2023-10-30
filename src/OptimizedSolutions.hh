@@ -9,6 +9,7 @@
 
 #include "PrimeImplicant.hh"
 #include "PrimeImplicants.hh"
+#include "Progress.hh"
 
 
 class OptimizedSolutions
@@ -46,8 +47,8 @@ private:
 	void printGateScores(std::ostream &o) const;
 	
 	void createNegatedInputs(const solutions_t &solutions);
-	finalPrimeImplicants_t extractCommonParts(const solutions_t &solutions);
-	void extractCommonParts(const solutions_t &solutions, const finalPrimeImplicants_t &finalPrimeImplicants);
+	finalPrimeImplicants_t extractCommonProductParts(const solutions_t &solutions, Progress &progress);
+	void extractCommonSumParts(const solutions_t &solutions, const finalPrimeImplicants_t &finalPrimeImplicants, Progress &progress);
 	
 	static id_t makeProductId(const std::size_t index) { return index; }
 	id_t makeSumId(const std::size_t index) const { return index + products.size(); }
@@ -63,7 +64,7 @@ private:
 	
 public:
 	OptimizedSolutions() = default;
-	OptimizedSolutions(const solutions_t &solutions);
+	OptimizedSolutions(const solutions_t &solutions, Progress &progress);
 	
 	std::size_t getSize() const { return finalSums.size(); }
 	

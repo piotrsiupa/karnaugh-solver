@@ -2,6 +2,8 @@
 
 #include <iostream>
 
+#include "Progress.hh"
+
 
 void Karnaughs::printSolutions(const solutions_t &solutions) const
 {
@@ -54,23 +56,21 @@ void Karnaughs::findBestSolutions(const solutionses_t &solutionses, solutions_t 
 	if (solutionses.empty())
 		return;
 	
-	if (::terminalStderr)
-		std::clog << "Eliminating common subexpressions..." << std::endl;
 	bestSolutions.resize(solutionses.size());
 	std::size_t bestGateScore = SIZE_MAX;
-	std::size_t n = 1, i = 0;
+	Progress::steps_t steps = 1;
 	if (::terminalStderr)
 		for (const solutions_t &solutions : solutionses)
-			n *= solutions.size();
+			steps *= solutions.size();
+	Progress progress("Eliminating common subexpressions", steps);
 	for (std::vector<std::size_t> indexes(solutionses.size(), 0);;)
 	{
-		if (::terminalStderr)
-			std::clog << '\t' << ++i << '/' << n << "..." << std::endl;
+		progress.step();
 		std::vector<const PrimeImplicants*> solutions;
 		solutions.reserve(indexes.size());
 		for (std::size_t i = 0; i != indexes.size(); ++i)
 			solutions.push_back(&solutionses[i][indexes[i]]);
-		OptimizedSolutions currentOSs(solutions);
+		OptimizedSolutions currentOSs(solutions, progress);
 		
 		if (currentOSs.getGateScore() < bestGateScore)
 		{

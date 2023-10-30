@@ -146,13 +146,13 @@ void OptimizedSolutions::createNegatedInputs(const solutions_t &solutions)
 			negatedInputs |= x.getFalseBits();
 }
 
-OptimizedSolutions::finalPrimeImplicants_t OptimizedSolutions::extractCommonParts(const solutions_t &solutions)
+OptimizedSolutions::finalPrimeImplicants_t OptimizedSolutions::extractCommonProductParts(const solutions_t &solutions, Progress &progress)
 {
 	std::vector<PrimeImplicant> oldPrimeImplicants;
 	for (const PrimeImplicants *const solution : solutions)
 		for (const auto &product: *solution)
 			oldPrimeImplicants.push_back(product);
-	const auto [newPrimeImplicants, finalPrimeImplicants, subsetSelections] = SetOptimizerForProducts::optimizeSet(oldPrimeImplicants);
+	const auto [newPrimeImplicants, finalPrimeImplicants, subsetSelections] = SetOptimizerForProducts::optimizeSet(oldPrimeImplicants, progress);
 	
 	products.reserve(subsetSelections.size());
 	for (std::size_t i = 0; i != subsetSelections.size(); ++i)
@@ -161,7 +161,7 @@ OptimizedSolutions::finalPrimeImplicants_t OptimizedSolutions::extractCommonPart
 	return finalPrimeImplicants;
 }
 
-void OptimizedSolutions::extractCommonParts(const solutions_t &solutions, const finalPrimeImplicants_t &finalPrimeImplicants)
+void OptimizedSolutions::extractCommonSumParts(const solutions_t &solutions, const finalPrimeImplicants_t &finalPrimeImplicants, Progress &progress)
 {
 	std::vector<std::set<std::size_t>> oldIdSets;
 	{
@@ -174,7 +174,7 @@ void OptimizedSolutions::extractCommonParts(const solutions_t &solutions, const 
 				oldIdSet.insert(finalPrimeImplicants[i++]);
 		}
 	}
-	const auto [newIdSets, finalIdSets, subsetSelections] = SetOptimizerForSums::optimizeSet(oldIdSets);
+	const auto [newIdSets, finalIdSets, subsetSelections] = SetOptimizerForSums::optimizeSet(oldIdSets, progress);
 	
 	sums.reserve(subsetSelections.size());
 	for (std::size_t i = 0; i != subsetSelections.size(); ++i)
@@ -250,11 +250,11 @@ void OptimizedSolutions::validate(const solutions_t &solutions) const
 }
 #endif
 
-OptimizedSolutions::OptimizedSolutions(const solutions_t &solutions)
+OptimizedSolutions::OptimizedSolutions(const solutions_t &solutions, Progress &progress)
 {
 	createNegatedInputs(solutions);
-	const finalPrimeImplicants_t finalPrimeImplicants = extractCommonParts(solutions);
-	extractCommonParts(solutions, finalPrimeImplicants);
+	const finalPrimeImplicants_t finalPrimeImplicants = extractCommonProductParts(solutions, progress);
+	extractCommonSumParts(solutions, finalPrimeImplicants, progress);
 #ifndef NDEBUG
 	validate(solutions);
 #endif
