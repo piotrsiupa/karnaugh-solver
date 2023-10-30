@@ -3,7 +3,11 @@
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
+#include <cstring>
+#include <iomanip>
 #include <iostream>
+#include <string>
+#include <sstream>
 
 
 template<typename INDEX_T>
@@ -104,47 +108,95 @@ typename PetricksMethod<INDEX_T>::productOfSumsOfProducts_t PetricksMethod<INDEX
 }
 
 template<typename INDEX_T>
-typename PetricksMethod<INDEX_T>::sumOfProducts_t PetricksMethod<INDEX_T>::multiplySumsOfProducts(const sumOfProducts_t &multiplier0, const sumOfProducts_t &multiplier1)
+inline typename PetricksMethod<INDEX_T>::sumOfProducts_t PetricksMethod<INDEX_T>::multiplySumsOfProducts(const sumOfProducts_t &multiplier0, const sumOfProducts_t &multiplier1, long double &actualOperations, const long double expectedOperations, Progress &progress)
 {
 	product_t newProduct;
 	newProduct.reserve(multiplier0.front().size() + multiplier1.front().size());
 	HasseDiagram<index_t> hasseDiagram;
-	for (const product_t &x : multiplier0)
+	const auto estimateCompletion = [&actualOperations = std::as_const(actualOperations), expectedOperations](){ return static_cast<Progress::completion_t>(actualOperations) / expectedOperations; };
 	{
-		for (const product_t &y : multiplier1)
+		Progress::SubtaskGuard progressSubtask = progress.enterSubtask("expanding");
+		std::size_t operationsThisTime = 0;
+		for (const product_t &x : multiplier0)
 		{
-			newProduct.clear();
-			std::set_union(x.cbegin(), x.cend(), y.cbegin(), y.cend(), std::back_inserter(newProduct));
-			hasseDiagram.insertRemovingSupersets(std::move(newProduct));
+			for (const product_t &y : multiplier1)
+			{
+				progress.substep(estimateCompletion, operationsThisTime == 0);
+				++operationsThisTime;
+				newProduct.clear();
+				std::set_union(x.cbegin(), x.cend(), y.cbegin(), y.cend(), std::back_inserter(newProduct));
+				hasseDiagram.insertRemovingSupersets(std::move(newProduct));
+			}
 		}
+		actualOperations += operationsThisTime;
 	}
-	return hasseDiagram.getSets();
+	{	
+		Progress::SubtaskGuard progressSubtask = progress.enterSubtask("refining");
+		progress.substep(estimateCompletion, true);
+		return hasseDiagram.getSets();
+	}
 }
 
 template<typename INDEX_T>
-typename PetricksMethod<INDEX_T>::sumOfProducts_t PetricksMethod<INDEX_T>::findSumOfProducts() const
+std::string PetricksMethod<INDEX_T>::ld2integerString(const long double value)
+{
+	std::stringstream ss;
+	ss << std::fixed << std::setprecision(0) << value;
+	return ss.str();
+}
+
+template<typename INDEX_T>
+typename PetricksMethod<INDEX_T>::sumOfProducts_t PetricksMethod<INDEX_T>::findSumOfProducts(Progress &progress) const
 {
 	productOfSumsOfProducts_t productOfSumsOfProducts = createProductOfSums();
 	if (productOfSumsOfProducts.empty())
 		return sumOfProducts_t{};
 	
+	char progressInfo[128] = ""; // 128 should be enough even if the number is huge.
+	long double actualOperations = 0.0, expectedOperations = 0.0, expectedSolutions = 0.0;
+	Progress::SubtaskGuard progressSubtask = progress.enterSubtask(progressInfo);
+	
 	while (productOfSumsOfProducts.size() != 1)
 	{
+		if (::terminalStderr)
+		{
+			expectedSolutions = 0.0;
+			expectedSolutions = 0.0;
+			expectedSolutions = productOfSumsOfProducts.back().size();
+			for (auto iter = std::next(productOfSumsOfProducts.crbegin()); iter != productOfSumsOfProducts.crend(); ++iter)
+			{
+				expectedSolutions *= iter->size();
+				expectedOperations += expectedSolutions;
+			}
+			std::strcpy(progressInfo, ld2integerString(expectedSolutions).c_str());
+			std::strcat(progressInfo, " solutions");
+		}
 		sumOfProducts_t multiplier0 = std::move(productOfSumsOfProducts.back());
 		productOfSumsOfProducts.pop_back();
 		sumOfProducts_t multiplier1 = std::move(productOfSumsOfProducts.back());
 		productOfSumsOfProducts.pop_back();
-		productOfSumsOfProducts.emplace_back(multiplySumsOfProducts(std::move(multiplier0), std::move(multiplier1)));
+		if (::terminalStderr)
+		{
+			const std::uintmax_t expectedResultSize = static_cast<std::uintmax_t>(multiplier0.size()) * static_cast<std::uintmax_t>(multiplier1.size());
+			productOfSumsOfProducts.emplace_back(multiplySumsOfProducts(std::move(multiplier0), std::move(multiplier1), actualOperations, expectedOperations, progress));
+			const std::size_t actualResultSize = productOfSumsOfProducts.back().size();
+			expectedOperations = (expectedOperations - actualOperations) * (static_cast<long double>(actualResultSize) / static_cast<long double>(expectedResultSize)) + actualOperations;
+			expectedSolutions = expectedSolutions / expectedResultSize * actualResultSize;
+		}
+		else
+		{
+			productOfSumsOfProducts.emplace_back(multiplySumsOfProducts(std::move(multiplier0), std::move(multiplier1), actualOperations, expectedOperations, progress));
+		}
 	}
 	
 	return std::move(productOfSumsOfProducts.front());
 }
 
 template<typename INDEX_T>
-typename PetricksMethod<INDEX_T>::solutions_t PetricksMethod<INDEX_T>::solve()
+typename PetricksMethod<INDEX_T>::solutions_t PetricksMethod<INDEX_T>::solve(Progress &progress)
 {
 	PrimeImplicants essentials = extractEssentials();
-	sumOfProducts_t sumOfProducts = findSumOfProducts();
+	sumOfProducts_t sumOfProducts = findSumOfProducts(progress);
 	
 	if (sumOfProducts.empty())
 		return !essentials.empty()

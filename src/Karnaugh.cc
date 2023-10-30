@@ -207,9 +207,10 @@ bool Karnaugh::loadData(Input &input)
 
 Karnaugh::solutions_t Karnaugh::solve() const
 {
-	if (::terminalStderr)
-		std::clog << "Searching for solutions for the function \"" << functionName << "\"..." << std::endl;
-	const Karnaugh::solutions_t solutions = QuineMcCluskey().solve(allowedMinterms, targetMinterms);
+	const std::string progressName = "Solving \"" + functionName + '"';
+	Progress progress(progressName.c_str(), 1);
+	progress.step();
+	const Karnaugh::solutions_t solutions = QuineMcCluskey().solve(allowedMinterms, targetMinterms, progress);
 #ifndef NDEBUG
 	validate(solutions);
 #endif

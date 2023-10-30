@@ -8,6 +8,7 @@
 #include "Minterm.hh"
 #include "HasseDiagram.hh"
 #include "PrimeImplicants.hh"
+#include "Progress.hh"
 
 
 template<typename INDEX_T>
@@ -34,12 +35,13 @@ private:
 	productOfSumsOfProducts_t createPreliminaryProductOfSums() const;
 	static void removeRedundantSums(productOfSumsOfProducts_t &productOfSums);
 	productOfSumsOfProducts_t createProductOfSums() const;
-	static sumOfProducts_t multiplySumsOfProducts(const sumOfProducts_t &multiplier0, const sumOfProducts_t &multiplier1);
-	sumOfProducts_t findSumOfProducts() const;
-	solutions_t solve();
+	static sumOfProducts_t multiplySumsOfProducts(const sumOfProducts_t &multiplier0, const sumOfProducts_t &multiplier1, long double &actualOperations, const long double expectedOperations, Progress &progress);
+	static std::string ld2integerString(const long double value);
+	sumOfProducts_t findSumOfProducts(Progress &progress) const;
+	solutions_t solve(Progress &progress);
 	
 public:
 	static constexpr std::size_t MAX_PRIME_IMPL_COUNT = HasseDiagram<index_t>::MAX_VALUE;
 	
-	static solutions_t solve(minterms_t minterms, PrimeImplicants primeImplicants) { return PetricksMethod(std::move(minterms), std::move(primeImplicants)).solve(); }
+	static solutions_t solve(minterms_t minterms, PrimeImplicants primeImplicants, Progress &progress) { return PetricksMethod(std::move(minterms), std::move(primeImplicants)).solve(progress); }
 };
