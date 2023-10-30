@@ -1,27 +1,49 @@
 #include "./QuineMcCluskey.hh"
 
 #include <cstdint>
+#include <cstring>
 #include <iostream>
 #include <set>
+#include <string>
 
 #include "PetricksMethod.hh"
+#include "Progress.hh"
 
 
 Implicants QuineMcCluskey::findPrimeImplicants(const Minterms &allowedMinterms) const
 {
-	std::vector<std::pair<Implicant, bool>> oldImplicants;
+	Progress progress("Finding prime implicants", ::bits + 1);
+	
+	std::vector<std::pair<Implicant, bool>> implicants;
 	for (const Minterm &minterm : allowedMinterms)
-		oldImplicants.emplace_back(Implicant{minterm}, false);
+		implicants.emplace_back(Implicant{minterm}, false);
 	
 	Implicants primeImplicants;
 	
-	while (!oldImplicants.empty())
+	::bits_t implicantSize = ::bits;
+	char subtaskDescription[96] = "";
+	const auto subtaskGuard = progress.enterSubtask(subtaskDescription);
+	while (!implicants.empty())
 	{
+		std::uintmax_t operationsSoFar = 0, expectedOperations = 0;
+		if (::terminalStderr)
+		{
+			std::strcpy(subtaskDescription, std::to_string(implicants.size()).c_str());
+			std::strcat(subtaskDescription, " implicants with ");
+			std::strcat(subtaskDescription, std::to_string(implicantSize--).c_str());
+			std::strcat(subtaskDescription, " literals");
+			expectedOperations = static_cast<std::uintmax_t>(implicants.size()) * static_cast<std::uintmax_t>(implicants.size() - 1) / 2;
+		}
+		const Progress::calcSubstepCompletion_t calcSubstepCompletion = [&operationsSoFar = std::as_const(operationsSoFar), expectedOperations](){ return static_cast<Progress::completion_t>(operationsSoFar) / static_cast<Progress::completion_t>(expectedOperations); };
+		progress.step(true);
+		
 		std::set<Implicant> newImplicants;
 		
-		for (auto iter = oldImplicants.begin(); iter != oldImplicants.end(); ++iter)
+		for (auto iter = implicants.begin(); iter != implicants.end(); ++iter)
 		{
-			for (auto jiter = std::next(iter); jiter != oldImplicants.end(); ++jiter)
+			progress.substep(calcSubstepCompletion);
+			operationsSoFar += implicants.cend() - iter - 1;
+			for (auto jiter = std::next(iter); jiter != implicants.end(); ++jiter)
 			{
 				if (Implicant::areMergeable(iter->first, jiter->first))
 				{
@@ -32,14 +54,14 @@ Implicants QuineMcCluskey::findPrimeImplicants(const Minterms &allowedMinterms) 
 			}
 		}
 		
-		for (const auto &[implicant, merged] : oldImplicants)
+		for (const auto &[implicant, merged] : implicants)
 			if (!merged)
 				primeImplicants.push_back(implicant);
-		oldImplicants.clear();
+		implicants.clear();
 		
-		oldImplicants.reserve(newImplicants.size());
+		implicants.reserve(newImplicants.size());
 		for (const auto &newImplicant : newImplicants)
-			oldImplicants.emplace_back(newImplicant, false);
+			implicants.emplace_back(newImplicant, false);
 	}
 	
 	return primeImplicants;
