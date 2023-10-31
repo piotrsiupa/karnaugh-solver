@@ -9,6 +9,7 @@
 #include "Input.hh"
 #include "Minterm.hh"
 #include "Minterms.hh"
+#include "Progress.hh"
 
 
 class Karnaugh
@@ -30,7 +31,7 @@ private:
 	void prettyPrintTable() const;
 	static void prettyPrintSolution(const Implicants &solution);
 	
-	bool loadMinterms(Minterms &minterms, Input &input) const;
+	bool loadMinterms(Minterms &minterms, Input &input, Progress &progress) const;
 #ifndef NDEBUG
 	void validate(const solutions_t &solutions) const;
 #endif

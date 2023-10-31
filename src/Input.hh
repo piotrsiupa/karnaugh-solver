@@ -4,6 +4,8 @@
 #include <string>
 #include <vector>
 
+#include "Progress.hh"
+
 
 class Input
 {
@@ -28,5 +30,5 @@ public:
 	bool isEmpty() const { return line.empty(); }
 	bool isName() const;
 	std::string popLine() { state = State::NOT_LOADED; return std::move(line); }
-	std::vector<std::string> popParts();
+	std::vector<std::string> popParts(Progress &progress);
 };

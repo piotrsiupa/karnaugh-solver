@@ -4,7 +4,6 @@
 #include <cctype>
 #include <iostream>
 
-#include "Progress.hh"
 #include "QuineMcCluskey.hh"
 
 
@@ -84,30 +83,45 @@ void Karnaugh::prettyPrintSolution(const Implicants &solution)
 	prettyPrintTable(minterms);
 }
 
-bool Karnaugh::loadMinterms(Minterms &minterms, Input &input) const
+bool Karnaugh::loadMinterms(Minterms &minterms, Input &input, Progress &progress) const
 {
-	for (const std::string &string : input.popParts())
+	std::vector<std::string> parts;
 	{
-		try
+		const auto subtaskGuard = progress.enterSubtask("splitting input line");
+		progress.step(true);
+		parts = input.popParts(progress);
+	}
+	
+	{
+		const auto subtaskGuard = progress.enterSubtask("parsing numbers");
+		progress.step(true);
+		std::size_t i = 0;
+		const Progress::calcSubstepCompletion_t calcSubstepCompletion = [&i = std::as_const(i), n = parts.size()](){ return static_cast<Progress::completion_t>(i) / static_cast<Progress::completion_t>(n); };
+		for (const std::string &string : parts)
 		{
-			const unsigned long n = std::stoul(string);
-			static_assert(sizeof(unsigned long) * CHAR_BIT >= ::maxBits);
-			if (n > ::maxMinterm)
+			progress.substep(calcSubstepCompletion);
+			++i;
+			try
 			{
-				std::cerr << '"' << string << "\" is too big!\n";
+				const unsigned long n = std::stoul(string);
+				static_assert(sizeof(unsigned long) * CHAR_BIT >= ::maxBits);
+				if (n > ::maxMinterm)
+				{
+					std::cerr << '"' << string << "\" is too big!\n";
+					return false;
+				}
+				minterms.insert(n);
+			}
+			catch (std::invalid_argument &)
+			{
+				std::cerr << '"' << string << "\" is not a number!\n";
 				return false;
 			}
-			minterms.insert(n);
-		}
-		catch (std::invalid_argument &)
-		{
-			std::cerr << '"' << string << "\" is not a number!\n";
-			return false;
-		}
-		catch (std::out_of_range &)
-		{
-			std::cerr << '"' << string << "\" is out of range!\n";
-			return false;
+			catch (std::out_of_range &)
+			{
+				std::cerr << '"' << string << "\" is out of range!\n";
+				return false;
+			}
 		}
 	}
 	return true;
@@ -143,6 +157,8 @@ bool Karnaugh::loadData(Input &input)
 	if (hasName)
 		functionName = input.popLine();
 	
+	const std::string progressName = "Loading function \"" + functionName + '"';
+	Progress progress(progressName.c_str(), 5);
 	
 	if (hasName && ::terminalStdin)
 		std::cerr << "Enter a list of minterms of the function \"" << functionName << "\":\n";
@@ -153,7 +169,7 @@ bool Karnaugh::loadData(Input &input)
 		std::cerr << "A list of minterms is mandatory!\n";
 		return false;
 	}
-	if (!loadMinterms(targetMinterms, input))
+	if (!loadMinterms(targetMinterms, input, progress))
 		return false;
 	
 	if (::terminalStdin)
@@ -167,11 +183,17 @@ bool Karnaugh::loadData(Input &input)
 	if (input.hasError())
 		return false;
 	if (!input.isEmpty())
-		if (!loadMinterms(allowedMinterms, input))
+		if (!loadMinterms(allowedMinterms, input, progress))
 			return false;
 	
+	const auto conflictsSubtask = progress.enterSubtask("checking for conflicts");
+	progress.step(true);
+	std::size_t i = 0;
+	const Progress::calcSubstepCompletion_t calcSubstepCompletion = [&i = std::as_const(i), n = targetMinterms.size()](){ return static_cast<Progress::completion_t>(i) / static_cast<Progress::completion_t>(n); };
 	for (const Minterm &targetMinterm : targetMinterms)
 	{
+		progress.substep(calcSubstepCompletion);
+		++i;
 		if (allowedMinterms.find(targetMinterm) == allowedMinterms.cend())
 			allowedMinterms.insert(targetMinterm);
 		else

@@ -6,6 +6,7 @@
 #include "Input.hh"
 #include "Karnaughs.hh"
 #include "non-stdlib-stuff.hh"
+#include "Progress.hh"
 
 
 static void printHelp()
@@ -70,7 +71,9 @@ static bool parseInputBits(Input &input)
 	}
 	if (input.isName())
 	{
-		::inputNames = input.popParts();
+		Progress progress("Loading input names", 1);
+		progress.step();
+		::inputNames = input.popParts(progress);
 		if (::inputNames.size() > ::maxBits)
 		{
 			std::cerr << "Too many input variables!\n";
