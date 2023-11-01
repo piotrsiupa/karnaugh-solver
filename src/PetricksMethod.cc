@@ -146,15 +146,18 @@ std::string PetricksMethod<INDEX_T>::ld2integerString(const long double value)
 }
 
 template<typename INDEX_T>
-typename PetricksMethod<INDEX_T>::sumOfProducts_t PetricksMethod<INDEX_T>::findSumOfProducts(Progress &progress) const
+typename PetricksMethod<INDEX_T>::sumOfProducts_t PetricksMethod<INDEX_T>::findSumOfProducts(const std::string &functionName) const
 {
 	productOfSumsOfProducts_t productOfSumsOfProducts = createProductOfSums();
 	if (productOfSumsOfProducts.empty())
 		return sumOfProducts_t{};
 	
+	const std::string progressName = "Solving \"" + functionName + '"';
+	Progress progress(progressName.c_str(), 1);
 	char progressInfo[128] = ""; // 128 should be enough even if the number is huge.
 	long double actualOperations = 0.0, expectedOperations = 0.0, expectedSolutions = 0.0;
 	Progress::SubtaskGuard progressSubtask = progress.enterSubtask(progressInfo);
+	progress.step();
 	
 	while (productOfSumsOfProducts.size() != 1)
 	{
@@ -193,10 +196,10 @@ typename PetricksMethod<INDEX_T>::sumOfProducts_t PetricksMethod<INDEX_T>::findS
 }
 
 template<typename INDEX_T>
-typename PetricksMethod<INDEX_T>::solutions_t PetricksMethod<INDEX_T>::solve(Progress &progress)
+typename PetricksMethod<INDEX_T>::solutions_t PetricksMethod<INDEX_T>::solve(const std::string &functionName)
 {
 	Implicants essentials = extractEssentials();
-	sumOfProducts_t sumOfProducts = findSumOfProducts(progress);
+	sumOfProducts_t sumOfProducts = findSumOfProducts(functionName);
 	
 	if (sumOfProducts.empty())
 		return !essentials.empty()

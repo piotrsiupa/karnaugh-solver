@@ -1,10 +1,10 @@
 #pragma once
 
+#include <string>
 #include <vector>
 
 #include "Implicants.hh"
 #include "Minterms.hh"
-#include "Progress.hh"
 
 
 class QuineMcCluskey
@@ -14,5 +14,5 @@ class QuineMcCluskey
 public:
 	using solutions_t = std::vector<Implicants>;
 	
-	solutions_t solve(const Minterms &allowedMinterms, const Minterms &targetMinterms, Progress &progress) const;
+	solutions_t solve(const Minterms &allowedMinterms, const Minterms &targetMinterms, const std::string &functionName) const;
 };

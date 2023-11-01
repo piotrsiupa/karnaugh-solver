@@ -2,6 +2,7 @@
 
 #include <cstddef>
 #include <set>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -37,11 +38,11 @@ private:
 	productOfSumsOfProducts_t createProductOfSums() const;
 	static sumOfProducts_t multiplySumsOfProducts(const sumOfProducts_t &multiplier0, const sumOfProducts_t &multiplier1, long double &actualOperations, const long double expectedOperations, Progress &progress);
 	static std::string ld2integerString(const long double value);
-	sumOfProducts_t findSumOfProducts(Progress &progress) const;
-	solutions_t solve(Progress &progress);
+	sumOfProducts_t findSumOfProducts(const std::string &functionName) const;
+	solutions_t solve(const std::string &functionName);
 	
 public:
 	static constexpr std::size_t MAX_PRIME_IMPL_COUNT = HasseDiagram<index_t>::MAX_VALUE;
 	
-	static solutions_t solve(minterms_t minterms, Implicants primeImplicants, Progress &progress) { return PetricksMethod(std::move(minterms), std::move(primeImplicants)).solve(progress); }
+	static solutions_t solve(minterms_t minterms, Implicants primeImplicants, const std::string &functionName) { return PetricksMethod(std::move(minterms), std::move(primeImplicants)).solve(functionName); }
 };
