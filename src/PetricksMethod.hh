@@ -32,7 +32,7 @@ private:
 	PetricksMethod(minterms_t &&minterms, Implicants &&primeImplicants) : minterms(std::move(minterms)), primeImplicants(std::move(primeImplicants)) {}
 	
 	index_t findEssentialPrimeImplicantIndex(const Minterm minterm);
-	Implicants extractEssentials();
+	Implicants extractEssentials(const std::string &functionName);
 	productOfSumsOfProducts_t createPreliminaryProductOfSums() const;
 	static void removeRedundantSums(productOfSumsOfProducts_t &productOfSums);
 	productOfSumsOfProducts_t createProductOfSums() const;

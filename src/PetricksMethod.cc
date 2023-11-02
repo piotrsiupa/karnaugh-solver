@@ -29,11 +29,19 @@ typename PetricksMethod<INDEX_T>::index_t PetricksMethod<INDEX_T>::findEssential
 }
 
 template<typename INDEX_T>
-Implicants PetricksMethod<INDEX_T>::extractEssentials()
+Implicants PetricksMethod<INDEX_T>::extractEssentials(const std::string &functionName)
 {
+	const std::string progressName = "Extracting essentials of \"" + functionName + '"';
+	Progress progress(progressName.c_str(), 1);
+	progress.step();
+	std::size_t i = 0, n = minterms.size();
+	Progress::calcSubstepCompletion_t calcSubstepCompletion = [&i = std::as_const(i), &n = std::as_const(n)](){ return static_cast<Progress::completion_t>(i) / static_cast<Progress::completion_t>(n); };
+	
 	Implicants essentials;
 	for (typename minterms_t::const_iterator iter = minterms.cbegin(); iter != minterms.cend();)
 	{
+		progress.substep(calcSubstepCompletion);
+		++i;
 		const index_t essentialPrimeImplicantIndex = findEssentialPrimeImplicantIndex(*iter);
 		if (essentialPrimeImplicantIndex == NO_INDEX)
 		{
@@ -198,7 +206,7 @@ typename PetricksMethod<INDEX_T>::sumOfProducts_t PetricksMethod<INDEX_T>::findS
 template<typename INDEX_T>
 typename PetricksMethod<INDEX_T>::solutions_t PetricksMethod<INDEX_T>::solve(const std::string &functionName)
 {
-	Implicants essentials = extractEssentials();
+	Implicants essentials = extractEssentials(functionName);
 	sumOfProducts_t sumOfProducts = findSumOfProducts(functionName);
 	
 	if (sumOfProducts.empty())
