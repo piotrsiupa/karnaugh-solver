@@ -10,9 +10,10 @@
 #include "Progress.hh"
 
 
-Implicants QuineMcCluskey::findPrimeImplicants(const Minterms &allowedMinterms) const
+Implicants QuineMcCluskey::findPrimeImplicants(const Minterms &allowedMinterms, const std::string &functionName) const
 {
-	Progress progress("Finding prime implicants", ::bits + 1);
+	std::string progressName = "Merging implicants of \"" + functionName + '"';
+	Progress progress(progressName.c_str(), ::bits + 1);
 	
 	std::vector<std::pair<Implicant, bool>> implicants;
 	for (const Minterm &minterm : allowedMinterms)
@@ -29,9 +30,9 @@ Implicants QuineMcCluskey::findPrimeImplicants(const Minterms &allowedMinterms) 
 		if (::terminalStderr)
 		{
 			std::strcpy(subtaskDescription, std::to_string(implicants.size()).c_str());
-			std::strcat(subtaskDescription, " implicants with ");
+			std::strcat(subtaskDescription, " left (");
 			std::strcat(subtaskDescription, std::to_string(implicantSize--).c_str());
-			std::strcat(subtaskDescription, " literals");
+			std::strcat(subtaskDescription, " literals each)");
 			expectedOperations = static_cast<std::uintmax_t>(implicants.size()) * static_cast<std::uintmax_t>(implicants.size() - 1) / 2;
 		}
 		const Progress::calcSubstepCompletion_t calcSubstepCompletion = [&operationsSoFar = std::as_const(operationsSoFar), expectedOperations](){ return static_cast<Progress::completion_t>(operationsSoFar) / static_cast<Progress::completion_t>(expectedOperations); };
@@ -69,7 +70,7 @@ Implicants QuineMcCluskey::findPrimeImplicants(const Minterms &allowedMinterms) 
 
 QuineMcCluskey::solutions_t QuineMcCluskey::solve(const Minterms &allowedMinterms, const Minterms &targetMinterms, const std::string &functionName) const
 {
-	Implicants primeImplicants = findPrimeImplicants(allowedMinterms);
+	Implicants primeImplicants = findPrimeImplicants(allowedMinterms, functionName);
 	if (primeImplicants.size() <= PetricksMethod<std::uint8_t>::MAX_PRIME_IMPL_COUNT)
 		return PetricksMethod<std::uint8_t>::solve(targetMinterms, std::move(primeImplicants), functionName);
 	else if (primeImplicants.size() <= PetricksMethod<std::uint16_t>::MAX_PRIME_IMPL_COUNT)
