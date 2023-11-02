@@ -33,9 +33,9 @@ private:
 	
 	index_t findEssentialPrimeImplicantIndex(const Minterm minterm);
 	Implicants extractEssentials(const std::string &functionName);
-	productOfSumsOfProducts_t createPreliminaryProductOfSums() const;
-	static void removeRedundantSums(productOfSumsOfProducts_t &productOfSums);
-	productOfSumsOfProducts_t createProductOfSums() const;
+	productOfSumsOfProducts_t createPreliminaryProductOfSums(const std::string &functionName) const;
+	static void removeRedundantSums(productOfSumsOfProducts_t &productOfSums, const std::string &functionName);
+	productOfSumsOfProducts_t createProductOfSums(const std::string &functionName) const;
 	static sumOfProducts_t multiplySumsOfProducts(const sumOfProducts_t &multiplier0, const sumOfProducts_t &multiplier1, long double &actualOperations, const long double expectedOperations, Progress &progress);
 	static std::string ld2integerString(const long double value);
 	sumOfProducts_t findSumOfProducts(const std::string &functionName) const;

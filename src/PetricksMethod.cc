@@ -67,11 +67,18 @@ Implicants PetricksMethod<INDEX_T>::extractEssentials(const std::string &functio
 }
 
 template<typename INDEX_T>
-typename PetricksMethod<INDEX_T>::productOfSumsOfProducts_t PetricksMethod<INDEX_T>::createPreliminaryProductOfSums() const
+typename PetricksMethod<INDEX_T>::productOfSumsOfProducts_t PetricksMethod<INDEX_T>::createPreliminaryProductOfSums(const std::string &functionName) const
 {
+	const std::string progressName = "Creating initial solution space for \"" + functionName + '"';
+	Progress progress(progressName.c_str(), 1);
+	progress.step();
+	std::size_t i = 0;
+	const Progress::calcSubstepCompletion_t calcSubstepCompletion = [&i = std::as_const(i), n = minterms.size()](){ return static_cast<Progress::completion_t>(i) / static_cast<Progress::completion_t>(n); };
 	productOfSumsOfProducts_t productOfSums;
 	for (const Minterm &minterm : minterms)
 	{
+		progress.substep(calcSubstepCompletion);
+		++i;
 		sumOfProducts_t &sum = productOfSums.emplace_back();
 		for (index_t i = 0; i != primeImplicants.size(); ++i)
 			if (primeImplicants[i].covers(minterm))
@@ -81,10 +88,17 @@ typename PetricksMethod<INDEX_T>::productOfSumsOfProducts_t PetricksMethod<INDEX
 }
 
 template<typename INDEX_T>
-void PetricksMethod<INDEX_T>::removeRedundantSums(productOfSumsOfProducts_t &productOfSums)
+void PetricksMethod<INDEX_T>::removeRedundantSums(productOfSumsOfProducts_t &productOfSums, const std::string &functionName)
 {
+	const std::string progressName = "Cleaning up solution space for \"" + functionName + '"';
+	Progress progress(progressName.c_str(), 1);
+	progress.step();
+	std::size_t i = 0;
+	const Progress::calcSubstepCompletion_t calcSubstepCompletion = [&i = std::as_const(i), n = productOfSums.size()](){ return static_cast<Progress::completion_t>(i) / static_cast<Progress::completion_t>(n); };
 	for (auto x = productOfSums.begin(); x != productOfSums.end(); ++x)
 	{
+		progress.substep(calcSubstepCompletion);
+		++i;
 		if (!x->empty())
 		{
 			for (auto y = std::next(x); y != productOfSums.end(); ++y)
@@ -108,10 +122,10 @@ void PetricksMethod<INDEX_T>::removeRedundantSums(productOfSumsOfProducts_t &pro
 }
 
 template<typename INDEX_T>
-typename PetricksMethod<INDEX_T>::productOfSumsOfProducts_t PetricksMethod<INDEX_T>::createProductOfSums() const
+typename PetricksMethod<INDEX_T>::productOfSumsOfProducts_t PetricksMethod<INDEX_T>::createProductOfSums(const std::string &functionName) const
 {
-	productOfSumsOfProducts_t productOfSums = createPreliminaryProductOfSums();
-	removeRedundantSums(productOfSums);
+	productOfSumsOfProducts_t productOfSums = createPreliminaryProductOfSums(functionName);
+	removeRedundantSums(productOfSums, functionName);
 	return productOfSums;
 }
 
@@ -156,7 +170,7 @@ std::string PetricksMethod<INDEX_T>::ld2integerString(const long double value)
 template<typename INDEX_T>
 typename PetricksMethod<INDEX_T>::sumOfProducts_t PetricksMethod<INDEX_T>::findSumOfProducts(const std::string &functionName) const
 {
-	productOfSumsOfProducts_t productOfSumsOfProducts = createProductOfSums();
+	productOfSumsOfProducts_t productOfSumsOfProducts = createProductOfSums(functionName);
 	if (productOfSumsOfProducts.empty())
 		return sumOfProducts_t{};
 	
