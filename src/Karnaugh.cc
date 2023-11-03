@@ -129,7 +129,7 @@ bool Karnaugh::loadMinterms(Minterms &minterms, Input &input, Progress &progress
 void Karnaugh::validate(const solutions_t &solutions) const
 {
 	const std::string progressName = "Validating solutions for \"" + functionName + "\" (development build)";
-	Progress progress(progressName.c_str(), solutions.size());
+	Progress progress(Progress::Stage::SOLVING, progressName.c_str(), solutions.size());
 	for (const Implicants &solution : solutions)
 	{
 		progress.step();
@@ -156,7 +156,7 @@ bool Karnaugh::loadData(Input &input)
 		functionName = input.popLine();
 	
 	const std::string progressName = "Loading function \"" + functionName + '"';
-	Progress progress(progressName.c_str(), 5, !::terminalStdin);
+	Progress progress(Progress::Stage::LOADING, progressName.c_str(), 5, !::terminalStdin);
 	
 	if (hasName && ::terminalStdin)
 		std::cerr << "Enter a list of minterms of the function \"" << functionName << "\":\n";

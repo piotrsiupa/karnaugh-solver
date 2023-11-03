@@ -32,7 +32,7 @@ template<typename INDEX_T>
 Implicants PetricksMethod<INDEX_T>::extractEssentials(const std::string &functionName)
 {
 	const std::string progressName = "Extracting essentials of \"" + functionName + '"';
-	Progress progress(progressName.c_str(), 1);
+	Progress progress(Progress::Stage::SOLVING, progressName.c_str(), 1);
 	progress.step();
 	Progress::CountingSubsteps substeps = progress.makeCountingSubsteps(minterms.size());
 	
@@ -68,7 +68,7 @@ template<typename INDEX_T>
 typename PetricksMethod<INDEX_T>::productOfSumsOfProducts_t PetricksMethod<INDEX_T>::createPreliminaryProductOfSums(const std::string &functionName) const
 {
 	const std::string progressName = "Creating initial solution space for \"" + functionName + '"';
-	Progress progress(progressName.c_str(), 1);
+	Progress progress(Progress::Stage::SOLVING, progressName.c_str(), 1);
 	progress.step();
 	Progress::CountingSubsteps substeps = progress.makeCountingSubsteps(minterms.size());
 	productOfSumsOfProducts_t productOfSums;
@@ -87,7 +87,7 @@ template<typename INDEX_T>
 void PetricksMethod<INDEX_T>::removeRedundantSums(productOfSumsOfProducts_t &productOfSums, const std::string &functionName)
 {
 	const std::string progressName = "Cleaning up solution space for \"" + functionName + '"';
-	Progress progress(progressName.c_str(), 1);
+	Progress progress(Progress::Stage::SOLVING, progressName.c_str(), 1);
 	progress.step();
 	Progress::CountingSubsteps substeps = progress.makeCountingSubsteps(productOfSums.size());
 	for (auto x = productOfSums.begin(); x != productOfSums.end(); ++x)
@@ -170,7 +170,7 @@ typename PetricksMethod<INDEX_T>::sumOfProducts_t PetricksMethod<INDEX_T>::findS
 		return sumOfProducts_t{};
 	
 	const std::string progressName = "Solving \"" + functionName + '"';
-	Progress progress(progressName.c_str(), 1);
+	Progress progress(Progress::Stage::SOLVING, progressName.c_str(), 1);
 	char progressInfo[128] = ""; // 128 should be enough even if the number is huge.
 	long double actualOperations = 0.0, expectedOperations = 0.0, expectedSolutions = 0.0;
 	Progress::SubtaskGuard progressSubtask = progress.enterSubtask(progressInfo);

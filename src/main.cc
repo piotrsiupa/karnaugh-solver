@@ -71,7 +71,7 @@ static bool parseInputBits(Input &input)
 	}
 	if (input.isName())
 	{
-		Progress progress("Loading input names", 1);
+		Progress progress(Progress::Stage::LOADING, "Loading input names", 1);
 		progress.step();
 		::inputNames = input.popParts(progress);
 		if (::inputNames.size() > ::maxBits)

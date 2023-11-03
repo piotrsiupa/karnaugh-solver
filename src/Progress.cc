@@ -1,12 +1,15 @@
 #include "./Progress.hh"
 
 #include <algorithm>
+#include <cassert>
 #include <iomanip>
 #include <ios>
 #include <iostream>
 
 
 Progress::calcSubstepCompletion_t Progress::calc0SubstepCompletion = [](){ return 0.0; };
+
+std::uint_fast8_t Progress::stageCounters[STAGE_COUNT] = {};
 
 Progress::steps_t Progress::calcStepsToSkip(const double secondsToSkip, const double secondsPerStep) const
 {
@@ -72,20 +75,47 @@ void Progress::printTime(double time)
 			<< static_cast<unsigned>(seconds / 10) << std::setprecision(3) << time;
 }
 
-void Progress::clearReport()
+void Progress::clearReport(const bool clearStage)
 {
 	if (reportVisible)
 	{
-		std::clog << "\033[3A\r\033[J";
+		if (clearStage)
+			std::clog << "\033[4A";
+		else
+			std::clog << "\033[3A";
+		std::clog << "\r\033[J";
 		reportVisible = false;
 	}
 }
 
+void Progress::reportStage() const
+{
+	std::clog << "Stage " << (static_cast<unsigned>(stage) + 1) << '/' << STAGE_COUNT;
+	std::clog << " - ";
+	switch (stage)
+	{
+	case Stage::LOADING:
+		std::clog << "Loading";
+		break;
+	case Stage::SOLVING:
+		std::clog << "Solving";
+		break;
+	case Stage::OPTIMIZING:
+		std::clog << "Optimizing";
+		break;
+	}
+	std::clog << " (sub-stage " << static_cast<unsigned>(stageCounters[static_cast<std::size_t>(stage)]) << ')';
+	std::clog << '\n';
+}
+
 void Progress::reportProgress(const calcSubstepCompletion_t &calcSubstepCompletion)
 {
+	if (!reportVisible)
+		reportStage();
+	
 	const completion_t completion = calcSubstepCompletion() / allSteps + calcStepCompletion();
 	
-	clearReport();
+	clearReport(false);
 	
 	std::clog << processName;
 	if (allSteps != 1)
@@ -125,11 +155,16 @@ void Progress::handleStep(const calcSubstepCompletion_t &calcSubstepCompletion, 
 		reportProgress(calcSubstepCompletion);
 }
 
-Progress::Progress(const char processName[], const steps_t allSteps, const bool progressVisible) :
+Progress::Progress(const Stage stage, const char processName[], const steps_t allSteps, const bool progressVisible) :
+	stage(stage),
 	processName(processName),
 	allSteps(allSteps),
 	progressVisible(progressVisible)
 {
+	assert(static_cast<std::size_t>(stage) < STAGE_COUNT);
+	if (static_cast<std::size_t>(stage) != STAGE_COUNT - 1)
+		assert(stageCounters[static_cast<std::size_t>(stage) + 1] == 0);
+	++stageCounters[static_cast<std::size_t>(stage)];
 	if (progressVisible)
 	{
 		lastReportTime = startTime = std::chrono::steady_clock::now();

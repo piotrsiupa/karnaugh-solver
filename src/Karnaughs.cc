@@ -62,7 +62,7 @@ void Karnaughs::findBestSolutions(const solutionses_t &solutionses, solutions_t 
 	if (::terminalStderr)
 		for (const solutions_t &solutions : solutionses)
 			steps *= solutions.size();
-	Progress progress("Eliminating common subexpressions", steps);
+	Progress progress(Progress::Stage::OPTIMIZING, "Eliminating common subexpressions", steps);
 	for (std::vector<std::size_t> indexes(solutionses.size(), 0);;)
 	{
 		progress.step();

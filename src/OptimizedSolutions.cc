@@ -241,7 +241,7 @@ void OptimizedSolutions::validate(const solutions_t &solutions) const
 {
 	assert(solutions.size() == finalSums.size());
 	
-	Progress progress("Validating the optimized solution", solutions.size());
+	Progress progress(Progress::Stage::OPTIMIZING, "Validating the optimized solution", solutions.size());
 	progress.step();
 	std::size_t i;
 	const Progress::calcSubstepCompletion_t calcSubstepCompletion = [&i = std::as_const(i), n = solutions.size()](){ return static_cast<Progress::completion_t>(i) / static_cast<Progress::completion_t>(n); };
