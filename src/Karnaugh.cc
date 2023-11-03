@@ -95,7 +95,7 @@ bool Karnaugh::loadMinterms(Minterms &minterms, Input &input, Progress &progress
 	{
 		const auto subtaskGuard = progress.enterSubtask("parsing numbers");
 		progress.step(true);
-		Progress::CountingSubsteps substeps = progress.makeCountingSubsteps(parts.size());
+		Progress::CountingSubsteps substeps = progress.makeCountingSubsteps(static_cast<Progress::completion_t>(parts.size()));
 		for (const std::string &string : parts)
 		{
 			substeps.substep();
@@ -186,7 +186,7 @@ bool Karnaugh::loadData(Input &input)
 	
 	const auto conflictsSubtask = progress.enterSubtask("checking for conflicts");
 	progress.step(true);
-	Progress::CountingSubsteps substeps = progress.makeCountingSubsteps(targetMinterms.size());
+	Progress::CountingSubsteps substeps = progress.makeCountingSubsteps(static_cast<Progress::completion_t>(targetMinterms.size()));
 	for (const Minterm &targetMinterm : targetMinterms)
 	{
 		substeps.substep();
