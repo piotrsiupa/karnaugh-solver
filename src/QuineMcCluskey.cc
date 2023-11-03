@@ -1,61 +1,84 @@
 #include "./QuineMcCluskey.hh"
 
 #include <cstdint>
+#include <cstring>
 #include <iostream>
 #include <set>
+#include <string>
 
 #include "PetricksMethod.hh"
+#include "Progress.hh"
 
 
-PrimeImplicants QuineMcCluskey::findPrimeImplicants(const Minterms &allowedMinterms) const
+Implicants QuineMcCluskey::findPrimeImplicants(const Minterms &allowedMinterms, const std::string &functionName) const
 {
-	std::vector<std::pair<PrimeImplicant, bool>> oldPrimeImplicants;
+	const std::string progressName = "Merging implicants of \"" + functionName + '"';
+	Progress progress(Progress::Stage::SOLVING, progressName.c_str(), ::bits + 1);
+	
+	std::vector<std::pair<Implicant, bool>> implicants;
 	for (const Minterm &minterm : allowedMinterms)
-		oldPrimeImplicants.emplace_back(PrimeImplicant{minterm}, false);
+		implicants.emplace_back(Implicant{minterm}, false);
 	
-	PrimeImplicants primeImplicants;
+	Implicants primeImplicants;
 	
-	while (!oldPrimeImplicants.empty())
+	::bits_t implicantSize = ::bits;
+	char subtaskDescription[96] = "";
+	const auto subtaskGuard = progress.enterSubtask(subtaskDescription);
+	while (!implicants.empty())
 	{
-		std::set<PrimeImplicant> newPrimeImplicants;
-		
-		for (auto iter = oldPrimeImplicants.begin(); iter != oldPrimeImplicants.end(); ++iter)
+		std::uintmax_t operationsSoFar = 0, expectedOperations = 0;
+		if (::terminalStderr)
 		{
-			for (auto jiter = std::next(iter); jiter != oldPrimeImplicants.end(); ++jiter)
+			std::strcpy(subtaskDescription, std::to_string(implicants.size()).c_str());
+			std::strcat(subtaskDescription, " left (");
+			std::strcat(subtaskDescription, std::to_string(implicantSize--).c_str());
+			std::strcat(subtaskDescription, " literals each)");
+			expectedOperations = static_cast<std::uintmax_t>(implicants.size()) * static_cast<std::uintmax_t>(implicants.size() - 1) / 2;
+		}
+		const Progress::calcSubstepCompletion_t calcSubstepCompletion = [&operationsSoFar = std::as_const(operationsSoFar), expectedOperations](){ return static_cast<Progress::completion_t>(operationsSoFar) / static_cast<Progress::completion_t>(expectedOperations); };
+		progress.step(true);
+		
+		std::set<Implicant> newImplicants;
+		
+		for (auto iter = implicants.begin(); iter != implicants.end(); ++iter)
+		{
+			progress.substep(calcSubstepCompletion);
+			operationsSoFar += implicants.cend() - iter - 1;
+			for (auto jiter = std::next(iter); jiter != implicants.end(); ++jiter)
 			{
-				if (PrimeImplicant::areMergeable(iter->first, jiter->first))
+				if (Implicant::areMergeable(iter->first, jiter->first))
 				{
-					newPrimeImplicants.insert(PrimeImplicant::merge(iter->first, jiter->first));
+					newImplicants.insert(Implicant::merge(iter->first, jiter->first));
 					iter->second = true;
 					jiter->second = true;
 				}
 			}
 		}
 		
-		for (const auto &[primeImplicant, merged] : oldPrimeImplicants)
+		for (const auto &[implicant, merged] : implicants)
 			if (!merged)
-				primeImplicants.push_back(primeImplicant);
-		oldPrimeImplicants.clear();
+				primeImplicants.push_back(implicant);
+		implicants.clear();
 		
-		oldPrimeImplicants.reserve(newPrimeImplicants.size());
-		for (const auto &newPrimeImplicant : newPrimeImplicants)
-			oldPrimeImplicants.emplace_back(newPrimeImplicant, false);
+		implicants.reserve(newImplicants.size());
+		for (const auto &newImplicant : newImplicants)
+			implicants.emplace_back(newImplicant, false);
 	}
 	
 	return primeImplicants;
 }
 
-QuineMcCluskey::solutions_t QuineMcCluskey::solve(const Minterms &allowedMinterms, const Minterms &targetMinterms) const
+QuineMcCluskey::solutions_t QuineMcCluskey::solve(const Minterms &allowedMinterms, const Minterms &targetMinterms, const std::string &functionName) const
 {
-	PrimeImplicants primeImplicants = findPrimeImplicants(allowedMinterms);
+	Implicants primeImplicants = findPrimeImplicants(allowedMinterms, functionName);
 	if (primeImplicants.size() <= PetricksMethod<std::uint8_t>::MAX_PRIME_IMPL_COUNT)
-		return PetricksMethod<std::uint8_t>::solve(targetMinterms, std::move(primeImplicants));
+		return PetricksMethod<std::uint8_t>::solve(targetMinterms, std::move(primeImplicants), functionName);
 	else if (primeImplicants.size() <= PetricksMethod<std::uint16_t>::MAX_PRIME_IMPL_COUNT)
-		return PetricksMethod<std::uint16_t>::solve(targetMinterms, std::move(primeImplicants));
+		return PetricksMethod<std::uint16_t>::solve(targetMinterms, std::move(primeImplicants), functionName);
 	else if (primeImplicants.size() <= PetricksMethod<std::uint32_t>::MAX_PRIME_IMPL_COUNT)
-		return PetricksMethod<std::uint32_t>::solve(targetMinterms, std::move(primeImplicants));
+		return PetricksMethod<std::uint32_t>::solve(targetMinterms, std::move(primeImplicants), functionName);
 	else if (primeImplicants.size() <= PetricksMethod<std::uint64_t>::MAX_PRIME_IMPL_COUNT)
-		return PetricksMethod<std::uint64_t>::solve(targetMinterms, std::move(primeImplicants));
+		return PetricksMethod<std::uint64_t>::solve(targetMinterms, std::move(primeImplicants), functionName);
 	else
 		std::cerr << "The number of prime implicants is ridiculous and this has no right to work! I won't even try.\n";
 	return {};

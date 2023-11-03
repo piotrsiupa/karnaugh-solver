@@ -7,19 +7,20 @@
 #include <utility>
 #include <vector>
 
-#include "PrimeImplicant.hh"
-#include "PrimeImplicants.hh"
+#include "Implicant.hh"
+#include "Implicants.hh"
+#include "Progress.hh"
 
 
 class OptimizedSolutions
 {
 public:
-	using solutions_t = std::vector<const PrimeImplicants*>;
+	using solutions_t = std::vector<const Implicants*>;
 	
 private:
 	using id_t = std::size_t;
 	using ids_t = std::vector<id_t>;
-	using product_t = std::pair<PrimeImplicant, ids_t>;
+	using product_t = std::pair<Implicant, ids_t>;
 	using sum_t = ids_t;
 	using finalPrimeImplicants_t = std::vector<std::size_t>;
 	
@@ -46,8 +47,8 @@ private:
 	void printGateScores(std::ostream &o) const;
 	
 	void createNegatedInputs(const solutions_t &solutions);
-	finalPrimeImplicants_t extractCommonParts(const solutions_t &solutions);
-	void extractCommonParts(const solutions_t &solutions, const finalPrimeImplicants_t &finalPrimeImplicants);
+	finalPrimeImplicants_t extractCommonProductParts(const solutions_t &solutions, Progress &progress);
+	void extractCommonSumParts(const solutions_t &solutions, const finalPrimeImplicants_t &finalPrimeImplicants, Progress &progress);
 	
 	static id_t makeProductId(const std::size_t index) { return index; }
 	id_t makeSumId(const std::size_t index) const { return index + products.size(); }
@@ -56,14 +57,14 @@ private:
 	const sum_t& getSum(const id_t id) const { return sums[id - products.size()]; }
 	
 #ifndef NDEBUG
-	using normalizedSolution_t = std::set<PrimeImplicant>;
+	using normalizedSolution_t = std::set<Implicant>;
 	normalizedSolution_t normalizeSolution(const id_t finalSumId) const;
 	void validate(const solutions_t &solutions) const;
 #endif
 	
 public:
 	OptimizedSolutions() = default;
-	OptimizedSolutions(const solutions_t &solutions);
+	OptimizedSolutions(const solutions_t &solutions, Progress &progress);
 	
 	std::size_t getSize() const { return finalSums.size(); }
 	

@@ -1,6 +1,5 @@
 #include "./Karnaugh.hh"
 
-#include <algorithm>
 #include <cassert>
 #include <cctype>
 #include <iostream>
@@ -73,64 +72,54 @@ void Karnaugh::prettyPrintTable() const
 	return prettyPrintTable(targetMinterms, allowedMinterms);
 }
 
-void Karnaugh::prettyPrintSolution(const PrimeImplicants &solution)
+void Karnaugh::prettyPrintSolution(const Implicants &solution)
 {
 	Minterms minterms;
-	for (const auto &primeImplicant : solution)
+	for (const auto &implicant : solution)
 	{
-		const auto newMinterms = primeImplicant.findMinterms();
+		const auto newMinterms = implicant.findMinterms();
 		minterms.insert(newMinterms.cbegin(), newMinterms.end());
 	}
 	prettyPrintTable(minterms);
 }
 
-void Karnaugh::printPrimeImplicant(const PrimeImplicant primeImplicant, const bool parentheses) const
+bool Karnaugh::loadMinterms(Minterms &minterms, Input &input, Progress &progress) const
 {
-	return primeImplicant.print(std::cout, parentheses);
-}
-
-void Karnaugh::printPrimeImplicants(PrimeImplicants primeImplicants) const
-{
-	if (primeImplicants.size() == 1)
+	std::vector<std::string> parts;
 	{
-		printPrimeImplicant(primeImplicants.front(), false);
+		const auto subtaskGuard = progress.enterSubtask("splitting input line");
+		progress.step(true);
+		parts = input.popParts(progress);
 	}
-	else
+	
 	{
-		std::sort(primeImplicants.begin(), primeImplicants.end());
-		for (const PrimeImplicant &primeImplicant : primeImplicants)
+		const auto subtaskGuard = progress.enterSubtask("parsing numbers");
+		progress.step(true);
+		Progress::CountingSubsteps substeps = progress.makeCountingSubsteps(static_cast<Progress::completion_t>(parts.size()));
+		for (const std::string &string : parts)
 		{
-			if (&primeImplicant != &primeImplicants.front())
-				std::cout << " || ";
-			printPrimeImplicant(primeImplicant, true);
-		}
-	}
-}
-
-bool Karnaugh::loadMinterms(Minterms &minterms, Input &input) const
-{
-	for (const std::string &string : input.popParts())
-	{
-		try
-		{
-			const unsigned long n = std::stoul(string);
-			static_assert(sizeof(unsigned long) * CHAR_BIT >= ::maxBits);
-			if (n > ::maxMinterm)
+			substeps.substep();
+			try
 			{
-				std::cerr << '"' << string << "\" is too big!\n";
+				const unsigned long n = std::stoul(string);
+				static_assert(sizeof(unsigned long) * CHAR_BIT >= ::maxBits);
+				if (n > ::maxMinterm)
+				{
+					std::cerr << '"' << string << "\" is too big!\n";
+					return false;
+				}
+				minterms.insert(n);
+			}
+			catch (std::invalid_argument &)
+			{
+				std::cerr << '"' << string << "\" is not a number!\n";
 				return false;
 			}
-			minterms.insert(n);
-		}
-		catch (std::invalid_argument &)
-		{
-			std::cerr << '"' << string << "\" is not a number!\n";
-			return false;
-		}
-		catch (std::out_of_range &)
-		{
-			std::cerr << '"' << string << "\" is out of range!\n";
-			return false;
+			catch (std::out_of_range &)
+			{
+				std::cerr << '"' << string << "\" is out of range!\n";
+				return false;
+			}
 		}
 	}
 	return true;
@@ -139,16 +128,21 @@ bool Karnaugh::loadMinterms(Minterms &minterms, Input &input) const
 #ifndef NDEBUG
 void Karnaugh::validate(const solutions_t &solutions) const
 {
-	for (Minterm i = 0;; ++i)
+	const std::string progressName = "Validating solutions for \"" + functionName + "\" (development build)";
+	Progress progress(Progress::Stage::SOLVING, progressName.c_str(), solutions.size());
+	for (const Implicants &solution : solutions)
 	{
-		if (targetMinterms.find(i) != targetMinterms.cend())
-			for (const PrimeImplicants &solution : solutions)
+		progress.step();
+		for (Minterm i = 0;; ++i)
+		{
+			progress.substep([i = std::as_const(i)](){ return static_cast<Progress::completion_t>(i) / (static_cast<Progress::completion_t>(::maxMinterm) + 1.0); });
+			if (targetMinterms.find(i) != targetMinterms.cend())
 				assert(solution.covers(i));
-		else if (allowedMinterms.find(i) == allowedMinterms.cend())
-			for (const PrimeImplicants &solution : solutions)
+			else if (allowedMinterms.find(i) == allowedMinterms.cend())
 				assert(!solution.covers(i));
-		if (i == ::maxMinterm)
-			break;
+			if (i == ::maxMinterm)
+				break;
+		}
 	}
 }
 #endif
@@ -161,8 +155,10 @@ bool Karnaugh::loadData(Input &input)
 	if (hasName)
 		functionName = input.popLine();
 	
+	const std::string progressName = "Loading function \"" + functionName + '"';
+	Progress progress(Progress::Stage::LOADING, progressName.c_str(), 5, !::terminalStdin);
 	
-	if (hasName && ::inputTerminal)
+	if (hasName && ::terminalStdin)
 		std::cerr << "Enter a list of minterms of the function \"" << functionName << "\":\n";
 	if (input.hasError())
 		return false;
@@ -171,10 +167,10 @@ bool Karnaugh::loadData(Input &input)
 		std::cerr << "A list of minterms is mandatory!\n";
 		return false;
 	}
-	if (!loadMinterms(targetMinterms, input))
+	if (!loadMinterms(targetMinterms, input, progress))
 		return false;
 	
-	if (::inputTerminal)
+	if (::terminalStdin)
 	{
 		std::cerr << "Enter a list of don't-cares of the function";
 		if (hasName)
@@ -185,11 +181,15 @@ bool Karnaugh::loadData(Input &input)
 	if (input.hasError())
 		return false;
 	if (!input.isEmpty())
-		if (!loadMinterms(allowedMinterms, input))
+		if (!loadMinterms(allowedMinterms, input, progress))
 			return false;
 	
+	const auto conflictsSubtask = progress.enterSubtask("checking for conflicts");
+	progress.step(true);
+	Progress::CountingSubsteps substeps = progress.makeCountingSubsteps(static_cast<Progress::completion_t>(targetMinterms.size()));
 	for (const Minterm &targetMinterm : targetMinterms)
 	{
+		substeps.substep();
 		if (allowedMinterms.find(targetMinterm) == allowedMinterms.cend())
 			allowedMinterms.insert(targetMinterm);
 		else
@@ -201,14 +201,14 @@ bool Karnaugh::loadData(Input &input)
 
 Karnaugh::solutions_t Karnaugh::solve() const
 {
-	const Karnaugh::solutions_t solutions = QuineMcCluskey().solve(allowedMinterms, targetMinterms);
+	const Karnaugh::solutions_t solutions = QuineMcCluskey().solve(allowedMinterms, targetMinterms, functionName);
 #ifndef NDEBUG
 	validate(solutions);
 #endif
 	return solutions;
 }
 
-void Karnaugh::printSolution(const PrimeImplicants &solution) const
+void Karnaugh::printSolution(const Implicants &solution) const
 {
 	if (::bits <= 8)
 	{
@@ -227,6 +227,6 @@ void Karnaugh::printSolution(const PrimeImplicants &solution) const
 	}
 	
 	std::cout << "solution:\n";
-	printPrimeImplicants(solution);
+	Implicants(solution).sort().print(std::cout);
 	std::cout << std::endl;
 }

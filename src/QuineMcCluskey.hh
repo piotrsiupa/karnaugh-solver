@@ -1,17 +1,18 @@
 #pragma once
 
+#include <string>
 #include <vector>
 
+#include "Implicants.hh"
 #include "Minterms.hh"
-#include "PrimeImplicants.hh"
 
 
 class QuineMcCluskey
 {
-	PrimeImplicants findPrimeImplicants(const Minterms &allowedMinterms) const;
+	Implicants findPrimeImplicants(const Minterms &allowedMinterms, const std::string &functionName) const;
 	
 public:
-	using solutions_t = std::vector<PrimeImplicants>;
+	using solutions_t = std::vector<Implicants>;
 	
-	solutions_t solve(const Minterms &allowedMinterms, const Minterms &targetMinterms) const;
+	solutions_t solve(const Minterms &allowedMinterms, const Minterms &targetMinterms, const std::string &functionName) const;
 };

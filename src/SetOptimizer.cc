@@ -1,15 +1,16 @@
 #include "./SetOptimizer.hh"
 
 #include <algorithm>
+#include <cmath>
 #include <cstdint>
 
 
-template<typename SET, typename HASSE_VALUE, template<typename> class HASSE_CONTAINER>
-typename SetOptimizer<SET, HASSE_VALUE, HASSE_CONTAINER>::Result SetOptimizer<SET, HASSE_VALUE, HASSE_CONTAINER>::extractCommonParts(const sets_t &oldSets)
+template<typename SET, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
+typename SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::Result SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::extractCommonParts(const sets_t &oldSets, Progress &progress)
 {
-	const typename HasseDiagram::setHierarchy_t setHierarchy = HasseDiagram::makeSetHierarchy(convertSets(oldSets));
+	const typename SubsetFinder::setHierarchy_t setHierarchy = SubsetFinder::makeSetHierarchy(convertSets(oldSets));
 	makeGraph(setHierarchy);
-	auto [subsetSelections, usageCounts] = findBestSubsets();
+	auto [subsetSelections, usageCounts] = findBestSubsets(progress);
 	removeUnusedSubsets(subsetSelections, usageCounts);
 	sets_t newSets = makeSets();
 	const finalSets_t finalSets = makeFinalSets(oldSets, newSets);
@@ -17,8 +18,42 @@ typename SetOptimizer<SET, HASSE_VALUE, HASSE_CONTAINER>::Result SetOptimizer<SE
 	return {newSets, finalSets, subsetSelections};
 }
 
-template<typename SET, typename HASSE_VALUE, template<typename> class HASSE_CONTAINER>
-bool SetOptimizer<SET, HASSE_VALUE, HASSE_CONTAINER>::chooseNextSubsets(subsetSelections_t &subsetSelections, usageCounts_t &usageCounts) const
+template<typename SET, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
+std::pair<Progress::completion_t, Progress::completion_t> SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::estimateCompletion(const subsetSelection_t &subsetSelection, const possibleSubsets_t &possibleSubsets)
+{
+	const Progress::completion_t stepCompletion = 1.0 / std::pow(2.0, possibleSubsets.size());
+	Progress::completion_t completion = 0.0, currentPositionWeight = 1.0;
+	std::size_t lastSubset = 0;
+	for (const std::size_t &subset : subsetSelection)
+	{
+		currentPositionWeight /= 2.0;
+		while (++lastSubset != subset + 1)
+		{
+			completion += currentPositionWeight;
+			currentPositionWeight /= 2.0;
+		}
+		completion += stepCompletion;
+	}
+	return {stepCompletion, completion};
+}
+
+template<typename SET, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
+Progress::completion_t SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::estimateCompletion(const subsetSelections_t &subsetSelections, const usageCounts_t &usageCounts) const
+{
+	Progress::completion_t completion = 0.0;
+	for (std::size_t i = 0; i != subsetSelections.size(); ++i)
+	{
+		if (usageCounts[i] == 0)
+			continue;
+		const auto [partialStepCompletion, partialCompletion] = estimateCompletion(subsetSelections[i], graph[i].second);
+		completion *= partialStepCompletion;
+		completion += partialCompletion;
+	}
+	return completion;
+}
+
+template<typename SET, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
+bool SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::chooseNextSubsets(subsetSelections_t &subsetSelections, usageCounts_t &usageCounts) const
 {
 	try_again:
 	// Don't let the familiar sight of the loop make an impression that control flow of this function is in any way understandable without analyzing specific paths.
@@ -26,7 +61,7 @@ bool SetOptimizer<SET, HASSE_VALUE, HASSE_CONTAINER>::chooseNextSubsets(subsetSe
 	{
 		if (usageCounts[i] == 0)
 			continue;
-		const std::vector<std::size_t> &possibleSubsets = graph[i].second;
+		const possibleSubsets_t &possibleSubsets = graph[i].second;
 		if (possibleSubsets.empty())
 			continue;
 		subsetSelection_t &subsetSelection = subsetSelections[i];
@@ -62,8 +97,8 @@ bool SetOptimizer<SET, HASSE_VALUE, HASSE_CONTAINER>::chooseNextSubsets(subsetSe
 	return false;
 }
 
-template<typename SET, typename HASSE_VALUE, template<typename> class HASSE_CONTAINER>
-void SetOptimizer<SET, HASSE_VALUE, HASSE_CONTAINER>::removeRedundantNodes(subsetSelections_t &subsetSelections, usageCounts_t &usageCounts) const
+template<typename SET, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
+void SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::removeRedundantNodes(subsetSelections_t &subsetSelections, usageCounts_t &usageCounts) const
 {
 	for (std::size_t nodeIndex = 0; nodeIndex != subsetSelections.size(); ++nodeIndex)
 	{
@@ -86,16 +121,18 @@ void SetOptimizer<SET, HASSE_VALUE, HASSE_CONTAINER>::removeRedundantNodes(subse
 	}
 }
 
-template<typename SET, typename HASSE_VALUE, template<typename> class HASSE_CONTAINER>
-std::pair<typename SetOptimizer<SET, HASSE_VALUE, HASSE_CONTAINER>::subsetSelections_t, typename SetOptimizer<SET, HASSE_VALUE, HASSE_CONTAINER>::usageCounts_t> SetOptimizer<SET, HASSE_VALUE, HASSE_CONTAINER>::findBestSubsets() const
+template<typename SET, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
+std::pair<typename SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::subsetSelections_t, typename SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::usageCounts_t> SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::findBestSubsets(Progress &progress) const
 {
 	subsetSelections_t subsetSelections(graph.size()), bestSubsetSelections(graph.size());
 	usageCounts_t usageCounts(graph.size()), bestUsageCounts(graph.size());
 	for (const std::size_t endNode : endNodes)
 		usageCounts[endNode] = SIZE_MAX - graph.size();
 	std::size_t bestGates = SIZE_MAX;
+	const auto estimateCompletion = [this, &subsetSelections = std::as_const(subsetSelections), &usageCounts = std::as_const(usageCounts)](){ return SetOptimizer::estimateCompletion(subsetSelections, usageCounts); };
 	while (true)
 	{
+		progress.substep(estimateCompletion);
 		subsetSelections_t candidateSubsetSelections(subsetSelections.size());
 		for (std::size_t i = 0; i != subsetSelections.size(); ++i)
 		{
@@ -120,8 +157,8 @@ std::pair<typename SetOptimizer<SET, HASSE_VALUE, HASSE_CONTAINER>::subsetSelect
 	return {bestSubsetSelections, bestUsageCounts};
 }
 
-template<typename SET, typename HASSE_VALUE, template<typename> class HASSE_CONTAINER>
-void SetOptimizer<SET, HASSE_VALUE, HASSE_CONTAINER>::removeUnusedSubsets(subsetSelections_t &subsetSelections, usageCounts_t &usageCounts)
+template<typename SET, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
+void SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::removeUnusedSubsets(subsetSelections_t &subsetSelections, usageCounts_t &usageCounts)
 {
 	std::size_t i = 0;
 	for (i = 0; i != graph.size(); ++i)
@@ -157,8 +194,8 @@ void SetOptimizer<SET, HASSE_VALUE, HASSE_CONTAINER>::removeUnusedSubsets(subset
 	endNodes = std::move(newEndNodes);
 }
 
-template<typename SET, typename HASSE_VALUE, template<typename> class HASSE_CONTAINER>
-typename SetOptimizer<SET, HASSE_VALUE, HASSE_CONTAINER>::sets_t SetOptimizer<SET, HASSE_VALUE, HASSE_CONTAINER>::makeSets() const
+template<typename SET, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
+typename SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::sets_t SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::makeSets() const
 {
 	sets_t sets;
 	sets.reserve(graph.size());
@@ -167,8 +204,8 @@ typename SetOptimizer<SET, HASSE_VALUE, HASSE_CONTAINER>::sets_t SetOptimizer<SE
 	return sets;
 }
 
-template<typename SET, typename HASSE_VALUE, template<typename> class HASSE_CONTAINER>
-typename SetOptimizer<SET, HASSE_VALUE, HASSE_CONTAINER>::finalSets_t SetOptimizer<SET, HASSE_VALUE, HASSE_CONTAINER>::makeFinalSets(const sets_t &oldSets, const sets_t &newSets)
+template<typename SET, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
+typename SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::finalSets_t SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::makeFinalSets(const sets_t &oldSets, const sets_t &newSets)
 {
 	finalSets_t finalSets(oldSets.size());
 	for (const std::size_t endNode : endNodes)
@@ -185,7 +222,7 @@ typename SetOptimizer<SET, HASSE_VALUE, HASSE_CONTAINER>::finalSets_t SetOptimiz
 }
 
 
-#include "PrimeImplicant.hh"
+#include "Implicant.hh"
 
-template class SetOptimizer<PrimeImplicant, std::int_fast8_t, std::vector>;
+template class SetOptimizer<Implicant, std::int_fast8_t, std::vector>;
 template class SetOptimizer<std::set<std::size_t>, std::size_t, std::set>;

@@ -4,19 +4,19 @@
 #include <limits>
 
 
-SetOptimizerForProducts::HasseDiagram::sets_t SetOptimizerForProducts::convertSets(const sets_t &sets) const
+SetOptimizerForProducts::SubsetFinder::sets_t SetOptimizerForProducts::convertSets(const sets_t &sets) const
 {
-	HasseDiagram::sets_t convertedSets;
-	for (const PrimeImplicant &set : sets)
+	SubsetFinder::sets_t convertedSets;
+	for (const Implicant &set : sets)
 	{
-		HasseDiagram::set_t convertedSet;
-		if (set == PrimeImplicant::all())
+		SubsetFinder::set_t convertedSet;
+		if (set == Implicant::all())
 		{
-			convertedSet.push_back(std::numeric_limits<hasseValue_t>::max());
+			convertedSet.push_back(std::numeric_limits<valueId_t>::max());
 		}
-		else if (set == PrimeImplicant::error())
+		else if (set == Implicant::error())
 		{
-			convertedSet.push_back(std::numeric_limits<hasseValue_t>::min());
+			convertedSet.push_back(std::numeric_limits<valueId_t>::min());
 		}
 		else
 		{
@@ -29,21 +29,21 @@ SetOptimizerForProducts::HasseDiagram::sets_t SetOptimizerForProducts::convertSe
 	return convertedSets;
 }
 
-void SetOptimizerForProducts::makeGraph(const HasseDiagram::setHierarchy_t &setHierarchy)
+void SetOptimizerForProducts::makeGraph(const SubsetFinder::setHierarchy_t &setHierarchy)
 {
 	graph.reserve(setHierarchy.size());
 	std::size_t i = 0;
 	for (auto &setHierarchyEntry : setHierarchy)
 	{
-		PrimeImplicant set = PrimeImplicant::all();
+		Implicant set = Implicant::all();
 		const auto &values = setHierarchyEntry.values;
-		if (values.size() == 1 && values[0] == std::numeric_limits<hasseValue_t>::max())
+		if (values.size() == 1 && values[0] == std::numeric_limits<valueId_t>::max())
 		{
-			set = PrimeImplicant::all();
+			set = Implicant::all();
 		}
-		else if (values.size() == 1 && values[0] == std::numeric_limits<hasseValue_t>::min())
+		else if (values.size() == 1 && values[0] == std::numeric_limits<valueId_t>::min())
 		{
-			set = PrimeImplicant::error();
+			set = Implicant::error();
 		}
 		else
 		{
@@ -68,7 +68,7 @@ SetOptimizerForProducts::gateCount_t SetOptimizerForProducts::countGates(const s
 		if (usageCounts[i] == 0)
 			continue;
 		gates += subsetSelections[i].size();
-		PrimeImplicant reducedProduct = graph[i].first;
+		Implicant reducedProduct = graph[i].first;
 		for (const std::size_t &subset : subsetSelections[i])
 			reducedProduct -= graph[subset].first;
 		gates += reducedProduct.getBitCount();

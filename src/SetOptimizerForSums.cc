@@ -4,15 +4,15 @@
 #include <iterator>
 
 
-SetOptimizerForSums::HasseDiagram::sets_t SetOptimizerForSums::convertSets(const sets_t &sets) const
+SetOptimizerForSums::SubsetFinder::sets_t SetOptimizerForSums::convertSets(const sets_t &sets) const
 {
-	HasseDiagram::sets_t convertedSets;
+	SubsetFinder::sets_t convertedSets;
 	for (const std::set<std::size_t> &set : sets)
 		convertedSets.push_back(set);
 	return convertedSets;
 }
 
-void SetOptimizerForSums::makeGraph(const HasseDiagram::setHierarchy_t &setHierarchy)
+void SetOptimizerForSums::makeGraph(const SubsetFinder::setHierarchy_t &setHierarchy)
 {
 	graph.reserve(setHierarchy.size());
 	std::size_t i = 0;

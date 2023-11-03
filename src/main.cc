@@ -6,6 +6,7 @@
 #include "Input.hh"
 #include "Karnaughs.hh"
 #include "non-stdlib-stuff.hh"
+#include "Progress.hh"
 
 
 static void printHelp()
@@ -49,7 +50,7 @@ static void printHelp()
 static void printVersion()
 {
 	std::cout <<
-			"karnaugh (Karnaugh Map Solver) version 0.1.1\n"
+			"karnaugh (Karnaugh Map Solver) version 0.1.2\n"
 			"Author: Piotr Siupa\n"
 #ifndef NDEBUG
 			"This is a development build which contains additional assertions. This may slow down the execution.\n"
@@ -59,7 +60,7 @@ static void printVersion()
 
 static bool parseInputBits(Input &input)
 {
-	if (::inputTerminal)
+	if (::terminalStdin)
 		std::cerr << "Enter a list of input variables or their count:\n";
 	if (input.hasError())
 		return false;
@@ -70,7 +71,9 @@ static bool parseInputBits(Input &input)
 	}
 	if (input.isName())
 	{
-		::inputNames = input.popParts();
+		Progress progress(Progress::Stage::LOADING, "Loading input names", 1);
+		progress.step();
+		::inputNames = input.popParts(progress);
 		if (::inputNames.size() > ::maxBits)
 		{
 			std::cerr << "Too many input variables!\n";
@@ -141,7 +144,8 @@ int main(const int argc, const char *const *const argv)
 		return 0;
 	}
 	
-	::inputTerminal = isInputTerminal();
+	::terminalStdin = isStdinTerminal();
+	::terminalStderr = isStderrTerminal();
 	
 	if (!solveInput(std::cin))
 		return 1;

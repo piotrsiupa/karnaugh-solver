@@ -3,18 +3,19 @@
 #include <cstdint>
 #include <vector>
 
-#include "PrimeImplicant.hh"
+#include "Implicant.hh"
+#include "Progress.hh"
 #include "SetOptimizer.hh"
 
 
-class SetOptimizerForProducts : public SetOptimizer<PrimeImplicant, std::int_fast8_t, std::vector>
+class SetOptimizerForProducts : public SetOptimizer<Implicant, std::int_fast8_t, std::vector>
 {
 public:
-	static Result optimizeSet(const sets_t &sets) { return SetOptimizerForProducts().extractCommonParts(sets); }
+	static Result optimizeSet(const sets_t &sets, Progress &progress) { const auto subtaskGuard = progress.enterSubtask("Products"); return SetOptimizerForProducts().extractCommonParts(sets, progress); }
 	
 protected:
-	HasseDiagram::sets_t convertSets(const sets_t &sets) const final;
-	void makeGraph(const HasseDiagram::setHierarchy_t &setHierarchy) final;
+	SubsetFinder::sets_t convertSets(const sets_t &sets) const final;
+	void makeGraph(const SubsetFinder::setHierarchy_t &setHierarchy) final;
 	gateCount_t countGates(const subsetSelections_t &subsetSelections, const usageCounts_t &usageCounts) const final;
 	void substractSubsets(sets_t &sets, const subsetSelections_t &subsetSelections) final;
 };

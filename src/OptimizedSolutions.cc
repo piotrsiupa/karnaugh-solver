@@ -51,7 +51,7 @@ void OptimizedSolutions::printNegatedInputs(std::ostream &o) const
 void OptimizedSolutions::printProductBody(std::ostream &o, const id_t productId) const
 {
 	const auto &[primeImplicant, ids] = getProduct(productId);
-	bool first = primeImplicant == PrimeImplicant::all();
+	bool first = primeImplicant == Implicant::all();
 	if (!first || ids.empty())
 		primeImplicant.print(o, false);
 	for (const auto &id : ids)
@@ -141,18 +141,18 @@ void OptimizedSolutions::printGateScores(std::ostream &o) const
 
 void OptimizedSolutions::createNegatedInputs(const solutions_t &solutions)
 {
-	for (const PrimeImplicants *const solution : solutions)
+	for (const Implicants *const solution : solutions)
 		for (const auto &x : *solution)
 			negatedInputs |= x.getFalseBits();
 }
 
-OptimizedSolutions::finalPrimeImplicants_t OptimizedSolutions::extractCommonParts(const solutions_t &solutions)
+OptimizedSolutions::finalPrimeImplicants_t OptimizedSolutions::extractCommonProductParts(const solutions_t &solutions, Progress &progress)
 {
-	std::vector<PrimeImplicant> oldPrimeImplicants;
-	for (const PrimeImplicants *const solution : solutions)
+	std::vector<Implicant> oldPrimeImplicants;
+	for (const Implicants *const solution : solutions)
 		for (const auto &product: *solution)
 			oldPrimeImplicants.push_back(product);
-	const auto [newPrimeImplicants, finalPrimeImplicants, subsetSelections] = SetOptimizerForProducts::optimizeSet(oldPrimeImplicants);
+	const auto [newPrimeImplicants, finalPrimeImplicants, subsetSelections] = SetOptimizerForProducts::optimizeSet(oldPrimeImplicants, progress);
 	
 	products.reserve(subsetSelections.size());
 	for (std::size_t i = 0; i != subsetSelections.size(); ++i)
@@ -161,12 +161,12 @@ OptimizedSolutions::finalPrimeImplicants_t OptimizedSolutions::extractCommonPart
 	return finalPrimeImplicants;
 }
 
-void OptimizedSolutions::extractCommonParts(const solutions_t &solutions, const finalPrimeImplicants_t &finalPrimeImplicants)
+void OptimizedSolutions::extractCommonSumParts(const solutions_t &solutions, const finalPrimeImplicants_t &finalPrimeImplicants, Progress &progress)
 {
 	std::vector<std::set<std::size_t>> oldIdSets;
 	{
 		std::size_t i = 0;
-		for (const PrimeImplicants *const solution : solutions)
+		for (const Implicants *const solution : solutions)
 		{
 			oldIdSets.emplace_back();
 			auto &oldIdSet = oldIdSets.back();
@@ -174,7 +174,7 @@ void OptimizedSolutions::extractCommonParts(const solutions_t &solutions, const 
 				oldIdSet.insert(finalPrimeImplicants[i++]);
 		}
 	}
-	const auto [newIdSets, finalIdSets, subsetSelections] = SetOptimizerForSums::optimizeSet(oldIdSets);
+	const auto [newIdSets, finalIdSets, subsetSelections] = SetOptimizerForSums::optimizeSet(oldIdSets, progress);
 	
 	sums.reserve(subsetSelections.size());
 	for (std::size_t i = 0; i != subsetSelections.size(); ++i)
@@ -223,11 +223,11 @@ OptimizedSolutions::normalizedSolution_t OptimizedSolutions::normalizeSolution(c
 	for (const id_t &rootProductId : rootProductIds)
 	{
 		idsToProcess.push_back(rootProductId);
-		PrimeImplicant resultingProduct = PrimeImplicant::all();
+		Implicant resultingProduct = Implicant::all();
 		while (!idsToProcess.empty())
 		{
 			const product_t &product = getProduct(idsToProcess.back());
-			assert(product.first.getBitCount() != 0 || (product.first == PrimeImplicant::all() && !product.second.empty()));
+			assert(product.first.getBitCount() != 0 || (product.first == Implicant::all() && !product.second.empty()));
 			idsToProcess.pop_back();
 			resultingProduct |= product.first;
 			idsToProcess.insert(idsToProcess.end(), product.second.cbegin(), product.second.cend());
@@ -241,8 +241,13 @@ void OptimizedSolutions::validate(const solutions_t &solutions) const
 {
 	assert(solutions.size() == finalSums.size());
 	
-	for (std::size_t i = 0; i != solutions.size(); ++i)
+	Progress progress(Progress::Stage::OPTIMIZING, "Validating the optimized solution", solutions.size());
+	progress.step();
+	std::size_t i;
+	const Progress::calcSubstepCompletion_t calcSubstepCompletion = [&i = std::as_const(i), n = solutions.size()](){ return static_cast<Progress::completion_t>(i) / static_cast<Progress::completion_t>(n); };
+	for (i = 0; i != solutions.size(); ++i)
 	{
+		progress.substep(calcSubstepCompletion);
 		const normalizedSolution_t expectedSolution(solutions[i]->cbegin(), solutions[i]->cend());
 		const normalizedSolution_t actualSolution = normalizeSolution(finalSums[i]);
 		assert(actualSolution == expectedSolution);
@@ -250,11 +255,11 @@ void OptimizedSolutions::validate(const solutions_t &solutions) const
 }
 #endif
 
-OptimizedSolutions::OptimizedSolutions(const solutions_t &solutions)
+OptimizedSolutions::OptimizedSolutions(const solutions_t &solutions, Progress &progress)
 {
 	createNegatedInputs(solutions);
-	const finalPrimeImplicants_t finalPrimeImplicants = extractCommonParts(solutions);
-	extractCommonParts(solutions, finalPrimeImplicants);
+	const finalPrimeImplicants_t finalPrimeImplicants = extractCommonProductParts(solutions, progress);
+	extractCommonSumParts(solutions, finalPrimeImplicants, progress);
 #ifndef NDEBUG
 	validate(solutions);
 #endif
