@@ -1,6 +1,7 @@
 #pragma once
 
 #include <chrono>
+#include <cstddef>
 #include <functional>
 #include <vector>
 
@@ -50,6 +51,21 @@ public:
 		~SubtaskGuard() { progress.subtaskNames.pop_back(); }
 	};
 	
+	template<typename T = std::size_t>
+	class CountingSubsteps
+	{
+		Progress &progress;
+		T i = 0;
+		const calcSubstepCompletion_t calcCompletion;
+		friend class Progress;
+		CountingSubsteps(Progress &progress, const completion_t n) : progress(progress), calcCompletion([&i = std::as_const(i), n](){ return static_cast<completion_t>(i) / n; }) {}
+		CountingSubsteps(const CountingSubsteps&) = delete;
+		CountingSubsteps& operator=(const CountingSubsteps&) = delete;
+	public:
+		void substep(const bool force = false) { progress.substep(calcCompletion, force); ++i; }
+		void substep(const T increment, const bool force = false) { progress.substep(calcCompletion, force); i += increment; }
+	};
+	
 	Progress(const char processName[], const steps_t allSteps);
 	Progress(const Progress&) = delete;
 	Progress& operator=(const Progress&) = delete;
@@ -57,6 +73,8 @@ public:
 	
 	void step(const bool force = false) { if (::terminalStderr) { ++stepsSoFar; handleStep(calc0SubstepCompletion, force); } }
 	void substep(const calcSubstepCompletion_t &calcSubstepCompletion, const bool force = false) { if (::terminalStderr) { if (--substepsToSkip == 0 || force) handleStep(calcSubstepCompletion, force); ++substepsSoFar; } }
+	template<typename T = std::size_t>
+	CountingSubsteps<T> makeCountingSubsteps(const completion_t n) { return {*this, n}; }
 	
 	SubtaskGuard enterSubtask(const char subtaskName[]) { subtaskNames.push_back(subtaskName); return {*this}; }
 };

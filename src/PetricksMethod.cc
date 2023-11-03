@@ -34,14 +34,12 @@ Implicants PetricksMethod<INDEX_T>::extractEssentials(const std::string &functio
 	const std::string progressName = "Extracting essentials of \"" + functionName + '"';
 	Progress progress(progressName.c_str(), 1);
 	progress.step();
-	std::size_t i = 0, n = minterms.size();
-	Progress::calcSubstepCompletion_t calcSubstepCompletion = [&i = std::as_const(i), &n = std::as_const(n)](){ return static_cast<Progress::completion_t>(i) / static_cast<Progress::completion_t>(n); };
+	Progress::CountingSubsteps substeps = progress.makeCountingSubsteps(minterms.size());
 	
 	Implicants essentials;
 	for (typename minterms_t::const_iterator iter = minterms.cbegin(); iter != minterms.cend();)
 	{
-		progress.substep(calcSubstepCompletion);
-		++i;
+		substeps.substep();
 		const index_t essentialPrimeImplicantIndex = findEssentialPrimeImplicantIndex(*iter);
 		if (essentialPrimeImplicantIndex == NO_INDEX)
 		{
@@ -72,13 +70,11 @@ typename PetricksMethod<INDEX_T>::productOfSumsOfProducts_t PetricksMethod<INDEX
 	const std::string progressName = "Creating initial solution space for \"" + functionName + '"';
 	Progress progress(progressName.c_str(), 1);
 	progress.step();
-	std::size_t i = 0;
-	const Progress::calcSubstepCompletion_t calcSubstepCompletion = [&i = std::as_const(i), n = minterms.size()](){ return static_cast<Progress::completion_t>(i) / static_cast<Progress::completion_t>(n); };
+	Progress::CountingSubsteps substeps = progress.makeCountingSubsteps(minterms.size());
 	productOfSumsOfProducts_t productOfSums;
 	for (const Minterm &minterm : minterms)
 	{
-		progress.substep(calcSubstepCompletion);
-		++i;
+		substeps.substep();
 		sumOfProducts_t &sum = productOfSums.emplace_back();
 		for (index_t i = 0; i != primeImplicants.size(); ++i)
 			if (primeImplicants[i].covers(minterm))
@@ -93,12 +89,10 @@ void PetricksMethod<INDEX_T>::removeRedundantSums(productOfSumsOfProducts_t &pro
 	const std::string progressName = "Cleaning up solution space for \"" + functionName + '"';
 	Progress progress(progressName.c_str(), 1);
 	progress.step();
-	std::size_t i = 0;
-	const Progress::calcSubstepCompletion_t calcSubstepCompletion = [&i = std::as_const(i), n = productOfSums.size()](){ return static_cast<Progress::completion_t>(i) / static_cast<Progress::completion_t>(n); };
+	Progress::CountingSubsteps substeps = progress.makeCountingSubsteps(productOfSums.size());
 	for (auto x = productOfSums.begin(); x != productOfSums.end(); ++x)
 	{
-		progress.substep(calcSubstepCompletion);
-		++i;
+		substeps.substep();
 		if (!x->empty())
 		{
 			for (auto y = std::next(x); y != productOfSums.end(); ++y)
@@ -135,10 +129,10 @@ inline typename PetricksMethod<INDEX_T>::sumOfProducts_t PetricksMethod<INDEX_T>
 	product_t newProduct;
 	newProduct.reserve(multiplier0.front().size() + multiplier1.front().size());
 	HasseDiagram<index_t> hasseDiagram;
-	const auto estimateCompletion = [&actualOperations = std::as_const(actualOperations), expectedOperations](){ return static_cast<Progress::completion_t>(actualOperations / expectedOperations); };
 	{
-		Progress::SubtaskGuard progressSubtask = progress.enterSubtask("expanding");
 		std::size_t operationsThisTime = 0;
+		const auto estimateCompletion = [actualOperations, &operationsThisTime = std::as_const(operationsThisTime), expectedOperations](){ return static_cast<Progress::completion_t>((actualOperations + operationsThisTime) / expectedOperations); };
+		Progress::SubtaskGuard progressSubtask = progress.enterSubtask("expanding");
 		for (const product_t &x : multiplier0)
 		{
 			for (const product_t &y : multiplier1)
@@ -153,6 +147,7 @@ inline typename PetricksMethod<INDEX_T>::sumOfProducts_t PetricksMethod<INDEX_T>
 		actualOperations += operationsThisTime;
 	}
 	{	
+		const auto estimateCompletion = [&actualOperations = std::as_const(actualOperations), expectedOperations](){ return static_cast<Progress::completion_t>(actualOperations / expectedOperations); };
 		Progress::SubtaskGuard progressSubtask = progress.enterSubtask("refining");
 		progress.substep(estimateCompletion, true);
 		return hasseDiagram.getSets();

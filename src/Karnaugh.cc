@@ -95,12 +95,10 @@ bool Karnaugh::loadMinterms(Minterms &minterms, Input &input, Progress &progress
 	{
 		const auto subtaskGuard = progress.enterSubtask("parsing numbers");
 		progress.step(true);
-		std::size_t i = 0;
-		const Progress::calcSubstepCompletion_t calcSubstepCompletion = [&i = std::as_const(i), n = parts.size()](){ return static_cast<Progress::completion_t>(i) / static_cast<Progress::completion_t>(n); };
+		Progress::CountingSubsteps substeps = progress.makeCountingSubsteps(parts.size());
 		for (const std::string &string : parts)
 		{
-			progress.substep(calcSubstepCompletion);
-			++i;
+			substeps.substep();
 			try
 			{
 				const unsigned long n = std::stoul(string);
@@ -188,12 +186,10 @@ bool Karnaugh::loadData(Input &input)
 	
 	const auto conflictsSubtask = progress.enterSubtask("checking for conflicts");
 	progress.step(true);
-	std::size_t i = 0;
-	const Progress::calcSubstepCompletion_t calcSubstepCompletion = [&i = std::as_const(i), n = targetMinterms.size()](){ return static_cast<Progress::completion_t>(i) / static_cast<Progress::completion_t>(n); };
+	Progress::CountingSubsteps substeps = progress.makeCountingSubsteps(targetMinterms.size());
 	for (const Minterm &targetMinterm : targetMinterms)
 	{
-		progress.substep(calcSubstepCompletion);
-		++i;
+		substeps.substep();
 		if (allowedMinterms.find(targetMinterm) == allowedMinterms.cend())
 			allowedMinterms.insert(targetMinterm);
 		else
