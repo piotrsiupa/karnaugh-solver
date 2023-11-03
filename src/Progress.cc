@@ -125,11 +125,12 @@ void Progress::handleStep(const calcSubstepCompletion_t &calcSubstepCompletion, 
 		reportProgress(calcSubstepCompletion);
 }
 
-Progress::Progress(const char processName[], const steps_t allSteps) :
+Progress::Progress(const char processName[], const steps_t allSteps, const bool progressVisible) :
 	processName(processName),
-	allSteps(allSteps)
+	allSteps(allSteps),
+	progressVisible(progressVisible)
 {
-	if (::terminalStderr)
+	if (progressVisible)
 	{
 		lastReportTime = startTime = std::chrono::steady_clock::now();
 		substepsToSkip = 2;
