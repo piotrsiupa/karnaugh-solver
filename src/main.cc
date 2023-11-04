@@ -1,4 +1,3 @@
-#include <cstring>
 #include <iostream>
 #include <string>
 
@@ -6,6 +5,7 @@
 #include "Input.hh"
 #include "Karnaughs.hh"
 #include "non-stdlib-stuff.hh"
+#include "options.hh"
 #include "Progress.hh"
 
 
@@ -20,7 +20,7 @@ static void printHelp()
 			"\n"
 			"Usage:\tkarnough [OPTIONS...]\n"
 			"Options:\n"
-			"\t--help\t\t- Print this help text.\n"
+			"    -h, --help\t\t- Print this help text.\n"
 			"\t--version\t- Print version information.\n"
 			"\n"
 			"Input:\n"
@@ -133,12 +133,20 @@ static bool solveInput(std::istream &istream)
 
 int main(const int argc, const char *const *const argv)
 {
-	if (argc > 1 && std::strcmp(argv[1], "--help") == 0)
+	if (!options::parse(argc, argv))
+		return 1;
+	if (!options::freeOptions.empty())
+	{
+		std::cerr << "Too many arguments!\n";
+		return 1;
+	}
+	
+	if (options::help.isRaised())
 	{
 		printHelp();
 		return 0;
 	}
-	else if (argc > 1 && std::strcmp(argv[1], "--version") == 0)
+	else if (options::version.isRaised())
 	{
 		printVersion();
 		return 0;
