@@ -6,7 +6,7 @@
 #include <vector>
 
 
-extern bool terminalStdin, terminalStderr;
+extern bool terminalStdin, terminalInput, terminalStderr;
 
 extern std::vector<std::string> inputNames;
 

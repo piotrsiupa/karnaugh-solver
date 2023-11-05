@@ -1,7 +1,7 @@
 #include "./global.hh"
 
 
-bool terminalStdin, terminalStderr;
+bool terminalStdin, terminalInput, terminalStderr;
 
 std::vector<std::string> inputNames;
 

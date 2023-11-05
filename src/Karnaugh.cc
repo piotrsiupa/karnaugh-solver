@@ -156,9 +156,9 @@ bool Karnaugh::loadData(Input &input)
 		functionName = input.popLine();
 	
 	const std::string progressName = "Loading function \"" + functionName + '"';
-	Progress progress(Progress::Stage::LOADING, progressName.c_str(), 5, !::terminalStdin);
+	Progress progress(Progress::Stage::LOADING, progressName.c_str(), 5, !::terminalInput);
 	
-	if (hasName && ::terminalStdin)
+	if (hasName && ::terminalInput)
 		std::cerr << "Enter a list of minterms of the function \"" << functionName << "\":\n";
 	if (input.hasError())
 		return false;
@@ -170,7 +170,7 @@ bool Karnaugh::loadData(Input &input)
 	if (!loadMinterms(targetMinterms, input, progress))
 		return false;
 	
-	if (::terminalStdin)
+	if (::terminalInput)
 	{
 		std::cerr << "Enter a list of don't-cares of the function";
 		if (hasName)

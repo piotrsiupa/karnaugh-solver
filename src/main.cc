@@ -1,4 +1,7 @@
+#include <fstream>
 #include <iostream>
+#include <istream>
+#include <memory>
 #include <string>
 
 #include "global.hh"
@@ -60,7 +63,7 @@ static void printVersion()
 
 static bool parseInputBits(Input &input)
 {
-	if (::terminalStdin)
+	if (::terminalInput)
 		std::cerr << "Enter a list of input variables or their count:\n";
 	if (input.hasError())
 		return false;
@@ -121,6 +124,42 @@ static bool parseInputBits(Input &input)
 	return true;
 }
 
+static void deleteIstream(const std::istream *const stream) {
+	if (stream != &std::cin)
+		delete stream;
+}
+using IstreamUniquePtr = std::unique_ptr<std::istream, decltype(&deleteIstream)>;
+static IstreamUniquePtr prepareIstream()
+{
+	if (options::freeOptions.empty())
+	{
+		return {&std::cin, deleteIstream};
+	}
+	else if (options::freeOptions.size() == 1)
+	{
+		const std::string path(options::freeOptions.front());
+		if (path == "-")
+		{
+			return {&std::cin, deleteIstream};
+		}
+		else
+		{
+			IstreamUniquePtr ifstream(new std::ifstream(path), deleteIstream);
+			if (!*ifstream)
+			{
+				std::cerr << "Cannot open \"" << path << "\"!\n";
+				return {nullptr, deleteIstream};
+			}
+			return ifstream;
+		}
+	}
+	else
+	{
+		std::cerr << "Too many arguments!\n";
+		return {nullptr, deleteIstream};
+	}
+}
+
 static bool solveInput(std::istream &istream)
 {
 	Input input(istream);
@@ -135,11 +174,6 @@ int main(const int argc, const char *const *const argv)
 {
 	if (!options::parse(argc, argv))
 		return 1;
-	if (!options::freeOptions.empty())
-	{
-		std::cerr << "Too many arguments!\n";
-		return 1;
-	}
 	
 	if (options::help.isRaised())
 	{
@@ -152,10 +186,15 @@ int main(const int argc, const char *const *const argv)
 		return 0;
 	}
 	
+	const IstreamUniquePtr istream = prepareIstream();
+	if (!istream)
+		return 1;
+	
 	::terminalStdin = isStdinTerminal();
+	::terminalInput = ::terminalStdin && istream.get() == &std::cin;
 	::terminalStderr = isStderrTerminal();
 	
-	if (!solveInput(std::cin))
+	if (!solveInput(*istream))
 		return 1;
 	
 	return 0;

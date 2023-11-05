@@ -29,7 +29,7 @@ bool Karnaughs::loadData(Input &input)
 {
 	while (true)
 	{
-		if (::terminalStdin)
+		if (::terminalInput)
 			std::cerr << "Either end the input or enter a name of the next function (optional) or a list of its minterms:\n";
 		if (input.hasError())
 			return false;
