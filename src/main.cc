@@ -131,13 +131,13 @@ static void deleteIstream(const std::istream *const stream) {
 using IstreamUniquePtr = std::unique_ptr<std::istream, decltype(&deleteIstream)>;
 static IstreamUniquePtr prepareIstream()
 {
-	if (options::freeOptions.empty())
+	if (options::freeArgs.empty())
 	{
 		return {&std::cin, deleteIstream};
 	}
-	else if (options::freeOptions.size() == 1)
+	else if (options::freeArgs.size() == 1)
 	{
-		const std::string path(options::freeOptions.front());
+		const std::string path(options::freeArgs.front());
 		if (path == "-")
 		{
 			return {&std::cin, deleteIstream};

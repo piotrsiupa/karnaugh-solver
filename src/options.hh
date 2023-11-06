@@ -42,7 +42,7 @@ namespace options
 	extern Flag help;
 	extern Flag version;
 	
-	extern std::vector<std::string_view> freeOptions;
+	extern std::vector<std::string_view> freeArgs;
 	
 	
 	[[nodiscard]] bool parse(const int argc, const char *const *const argv);
