@@ -20,7 +20,7 @@ namespace options
 	
 	
 	Flag help("help", 'h');
-	Flag version("version");
+	Flag version("version", 'v');
 	
 	std::vector<std::string_view> freeArgs;
 	

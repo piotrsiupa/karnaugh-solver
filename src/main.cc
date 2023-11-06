@@ -24,7 +24,7 @@ static void printHelp()
 			"Usage:\tkarnough [OPTIONS...]\n"
 			"Options:\n"
 			"    -h, --help\t\t- Print this help text.\n"
-			"\t--version\t- Print version information.\n"
+			"    -v, --version\t- Print version information.\n"
 			"\n"
 			"Input:\n"
 			"The input is read from the stdin and has the following format:\nINPUTS_DESCRIPTION <line-break> LIST_OF_FUNCTIONS\n"
