@@ -15,16 +15,17 @@ class Karnaughs
 	using solutionses_t = std::vector<solutions_t>;
 	
 	karnaughs_t karnaughs;
+	solutions_t bestSolutions;
 	OptimizedSolutions optimizedSolutions;
 	
-	void printSolutions(const solutions_t &solutions) const;
+	void printBestSolutions() const;
 	void printOptimizedSolution() const;
 	
-	bool loadData(Input &input);
 	solutionses_t makeSolutionses() const;
-	void findBestSolutions(const solutionses_t &solutionses, solutions_t &bestSolutions);
-	void solve();
+	void findBestSolutions(const solutionses_t &solutionses);
 	
 public:
-	static bool solve(Input &input);
+	bool loadData(Input &input);
+	void solve();
+	void print();
 };

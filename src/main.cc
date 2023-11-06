@@ -160,13 +160,23 @@ static IstreamUniquePtr prepareIstream()
 	}
 }
 
-static bool solveInput(std::istream &istream)
+static bool loadInput(IstreamUniquePtr istream, Karnaughs &karnaughs)
 {
-	Input input(istream);
+	Input input(*istream);
 	if (!parseInputBits(input))
 		return false;
-	if (!Karnaughs::solve(input))
+	if (!karnaughs.loadData(input))
 		return false;
+	return true;
+}
+
+static bool processInput(IstreamUniquePtr istream)
+{
+	Karnaughs karnaughs;
+	if (!loadInput(std::move(istream), karnaughs))
+		return false;
+	karnaughs.solve();
+	karnaughs.print();
 	return true;
 }
 
@@ -186,7 +196,7 @@ int main(const int argc, const char *const *const argv)
 		return 0;
 	}
 	
-	const IstreamUniquePtr istream = prepareIstream();
+	IstreamUniquePtr istream = prepareIstream();
 	if (!istream)
 		return 1;
 	
@@ -194,7 +204,7 @@ int main(const int argc, const char *const *const argv)
 	::terminalInput = ::terminalStdin && istream.get() == &std::cin;
 	::terminalStderr = isStderrTerminal();
 	
-	if (!solveInput(*istream))
+	if (!processInput(std::move(istream)))
 		return 1;
 	
 	return 0;

@@ -5,14 +5,14 @@
 #include "Progress.hh"
 
 
-void Karnaughs::printSolutions(const solutions_t &solutions) const
+void Karnaughs::printBestSolutions() const
 {
 	for (std::size_t i = 0; i != karnaughs.size(); ++i)
 	{
 		if (i != 0)
 			std::cout << '\n';
 		std::cout << "--- " << karnaughs[i].getFunctionName() << " ---\n\n";
-		karnaughs[i].printSolution(solutions[i]);
+		karnaughs[i].printSolution(bestSolutions[i]);
 	}
 }
 
@@ -51,7 +51,7 @@ Karnaughs::solutionses_t Karnaughs::makeSolutionses() const
 	return solutionses;
 }
 
-void Karnaughs::findBestSolutions(const solutionses_t &solutionses, solutions_t &bestSolutions)
+void Karnaughs::findBestSolutions(const solutionses_t &solutionses)
 {
 	if (solutionses.empty())
 		return;
@@ -94,23 +94,15 @@ void Karnaughs::findBestSolutions(const solutionses_t &solutionses, solutions_t 
 void Karnaughs::solve()
 {
 	const std::vector<solutions_t> solutionses = makeSolutionses();
-	
-	solutions_t solutions;
-	findBestSolutions(solutionses, solutions);
-	
-	printSolutions(solutions);
-	if (!solutions.empty())
+	findBestSolutions(solutionses);
+}
+
+void Karnaughs::print()
+{
+	printBestSolutions();
+	if (!bestSolutions.empty())
 		std::cout << '\n';
 	std::cout << "=== optimized solution ===\n\n";
 	printOptimizedSolution();
 	std::cout << std::flush;
-}
-
-bool Karnaughs::solve(Input &input)
-{
-	Karnaughs karnaughs;
-	if (!karnaughs.loadData(input))
-		return false;
-	karnaughs.solve();
-	return true;
 }
