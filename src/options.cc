@@ -1,12 +1,16 @@
 #include "./options.hh"
 
+#include <cctype>
 #include <iostream>
+#include <regex>
+
+#include "global.hh"
 
 
 namespace options
 {
 	
-	bool Flag::parse(std::string_view argument)
+	bool NoArgOption::parse(std::string_view argument)
 	{
 		if (!argument.empty())
 		{
@@ -14,13 +18,50 @@ namespace options
 			std::cerr << "The option \"--" << getLongName() << "\" doesn't take an argument!\n";
 			return false;
 		}
-		raised = true;
+		return parse();
+	}
+	
+	Trilean::Trilean(const std::string_view longName, const char shortName, const getDefault_t getDefault) :
+		Option(longName, shortName),
+		getDefault(getDefault),
+		negatedLongName("no-" + std::string(longName)),
+		negated(negatedLongName, std::toupper(shortName), *this)
+	{
+	}
+	
+	bool Trilean::parse(std::string_view argument)
+	{
+		static const std::regex trueRegex("y(es)?|a(lways)?|t(rue)?", std::regex_constants::icase | std::regex_constants::nosubs);
+		static const std::regex falseRegex("n(o)?|n(ever)?|f(alse)?", std::regex_constants::icase | std::regex_constants::nosubs);
+		static const std::regex defaultRegex("d(efault)?", std::regex_constants::icase | std::regex_constants::nosubs);
+		std::cmatch match;
+		if (std::regex_match(argument.begin(), argument.end(), match, trueRegex) || argument.empty())
+		{
+			undecided = false;
+			value = true;
+		}
+		else if (std::regex_match(argument.begin(), argument.end(), match, falseRegex))
+		{
+			undecided = false;
+			value = false;
+		}
+		else if (std::regex_match(argument.begin(), argument.end(), match, defaultRegex))
+		{
+			undecided = true;
+		}
+		else
+		{
+			std::cerr << "Invalid value \"" << argument << "\" for the option \"--" << getLongName() << "\"!\n";
+			return false;
+		}
 		return true;
 	}
 	
 	
 	Flag help("help", 'h');
 	Flag version("version", 'v');
+	
+	Trilean prompt("prompt", 'p', [](){ return ::terminalInput; });
 	
 	std::vector<std::string_view> freeArgs;
 	
@@ -50,7 +91,7 @@ namespace options
 			[[nodiscard]] static bool parse(const int argc, const char *const *const argv) { return Parser(argc, argv).parse(); }
 		};
 		
-		Option *const Parser::allOptions[] = {&help, &version};
+		Option *const Parser::allOptions[] = {&help, &version, &prompt, &prompt.getNegatedOption()};
 		
 		bool Parser::parseShortOption(const char *&shortName, Option &option)
 		{

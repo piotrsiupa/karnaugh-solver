@@ -4,6 +4,7 @@
 #include <cctype>
 #include <iostream>
 
+#include "options.hh"
 #include "QuineMcCluskey.hh"
 
 
@@ -156,9 +157,9 @@ bool Karnaugh::loadData(Input &input)
 		functionName = input.popLine();
 	
 	const std::string progressName = "Loading function \"" + functionName + '"';
-	Progress progress(Progress::Stage::LOADING, progressName.c_str(), 5, !::terminalInput);
+	Progress progress(Progress::Stage::LOADING, progressName.c_str(), 5, !options::prompt.getValue());
 	
-	if (hasName && ::terminalInput)
+	if (hasName && options::prompt.getValue())
 		std::cerr << "Enter a list of minterms of the function \"" << functionName << "\":\n";
 	if (input.hasError())
 		return false;
@@ -170,7 +171,7 @@ bool Karnaugh::loadData(Input &input)
 	if (!loadMinterms(targetMinterms, input, progress))
 		return false;
 	
-	if (::terminalInput)
+	if (options::prompt.getValue())
 	{
 		std::cerr << "Enter a list of don't-cares of the function";
 		if (hasName)

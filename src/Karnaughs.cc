@@ -2,6 +2,7 @@
 
 #include <iostream>
 
+#include "options.hh"
 #include "Progress.hh"
 
 
@@ -29,7 +30,7 @@ bool Karnaughs::loadData(Input &input)
 {
 	while (true)
 	{
-		if (::terminalInput)
+		if (options::prompt.getValue())
 			std::cerr << "Either end the input or enter a name of the next function (optional) or a list of its minterms:\n";
 		if (input.hasError())
 			return false;
