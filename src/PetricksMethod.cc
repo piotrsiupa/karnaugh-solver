@@ -9,6 +9,8 @@
 #include <string>
 #include <sstream>
 
+#include "options.hh"
+
 
 template<typename INDEX_T>
 typename PetricksMethod<INDEX_T>::index_t PetricksMethod<INDEX_T>::findEssentialPrimeImplicantIndex(const Minterm minterm)
@@ -178,7 +180,7 @@ typename PetricksMethod<INDEX_T>::sumOfProducts_t PetricksMethod<INDEX_T>::findS
 	
 	while (productOfSumsOfProducts.size() != 1)
 	{
-		if (::terminalStderr)
+		if (progress.isVisible())
 		{
 			expectedSolutions = 0.0;
 			expectedSolutions = 0.0;
@@ -195,7 +197,7 @@ typename PetricksMethod<INDEX_T>::sumOfProducts_t PetricksMethod<INDEX_T>::findS
 		productOfSumsOfProducts.pop_back();
 		sumOfProducts_t multiplier1 = std::move(productOfSumsOfProducts.back());
 		productOfSumsOfProducts.pop_back();
-		if (::terminalStderr)
+		if (progress.isVisible())
 		{
 			const std::uintmax_t expectedResultSize = static_cast<std::uintmax_t>(multiplier0.size()) * static_cast<std::uintmax_t>(multiplier1.size());
 			productOfSumsOfProducts.emplace_back(multiplySumsOfProducts(std::move(multiplier0), std::move(multiplier1), actualOperations, expectedOperations, progress));

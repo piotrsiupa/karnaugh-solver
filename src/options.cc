@@ -62,6 +62,7 @@ namespace options
 	Flag version("version", 'v');
 	
 	Trilean prompt("prompt", 'p', [](){ return ::terminalInput; });
+	Trilean status("status", 's', [](){ return ::terminalStderr; });
 	
 	std::vector<std::string_view> freeArgs;
 	
@@ -91,7 +92,7 @@ namespace options
 			[[nodiscard]] static bool parse(const int argc, const char *const *const argv) { return Parser(argc, argv).parse(); }
 		};
 		
-		Option *const Parser::allOptions[] = {&help, &version, &prompt, &prompt.getNegatedOption()};
+		Option *const Parser::allOptions[] = {&help, &version, &prompt, &prompt.getNegatedOption(), &status, &status.getNegatedOption()};
 		
 		bool Parser::parseShortOption(const char *&shortName, Option &option)
 		{

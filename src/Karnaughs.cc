@@ -60,7 +60,7 @@ void Karnaughs::findBestSolutions(const solutionses_t &solutionses)
 	bestSolutions.resize(solutionses.size());
 	std::size_t bestGateScore = SIZE_MAX;
 	Progress::steps_t steps = 1;
-	if (::terminalStderr)
+	if (options::status.getValue())
 		for (const solutions_t &solutions : solutionses)
 			steps *= solutions.size();
 	Progress progress(Progress::Stage::OPTIMIZING, "Eliminating common subexpressions", steps);

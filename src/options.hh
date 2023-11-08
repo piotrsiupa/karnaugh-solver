@@ -80,6 +80,7 @@ namespace options
 	extern Flag version;
 	
 	extern Trilean prompt;
+	extern Trilean status;
 	
 	extern std::vector<std::string_view> freeArgs;
 	

@@ -15,7 +15,7 @@ def run_test(test_dir: Path, program: Path, test_name: str) -> bool:
     print(f'Running "{test_name}"...', end=' ', flush=True)
     input_file = test_dir / (test_name + '.input')
     output_file = test_dir / (test_name + '.output')
-    process = subprocess.Popen(['./' + str(program), input_file], text=True, stdout=subprocess.PIPE)
+    process = subprocess.Popen(['./' + str(program), '--no-status', input_file], text=True, stdout=subprocess.PIPE)
     starttime = time.perf_counter()
     while True:
         try:

@@ -39,7 +39,7 @@ private:
 	steps_t allSteps;
 	steps_t stepsSoFar = 0;
 	steps_t substepsSoFar = 0, substepsToSkip;
-	bool progressVisible;
+	bool visible;
 	std::vector<const char*> subtaskNames;
 	bool reportVisible = false;
 	
@@ -80,15 +80,17 @@ public:
 		void substep(const T increment, const bool force = false) { progress.substep(calcCompletion, force); i += increment; }
 	};
 	
-	Progress(const Stage stage, const char processName[], const steps_t allSteps, const bool progressVisible = true);
+	Progress(const Stage stage, const char processName[], const steps_t allSteps, const bool visible = true);
 	Progress(const Progress&) = delete;
 	Progress& operator=(const Progress&) = delete;
 	~Progress() { clearReport(true); }
 	
-	void step(const bool force = false) { if (progressVisible) { ++stepsSoFar; handleStep(calc0SubstepCompletion, force); } }
-	void substep(const calcSubstepCompletion_t &calcSubstepCompletion, const bool force = false) { if (progressVisible) { if (--substepsToSkip == 0 || force) handleStep(calcSubstepCompletion, force); ++substepsSoFar; } }
-	template<typename T = std::size_t>
-	CountingSubsteps<T> makeCountingSubsteps(const completion_t n) { return {*this, n}; }
+	[[nodiscard]] bool isVisible() const { return visible; }
 	
-	SubtaskGuard enterSubtask(const char subtaskName[]) { subtaskNames.push_back(subtaskName); return {*this}; }
+	void step(const bool force = false) { if (visible) { ++stepsSoFar; handleStep(calc0SubstepCompletion, force); } }
+	void substep(const calcSubstepCompletion_t &calcSubstepCompletion, const bool force = false) { if (visible) { if (--substepsToSkip == 0 || force) handleStep(calcSubstepCompletion, force); ++substepsSoFar; } }
+	template<typename T = std::size_t>
+	[[nodiscard]] CountingSubsteps<T> makeCountingSubsteps(const completion_t n) { return {*this, n}; }
+	
+	[[nodiscard]] SubtaskGuard enterSubtask(const char subtaskName[]) { subtaskNames.push_back(subtaskName); return {*this}; }
 };
