@@ -38,7 +38,7 @@ private:
 	timePoint_t startTime, lastReportTime;
 	steps_t allSteps;
 	steps_t stepsSoFar = 0;
-	steps_t substepsSoFar = 0, substepsToSkip;
+	steps_t substepsSoFar, substepsToSkip;
 	bool visible;
 	std::vector<const char*> subtaskNames;
 	bool reportVisible = false;
@@ -87,7 +87,7 @@ public:
 	
 	[[nodiscard]] bool isVisible() const { return visible; }
 	
-	void step(const bool force = false) { if (visible) { ++stepsSoFar; handleStep(calc0SubstepCompletion, force); } }
+	void step(const bool force = false);
 	void substep(const calcSubstepCompletion_t &calcSubstepCompletion, const bool force = false) { if (visible) { if (--substepsToSkip == 0 || force) handleStep(calcSubstepCompletion, force); ++substepsSoFar; } }
 	template<typename T = std::size_t>
 	[[nodiscard]] CountingSubsteps<T> makeCountingSubsteps(const completion_t n) { return {*this, n}; }

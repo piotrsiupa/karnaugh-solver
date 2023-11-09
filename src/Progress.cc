@@ -167,9 +167,18 @@ Progress::Progress(const Stage stage, const char processName[], const steps_t al
 	if (static_cast<std::size_t>(stage) != STAGE_COUNT - 1)
 		assert(stageCounters[static_cast<std::size_t>(stage) + 1] == 0);
 	++stageCounters[static_cast<std::size_t>(stage)];
+	if (reportVisible)
+		lastReportTime = startTime = std::chrono::steady_clock::now();
+}
+
+void Progress::step(const bool force)
+{
 	if (visible)
 	{
-		lastReportTime = startTime = std::chrono::steady_clock::now();
+		++stepsSoFar;
+		handleStep(calc0SubstepCompletion, force);
+		lastReportTime = std::chrono::steady_clock::now();
+		substepsSoFar = 0;
 		substepsToSkip = 2;
 	}
 }
