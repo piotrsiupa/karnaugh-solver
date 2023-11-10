@@ -3,6 +3,7 @@
 #include <chrono>
 #include <cstddef>
 #include <functional>
+#include <iostream>
 #include <utility>
 #include <vector>
 
@@ -39,21 +40,37 @@ private:
 	steps_t allSteps;
 	steps_t stepsSoFar = 0;
 	steps_t substepsSoFar, substepsToSkip;
+	completion_t completion;
 	bool visible;
 	std::vector<const char*> subtaskNames;
-	bool reportVisible = false;
+	bool reported = false;
 	
 	steps_t calcStepsToSkip(const double secondsToSkip, const double secondsPerStep) const;
 	bool checkReportInterval(const bool force);
 	static void printTime(const double seconds);
 	void clearReport(const bool clearStage);
 	void reportStage() const;
-	void reportProgress(const calcSubstepCompletion_t &calcSubstepCompletion);
+	void reportProgress();
+	void reportProgress(const calcSubstepCompletion_t &calcSubstepCompletion) { completion = calcSubstepCompletion() / allSteps + calcStepCompletion(); return reportProgress(); }
 	void handleStep(const calcSubstepCompletion_t &calcSubstepCompletion, const bool force);
 	
 	completion_t calcStepCompletion() const { return static_cast<completion_t>(stepsSoFar - 1) / allSteps; }
 	
 public:
+	class CerrGuard
+	{
+		Progress &progress;
+		const bool reportedBefore;
+		CerrGuard(Progress &progress) : progress(progress), reportedBefore(progress.reported) { progress.clearReport(true); std::clog << std::flush; }
+		CerrGuard(const CerrGuard&) = delete;
+		CerrGuard& operator=(const CerrGuard&) = delete;
+		friend class Progress;
+	public:
+		~CerrGuard() { if (reportedBefore) progress.reportProgress(); }
+		template<typename T>
+		const CerrGuard& operator<<(T val) const { std::cerr << std::forward<T>(val); return *this; }
+	};
+	
 	class SubtaskGuard
 	{
 		Progress &progress;
@@ -86,6 +103,7 @@ public:
 	~Progress() { clearReport(true); }
 	
 	[[nodiscard]] bool isVisible() const { return visible; }
+	[[nodiscard]] CerrGuard cerr() { return {*this}; }
 	
 	void step(const bool force = false);
 	void substep(const calcSubstepCompletion_t &calcSubstepCompletion, const bool force = false) { if (visible) { if (--substepsToSkip == 0 || force) handleStep(calcSubstepCompletion, force); ++substepsSoFar; } }

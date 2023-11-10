@@ -21,12 +21,12 @@ class Input
 	State state = State::NOT_LOADED;
 	
 	void trimLine();
-	void load();
+	void load(Progress *const progress);
 	
 public:
 	Input(std::istream &istream) : istream(istream) {}
 	
-	bool hasError();
+	bool hasError(Progress *const progress = nullptr);
 	bool isEmpty() const { return line.empty(); }
 	bool isName() const;
 	std::string popLine() { state = State::NOT_LOADED; return std::move(line); }

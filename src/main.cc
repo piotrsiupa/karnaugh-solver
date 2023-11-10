@@ -83,7 +83,7 @@ static bool parseInputBits(Input &input)
 		::inputNames = input.popParts(progress);
 		if (::inputNames.size() > ::maxBits)
 		{
-			std::cerr << "Too many input variables!\n";
+			progress.cerr() << "Too many input variables!\n";
 			return false;
 		}
 		::bits = static_cast<::bits_t>(::inputNames.size());

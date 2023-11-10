@@ -4,7 +4,6 @@
 #include <cassert>
 #include <iomanip>
 #include <ios>
-#include <iostream>
 
 #include "options.hh"
 
@@ -79,14 +78,14 @@ void Progress::printTime(double time)
 
 void Progress::clearReport(const bool clearStage)
 {
-	if (reportVisible)
+	if (reported)
 	{
 		if (clearStage)
 			std::clog << "\033[4A";
 		else
 			std::clog << "\033[3A";
 		std::clog << "\r\033[J";
-		reportVisible = false;
+		reported = false;
 	}
 }
 
@@ -110,12 +109,10 @@ void Progress::reportStage() const
 	std::clog << '\n';
 }
 
-void Progress::reportProgress(const calcSubstepCompletion_t &calcSubstepCompletion)
+void Progress::reportProgress()
 {
-	if (!reportVisible)
+	if (!reported)
 		reportStage();
-	
-	const completion_t completion = calcSubstepCompletion() / allSteps + calcStepCompletion();
 	
 	clearReport(false);
 	
@@ -148,7 +145,7 @@ void Progress::reportProgress(const calcSubstepCompletion_t &calcSubstepCompleti
 	std::clog << std::endl;
 	std::clog.copyfmt(oldClogState);
 	
-	reportVisible = true;
+	reported = true;
 }
 
 void Progress::handleStep(const calcSubstepCompletion_t &calcSubstepCompletion, const bool force)
@@ -167,7 +164,7 @@ Progress::Progress(const Stage stage, const char processName[], const steps_t al
 	if (static_cast<std::size_t>(stage) != STAGE_COUNT - 1)
 		assert(stageCounters[static_cast<std::size_t>(stage) + 1] == 0);
 	++stageCounters[static_cast<std::size_t>(stage)];
-	if (reportVisible)
+	if (visible)
 		lastReportTime = startTime = std::chrono::steady_clock::now();
 }
 
