@@ -1,5 +1,6 @@
 #include "./options.hh"
 
+#include <algorithm>
 #include <cctype>
 #include <iostream>
 #include <regex>
@@ -15,17 +16,35 @@ namespace options
 		if (!argument.empty())
 		{
 			std::cerr << argument << '\n';
-			std::cerr << "The option \"--" << getLongName() << "\" doesn't take an argument!\n";
+			std::cerr << "The option \"--" << getLongNames().front() << "\" doesn't take an argument!\n";
 			return false;
 		}
 		return parse();
 	}
 	
-	Trilean::Trilean(const std::string_view longName, const char shortName, const getDefault_t getDefault) :
-		Option(longName, shortName),
+	std::vector<std::string> Trilean::makeNegatedLongNames(const std::vector<std::string_view> &longNames)
+	{
+		std::vector<std::string> negatedLongNames;
+		negatedLongNames.reserve(longNames.size());
+		for (const std::string_view &longName : longNames)
+			negatedLongNames.emplace_back("no-" + std::string(longName));
+		return negatedLongNames;
+	}
+	
+	std::vector<std::string_view> Trilean::makeStringViews(const std::vector<std::string> &strings)
+	{
+		std::vector<std::string_view> stringViews;
+		stringViews.reserve(strings.size());
+		for (const std::string &string : strings)
+			stringViews.emplace_back(string);
+		return stringViews;
+	}
+	
+	Trilean::Trilean(std::vector<std::string_view> &&longNames, const char shortName, const getDefault_t getDefault) :
+		Option(std::move(longNames), shortName),
 		getDefault(getDefault),
-		negatedLongName("no-" + std::string(longName)),
-		negated(negatedLongName, std::toupper(shortName), *this)
+		negatedLongNames(makeNegatedLongNames(getLongNames())),
+		negated(makeStringViews(negatedLongNames), std::toupper(shortName), *this)
 	{
 	}
 	
@@ -33,7 +52,7 @@ namespace options
 	{
 		static const std::regex trueRegex("y(es)?|a(lways)?|t(rue)?", std::regex_constants::icase | std::regex_constants::nosubs);
 		static const std::regex falseRegex("n(o)?|n(ever)?|f(alse)?", std::regex_constants::icase | std::regex_constants::nosubs);
-		static const std::regex defaultRegex("d(efault)?", std::regex_constants::icase | std::regex_constants::nosubs);
+		static const std::regex defaultRegex("d(efault)?|auto", std::regex_constants::icase | std::regex_constants::nosubs);
 		std::cmatch match;
 		if (std::regex_match(argument.begin(), argument.end(), match, trueRegex) || argument.empty())
 		{
@@ -51,18 +70,18 @@ namespace options
 		}
 		else
 		{
-			std::cerr << "Invalid value \"" << argument << "\" for the option \"--" << getLongName() << "\"!\n";
+			std::cerr << "Invalid value \"" << argument << "\" for the option \"--" << getLongNames().front() << "\"!\n";
 			return false;
 		}
 		return true;
 	}
 	
 	
-	Flag help("help", 'h');
-	Flag version("version", 'v');
+	Flag help({"help"}, 'h');
+	Flag version({"version"}, 'v');
 	
-	Trilean prompt("prompt", 'p', [](){ return ::terminalInput; });
-	Trilean status("status", 's', [](){ return ::terminalStderr; });
+	Trilean prompt({"prompt", "prompts", "hint", "hints"}, 'p', [](){ return ::terminalInput; });
+	Trilean status({"status", "progress", "progress-bar", "progress-bars", "stat", "stats"}, 's', [](){ return ::terminalStderr; });
 	
 	std::vector<std::string_view> freeArgs;
 	
@@ -112,7 +131,7 @@ namespace options
 				}
 				else
 				{
-					std::cerr << "The option \"" << option.getLongName() << "\" requires an argument!\n";
+					std::cerr << "The option \"" << option.getLongNames().front() << "\" requires an argument!\n";
 					return false;
 				}
 			}
@@ -147,7 +166,7 @@ namespace options
 			{
 				if (++i == argc)
 				{
-					std::cerr << "The option \"" << option.getLongName() << "\" requires an argument!\n";
+					std::cerr << "The option \"" << option.getLongNames().front() << "\" requires an argument!\n";
 					return false;
 				}
 				argument = argv[i];
@@ -166,7 +185,7 @@ namespace options
 				longName = longName.substr(0, pos);
 			}
 			for (Option *const option : allOptions)
-				if (option->getLongName() == longName)
+				if (std::find(option->getLongNames().cbegin(), option->getLongNames().cend(), longName) != option->getLongNames().cend())
 					return parseLongOption(argument, *option);
 			std::cerr << "Unknown option \"--" << longName << "\"!\n";
 			return false;

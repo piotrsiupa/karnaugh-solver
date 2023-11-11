@@ -11,16 +11,16 @@ namespace options
 	
 	class Option
 	{
-		const std::string_view longName;
+		const std::vector<std::string_view> longNames;
 		const char shortName;
 		
 		friend class OptionWithArg;
 		friend class OptionWithoutArg;
 		
 	public:
-		Option(const std::string_view longName, const char shortName = '\0') : longName(longName), shortName(shortName) {}
+		Option(std::vector<std::string_view> &&longNames, const char shortName = '\0') : longNames(std::move(longNames)), shortName(shortName) {}
 		
-		[[nodiscard]] const std::string_view getLongName() const { return longName; }
+		[[nodiscard]] const std::vector<std::string_view>& getLongNames() const { return longNames; }
 		[[nodiscard]] char getShortName() const { return shortName; }
 		
 		[[nodiscard]] virtual bool needsArgument() const = 0;
@@ -55,17 +55,19 @@ namespace options
 		const getDefault_t getDefault;
 		bool undecided = true, value;
 		
-		const std::string negatedLongName;
+		const std::vector<std::string> negatedLongNames;
+		static std::vector<std::string> makeNegatedLongNames(const std::vector<std::string_view> &longNames);
+		static std::vector<std::string_view> makeStringViews(const std::vector<std::string> &strings);
 		class Negated : public NoArgOption
 		{
 			Trilean &trilean;
 		public:
-			Negated(const std::string_view longName, const char shortName, Trilean &trilean) : NoArgOption(longName, shortName), trilean(trilean) {}
+			Negated(std::vector<std::string_view> &&longNames, const char shortName, Trilean &trilean) : NoArgOption(std::move(longNames), shortName), trilean(trilean) {}
 			[[nodiscard]] bool parse() final { trilean.undecided = false; trilean.value = false; return true; }
 		} negated;
 		
 	public:
-		Trilean(const std::string_view longName, const char shortName, const getDefault_t getDefault);
+		Trilean(std::vector<std::string_view> &&longNames, const char shortName, const getDefault_t getDefault);
 		
 		[[nodiscard]] Option& getNegatedOption() { return negated; }
 		
