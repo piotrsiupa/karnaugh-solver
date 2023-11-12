@@ -14,9 +14,6 @@ namespace options
 		const std::vector<std::string_view> longNames;
 		const char shortName;
 		
-		friend class OptionWithArg;
-		friend class OptionWithoutArg;
-		
 	public:
 		Option(std::vector<std::string_view> &&longNames, const char shortName = '\0') : longNames(std::move(longNames)), shortName(shortName) {}
 		

@@ -21,7 +21,7 @@ static void printHelp()
 			"The input format is flexible and easy to generate by a script.\n"
 			"The solution is printed in a human readable format.\n"
 			"\n"
-			"Usage:\tkarnough [OPTIONS...]\n"
+			"Usage:\tkarnaugh [OPTIONS...]\n"
 			"Options:\n"
 			"    -h, --help\t\t- Print this help text.\n"
 			"    -v, --version\t- Print version information.\n"

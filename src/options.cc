@@ -50,8 +50,8 @@ namespace options
 	
 	bool Trilean::parse(std::string_view argument)
 	{
-		static const std::regex trueRegex("y(es)?|a(lways)?|t(rue)?", std::regex_constants::icase | std::regex_constants::nosubs);
-		static const std::regex falseRegex("n(o)?|n(ever)?|f(alse)?", std::regex_constants::icase | std::regex_constants::nosubs);
+		static const std::regex trueRegex("y(es)?|a(lways)?|t(rue)?|1", std::regex_constants::icase | std::regex_constants::nosubs);
+		static const std::regex falseRegex("n(o)?|n(ever)?|f(alse)?|0", std::regex_constants::icase | std::regex_constants::nosubs);
 		static const std::regex defaultRegex("d(efault)?|auto", std::regex_constants::icase | std::regex_constants::nosubs);
 		std::cmatch match;
 		if (std::regex_match(&*argument.begin(), &*argument.end(), match, trueRegex) || argument.empty())
