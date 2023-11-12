@@ -84,6 +84,8 @@ namespace options
 	extern Trilean prompt;
 	extern Trilean status;
 	
+	extern Flag skipOptimization;
+	
 	extern std::vector<std::string_view> freeArgs;
 	
 	

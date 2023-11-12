@@ -1,6 +1,8 @@
 #include "./Karnaughs.hh"
 
+#include <algorithm>
 #include <iostream>
+#include <limits>
 
 #include "options.hh"
 #include "Progress.hh"
@@ -52,7 +54,44 @@ Karnaughs::solutionses_t Karnaughs::makeSolutionses() const
 	return solutionses;
 }
 
-void Karnaughs::findBestSolutions(const solutionses_t &solutionses)
+void Karnaughs::findBestNonOptimizedSolutions(const solutionses_t &solutionses)
+{
+	Progress progress(Progress::Stage::OPTIMIZING, "Electing the best solutions", solutionses.size());
+	bestSolutions.reserve(solutionses.size());
+	for (const solutions_t &solutions : solutionses)
+	{
+		progress.step();
+		auto substeps = progress.makeCountingSubsteps(solutions.size());
+		using score_t = std::size_t;
+		const Implicants *bestSolution = nullptr;
+		score_t bestScore = std::numeric_limits<score_t>::max();
+		for (const Implicants &solution : solutions)
+		{
+			substeps.substep();
+			if (solution.empty())
+			{
+				bestSolution = &solution;
+				break;
+			}
+			Implicant::mask_t falseBits = 0;
+			score_t score = (solution.size() - 1) * 2;
+			for (const Implicant &implicant : solution)
+			{
+				score += (implicant.getBitCount() - 1) * 2;
+				falseBits |= implicant.getFalseBits();
+			}
+			score += std::bitset<32>(falseBits).count();
+			if (score < bestScore)
+			{
+				bestScore = score;
+				bestSolution = &solution;
+			}
+		}
+		bestSolutions.push_back(*bestSolution);
+	}
+}
+
+void Karnaughs::findBestOptimizedSolutions(const solutionses_t &solutionses)
 {
 	if (solutionses.empty())
 		return;
@@ -92,6 +131,14 @@ void Karnaughs::findBestSolutions(const solutionses_t &solutionses)
 	}
 }
 
+void Karnaughs::findBestSolutions(const solutionses_t &solutionses)
+{
+	if (options::skipOptimization.isRaised())
+		findBestNonOptimizedSolutions(solutionses);
+	else
+		findBestOptimizedSolutions(solutionses);
+}	
+
 void Karnaughs::solve()
 {
 	const std::vector<solutions_t> solutionses = makeSolutionses();
@@ -101,9 +148,12 @@ void Karnaughs::solve()
 void Karnaughs::print()
 {
 	printBestSolutions();
-	if (!bestSolutions.empty())
-		std::cout << '\n';
-	std::cout << "=== optimized solution ===\n\n";
-	printOptimizedSolution();
-	std::cout << std::flush;
+	if (!options::skipOptimization.isRaised())
+	{
+		if (!bestSolutions.empty())
+			std::cout << '\n';
+		std::cout << "=== optimized solution ===\n\n";
+		printOptimizedSolution();
+		std::cout << std::flush;
+	}
 }

@@ -83,6 +83,8 @@ namespace options
 	Trilean prompt({"prompt", "prompts", "hint", "hints"}, 'p', [](){ return ::terminalInput; });
 	Trilean status({"status", "progress", "progress-bar", "progress-bars", "stat", "stats"}, 's', [](){ return ::terminalStderr; });
 	
+	Flag skipOptimization({"no-optimize", "no-cse", "no-optimization", "skip-optimize", "skip-cse", "skip-optimization"}, 'O');
+	
 	std::vector<std::string_view> freeArgs;
 	
 	
@@ -111,7 +113,7 @@ namespace options
 			[[nodiscard]] static bool parse(const int argc, const char *const *const argv) { return Parser(argc, argv).parse(); }
 		};
 		
-		Option *const Parser::allOptions[] = {&help, &version, &prompt, &prompt.getNegatedOption(), &status, &status.getNegatedOption()};
+		Option *const Parser::allOptions[] = {&help, &version, &prompt, &prompt.getNegatedOption(), &status, &status.getNegatedOption(), &skipOptimization};
 		
 		bool Parser::parseShortOption(const char *&shortName, Option &option)
 		{

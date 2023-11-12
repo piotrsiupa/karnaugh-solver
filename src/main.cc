@@ -29,6 +29,7 @@ static void printHelp()
 			"    -P, --no-prompt\t- Same as `--prompt=never`.\n"
 			"    -s, --status[=X]\t- Set whether things like the current operation,\n\t\t\t  progress bar, ET, ETA and so on are shown.\n\t\t\t  Valid values are \"never\", \"always\" and \"default\".\n\t\t\t  (No value means \"always\".) By default, they are shown\n\t\t\t  only when the stderr is a TTY.\n"
 			"    -S, --no-status\t- Same as `--status=never`.\n"
+			"\t--no-optimize\t- Skip the common subexpression elimination optimization\n\t\t\t  and only show a raw solution for each function.\n"
 			"\n"
 			"Input:\n"
 			"The input is read from the stdin and has the following format:\nINPUTS_DESCRIPTION <line-break> LIST_OF_FUNCTIONS\n"

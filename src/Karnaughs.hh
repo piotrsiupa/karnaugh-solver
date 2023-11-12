@@ -22,6 +22,8 @@ class Karnaughs
 	void printOptimizedSolution() const;
 	
 	solutionses_t makeSolutionses() const;
+	void findBestNonOptimizedSolutions(const solutionses_t &solutionses);
+	void findBestOptimizedSolutions(const solutionses_t &solutionses);
 	void findBestSolutions(const solutionses_t &solutionses);
 	
 public:
