@@ -1,9 +1,11 @@
 #pragma once
 
 #include <functional>
-#include <vector>
+#include <regex>
 #include <string>
 #include <string_view>
+#include <utility>
+#include <vector>
 
 
 namespace options
@@ -74,6 +76,37 @@ namespace options
 		[[nodiscard]] bool getValue() { if (undecided) { value = getDefault(); undecided = false; } return value; }
 	};
 	
+	template<typename T, T DEFAULT_VALUE>
+	class Mapped : public Option
+	{
+	public:
+		using Mapping = std::pair<std::string_view, T>;
+		using Mappings = std::vector<Mapping>;
+		
+	private:
+		const Mappings mappings;
+		bool regexReady = false;
+		std::regex regex;
+		T value = DEFAULT_VALUE;
+		
+		void prepareRegex();
+		
+	public:
+		Mapped(std::vector<std::string_view> &&longNames, const char shortName, Mappings &&mappings) : Option(std::move(longNames), shortName), mappings(std::move(mappings)) {}
+		
+		[[nodiscard]] bool needsArgument() const final { return true; }
+		[[nodiscard]] bool parse(std::string_view argument) final;
+		
+		[[nodiscard]] T getValue() const { return value; }
+	};
+	
+	
+	enum class OutputFormat
+	{
+		LONG_HUMAN,
+		HUMAN,
+		SHORT_HUMAN,
+	};
 	
 	extern Flag help;
 	extern Flag version;
@@ -82,6 +115,7 @@ namespace options
 	extern Trilean status;
 	
 	extern Flag skipOptimization;
+	extern Mapped<OutputFormat, OutputFormat::LONG_HUMAN> outputFormat;
 	
 	extern std::vector<std::string_view> freeArgs;
 	

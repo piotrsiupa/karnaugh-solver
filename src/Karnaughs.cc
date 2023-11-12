@@ -12,10 +12,11 @@ void Karnaughs::printBestSolutions() const
 {
 	for (std::size_t i = 0; i != karnaughs.size(); ++i)
 	{
-		if (i != 0)
+		std::cout << "--- " << karnaughs[i].getFunctionName() << " ---\n";
+		if (options::outputFormat.getValue() == options::OutputFormat::LONG_HUMAN)
 			std::cout << '\n';
-		std::cout << "--- " << karnaughs[i].getFunctionName() << " ---\n\n";
 		karnaughs[i].printSolution(bestSolutions[i]);
+		std::cout << '\n';
 	}
 }
 
@@ -147,12 +148,13 @@ void Karnaughs::solve()
 
 void Karnaughs::print()
 {
-	printBestSolutions();
+	const bool bestSolutionsVisible = options::skipOptimization.isRaised() || options::outputFormat.getValue() != options::OutputFormat::SHORT_HUMAN;
+	if (bestSolutionsVisible)
+		printBestSolutions();
 	if (!options::skipOptimization.isRaised())
 	{
-		if (!bestSolutions.empty())
-			std::cout << '\n';
-		std::cout << "=== optimized solution ===\n\n";
+		if (options::outputFormat.getValue() != options::OutputFormat::SHORT_HUMAN)
+			std::cout << "=== optimized solution ===\n\n";
 		printOptimizedSolution();
 		std::cout << std::flush;
 	}

@@ -4,6 +4,7 @@
 #include <cassert>
 #include <iomanip>
 
+#include "options.hh"
 #include "SetOptimizerForProducts.hh"
 #include "SetOptimizerForSums.hh"
 
@@ -272,5 +273,6 @@ void OptimizedSolutions::print(std::ostream &o, const std::vector<std::string> &
 	printProducts(o);
 	printSums(o);
 	printFinalSums(o, functionNames);
-	printGateScores(o);
+	if (options::outputFormat.getValue() != options::OutputFormat::SHORT_HUMAN)
+		printGateScores(o);
 }

@@ -211,23 +211,26 @@ Karnaugh::solutions_t Karnaugh::solve() const
 
 void Karnaugh::printSolution(const Implicants &solution) const
 {
-	if (::bits <= 8)
+	if (options::outputFormat.getValue() == options::OutputFormat::LONG_HUMAN)
 	{
-		std::cout << "goal:\n";
-		prettyPrintTable();
-		
-		if (targetMinterms.size() != allowedMinterms.size())
+		if (::bits <= 8)
 		{
-			std::cout << "best fit:\n";
-			prettyPrintSolution(solution);
+			std::cout << "goal:\n";
+			prettyPrintTable();
+			
+			if (targetMinterms.size() != allowedMinterms.size())
+			{
+				std::cout << "best fit:\n";
+				prettyPrintSolution(solution);
+			}
 		}
+		else
+		{
+			std::cout << "The Karnaugh map is too big to be displayed.\n\n";
+		}
+		std::cout << "solution:\n";
 	}
-	else
-	{
-		std::cout << "The Karnaugh map is too big to be displayed.\n\n";
-	}
-	
-	std::cout << "solution:\n";
 	Implicants(solution).sort().print(std::cout);
-	std::cout << std::endl;
+	if (options::outputFormat.getValue() != options::OutputFormat::SHORT_HUMAN)
+		std::cout << '\n';
 }
