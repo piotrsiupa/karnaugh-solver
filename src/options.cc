@@ -44,7 +44,7 @@ namespace options
 		Option(std::move(longNames), shortName),
 		getDefault(getDefault),
 		negatedLongNames(makeNegatedLongNames(getLongNames())),
-		negated(makeStringViews(negatedLongNames), std::toupper(shortName), *this)
+		negated(makeStringViews(negatedLongNames), static_cast<char>(std::toupper(static_cast<unsigned char>(shortName))), *this)
 	{
 	}
 	
@@ -54,17 +54,17 @@ namespace options
 		static const std::regex falseRegex("n(o)?|n(ever)?|f(alse)?", std::regex_constants::icase | std::regex_constants::nosubs);
 		static const std::regex defaultRegex("d(efault)?|auto", std::regex_constants::icase | std::regex_constants::nosubs);
 		std::cmatch match;
-		if (std::regex_match(argument.begin(), argument.end(), match, trueRegex) || argument.empty())
+		if (std::regex_match(&*argument.begin(), &*argument.end(), match, trueRegex) || argument.empty())
 		{
 			undecided = false;
 			value = true;
 		}
-		else if (std::regex_match(argument.begin(), argument.end(), match, falseRegex))
+		else if (std::regex_match(&*argument.begin(), &*argument.end(), match, falseRegex))
 		{
 			undecided = false;
 			value = false;
 		}
-		else if (std::regex_match(argument.begin(), argument.end(), match, defaultRegex))
+		else if (std::regex_match(&*argument.begin(), &*argument.end(), match, defaultRegex))
 		{
 			undecided = true;
 		}
