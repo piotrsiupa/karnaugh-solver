@@ -3,6 +3,7 @@
 #include <chrono>
 #include <cstddef>
 #include <functional>
+#include <iostream>
 #include <utility>
 #include <vector>
 
@@ -38,22 +39,38 @@ private:
 	timePoint_t startTime, lastReportTime;
 	steps_t allSteps;
 	steps_t stepsSoFar = 0;
-	steps_t substepsSoFar = 0, substepsToSkip;
-	bool progressVisible;
+	steps_t substepsSoFar, substepsToSkip;
+	completion_t completion;
+	bool visible;
 	std::vector<const char*> subtaskNames;
-	bool reportVisible = false;
+	bool reported = false;
 	
 	steps_t calcStepsToSkip(const double secondsToSkip, const double secondsPerStep) const;
 	bool checkReportInterval(const bool force);
 	static void printTime(const double seconds);
 	void clearReport(const bool clearStage);
 	void reportStage() const;
-	void reportProgress(const calcSubstepCompletion_t &calcSubstepCompletion);
+	void reportProgress();
+	void reportProgress(const calcSubstepCompletion_t &calcSubstepCompletion) { completion = calcSubstepCompletion() / allSteps + calcStepCompletion(); return reportProgress(); }
 	void handleStep(const calcSubstepCompletion_t &calcSubstepCompletion, const bool force);
 	
 	completion_t calcStepCompletion() const { return static_cast<completion_t>(stepsSoFar - 1) / allSteps; }
 	
 public:
+	class CerrGuard
+	{
+		Progress &progress;
+		const bool reportedBefore;
+		CerrGuard(Progress &progress) : progress(progress), reportedBefore(progress.reported) { progress.clearReport(true); std::clog << std::flush; }
+		CerrGuard(const CerrGuard&) = delete;
+		CerrGuard& operator=(const CerrGuard&) = delete;
+		friend class Progress;
+	public:
+		~CerrGuard() { if (reportedBefore) progress.reportProgress(); }
+		template<typename T>
+		const CerrGuard& operator<<(T val) const { std::cerr << std::forward<T>(val); return *this; }
+	};
+	
 	class SubtaskGuard
 	{
 		Progress &progress;
@@ -80,15 +97,18 @@ public:
 		void substep(const T increment, const bool force = false) { progress.substep(calcCompletion, force); i += increment; }
 	};
 	
-	Progress(const Stage stage, const char processName[], const steps_t allSteps, const bool progressVisible = true);
+	Progress(const Stage stage, const char processName[], const steps_t allSteps, const bool visible = true);
 	Progress(const Progress&) = delete;
 	Progress& operator=(const Progress&) = delete;
 	~Progress() { clearReport(true); }
 	
-	void step(const bool force = false) { if (progressVisible) { ++stepsSoFar; handleStep(calc0SubstepCompletion, force); } }
-	void substep(const calcSubstepCompletion_t &calcSubstepCompletion, const bool force = false) { if (progressVisible) { if (--substepsToSkip == 0 || force) handleStep(calcSubstepCompletion, force); ++substepsSoFar; } }
-	template<typename T = std::size_t>
-	CountingSubsteps<T> makeCountingSubsteps(const completion_t n) { return {*this, n}; }
+	[[nodiscard]] bool isVisible() const { return visible; }
+	[[nodiscard]] CerrGuard cerr() { return {*this}; }
 	
-	SubtaskGuard enterSubtask(const char subtaskName[]) { subtaskNames.push_back(subtaskName); return {*this}; }
+	void step(const bool force = false);
+	void substep(const calcSubstepCompletion_t &calcSubstepCompletion, const bool force = false) { if (visible) { if (--substepsToSkip == 0 || force) handleStep(calcSubstepCompletion, force); ++substepsSoFar; } }
+	template<typename T = std::size_t>
+	[[nodiscard]] CountingSubsteps<T> makeCountingSubsteps(const completion_t n) { return {*this, n}; }
+	
+	[[nodiscard]] SubtaskGuard enterSubtask(const char subtaskName[]) { subtaskNames.push_back(subtaskName); return {*this}; }
 };

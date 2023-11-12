@@ -15,16 +15,15 @@ def run_test(test_dir: Path, program: Path, test_name: str) -> bool:
     print(f'Running "{test_name}"...', end=' ', flush=True)
     input_file = test_dir / (test_name + '.input')
     output_file = test_dir / (test_name + '.output')
-    with open(input_file, 'r') as f:
-        process = subprocess.Popen('./' + str(program), text=True, stdin=f, stdout=subprocess.PIPE)
-        starttime = time.perf_counter()
-        while True:
-            try:
-                process.wait()
-                break
-            except KeyboardInterrupt:
-                process.send_signal(signal.SIGINT)
-        endtime = time.perf_counter()
+    process = subprocess.Popen(['./' + str(program), '--no-status', input_file], text=True, stdout=subprocess.PIPE)
+    starttime = time.perf_counter()
+    while True:
+        try:
+            process.wait()
+            break
+        except KeyboardInterrupt:
+            process.send_signal(signal.SIGINT)
+    endtime = time.perf_counter()
     if process.returncode != 0:
         print(f'FAIL ({endtime-starttime:.2f}s, return code is {process.returncode})')
         return False

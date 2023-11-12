@@ -12,7 +12,7 @@ void Input::trimLine()
     line.erase(std::find_if(line.rbegin(), line.rend(), [](unsigned char ch) { return !std::isspace(ch); }).base(), line.end());
 }
 
-void Input::load()
+void Input::load(Progress *const progress)
 {
 	if (istream.eof())
 	{
@@ -27,7 +27,10 @@ void Input::load()
 			break;
 		if (!istream)
 		{
-			std::cerr << "Cannot read from stdin!\n";
+			if (progress != nullptr)
+				progress->cerr() << "Cannot read from stdin!\n";
+			else
+				std::cerr << "Cannot read from stdin!\n";
 			state = State::ERROR;
 			return;
 		}
@@ -36,10 +39,10 @@ void Input::load()
 	state = State::LOADED;
 }
 
-bool Input::hasError()
+bool Input::hasError(Progress *const progress)
 {
 	if (state == State::NOT_LOADED)
-		load();
+		load(progress);
 	return state == State::ERROR;
 }
 

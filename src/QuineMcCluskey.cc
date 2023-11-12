@@ -6,6 +6,7 @@
 #include <set>
 #include <string>
 
+#include "options.hh"
 #include "PetricksMethod.hh"
 #include "Progress.hh"
 
@@ -27,7 +28,7 @@ Implicants QuineMcCluskey::findPrimeImplicants(const Minterms &allowedMinterms, 
 	while (!implicants.empty())
 	{
 		std::uintmax_t operationsSoFar = 0, expectedOperations = 0;
-		if (::terminalStderr)
+		if (progress.isVisible())
 		{
 			std::strcpy(subtaskDescription, std::to_string(implicants.size()).c_str());
 			std::strcat(subtaskDescription, " left (");

@@ -1,11 +1,14 @@
-#include <cstring>
+#include <fstream>
 #include <iostream>
+#include <istream>
+#include <memory>
 #include <string>
 
 #include "global.hh"
 #include "Input.hh"
 #include "Karnaughs.hh"
 #include "non-stdlib-stuff.hh"
+#include "options.hh"
 #include "Progress.hh"
 
 
@@ -20,8 +23,13 @@ static void printHelp()
 			"\n"
 			"Usage:\tkarnough [OPTIONS...]\n"
 			"Options:\n"
-			"\t--help\t\t- Print this help text.\n"
-			"\t--version\t- Print version information.\n"
+			"    -h, --help\t\t- Print this help text.\n"
+			"    -v, --version\t- Print version information.\n"
+			"    -p, --prompt[=X]\t- Set whether hints are shown when the input is read.\n\t\t\t  Valid values are \"never\", \"always\" and \"default\".\n\t\t\t  (No value means \"always\".) By default, hints are shown\n\t\t\t  only when input is read from a TTY.\n"
+			"    -P, --no-prompt\t- Same as `--prompt=never`.\n"
+			"    -s, --status[=X]\t- Set whether things like the current operation,\n\t\t\t  progress bar, ET, ETA and so on are shown.\n\t\t\t  Valid values are \"never\", \"always\" and \"default\".\n\t\t\t  (No value means \"always\".) By default, they are shown\n\t\t\t  only when the stderr is a TTY.\n"
+			"    -S, --no-status\t- Same as `--status=never`.\n"
+			"\t--no-optimize\t- Skip the common subexpression elimination optimization\n\t\t\t  and only show a raw solution for each function.\n"
 			"\n"
 			"Input:\n"
 			"The input is read from the stdin and has the following format:\nINPUTS_DESCRIPTION <line-break> LIST_OF_FUNCTIONS\n"
@@ -50,7 +58,7 @@ static void printHelp()
 static void printVersion()
 {
 	std::cout <<
-			"karnaugh (Karnaugh Map Solver) version 0.1.2\n"
+			"karnaugh (Karnaugh Map Solver) version 0.1.3\n"
 			"Author: Piotr Siupa\n"
 #ifndef NDEBUG
 			"This is a development build which contains additional assertions. This may slow down the execution.\n"
@@ -60,7 +68,7 @@ static void printVersion()
 
 static bool parseInputBits(Input &input)
 {
-	if (::terminalStdin)
+	if (options::prompt.getValue())
 		std::cerr << "Enter a list of input variables or their count:\n";
 	if (input.hasError())
 		return false;
@@ -76,7 +84,7 @@ static bool parseInputBits(Input &input)
 		::inputNames = input.popParts(progress);
 		if (::inputNames.size() > ::maxBits)
 		{
-			std::cerr << "Too many input variables!\n";
+			progress.cerr() << "Too many input variables!\n";
 			return false;
 		}
 		::bits = static_cast<::bits_t>(::inputNames.size());
@@ -121,33 +129,87 @@ static bool parseInputBits(Input &input)
 	return true;
 }
 
-static bool solveInput(std::istream &istream)
+static void deleteIstream(const std::istream *const stream) {
+	if (stream != &std::cin)
+		delete stream;
+}
+using IstreamUniquePtr = std::unique_ptr<std::istream, decltype(&deleteIstream)>;
+static IstreamUniquePtr prepareIstream()
 {
-	Input input(istream);
+	if (options::freeArgs.empty())
+	{
+		return {&std::cin, deleteIstream};
+	}
+	else if (options::freeArgs.size() == 1)
+	{
+		const std::string path(options::freeArgs.front());
+		if (path == "-")
+		{
+			return {&std::cin, deleteIstream};
+		}
+		else
+		{
+			IstreamUniquePtr ifstream(new std::ifstream(path), deleteIstream);
+			if (!*ifstream)
+			{
+				std::cerr << "Cannot open \"" << path << "\"!\n";
+				return {nullptr, deleteIstream};
+			}
+			return ifstream;
+		}
+	}
+	else
+	{
+		std::cerr << "Too many arguments!\n";
+		return {nullptr, deleteIstream};
+	}
+}
+
+static bool loadInput(IstreamUniquePtr istream, Karnaughs &karnaughs)
+{
+	Input input(*istream);
 	if (!parseInputBits(input))
 		return false;
-	if (!Karnaughs::solve(input))
+	if (!karnaughs.loadData(input))
 		return false;
+	return true;
+}
+
+static bool processInput(IstreamUniquePtr istream)
+{
+	Karnaughs karnaughs;
+	if (!loadInput(std::move(istream), karnaughs))
+		return false;
+	karnaughs.solve();
+	karnaughs.print();
 	return true;
 }
 
 int main(const int argc, const char *const *const argv)
 {
-	if (argc > 1 && std::strcmp(argv[1], "--help") == 0)
+	if (!options::parse(argc, argv))
+		return 1;
+	
+	if (options::help.isRaised())
 	{
 		printHelp();
 		return 0;
 	}
-	else if (argc > 1 && std::strcmp(argv[1], "--version") == 0)
+	else if (options::version.isRaised())
 	{
 		printVersion();
 		return 0;
 	}
 	
+	IstreamUniquePtr istream = prepareIstream();
+	if (!istream)
+		return 1;
+	
 	::terminalStdin = isStdinTerminal();
+	::terminalInput = ::terminalStdin && istream.get() == &std::cin;
 	::terminalStderr = isStderrTerminal();
 	
-	if (!solveInput(std::cin))
+	if (!processInput(std::move(istream)))
 		return 1;
 	
 	return 0;

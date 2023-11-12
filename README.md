@@ -6,7 +6,7 @@
 This program takes a description of multiple logic functions in the form of lists of minterms and don't-cares (up to 32 input variables).
 It performs [logic optimization](https://en.wikipedia.org/wiki/Logic_optimization) on them to find the minimal matching [SOPs](https://en.wikipedia.org/wiki/Canonical_normal_form#SOP). (Using the [Petrick's method](https://en.wikipedia.org/wiki/Petrick%27s_method).)
 
-Then it performs a [common subexpression elimination](https://en.wikipedia.org/wiki/Common_subexpression_elimination) to further reduce the number of logic gates required to build the circuit.
+Then it (optionally) performs a [common subexpression elimination](https://en.wikipedia.org/wiki/Common_subexpression_elimination) to further reduce the number of logic gates required to build the circuit.
 (This is the main reason for which the program has ability to solve multiple functions in a single run.)
 
 If there are multiple solutions, the one with the smallest cost in logic gates is chosen.
@@ -23,7 +23,7 @@ The popular way to do it by hand for smaller circuits are [Karnaugh maps](https:
 This program doesn't really do that under the hood. It uses a different (faster) method that gives the same result.
 However, the result is displayed as a Karnaugh map and hence the program name.
 
-Additionally, the program finds common parts of the resulting circuits and reuses them in multiple places to not waste gates for doing the same thing multiple times.
+Additionally, the program can find common parts of the resulting circuits and reuses them in multiple places to not waste gates for doing the same thing multiple times.
 (This is one of the main selling points.)
 
 
@@ -31,8 +31,8 @@ Additionally, the program finds common parts of the resulting circuits and reuse
 
 Currently there is quite a few limitations both because the program is still in development and because of its main purpose which is to be used for the game *Turing Complete*.
  - The search for the solution is done using a **brute force** method which returns the best possible result but often takes too much time and memory to be realistically useful. (Heuristics will be added in the future.)
- - The theoretical limit for the number of input variables is 32, however, the real **input limit is 5** because of how much time the brute-force method takes (unless the logic function is trivial).
- - The number of underlying transistors are not taken into account. Instead **NOT gate, 2-input AND gate and 2-input OR gate** are treated as basic building blocks with respective costs 1, 2 and 2.
+ - The theoretical limit for the number of input variables is 32, however, the real **input limit is 5 (6 without CSE)** because of how much time the brute-force method takes (unless the logic function is trivial).
+ - The number of underlying transistors are not taken into account. Instead **NOT gate, 2-input AND gate and 2-input OR gate** are treated as basic building blocks with respective costs 1, 2 and 2. (Although, this shouldn't change the result dramatically.)
  - **Delay** of the resulting circuit is not taken under account in the deduplication phase.
  - **Hazards** in the resulting circuit are not taken into account at any stage.
  - The output of the program is made to be **human-readable**, which makes it hard to use in another program. (More output formats are planned.)

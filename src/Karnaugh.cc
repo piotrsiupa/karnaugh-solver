@@ -4,6 +4,7 @@
 #include <cctype>
 #include <iostream>
 
+#include "options.hh"
 #include "QuineMcCluskey.hh"
 
 
@@ -105,19 +106,19 @@ bool Karnaugh::loadMinterms(Minterms &minterms, Input &input, Progress &progress
 				static_assert(sizeof(unsigned long) * CHAR_BIT >= ::maxBits);
 				if (n > ::maxMinterm)
 				{
-					std::cerr << '"' << string << "\" is too big!\n";
+					progress.cerr() << '"' << string << "\" is too big!\n";
 					return false;
 				}
 				minterms.insert(n);
 			}
 			catch (std::invalid_argument &)
 			{
-				std::cerr << '"' << string << "\" is not a number!\n";
+				progress.cerr() << '"' << string << "\" is not a number!\n";
 				return false;
 			}
 			catch (std::out_of_range &)
 			{
-				std::cerr << '"' << string << "\" is out of range!\n";
+				progress.cerr() << '"' << string << "\" is out of range!\n";
 				return false;
 			}
 		}
@@ -149,28 +150,28 @@ void Karnaugh::validate(const solutions_t &solutions) const
 
 bool Karnaugh::loadData(Input &input)
 {
-	if (input.hasError())
+	const std::string progressName = "Loading function \"" + functionName + '"';
+	Progress progress(Progress::Stage::LOADING, progressName.c_str(), 5, !options::prompt.getValue());
+	
+	if (input.hasError(&progress))
 		return false;
 	const bool hasName = input.isName();
 	if (hasName)
 		functionName = input.popLine();
 	
-	const std::string progressName = "Loading function \"" + functionName + '"';
-	Progress progress(Progress::Stage::LOADING, progressName.c_str(), 5, !::terminalStdin);
-	
-	if (hasName && ::terminalStdin)
+	if (hasName && options::prompt.getValue())
 		std::cerr << "Enter a list of minterms of the function \"" << functionName << "\":\n";
-	if (input.hasError())
+	if (input.hasError(&progress))
 		return false;
 	if (input.isEmpty())
 	{
-		std::cerr << "A list of minterms is mandatory!\n";
+		progress.cerr() << "A list of minterms is mandatory!\n";
 		return false;
 	}
 	if (!loadMinterms(targetMinterms, input, progress))
 		return false;
 	
-	if (::terminalStdin)
+	if (options::prompt.getValue())
 	{
 		std::cerr << "Enter a list of don't-cares of the function";
 		if (hasName)
@@ -178,7 +179,7 @@ bool Karnaugh::loadData(Input &input)
 		else
 			std::cerr << ":\n";
 	}
-	if (input.hasError())
+	if (input.hasError(&progress))
 		return false;
 	if (!input.isEmpty())
 		if (!loadMinterms(allowedMinterms, input, progress))
@@ -193,7 +194,7 @@ bool Karnaugh::loadData(Input &input)
 		if (allowedMinterms.find(targetMinterm) == allowedMinterms.cend())
 			allowedMinterms.insert(targetMinterm);
 		else
-			std::cerr << targetMinterm << " on the \"don't care\" list of \"" << functionName << "\" will be ignored because it is already a minterm!\n";
+			progress.cerr() << targetMinterm << " on the \"don't care\" list of \"" << functionName << "\" will be ignored because it is already a minterm!\n";
 	}
 	
 	return true;
