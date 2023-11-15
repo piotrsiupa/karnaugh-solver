@@ -130,6 +130,7 @@ namespace options
 			{"human(?:[-_]readable)?[-_](?:long|big)|(?:long|big)[-_]human(?:[-_]readable)?|hr?l|lhr?|full|default", OutputFormat::LONG_HUMAN},
 			{"human(?:[-_]readable)?(?:[-_](?:medium|middle))?|(?:(?:medium|middle)[-_])?human(?:[-_]readable)?|hr?m?|m?hr?|medium|middle|shorter", OutputFormat::HUMAN},
 			{"human(?:[-_]readable)?[-_](?:short|small)|(?:short|small)[-_]human(?:[-_]readable)?|hr?s|shr?|short|small|tiny|minimal", OutputFormat::SHORT_HUMAN},
+			{"verilog", OutputFormat::VERILOG},
 		});
 	
 	std::vector<std::string_view> freeArgs;

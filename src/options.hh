@@ -106,6 +106,7 @@ namespace options
 		LONG_HUMAN,
 		HUMAN,
 		SHORT_HUMAN,
+		VERILOG,
 	};
 	
 	extern Flag help;

@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <ostream>
 #include <set>
+#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -29,21 +30,31 @@ private:
 	std::vector<sum_t> sums;
 	std::vector<id_t> finalSums;
 	
-	mutable std::vector<id_t> humanIds;
+	mutable std::vector<id_t> normalizedIds;
 	
-	bool isWorthPrinting(const id_t id) const { return isProduct(id) ? isProductWorthPrinting(id) : isSumWorthPrinting(id); }
+	bool isWorthPrinting(const id_t id, const bool simpleFinalSums) const { return isProduct(id) ? isProductWorthPrinting(id) : isSumWorthPrinting(id, simpleFinalSums); }
+	std::size_t generateHumanIds() const;
+	std::pair<std::size_t, std::size_t> generateNormalizedIds() const;
+	void printVerilogImmediates(std::ostream &o, const std::size_t immediateProductCount, const std::size_t immediateSumCount) const;
 	void printHumanId(std::ostream &o, const id_t id) const;
-	void generateHumanIds() const;
-	void printNegatedInputs(std::ostream &o) const;
+	void printVerilogId(std::ostream &o, const id_t id) const;
+	void printHumanNegatedInputs(std::ostream &o) const;
 	bool isProductWorthPrinting(const id_t productId) const { const product_t &product = getProduct(productId); return product.first.getBitCount() >= 2 || !product.second.empty(); }
-	void printProductBody(std::ostream &o, const id_t productId) const;
-	void printProduct(std::ostream &o, const id_t productId) const;
-	void printProducts(std::ostream &o) const;
-	bool isSumWorthPrinting(const id_t sumId) const { for (const sum_t &sum : sums) for (const id_t &id : sum) if (id == sumId) return true; return false; }
-	void printSumBody(std::ostream &o, const id_t sumId) const;
-	void printSum(std::ostream &o, const id_t sumId) const;
-	void printSums(std::ostream &o) const;
-	void printFinalSums(std::ostream &o, const std::vector<std::string> &functionNames) const;
+	void printHumanProductBody(std::ostream &o, const id_t productId) const;
+	void printHumanProduct(std::ostream &o, const id_t productId) const;
+	void printHumanProducts(std::ostream &o) const;
+	void printVerilogProductBody(std::ostream &o, const id_t productId) const;
+	void printVerilogProduct(std::ostream &o, const id_t productId) const;
+	void printVerilogProducts(std::ostream &o) const;
+	bool isSumWorthPrinting(const id_t sumId, const bool simpleFinalSums) const { if (simpleFinalSums) return getSum(sumId).size() >= 2; for (const sum_t &sum : sums) for (const id_t &id : sum) if (id == sumId) return true; return false; }
+	void printHumanSumBody(std::ostream &o, const id_t sumId) const;
+	void printHumanSum(std::ostream &o, const id_t sumId) const;
+	void printHumanSums(std::ostream &o) const;
+	void printVerilogSumBody(std::ostream &o, const id_t sumId) const;
+	void printVerilogSum(std::ostream &o, const id_t sumId) const;
+	void printVerilogSums(std::ostream &o) const;
+	void printHumanFinalSums(std::ostream &o, const std::vector<std::string_view> &functionNames) const;
+	void printVerilogFinalSums(std::ostream &o, const std::vector<std::string_view> &functionNames) const;
 	void printGateScores(std::ostream &o) const;
 	
 	void createNegatedInputs(const solutions_t &solutions);
@@ -73,5 +84,6 @@ public:
 	std::size_t getOrCount() const { std::size_t orCount = 0; for (const auto &sum : sums) orCount += sum.size() - 1; return orCount; }
 	std::size_t getGateScore() const { return getNotCount() + 2 * getAndCount() + 2 * getOrCount(); }
 	
-	void print(std::ostream &o, const std::vector<std::string> &functionNames) const;
+	void printHuman(std::ostream &o, const std::vector<std::string_view> &functionNames) const;
+	void printVerilog(std::ostream &o, const std::vector<std::string_view> &functionNames) const;
 };

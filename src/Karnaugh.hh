@@ -41,10 +41,11 @@ public:
 	Karnaugh(Karnaugh &&) = default;
 	Karnaugh& operator=(Karnaugh &&) = default;
 	
-	std::string getFunctionName() const { return functionName; }
+	const std::string& getFunctionName() const { return functionName; }
 	
 	bool loadData(Input &input);
 	solutions_t solve() const;
 	
-	void printSolution(const Implicants &solution) const;
+	void printHumanSolution(const Implicants &solution) const;
+	void printVerilogSolution(const Implicants &solution) const;
 };

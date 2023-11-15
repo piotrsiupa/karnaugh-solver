@@ -8,25 +8,51 @@
 #include "Progress.hh"
 
 
-void Karnaughs::printBestSolutions() const
+void Karnaughs::printHumanBestSolutions() const
 {
 	for (std::size_t i = 0; i != karnaughs.size(); ++i)
 	{
 		std::cout << "--- " << karnaughs[i].getFunctionName() << " ---\n";
 		if (options::outputFormat.getValue() == options::OutputFormat::LONG_HUMAN)
 			std::cout << '\n';
-		karnaughs[i].printSolution(bestSolutions[i]);
+		karnaughs[i].printHumanSolution(bestSolutions[i]);
 		std::cout << '\n';
 	}
 }
 
-void Karnaughs::printOptimizedSolution() const
+std::vector<std::string_view> Karnaughs::gatherFunctionNames() const
 {
-	std::vector<std::string> functionNames;
+	std::vector<std::string_view> functionNames;
 	functionNames.reserve(karnaughs.size());
 	for (const Karnaugh &karnaugh : karnaughs)
-		functionNames.push_back(karnaugh.getFunctionName());
-	optimizedSolutions.print(std::cout, functionNames);
+		functionNames.emplace_back(karnaugh.getFunctionName());
+	return functionNames;
+}
+
+void Karnaughs::printHumanOptimizedSolution() const
+{
+	const std::vector<std::string_view> functionNames = gatherFunctionNames();
+	optimizedSolutions.printHuman(std::cout, functionNames);
+}
+
+void Karnaughs::printVerilogBestSolutions() const
+{
+	if (!karnaughs.empty())
+	{
+		for (std::size_t i = 0; i != karnaughs.size(); ++i)
+		{
+			std::cout << "\tassign " << karnaughs[i].getFunctionName() << " = ";
+			karnaughs[i].printVerilogSolution(bestSolutions[i]);
+			std::cout << ";\n";
+		}
+		std::cout << "\t\n";
+	}
+}
+
+void Karnaughs::printVerilogOptimizedSolution() const
+{
+	const std::vector<std::string_view> functionNames = gatherFunctionNames();
+	optimizedSolutions.printVerilog(std::cout, functionNames);
 }
 
 bool Karnaughs::loadData(Input &input)
@@ -146,16 +172,57 @@ void Karnaughs::solve()
 	findBestSolutions(solutionses);
 }
 
-void Karnaughs::print()
+void Karnaughs::printHuman()
 {
 	const bool bestSolutionsVisible = options::skipOptimization.isRaised() || options::outputFormat.getValue() != options::OutputFormat::SHORT_HUMAN;
 	if (bestSolutionsVisible)
-		printBestSolutions();
+		printHumanBestSolutions();
 	if (!options::skipOptimization.isRaised())
 	{
 		if (options::outputFormat.getValue() != options::OutputFormat::SHORT_HUMAN)
 			std::cout << "=== optimized solution ===\n\n";
-		printOptimizedSolution();
+		printHumanOptimizedSolution();
 		std::cout << std::flush;
+	}
+}
+
+void Karnaughs::printVerilog()
+{
+	std::cout << "module Karnaugh(\n";
+	if (!::inputNames.empty())
+	{
+		std::cout << "\tinput wire";
+		for (const auto &inputName : inputNames)
+			std::cout << ' ' << inputName << ',';
+		std::cout << '\n';
+	}
+	if (!karnaughs.empty())
+	{
+		std::cout << "\toutput wire";
+		for (const Karnaugh &karnaugh : karnaughs)
+			std::cout << ' ' << karnaugh.getFunctionName() << ',';
+		std::cout << '\n';
+	}
+	std::cout << ");\n";
+	std::cout << "\t\n";
+	if (options::skipOptimization.isRaised())
+		printVerilogBestSolutions();
+	else
+		printVerilogOptimizedSolution();
+	std::cout << "endmodule" << std::endl;
+}
+
+void Karnaughs::print()
+{
+	switch (options::outputFormat.getValue())
+	{
+	case options::OutputFormat::LONG_HUMAN:
+	case options::OutputFormat::HUMAN:
+	case options::OutputFormat::SHORT_HUMAN:
+		printHuman();
+		break;
+	case options::OutputFormat::VERILOG:
+		printVerilog();
+		break;
 	}
 }

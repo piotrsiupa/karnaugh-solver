@@ -1,5 +1,6 @@
 #pragma once
 
+#include <string_view>
 #include <vector>
 
 #include "Implicants.hh"
@@ -18,8 +19,11 @@ class Karnaughs
 	solutions_t bestSolutions;
 	OptimizedSolutions optimizedSolutions;
 	
-	void printBestSolutions() const;
-	void printOptimizedSolution() const;
+	std::vector<std::string_view> gatherFunctionNames() const;
+	void printHumanBestSolutions() const;
+	void printHumanOptimizedSolution() const;
+	void printVerilogBestSolutions() const;
+	void printVerilogOptimizedSolution() const;
 	
 	solutionses_t makeSolutionses() const;
 	void findBestNonOptimizedSolutions(const solutionses_t &solutionses);
@@ -29,5 +33,7 @@ class Karnaughs
 public:
 	bool loadData(Input &input);
 	void solve();
+	void printHuman();
+	void printVerilog();
 	void print();
 };

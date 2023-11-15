@@ -209,7 +209,7 @@ Karnaugh::solutions_t Karnaugh::solve() const
 	return solutions;
 }
 
-void Karnaugh::printSolution(const Implicants &solution) const
+void Karnaugh::printHumanSolution(const Implicants &solution) const
 {
 	if (options::outputFormat.getValue() == options::OutputFormat::LONG_HUMAN)
 	{
@@ -230,7 +230,12 @@ void Karnaugh::printSolution(const Implicants &solution) const
 		}
 		std::cout << "solution:\n";
 	}
-	Implicants(solution).sort().print(std::cout);
+	Implicants(solution).sort().printHuman(std::cout);
 	if (options::outputFormat.getValue() != options::OutputFormat::SHORT_HUMAN)
 		std::cout << '\n';
+}
+
+void Karnaugh::printVerilogSolution(const Implicants &solution) const
+{
+	Implicants(solution).sort().printVerilog(std::cout);
 }

@@ -1,11 +1,11 @@
 # Implementing a full adder as SOP is not the best way but it makes for a good, readable example.
 
-in0 in1 carry-in
+in0 in1 carry_in
 
 sum
 1 2 4 7
 -
 
-carry-out
+carry_out
 3 5 6 7
 -

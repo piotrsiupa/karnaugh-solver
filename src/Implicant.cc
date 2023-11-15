@@ -52,7 +52,7 @@ Implicant Implicant::merge(const Implicant &x, const Implicant &y)
 	return Implicant(x.trueBits & y.trueBits, x.falseBits & y.falseBits, x.bitCount - 1);
 }
 
-void Implicant::print(std::ostream &o, const bool parentheses) const
+void Implicant::printHuman(std::ostream &o, const bool parentheses) const
 {
 	if (bitCount == 0)
 	{
@@ -72,6 +72,34 @@ void Implicant::print(std::ostream &o, const bool parentheses) const
 			first = false;
 		else
 			o << " && ";
+		if (negated)
+			o << '!';
+		o << ::inputNames[bitIndex];
+	}
+	if (needsParentheses)
+		o << ')';
+}
+
+void Implicant::printVerilog(std::ostream &o, const bool parentheses) const
+{
+	if (bitCount == 0)
+	{
+		if (isError())
+			o << "0";
+		else
+			o << "1";
+		return;
+	}
+	const bool needsParentheses = parentheses && bitCount != 1;
+	if (needsParentheses)
+		o << '(';
+	bool first = true;
+	for (const auto &[bitIndex, negated] : splitBits())
+	{
+		if (first)
+			first = false;
+		else
+			o << " & ";
 		if (negated)
 			o << '!';
 		o << ::inputNames[bitIndex];

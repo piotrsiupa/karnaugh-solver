@@ -9,11 +9,11 @@ Implicants& Implicants::sort()
 	return *this;
 }
 
-void Implicants::print(std::ostream &o) const
+void Implicants::printHuman(std::ostream &o) const
 {
 	if (size() == 1)
 	{
-		front().print(o, false);
+		front().printHuman(o, false);
 	}
 	else
 	{
@@ -21,7 +21,24 @@ void Implicants::print(std::ostream &o) const
 		{
 			if (&implicant != &front())
 				o << " || ";
-			implicant.print(o, true);
+			implicant.printHuman(o, true);
+		}
+	}
+}
+
+void Implicants::printVerilog(std::ostream &o) const
+{
+	if (size() == 1)
+	{
+		front().printVerilog(o, false);
+	}
+	else
+	{
+		for (const Implicant &implicant : *this)
+		{
+			if (&implicant != &front())
+				o << " | ";
+			implicant.printVerilog(o, true);
 		}
 	}
 }

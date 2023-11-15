@@ -9,22 +9,65 @@
 #include "SetOptimizerForSums.hh"
 
 
-void OptimizedSolutions::generateHumanIds() const
+std::size_t OptimizedSolutions::generateHumanIds() const
 {
 	const id_t idCount = products.size() + sums.size();
-	humanIds.resize(idCount);
+	normalizedIds.resize(idCount);
 	id_t currentHumanId = 0;
 	for (id_t id = 0; id != idCount; ++id)
-		if (isWorthPrinting(id))
-			humanIds[id] = currentHumanId++;
+		if (isWorthPrinting(id, false))
+			normalizedIds[id] = currentHumanId++;
+	return currentHumanId;
+}
+
+std::pair<std::size_t, std::size_t> OptimizedSolutions::generateNormalizedIds() const
+{
+	const id_t idCount = products.size() + sums.size();
+	normalizedIds.resize(idCount);
+	id_t currentNormalizedProductId = 0, currentNormalizedSumId = 0;
+	for (id_t id = 0; id != idCount; ++id)
+	{
+		if (isProduct(id))
+		{
+			if (isProductWorthPrinting(id))
+				normalizedIds[id] = currentNormalizedProductId++;
+		}
+		else
+		{
+			if (isSumWorthPrinting(id, true))
+				normalizedIds[id] = currentNormalizedSumId++;
+		}
+	}
+	return {currentNormalizedProductId, currentNormalizedSumId};
+}
+
+void OptimizedSolutions::printVerilogImmediates(std::ostream &o, const std::size_t immediateProductCount, const std::size_t immediateSumCount) const
+{
+	if (immediateProductCount != 0 || immediateSumCount != 0)
+	{
+		o << "\t// Internal signals\n";
+		if (immediateProductCount != 0)
+			o << "\twire [" << (immediateProductCount - 1) << ":0] int_prods;\n";
+		if (immediateSumCount != 0)
+			o << "\twire [" << (immediateSumCount - 1) << ":0] int_sums;\n";
+		o << "\t\n";
+	}
 }
 
 void OptimizedSolutions::printHumanId(std::ostream &o, const id_t id) const
 {
-	o << '[' << humanIds[id] << ']';
+	o << '[' << normalizedIds[id] << ']';
 }
 
-void OptimizedSolutions::printNegatedInputs(std::ostream &o) const
+void OptimizedSolutions::printVerilogId(std::ostream &o, const id_t id) const
+{
+	if (isProduct(id))
+		o << "int_prods[" << normalizedIds[id] << ']';
+	else
+		o << "int_sums[" << normalizedIds[id] << ']';
+}
+
+void OptimizedSolutions::printHumanNegatedInputs(std::ostream &o) const
 {
 	o << "Negated inputs:";
 	bool first = true;
@@ -49,43 +92,83 @@ void OptimizedSolutions::printNegatedInputs(std::ostream &o) const
 	o << '\n';
 }
 
-void OptimizedSolutions::printProductBody(std::ostream &o, const id_t productId) const
+void OptimizedSolutions::printHumanProductBody(std::ostream &o, const id_t productId) const
 {
 	const auto &[primeImplicant, ids] = getProduct(productId);
-	bool first = primeImplicant == Implicant::all();
-	if (!first || ids.empty())
-		primeImplicant.print(o, false);
+	bool needsAnd = primeImplicant != Implicant::all();
+	if (needsAnd || ids.empty())
+		primeImplicant.printHuman(o, false);
 	for (const auto &id : ids)
 	{
-		if (first)
-			first = false;
-		else
+		if (needsAnd)
 			o << " && ";
+		else
+			needsAnd = true;
 		printHumanId(o, id);
 	}
 }
 
-void OptimizedSolutions::printProduct(std::ostream &o, const id_t productId) const
+void OptimizedSolutions::printHumanProduct(std::ostream &o, const id_t productId) const
 {
 	o << '\t';
 	printHumanId(o, productId);
 	o << " = ";
-	printProductBody(o, productId);
+	printHumanProductBody(o, productId);
 	o << '\n';
 }
 
-void OptimizedSolutions::printProducts(std::ostream &o) const
+void OptimizedSolutions::printHumanProducts(std::ostream &o) const
 {
 	o << "Products:\n";
 	for (std::size_t i = 0; i != products.size(); ++i)
 	{
 		if (!isProductWorthPrinting(makeProductId(i)))
 			continue;
-		printProduct(o, makeProductId(i));
+		printHumanProduct(o, makeProductId(i));
 	}
 }
 
-void OptimizedSolutions::printSumBody(std::ostream &o, const id_t sumId) const
+void OptimizedSolutions::printVerilogProductBody(std::ostream &o, const id_t productId) const
+{
+	const auto &[primeImplicant, ids] = getProduct(productId);
+	bool needsAnd = primeImplicant != Implicant::all();
+	if (needsAnd || ids.empty())
+		primeImplicant.printVerilog(o, false);
+	for (const auto &id : ids)
+	{
+		if (needsAnd)
+			o << " & ";
+		else
+			needsAnd = true;
+		printVerilogId(o, id);
+	}
+}
+
+void OptimizedSolutions::printVerilogProduct(std::ostream &o, const id_t productId) const
+{
+	o << "\tassign ";
+	printVerilogId(o, productId);
+	o << " = ";
+	printVerilogProductBody(o, productId);
+	o << ";\n";
+}
+
+void OptimizedSolutions::printVerilogProducts(std::ostream &o) const
+{
+	if (!products.empty())
+	{
+		o << "\t// Products\n";
+		for (std::size_t i = 0; i != products.size(); ++i)
+		{
+			if (!isProductWorthPrinting(makeProductId(i)))
+				continue;
+			printVerilogProduct(o, makeProductId(i));
+		}
+		o << "\t\n";
+	}
+}
+
+void OptimizedSolutions::printHumanSumBody(std::ostream &o, const id_t sumId) const
 {
 	bool first = true;
 	for (const auto &partId : getSum(sumId))
@@ -97,41 +180,100 @@ void OptimizedSolutions::printSumBody(std::ostream &o, const id_t sumId) const
 		if (!isProduct(partId) || isProductWorthPrinting(partId))
 			printHumanId(o, partId);
 		else
-			getProduct(partId).first.print(o, false);
+			getProduct(partId).first.printHuman(o, false);
 	}
 }
 
-void OptimizedSolutions::printSum(std::ostream &o, const id_t sumId) const
+void OptimizedSolutions::printHumanSum(std::ostream &o, const id_t sumId) const
 {
 	o << '\t';
 	printHumanId(o, sumId);
 	o << " = ";
-	printSumBody(o, sumId);
+	printHumanSumBody(o, sumId);
 	o << '\n';
 }
 
-void OptimizedSolutions::printSums(std::ostream &o) const
+void OptimizedSolutions::printHumanSums(std::ostream &o) const
 {
 	o << "Sums:\n";
 	for (std::size_t i = 0; i != sums.size(); ++i)
 	{
-		if (!isSumWorthPrinting(makeSumId(i)))
+		if (!isSumWorthPrinting(makeSumId(i), false))
 			continue;
-		printSum(o, makeSumId(i));
+		printHumanSum(o, makeSumId(i));
 	}
 }
 
-void OptimizedSolutions::printFinalSums(std::ostream &o, const std::vector<std::string> &functionNames) const
+void OptimizedSolutions::printVerilogSumBody(std::ostream &o, const id_t sumId) const
+{
+	bool first = true;
+	for (const auto &partId : getSum(sumId))
+	{
+		if (first)
+			first = false;
+		else
+			o << " | ";
+		if (!isProduct(partId) || isProductWorthPrinting(partId))
+			printVerilogId(o, partId);
+		else
+			getProduct(partId).first.printVerilog(o, false);
+	}
+}
+
+void OptimizedSolutions::printVerilogSum(std::ostream &o, const id_t sumId) const
+{
+	o << "\tassign ";
+	printVerilogId(o, sumId);
+	o << " = ";
+	printVerilogSumBody(o, sumId);
+	o << ";\n";
+}
+
+void OptimizedSolutions::printVerilogSums(std::ostream &o) const
+{
+	if (!sums.empty())
+	{
+		o << "\t// Sums\n";
+		for (std::size_t i = 0; i != sums.size(); ++i)
+		{
+			if (!isSumWorthPrinting(makeSumId(i), true))
+				continue;
+			printVerilogSum(o, makeSumId(i));
+		}
+		o << "\t\n";
+	}
+}
+
+void OptimizedSolutions::printHumanFinalSums(std::ostream &o, const std::vector<std::string_view> &functionNames) const
 {
 	for (std::size_t i = 0; i != finalSums.size(); ++i)
 	{
 		o << "\t\"" << functionNames[i] << "\" = ";
 		const id_t sumId = finalSums[i];
-		if (isSumWorthPrinting(sumId))
+		if (isSumWorthPrinting(sumId, false))
 			printHumanId(o, sumId);
 		else
-			printSumBody(o, sumId);
+			printHumanSumBody(o, sumId);
 		o << '\n';
+	}
+}
+
+void OptimizedSolutions::printVerilogFinalSums(std::ostream &o, const std::vector<std::string_view> &functionNames) const
+{
+	if (!finalSums.empty())
+	{
+		o << "\t// Results\n";
+		for (std::size_t i = 0; i != finalSums.size(); ++i)
+		{
+			o << "\tassign " << functionNames[i] << " = ";
+			const id_t sumId = finalSums[i];
+			if (isSumWorthPrinting(sumId, true))
+				printVerilogId(o, finalSums[i]);
+			else
+				printVerilogSumBody(o, sumId);
+			o << ";\n";
+		}
+		o << "\t\n";
 	}
 }
 
@@ -266,13 +408,22 @@ OptimizedSolutions::OptimizedSolutions(const solutions_t &solutions, Progress &p
 #endif
 }
 
-void OptimizedSolutions::print(std::ostream &o, const std::vector<std::string> &functionNames) const
+void OptimizedSolutions::printHuman(std::ostream &o, const std::vector<std::string_view> &functionNames) const
 {
 	generateHumanIds();
-	printNegatedInputs(o);
-	printProducts(o);
-	printSums(o);
-	printFinalSums(o, functionNames);
+	printHumanNegatedInputs(o);
+	printHumanProducts(o);
+	printHumanSums(o);
+	printHumanFinalSums(o, functionNames);
 	if (options::outputFormat.getValue() != options::OutputFormat::SHORT_HUMAN)
 		printGateScores(o);
+}
+
+void OptimizedSolutions::printVerilog(std::ostream &o, const std::vector<std::string_view> &functionNames) const
+{
+	const auto [immediateProductCount, immediateSumCount] = generateNormalizedIds();
+	printVerilogImmediates(o, immediateProductCount, immediateSumCount);
+	printVerilogProducts(o);
+	printVerilogSums(o);
+	printVerilogFinalSums(o, functionNames);
 }

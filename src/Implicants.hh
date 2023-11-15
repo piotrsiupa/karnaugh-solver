@@ -14,7 +14,8 @@ public:
 	
 	Implicants& sort();
 	
-	void print(std::ostream &o) const;
+	void printHuman(std::ostream &o) const;
+	void printVerilog(std::ostream &o) const;
 	
 #ifndef NDEBUG
 	bool covers(const Minterm minterm) const;
