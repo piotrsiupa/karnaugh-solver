@@ -3,6 +3,7 @@
 
 bool terminalStdin, terminalInput, terminalStderr;
 
+std::optional<std::string_view> inputFilePath;
 std::vector<std::string> inputNames;
 
 bits_t bits;

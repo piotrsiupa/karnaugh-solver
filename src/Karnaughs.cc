@@ -1,6 +1,7 @@
 #include "./Karnaughs.hh"
 
 #include <algorithm>
+#include <filesystem>
 #include <iostream>
 #include <limits>
 
@@ -188,7 +189,14 @@ void Karnaughs::printHuman()
 
 void Karnaughs::printVerilog()
 {
-	std::cout << "module Karnaugh(\n";
+	std::cout << "module ";
+	if (options::name.getValue())
+		std::cout << *options::name.getValue();
+	else if (::inputFilePath)
+		std::cout << std::filesystem::path(*::inputFilePath).stem();
+	else
+		std::cout << "Karnaugh";
+	std::cout << "(\n";
 	if (!::inputNames.empty())
 	{
 		std::cout << "\tinput wire";

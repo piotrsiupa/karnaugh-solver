@@ -132,6 +132,7 @@ namespace options
 			{"human(?:[-_]readable)?[-_](?:short|small)|(?:short|small)[-_]human(?:[-_]readable)?|hr?s|shr?|short|small|tiny|minimal", OutputFormat::SHORT_HUMAN},
 			{"verilog", OutputFormat::VERILOG},
 		});
+	Text name({"name", "module-name", "class-name"}, 'n');
 	
 	std::vector<std::string_view> freeArgs;
 	
@@ -161,7 +162,7 @@ namespace options
 			[[nodiscard]] static bool parse(const int argc, const char *const *const argv) { return Parser(argc, argv).parse(); }
 		};
 		
-		Option *const Parser::allOptions[] = {&help, &version, &prompt, &prompt.getNegatedOption(), &status, &status.getNegatedOption(), &skipOptimization, &outputFormat};
+		Option *const Parser::allOptions[] = {&help, &version, &prompt, &prompt.getNegatedOption(), &status, &status.getNegatedOption(), &skipOptimization, &outputFormat, &name};
 		
 		bool Parser::parseShortOption(const char *&shortName, Option &option)
 		{

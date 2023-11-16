@@ -1,6 +1,7 @@
 #pragma once
 
 #include <functional>
+#include <optional>
 #include <regex>
 #include <string>
 #include <string_view>
@@ -100,6 +101,19 @@ namespace options
 		[[nodiscard]] T getValue() const { return value; }
 	};
 	
+	class Text : public Option
+	{
+		std::optional<std::string> value;
+		
+	public:
+		using Option::Option;
+		
+		[[nodiscard]] bool needsArgument() const final { return true; }
+		[[nodiscard]] bool parse(std::string_view argument) final { value = argument; return true; }
+		
+		[[nodiscard]] const std::optional<std::string>& getValue() const { return value; }
+	};
+	
 	
 	enum class OutputFormat
 	{
@@ -117,6 +131,7 @@ namespace options
 	
 	extern Flag skipOptimization;
 	extern Mapped<OutputFormat, OutputFormat::LONG_HUMAN> outputFormat;
+	extern Text name;
 	
 	extern std::vector<std::string_view> freeArgs;
 	

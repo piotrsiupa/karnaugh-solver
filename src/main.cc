@@ -31,6 +31,7 @@ static void printHelp()
 			"    -S, --no-status\t- Same as `--status=never`.\n"
 			"\t--no-optimize\t- Skip the common subexpression elimination optimization\n\t\t\t  and only show a raw solution for each function.\n"
 			"    -f, --format=X\t- Set the output format. (See \"Output formats\".)\n"
+			"\t--name=X\t- Set module name for Verilog output.\n\t\t\t  (By default, the name of the input file is used,\n\t\t\t  or \"Karnaugh\" if input is read from stdin.)\n"
 			"\n"
 			"Output formats:\n"
 			"\thuman-long\t- The default format which displays all the information\n\t\t\t  in a human-readable way.\n"
@@ -156,6 +157,7 @@ static IstreamUniquePtr prepareIstream()
 		}
 		else
 		{
+			::inputFilePath = options::freeArgs.front();
 			IstreamUniquePtr ifstream(new std::ifstream(path), deleteIstream);
 			if (!*ifstream)
 			{
