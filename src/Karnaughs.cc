@@ -193,10 +193,10 @@ void Karnaughs::printVerilog()
 	if (options::name.getValue())
 		std::cout << *options::name.getValue();
 	else if (::inputFilePath)
-		std::cout << std::filesystem::path(*::inputFilePath).stem();
+		std::cout << std::filesystem::path(*::inputFilePath).stem().string();
 	else
 		std::cout << "Karnaugh";
-	std::cout << "(\n";
+	std::cout << " (\n";
 	if (!::inputNames.empty())
 	{
 		std::cout << "\tinput wire";
