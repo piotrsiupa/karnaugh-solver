@@ -89,13 +89,14 @@ static bool parseInputBits(Input &input)
 	{
 		Progress progress(Progress::Stage::LOADING, "Loading input names", 1);
 		progress.step();
-		::inputNames = input.popParts(progress);
-		if (::inputNames.size() > ::maxBits)
+		Names::names_t names = input.popParts(progress);
+		if (names.size() > ::maxBits)
 		{
 			progress.cerr() << "Too many input variables!\n";
 			return false;
 		}
-		::bits = static_cast<::bits_t>(::inputNames.size());
+		::bits = static_cast<::bits_t>(names.size());
+		::inputNames = Names(true, std::move(names));
 	}
 	else
 	{
@@ -130,8 +131,11 @@ static bool parseInputBits(Input &input)
 			std::cerr << '"' << line << "\" is out of range!\n";
 			return false;
 		}
+		Names::names_t names;
+		names.reserve(::bits);
 		for (bits_t i = 0; i != ::bits; ++i)
-			::inputNames.push_back("i" + std::to_string(i));
+			names.push_back("i" + std::to_string(i));
+		::inputNames = Names(false, std::move(names));
 	}
 	::maxMinterm = ::bits == 0 ? 0 : ((Minterm(1) << (::bits - 1)) - 1) * 2 + 1;
 	return true;

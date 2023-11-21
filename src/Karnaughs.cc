@@ -197,11 +197,10 @@ void Karnaughs::printVerilog()
 	else
 		std::cout << "Karnaugh";
 	std::cout << " (\n";
-	if (!::inputNames.empty())
+	if (!::inputNames.isEmpty())
 	{
 		std::cout << "\tinput wire";
-		for (const auto &inputName : inputNames)
-			std::cout << ' ' << inputName << ',';
+		::inputNames.printVerilogNames(std::cout, "in");
 		std::cout << '\n';
 	}
 	if (!karnaughs.empty())

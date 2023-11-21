@@ -74,7 +74,7 @@ void Implicant::printHuman(std::ostream &o, const bool parentheses) const
 			o << " && ";
 		if (negated)
 			o << '!';
-		o << ::inputNames[bitIndex];
+		::inputNames.printHumanName(o, bitIndex);
 	}
 	if (needsParentheses)
 		o << ')';
@@ -102,7 +102,7 @@ void Implicant::printVerilog(std::ostream &o, const bool parentheses) const
 			o << " & ";
 		if (negated)
 			o << '!';
-		o << ::inputNames[bitIndex];
+		::inputNames.printVerilogName(o, bitIndex);
 	}
 	if (needsParentheses)
 		o << ')';

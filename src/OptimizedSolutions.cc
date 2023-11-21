@@ -84,7 +84,7 @@ void OptimizedSolutions::printHumanNegatedInputs(std::ostream &o) const
 			{
 				o << ", ";
 			}
-			o << ::inputNames[i];
+			::inputNames.printHumanName(o, i);
 		}
 	}
 	if (first)
