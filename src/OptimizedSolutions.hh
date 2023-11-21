@@ -10,6 +10,7 @@
 
 #include "Implicant.hh"
 #include "Implicants.hh"
+#include "Names.hh"
 #include "Progress.hh"
 
 
@@ -53,8 +54,8 @@ private:
 	void printVerilogSumBody(std::ostream &o, const id_t sumId) const;
 	void printVerilogSum(std::ostream &o, const id_t sumId) const;
 	void printVerilogSums(std::ostream &o) const;
-	void printHumanFinalSums(std::ostream &o, const std::vector<std::string_view> &functionNames) const;
-	void printVerilogFinalSums(std::ostream &o, const std::vector<std::string_view> &functionNames) const;
+	void printHumanFinalSums(std::ostream &o, const Names &functionNames) const;
+	void printVerilogFinalSums(std::ostream &o, const Names &functionNames) const;
 	void printGateScores(std::ostream &o) const;
 	
 	void createNegatedInputs(const solutions_t &solutions);
@@ -84,6 +85,6 @@ public:
 	std::size_t getOrCount() const { std::size_t orCount = 0; for (const auto &sum : sums) orCount += sum.size() - 1; return orCount; }
 	std::size_t getGateScore() const { return getNotCount() + 2 * getAndCount() + 2 * getOrCount(); }
 	
-	void printHuman(std::ostream &o, const std::vector<std::string_view> &functionNames) const;
-	void printVerilog(std::ostream &o, const std::vector<std::string_view> &functionNames) const;
+	void printHuman(std::ostream &o, const Names &functionNames) const;
+	void printVerilog(std::ostream &o, const Names &functionNames) const;
 };

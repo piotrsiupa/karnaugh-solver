@@ -96,7 +96,7 @@ static bool parseInputBits(Input &input)
 			return false;
 		}
 		::bits = static_cast<::bits_t>(names.size());
-		::inputNames = Names(true, std::move(names));
+		::inputNames = Names(true, std::move(names), "in");
 	}
 	else
 	{
@@ -135,7 +135,7 @@ static bool parseInputBits(Input &input)
 		names.reserve(::bits);
 		for (bits_t i = 0; i != ::bits; ++i)
 			names.push_back("i" + std::to_string(i));
-		::inputNames = Names(false, std::move(names));
+		::inputNames = Names(false, std::move(names), "in");
 	}
 	::maxMinterm = ::bits == 0 ? 0 : ((Minterm(1) << (::bits - 1)) - 1) * 2 + 1;
 	return true;

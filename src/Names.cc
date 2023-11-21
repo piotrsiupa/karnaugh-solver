@@ -1,7 +1,7 @@
 #include "./Names.hh"
 
 
-void Names::printVerilogNames(std::ostream &o, const std::string_view replacementName) const
+void Names::printVerilogNames(std::ostream &o) const
 {
 	if (useInCode)
 	{

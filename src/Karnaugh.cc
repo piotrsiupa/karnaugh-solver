@@ -155,11 +155,11 @@ bool Karnaugh::loadData(Input &input)
 	
 	if (input.hasError(&progress))
 		return false;
-	const bool hasName = input.isName();
-	if (hasName)
+	nameIsCustom = input.isName();
+	if (nameIsCustom)
 		functionName = input.popLine();
 	
-	if (hasName && options::prompt.getValue())
+	if (nameIsCustom && options::prompt.getValue())
 		std::cerr << "Enter a list of minterms of the function \"" << functionName << "\":\n";
 	if (input.hasError(&progress))
 		return false;
@@ -174,7 +174,7 @@ bool Karnaugh::loadData(Input &input)
 	if (options::prompt.getValue())
 	{
 		std::cerr << "Enter a list of don't-cares of the function";
-		if (hasName)
+		if (nameIsCustom)
 			std::cerr << " \"" << functionName << "\":\n";
 		else
 			std::cerr << ":\n";

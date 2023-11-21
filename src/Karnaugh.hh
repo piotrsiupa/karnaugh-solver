@@ -22,6 +22,7 @@ private:
 	
 	static std::size_t nameCount;
 	
+	bool nameIsCustom = false;
 	std::string functionName;
 	Minterms targetMinterms, allowedMinterms;
 	
@@ -41,6 +42,7 @@ public:
 	Karnaugh(Karnaugh &&) = default;
 	Karnaugh& operator=(Karnaugh &&) = default;
 	
+	bool hasCustomName() const { return nameIsCustom; }
 	const std::string& getFunctionName() const { return functionName; }
 	
 	bool loadData(Input &input);

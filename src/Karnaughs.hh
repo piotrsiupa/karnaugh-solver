@@ -5,6 +5,7 @@
 
 #include "Implicants.hh"
 #include "Input.hh"
+#include "Names.hh"
 #include "Karnaugh.hh"
 #include "OptimizedSolutions.hh"
 
@@ -19,11 +20,12 @@ class Karnaughs
 	solutions_t bestSolutions;
 	OptimizedSolutions optimizedSolutions;
 	
-	std::vector<std::string_view> gatherFunctionNames() const;
+	bool shouldFunctionNamesBeUsed() const;
+	Names gatherFunctionNames() const;
 	void printHumanBestSolutions() const;
 	void printHumanOptimizedSolution() const;
-	void printVerilogBestSolutions() const;
-	void printVerilogOptimizedSolution() const;
+	void printVerilogBestSolutions(const Names &functionNames) const;
+	void printVerilogOptimizedSolution(const Names &functionNames) const;
 	
 	solutionses_t makeSolutionses() const;
 	void findBestNonOptimizedSolutions(const solutionses_t &solutionses);

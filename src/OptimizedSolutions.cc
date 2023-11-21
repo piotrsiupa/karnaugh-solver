@@ -244,11 +244,13 @@ void OptimizedSolutions::printVerilogSums(std::ostream &o) const
 	}
 }
 
-void OptimizedSolutions::printHumanFinalSums(std::ostream &o, const std::vector<std::string_view> &functionNames) const
+void OptimizedSolutions::printHumanFinalSums(std::ostream &o, const Names &functionNames) const
 {
 	for (std::size_t i = 0; i != finalSums.size(); ++i)
 	{
-		o << "\t\"" << functionNames[i] << "\" = ";
+		o << "\t\"";
+		functionNames.printHumanName(o, i);
+		o << "\" = ";
 		const id_t sumId = finalSums[i];
 		if (isSumWorthPrinting(sumId, false))
 			printHumanId(o, sumId);
@@ -258,14 +260,16 @@ void OptimizedSolutions::printHumanFinalSums(std::ostream &o, const std::vector<
 	}
 }
 
-void OptimizedSolutions::printVerilogFinalSums(std::ostream &o, const std::vector<std::string_view> &functionNames) const
+void OptimizedSolutions::printVerilogFinalSums(std::ostream &o, const Names &functionNames) const
 {
 	if (!finalSums.empty())
 	{
 		o << "\t// Results\n";
 		for (std::size_t i = 0; i != finalSums.size(); ++i)
 		{
-			o << "\tassign " << functionNames[i] << " = ";
+			o << "\tassign ";
+			functionNames.printVerilogName(o, i);
+			o << " = ";
 			const id_t sumId = finalSums[i];
 			if (isSumWorthPrinting(sumId, true))
 				printVerilogId(o, finalSums[i]);
@@ -408,7 +412,7 @@ OptimizedSolutions::OptimizedSolutions(const solutions_t &solutions, Progress &p
 #endif
 }
 
-void OptimizedSolutions::printHuman(std::ostream &o, const std::vector<std::string_view> &functionNames) const
+void OptimizedSolutions::printHuman(std::ostream &o, const Names &functionNames) const
 {
 	generateHumanIds();
 	printHumanNegatedInputs(o);
@@ -419,7 +423,7 @@ void OptimizedSolutions::printHuman(std::ostream &o, const std::vector<std::stri
 		printGateScores(o);
 }
 
-void OptimizedSolutions::printVerilog(std::ostream &o, const std::vector<std::string_view> &functionNames) const
+void OptimizedSolutions::printVerilog(std::ostream &o, const Names &functionNames) const
 {
 	const auto [immediateProductCount, immediateSumCount] = generateNormalizedIds();
 	printVerilogImmediates(o, immediateProductCount, immediateSumCount);

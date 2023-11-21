@@ -21,28 +21,38 @@ void Karnaughs::printHumanBestSolutions() const
 	}
 }
 
-std::vector<std::string_view> Karnaughs::gatherFunctionNames() const
+bool Karnaughs::shouldFunctionNamesBeUsed() const
 {
-	std::vector<std::string_view> functionNames;
+	for (const Karnaugh &karnaugh : karnaughs)
+		if (karnaugh.hasCustomName())
+			return true;
+	return false;
+}
+
+Names Karnaughs::gatherFunctionNames() const
+{
+	Names::names_t functionNames;
 	functionNames.reserve(karnaughs.size());
 	for (const Karnaugh &karnaugh : karnaughs)
 		functionNames.emplace_back(karnaugh.getFunctionName());
-	return functionNames;
+	return {shouldFunctionNamesBeUsed(), std::move(functionNames), "out"};
 }
 
 void Karnaughs::printHumanOptimizedSolution() const
 {
-	const std::vector<std::string_view> functionNames = gatherFunctionNames();
+	const Names functionNames = gatherFunctionNames();
 	optimizedSolutions.printHuman(std::cout, functionNames);
 }
 
-void Karnaughs::printVerilogBestSolutions() const
+void Karnaughs::printVerilogBestSolutions(const Names &functionNames) const
 {
 	if (!karnaughs.empty())
 	{
 		for (std::size_t i = 0; i != karnaughs.size(); ++i)
 		{
-			std::cout << "\tassign " << karnaughs[i].getFunctionName() << " = ";
+			std::cout << "\tassign ";
+			functionNames.printVerilogName(std::cout, i);
+			std::cout << " = ";
 			karnaughs[i].printVerilogSolution(bestSolutions[i]);
 			std::cout << ";\n";
 		}
@@ -50,9 +60,8 @@ void Karnaughs::printVerilogBestSolutions() const
 	}
 }
 
-void Karnaughs::printVerilogOptimizedSolution() const
+void Karnaughs::printVerilogOptimizedSolution(const Names &functionNames) const
 {
-	const std::vector<std::string_view> functionNames = gatherFunctionNames();
 	optimizedSolutions.printVerilog(std::cout, functionNames);
 }
 
@@ -200,22 +209,22 @@ void Karnaughs::printVerilog()
 	if (!::inputNames.isEmpty())
 	{
 		std::cout << "\tinput wire";
-		::inputNames.printVerilogNames(std::cout, "in");
+		::inputNames.printVerilogNames(std::cout);
 		std::cout << '\n';
 	}
+	const Names functionNames = gatherFunctionNames();
 	if (!karnaughs.empty())
 	{
 		std::cout << "\toutput wire";
-		for (const Karnaugh &karnaugh : karnaughs)
-			std::cout << ' ' << karnaugh.getFunctionName() << ',';
+		functionNames.printVerilogNames(std::cout);
 		std::cout << '\n';
 	}
 	std::cout << ");\n";
 	std::cout << "\t\n";
 	if (options::skipOptimization.isRaised())
-		printVerilogBestSolutions();
+		printVerilogBestSolutions(functionNames);
 	else
-		printVerilogOptimizedSolution();
+		printVerilogOptimizedSolution(functionNames);
 	std::cout << "endmodule" << std::endl;
 }
 
