@@ -1,7 +1,8 @@
 # Tests
 
-Each test is composed of two files (`input` and `output`) in a directory which name is the name of the test.
-This is pretty straightforward really. The input file is passed to the program and the program's output is compared with the output file.
+These are simple tests composed from an input files, each of which is linked with one or more output files.
+Each input file is named "input" and is in a separate directory which name is the name of the test. The remaining files in the directory are output files and their names are the options that will be passed to the program, separated by underscores (with one additional `--no-status` as the first option).
+This is pretty straightforward really. The input file is passed to the program along with the options and the program's output is compared with the appropriate output file.
 You can read those files to see some examples of how the input and output of the program look.
 
 Some test files are disabled. (The input name is `input.disabled`.)
