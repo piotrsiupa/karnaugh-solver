@@ -8,13 +8,13 @@ import time
 
 
 def find_tests(test_dir: Path) -> list[str]:
-    return sorted(x.stem for x in test_dir.glob('*.input'))
+    return sorted(child.name for child in test_dir.iterdir() if child.is_dir() and (child / 'input').is_file())
 
 
 def run_test(test_dir: Path, program: Path, test_name: str) -> bool:
     print(f'Running "{test_name}"...', end=' ', flush=True)
-    input_file = test_dir / (test_name + '.input')
-    output_file = test_dir / (test_name + '.output')
+    input_file = test_dir / test_name / 'input'
+    output_file = test_dir / test_name / 'output'
     process = subprocess.Popen(['./' + str(program), '--no-status', input_file], text=True, stdout=subprocess.PIPE)
     starttime = time.perf_counter()
     while True:
