@@ -1,32 +1,10 @@
 --- true ---
-
-goal:
-  
-0 T
-
-solution:
 <True>
 
 --- false ---
-
-goal:
-  
-0 F
-
-solution:
 <False>
 
 --- dont_care ---
-
-goal:
-  
-0 -
-
-best fit:
-  
-0 F
-
-solution:
 <False>
 
 === optimized solution ===

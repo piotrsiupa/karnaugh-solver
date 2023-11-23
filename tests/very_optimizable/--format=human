@@ -1,0 +1,34 @@
+--- first ---
+(a && !b && c && !d) || (a && !b && !c && d) || (!a && b && c && !d) || (!a && b && !c && d)
+
+--- second ---
+(a && b && c && d) || (a && !b && !c && d) || (!a && b && c && !d) || (!a && b && !c && d)
+
+--- third ---
+(a && !b && !c && d) || (!a && b && c && !d) || (!a && b && !c && d)
+
+--- fourth ---
+(a && !b && !c && d) || (!a && b && c && !d) || (!a && !b && !c && !d)
+
+=== optimized solution ===
+
+Negated inputs: a, b, c, d
+Products:
+	[0] = a && b && c && d
+	[1] = !c && d
+	[2] = !a && b
+	[3] = [2] && [1]
+	[4] = c && !d
+	[5] = [2] && [4]
+	[6] = a && !b
+	[7] = [1] && [6]
+	[8] = [4] && [6]
+	[9] = !a && !b && !c && !d
+Sums:
+	[10] = [5] || [7]
+	[11] = [3] || [10]
+	"first" = [8] || [11]
+	"second" = [0] || [11]
+	"third" = [11]
+	"fourth" = [9] || [10]
+Gate scores: NOTs = 4, ANDs = 14, ORs = 5

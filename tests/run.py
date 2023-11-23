@@ -18,7 +18,7 @@ def run_tests(main_test_dir: Path, program: Path, test_dir: Path) -> bool:
     for output_file in output_files:
         options = output_file.name.split('_')
         print(f'Running "{test_dir.name}" ({" ".join(options)})...', end=' ', flush=True)
-        process = subprocess.Popen(['./' + str(program), '--no-status'] + options + [input_file], text=True, stdout=subprocess.PIPE)
+        process = subprocess.Popen(['./' + str(program), '--no-status', '--name', test_dir.name] + options + [input_file], text=True, stdout=subprocess.PIPE)
         starttime = time.perf_counter()
         while True:
             try:
