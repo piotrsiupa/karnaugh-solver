@@ -1,0 +1,17 @@
+module without_function_names (
+	input wire a, b, c, d,
+	output wire [1:0] out,
+);
+	
+	// Internal signals
+	wire [1:0] int_prods;
+	
+	// Products
+	assign int_prods[0] = !a & !b;
+	assign int_prods[1] = c & int_prods[0];
+	
+	// Results
+	assign out[0] = int_prods[0];
+	assign out[1] = int_prods[1];
+	
+endmodule

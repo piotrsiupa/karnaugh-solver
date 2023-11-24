@@ -155,17 +155,20 @@ void OptimizedSolutions::printVerilogProduct(std::ostream &o, const id_t product
 
 void OptimizedSolutions::printVerilogProducts(std::ostream &o) const
 {
-	if (!products.empty())
+	bool anyIsPrinted = false;
+	for (std::size_t i = 0; i != products.size(); ++i)
 	{
-		o << "\t// Products\n";
-		for (std::size_t i = 0; i != products.size(); ++i)
+		if (!isProductWorthPrinting(makeProductId(i)))
+			continue;
+		if (!anyIsPrinted)
 		{
-			if (!isProductWorthPrinting(makeProductId(i)))
-				continue;
-			printVerilogProduct(o, makeProductId(i));
+			anyIsPrinted = true;
+			o << "\t// Products\n";
 		}
-		o << "\t\n";
+		printVerilogProduct(o, makeProductId(i));
 	}
+	if (anyIsPrinted)
+		o << "\t\n";
 }
 
 void OptimizedSolutions::printHumanSumBody(std::ostream &o, const id_t sumId) const
@@ -231,17 +234,20 @@ void OptimizedSolutions::printVerilogSum(std::ostream &o, const id_t sumId) cons
 
 void OptimizedSolutions::printVerilogSums(std::ostream &o) const
 {
-	if (!sums.empty())
+	bool anyIsPrinted = false;
+	for (std::size_t i = 0; i != sums.size(); ++i)
 	{
-		o << "\t// Sums\n";
-		for (std::size_t i = 0; i != sums.size(); ++i)
+		if (!isSumWorthPrinting(makeSumId(i), true))
+			continue;
+		if (!anyIsPrinted)
 		{
-			if (!isSumWorthPrinting(makeSumId(i), true))
-				continue;
-			printVerilogSum(o, makeSumId(i));
+			anyIsPrinted = true;
+			o << "\t// Sums\n";
 		}
-		o << "\t\n";
+		printVerilogSum(o, makeSumId(i));
 	}
+	if (anyIsPrinted)
+		o << "\t\n";
 }
 
 void OptimizedSolutions::printHumanFinalSums(std::ostream &o, const Names &functionNames) const

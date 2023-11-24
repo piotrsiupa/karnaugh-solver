@@ -1,0 +1,35 @@
+module very_optimizable (
+	input wire a, b, c, d,
+	output wire first, second, third, fourth,
+);
+	
+	// Internal signals
+	wire [9:0] int_prods;
+	wire [4:0] int_sums;
+	
+	// Products
+	assign int_prods[0] = a & b & c & d;
+	assign int_prods[1] = !c & d;
+	assign int_prods[2] = !a & b;
+	assign int_prods[3] = int_prods[2] & int_prods[1];
+	assign int_prods[4] = c & !d;
+	assign int_prods[5] = int_prods[2] & int_prods[4];
+	assign int_prods[6] = a & !b;
+	assign int_prods[7] = int_prods[1] & int_prods[6];
+	assign int_prods[8] = int_prods[4] & int_prods[6];
+	assign int_prods[9] = !a & !b & !c & !d;
+	
+	// Sums
+	assign int_sums[0] = int_prods[5] | int_prods[7];
+	assign int_sums[1] = int_prods[3] | int_sums[0];
+	assign int_sums[2] = int_prods[8] | int_sums[1];
+	assign int_sums[3] = int_prods[0] | int_sums[1];
+	assign int_sums[4] = int_prods[9] | int_sums[0];
+	
+	// Results
+	assign first = int_sums[2];
+	assign second = int_sums[3];
+	assign third = int_sums[1];
+	assign fourth = int_sums[4];
+	
+endmodule

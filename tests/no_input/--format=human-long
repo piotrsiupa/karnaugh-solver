@@ -1,0 +1,40 @@
+--- true ---
+
+goal:
+  
+0 T
+
+solution:
+<True>
+
+--- false ---
+
+goal:
+  
+0 F
+
+solution:
+<False>
+
+--- dont_care ---
+
+goal:
+  
+0 -
+
+best fit:
+  
+0 F
+
+solution:
+<False>
+
+=== optimized solution ===
+
+Negated inputs: <none>
+Products:
+Sums:
+	"true" = <True>
+	"false" = <False>
+	"dont_care" = <False>
+Gate scores: NOTs = 0, ANDs = 0, ORs = 0

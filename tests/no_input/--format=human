@@ -1,32 +1,10 @@
 --- true ---
-
-goal:
-  
-0 T
-
-solution:
 <True>
 
 --- false ---
-
-goal:
-  
-0 F
-
-solution:
 <False>
 
---- don't care ---
-
-goal:
-  
-0 -
-
-best fit:
-  
-0 F
-
-solution:
+--- dont_care ---
 <False>
 
 === optimized solution ===
@@ -36,5 +14,5 @@ Products:
 Sums:
 	"true" = <True>
 	"false" = <False>
-	"don't care" = <False>
+	"dont_care" = <False>
 Gate scores: NOTs = 0, ANDs = 0, ORs = 0

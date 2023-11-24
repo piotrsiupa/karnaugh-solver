@@ -1,0 +1,19 @@
+--- f0 ---
+
+goal:
+   00 01 11 10 
+00 F  F  F  F
+01 -  T  -  F
+11 F  -  T  F
+10 F  F  T  -
+
+best fit:
+   00 01 11 10 
+00 F  F  F  F
+01 F  T  T  F
+11 F  T  T  F
+10 F  F  T  F
+
+solution:
+(i1 && i3) || (i0 && i2 && i3)
+
