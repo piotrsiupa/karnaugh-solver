@@ -11,32 +11,42 @@ def find_test_dirs(test_dir: Path) -> list[str]:
     return sorted(child for child in test_dir.iterdir() if child.is_dir() and (child / 'input').is_file())
 
 
+def time_process(process: subprocess.Popen):
+    starttime = time.perf_counter()
+    while True:
+        try:
+            process.wait()
+            break
+        except KeyboardInterrupt:
+            process.send_signal(signal.SIGINT)
+    endtime = time.perf_counter()
+    return endtime - starttime
+
+
+def run_test(test_name: str, program: Path, input_file: Path, output_file: Path):
+    options = output_file.name.split('_')
+    print(f'Running "{test_name}" ({" ".join(options)})...', end=' ', flush=True)
+    process = subprocess.Popen(['./' + str(program), '--no-status', '--name', test_name] + options + [input_file], text=True, stdout=subprocess.PIPE)
+    elapsed_time = time_process(process)
+    if process.returncode != 0:
+        print(f'FAIL ({elapsed_time:.2f}s, return code is {process.returncode})')
+        return False
+    with open(output_file, 'r') as f:
+        expected_output = f.read()
+    if process.stdout.read() != expected_output:
+        print(f'FAIL ({elapsed_time:.2f}s)')
+        return False
+    print(f'SUCCESS ({elapsed_time:.2f}s)')
+    return True
+
+
 def run_tests(main_test_dir: Path, program: Path, test_dir: Path) -> bool:
     input_file = test_dir / 'input'
     output_files = sorted(output_file for output_file in test_dir.iterdir() if output_file != input_file)
     success_count = 0
     for output_file in output_files:
-        options = output_file.name.split('_')
-        print(f'Running "{test_dir.name}" ({" ".join(options)})...', end=' ', flush=True)
-        process = subprocess.Popen(['./' + str(program), '--no-status', '--name', test_dir.name] + options + [input_file], text=True, stdout=subprocess.PIPE)
-        starttime = time.perf_counter()
-        while True:
-            try:
-                process.wait()
-                break
-            except KeyboardInterrupt:
-                process.send_signal(signal.SIGINT)
-        endtime = time.perf_counter()
-        if process.returncode != 0:
-            print(f'FAIL ({endtime-starttime:.2f}s, return code is {process.returncode})')
-            continue
-        with open(output_file, 'r') as f:
-            expected_output = f.read()
-        if process.stdout.read() != expected_output:
-            print(f'FAIL ({endtime-starttime:.2f}s)')
-            continue
-        print(f'SUCCESS ({endtime-starttime:.2f}s)')
-        success_count += 1
+        if run_test(test_dir.name, program, input_file, output_file):
+            success_count += 1
     return success_count, len(output_files)
 
 
