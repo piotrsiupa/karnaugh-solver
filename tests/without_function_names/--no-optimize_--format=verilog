@@ -1,9 +1,9 @@
 module without_function_names (
 	input wire a, b, c, d,
-	output wire [1:0] out,
+	output wire [1:0] o,
 );
 	
-	assign out[0] = !a & d;
-	assign out[1] = !a & !b & c;
+	assign o[0] = !a & d;
+	assign o[1] = !a & !b & c;
 	
 endmodule

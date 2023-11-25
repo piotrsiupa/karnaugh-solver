@@ -54,6 +54,19 @@ void OptimizedSolutions::printVerilogImmediates(std::ostream &o, const std::size
 	}
 }
 
+void OptimizedSolutions::printVhdlImmediates(std::ostream &o, const std::size_t immediateProductCount, const std::size_t immediateSumCount) const
+{
+	if (immediateProductCount != 0 || immediateSumCount != 0)
+	{
+		o << "\t-- Internal signals\n";
+		if (immediateProductCount != 0)
+			o << "\tsignal int_prods : std_logic_vector(" << (immediateProductCount - 1) << " downto 0);\n";
+		if (immediateSumCount != 0)
+			o << "\tsignal int_sums : std_logic_vector(" << (immediateSumCount - 1) << " downto 0);\n";
+		o << "\t\n";
+	}
+}
+
 void OptimizedSolutions::printHumanId(std::ostream &o, const id_t id) const
 {
 	o << '[' << normalizedIds[id] << ']';
@@ -65,6 +78,14 @@ void OptimizedSolutions::printVerilogId(std::ostream &o, const id_t id) const
 		o << "int_prods[" << normalizedIds[id] << ']';
 	else
 		o << "int_sums[" << normalizedIds[id] << ']';
+}
+
+void OptimizedSolutions::printVhdlId(std::ostream &o, const id_t id) const
+{
+	if (isProduct(id))
+		o << "int_prods(" << normalizedIds[id] << ')';
+	else
+		o << "int_sums(" << normalizedIds[id] << ')';
 }
 
 void OptimizedSolutions::printHumanNegatedInputs(std::ostream &o) const
@@ -171,6 +192,48 @@ void OptimizedSolutions::printVerilogProducts(std::ostream &o) const
 		o << "\t\n";
 }
 
+void OptimizedSolutions::printVhdlProductBody(std::ostream &o, const id_t productId) const
+{
+	const auto &[primeImplicant, ids] = getProduct(productId);
+	bool needsAnd = primeImplicant != Implicant::all();
+	if (needsAnd || ids.empty())
+		primeImplicant.printVhdl(o, false);
+	for (const auto &id : ids)
+	{
+		if (needsAnd)
+			o << " and ";
+		else
+			needsAnd = true;
+		printVhdlId(o, id);
+	}
+}
+
+void OptimizedSolutions::printVhdlProduct(std::ostream &o, const id_t productId) const
+{
+	o << '\t';
+	printVhdlId(o, productId);
+	o << " <= ";
+	printVhdlProductBody(o, productId);
+	o << ";\n";
+}
+
+void OptimizedSolutions::printVhdlProducts(std::ostream &o) const
+{
+	bool anyIsPrinted = false;
+	for (std::size_t i = 0; i != products.size(); ++i)
+	{
+		if (!isProductWorthPrinting(makeProductId(i)))
+			continue;
+		if (!anyIsPrinted)
+		{
+			anyIsPrinted = true;
+			o << "\t\n"
+				"\t-- Products\n";
+		}
+		printVhdlProduct(o, makeProductId(i));
+	}
+}
+
 void OptimizedSolutions::printHumanSumBody(std::ostream &o, const id_t sumId) const
 {
 	bool first = true;
@@ -250,6 +313,48 @@ void OptimizedSolutions::printVerilogSums(std::ostream &o) const
 		o << "\t\n";
 }
 
+void OptimizedSolutions::printVhdlSumBody(std::ostream &o, const id_t sumId) const
+{
+	bool first = true;
+	for (const auto &partId : getSum(sumId))
+	{
+		if (first)
+			first = false;
+		else
+			o << " or ";
+		if (!isProduct(partId) || isProductWorthPrinting(partId))
+			printVhdlId(o, partId);
+		else
+			getProduct(partId).first.printVhdl(o, false);
+	}
+}
+
+void OptimizedSolutions::printVhdlSum(std::ostream &o, const id_t sumId) const
+{
+	o << '\t';
+	printVhdlId(o, sumId);
+	o << " <= ";
+	printVhdlSumBody(o, sumId);
+	o << ";\n";
+}
+
+void OptimizedSolutions::printVhdlSums(std::ostream &o) const
+{
+	bool anyIsPrinted = false;
+	for (std::size_t i = 0; i != sums.size(); ++i)
+	{
+		if (!isSumWorthPrinting(makeSumId(i), true))
+			continue;
+		if (!anyIsPrinted)
+		{
+			anyIsPrinted = true;
+			o << "\t\n"
+				"\t-- Sums\n";
+		}
+		printVhdlSum(o, makeSumId(i));
+	}
+}
+
 void OptimizedSolutions::printHumanFinalSums(std::ostream &o, const Names &functionNames) const
 {
 	for (std::size_t i = 0; i != finalSums.size(); ++i)
@@ -281,6 +386,28 @@ void OptimizedSolutions::printVerilogFinalSums(std::ostream &o, const Names &fun
 				printVerilogId(o, finalSums[i]);
 			else
 				printVerilogSumBody(o, sumId);
+			o << ";\n";
+		}
+		o << "\t\n";
+	}
+}
+
+void OptimizedSolutions::printVhdlFinalSums(std::ostream &o, const Names &functionNames) const
+{
+	if (!finalSums.empty())
+	{
+		o << "\t\n";
+		o << "\t-- Results\n";
+		for (std::size_t i = 0; i != finalSums.size(); ++i)
+		{
+			o << '\t';
+			functionNames.printVhdlName(o, i);
+			o << " <= ";
+			const id_t sumId = finalSums[i];
+			if (isSumWorthPrinting(sumId, true))
+				printVhdlId(o, finalSums[i]);
+			else
+				printVhdlSumBody(o, sumId);
 			o << ";\n";
 		}
 		o << "\t\n";
@@ -436,4 +563,14 @@ void OptimizedSolutions::printVerilog(std::ostream &o, const Names &functionName
 	printVerilogProducts(o);
 	printVerilogSums(o);
 	printVerilogFinalSums(o, functionNames);
+}
+
+void OptimizedSolutions::printVhdl(std::ostream &o, const Names &functionNames) const
+{
+	const auto [immediateProductCount, immediateSumCount] = generateNormalizedIds();
+	printVhdlImmediates(o, immediateProductCount, immediateSumCount);
+	o << "begin\n";
+	printVhdlProducts(o);
+	printVhdlSums(o);
+	printVhdlFinalSums(o, functionNames);
 }

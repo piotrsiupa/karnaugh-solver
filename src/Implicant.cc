@@ -85,9 +85,9 @@ void Implicant::printVerilog(std::ostream &o, const bool parentheses) const
 	if (bitCount == 0)
 	{
 		if (isError())
-			o << "0";
+			o << '0';
 		else
-			o << "1";
+			o << '1';
 		return;
 	}
 	const bool needsParentheses = parentheses && bitCount != 1;
@@ -103,6 +103,34 @@ void Implicant::printVerilog(std::ostream &o, const bool parentheses) const
 		if (negated)
 			o << '!';
 		::inputNames.printVerilogName(o, bitIndex);
+	}
+	if (needsParentheses)
+		o << ')';
+}
+
+void Implicant::printVhdl(std::ostream &o, const bool parentheses) const
+{
+	if (bitCount == 0)
+	{
+		if (isError())
+			o << "'0'";
+		else
+			o << "'1'";
+		return;
+	}
+	const bool needsParentheses = parentheses && bitCount != 1;
+	if (needsParentheses)
+		o << '(';
+	bool first = true;
+	for (const auto &[bitIndex, negated] : splitBits())
+	{
+		if (first)
+			first = false;
+		else
+			o << " and ";
+		if (negated)
+			o << "not ";
+		::inputNames.printVhdlName(o, bitIndex);
 	}
 	if (needsParentheses)
 		o << ')';

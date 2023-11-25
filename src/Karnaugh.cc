@@ -239,3 +239,8 @@ void Karnaugh::printVerilogSolution(const Implicants &solution) const
 {
 	Implicants(solution).sort().printVerilog(std::cout);
 }
+
+void Karnaugh::printVhdlSolution(const Implicants &solution) const
+{
+	Implicants(solution).sort().printVhdl(std::cout);
+}

@@ -43,6 +43,23 @@ void Implicants::printVerilog(std::ostream &o) const
 	}
 }
 
+void Implicants::printVhdl(std::ostream &o) const
+{
+	if (size() == 1)
+	{
+		front().printVhdl(o, false);
+	}
+	else
+	{
+		for (const Implicant &implicant : *this)
+		{
+			if (&implicant != &front())
+				o << " or ";
+			implicant.printVhdl(o, true);
+		}
+	}
+}
+
 #ifndef NDEBUG
 bool Implicants::covers(const Minterm minterm) const
 {

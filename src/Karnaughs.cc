@@ -35,7 +35,7 @@ Names Karnaughs::gatherFunctionNames() const
 	functionNames.reserve(karnaughs.size());
 	for (const Karnaugh &karnaugh : karnaughs)
 		functionNames.emplace_back(karnaugh.getFunctionName());
-	return {shouldFunctionNamesBeUsed(), std::move(functionNames), "out"};
+	return {shouldFunctionNamesBeUsed(), std::move(functionNames), "o"};
 }
 
 void Karnaughs::printHumanOptimizedSolution() const
@@ -63,6 +63,39 @@ void Karnaughs::printVerilogBestSolutions(const Names &functionNames) const
 void Karnaughs::printVerilogOptimizedSolution(const Names &functionNames) const
 {
 	optimizedSolutions.printVerilog(std::cout, functionNames);
+}
+
+void Karnaughs::printVhdlOptimizedSolution(const Names &functionNames) const
+{
+	optimizedSolutions.printVhdl(std::cout, functionNames);
+}
+
+void Karnaughs::printVhdlBestSolutions(const Names &functionNames) const
+{
+	std::cout << "begin\n";
+	if (!karnaughs.empty())
+	{
+		std::cout << "\t\n";
+		for (std::size_t i = 0; i != karnaughs.size(); ++i)
+		{
+			std::cout << '\t';
+			functionNames.printVhdlName(std::cout, i);
+			std::cout << " <= ";
+			karnaughs[i].printVhdlSolution(bestSolutions[i]);
+			std::cout << ";\n";
+		}
+		std::cout << "\t\n";
+	}
+}
+
+void Karnaughs::printName()
+{
+	if (options::name.getValue())
+		std::cout << *options::name.getValue();
+	else if (::inputFilePath)
+		std::cout << std::filesystem::path(*::inputFilePath).stem().string();
+	else
+		std::cout << "Karnaugh";
 }
 
 bool Karnaughs::loadData(Input &input)
@@ -199,12 +232,7 @@ void Karnaughs::printHuman()
 void Karnaughs::printVerilog()
 {
 	std::cout << "module ";
-	if (options::name.getValue())
-		std::cout << *options::name.getValue();
-	else if (::inputFilePath)
-		std::cout << std::filesystem::path(*::inputFilePath).stem().string();
-	else
-		std::cout << "Karnaugh";
+	printName();
 	std::cout << " (\n";
 	if (!::inputNames.isEmpty())
 	{
@@ -228,6 +256,52 @@ void Karnaughs::printVerilog()
 	std::cout << "endmodule" << std::endl;
 }
 
+void Karnaughs::printVhdl()
+{
+	std::cout << "library IEEE;\n"
+			"use IEEE.std_logic_1164.all;\n";
+	std::cout << '\n';
+	std::cout << "entity ";
+	printName();
+	std::cout << " is\n";
+	const Names functionNames = gatherFunctionNames();
+	if (!::inputNames.isEmpty() || !karnaughs.empty())
+	{
+		std::cout << "\tport(\n";
+		if (!::inputNames.isEmpty())
+		{
+			std::cout << "\t\t";
+			::inputNames.printVhdlNames(std::cout);
+			std::cout << " : in ";
+			::inputNames.printVhdlType(std::cout);
+			if (!karnaughs.empty())
+				std::cout << ';';
+			std::cout << '\n';
+		}
+		if (!karnaughs.empty())
+		{
+			std::cout << "\t\t";
+			functionNames.printVhdlNames(std::cout);
+			std::cout << " : out ";
+			functionNames.printVhdlType(std::cout);
+			std::cout << '\n';
+		}
+		std::cout << "\t);\n";
+	}
+	std::cout << "end ";
+	printName();
+	std::cout << ";\n";
+	std::cout << '\n';
+	std::cout << "architecture behavioural of ";
+	printName();
+	std::cout << " is\n";
+	if (options::skipOptimization.isRaised())
+		printVhdlBestSolutions(functionNames);
+	else
+		printVhdlOptimizedSolution(functionNames);
+	std::cout << "end behavioural;\n";
+}
+
 void Karnaughs::print()
 {
 	switch (options::outputFormat.getValue())
@@ -239,6 +313,9 @@ void Karnaughs::print()
 		break;
 	case options::OutputFormat::VERILOG:
 		printVerilog();
+		break;
+	case options::OutputFormat::VHDL:
+		printVhdl();
 		break;
 	}
 }

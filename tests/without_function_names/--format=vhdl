@@ -1,0 +1,25 @@
+library IEEE;
+use IEEE.std_logic_1164.all;
+
+entity without_function_names is
+	port(
+		a, b, c, d : in std_logic;
+		o : out std_logic_vector(1 downto 0)
+	);
+end without_function_names;
+
+architecture behavioural of without_function_names is
+	-- Internal signals
+	signal int_prods : std_logic_vector(1 downto 0);
+	
+begin
+	
+	-- Products
+	int_prods(0) <= not a and not b;
+	int_prods(1) <= c and int_prods(0);
+	
+	-- Results
+	o(0) <= int_prods(0);
+	o(1) <= int_prods(1);
+	
+end behavioural;

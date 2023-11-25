@@ -1,0 +1,17 @@
+library IEEE;
+use IEEE.std_logic_1164.all;
+
+entity no_input is
+	port(
+		true, false, dont_care : out std_logic
+	);
+end no_input;
+
+architecture behavioural of no_input is
+begin
+	
+	true <= '1';
+	false <= '0';
+	dont_care <= '0';
+	
+end behavioural;

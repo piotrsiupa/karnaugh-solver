@@ -26,6 +26,9 @@ class Karnaughs
 	void printHumanOptimizedSolution() const;
 	void printVerilogBestSolutions(const Names &functionNames) const;
 	void printVerilogOptimizedSolution(const Names &functionNames) const;
+	void printVhdlBestSolutions(const Names &functionNames) const;
+	void printVhdlOptimizedSolution(const Names &functionNames) const;
+	static void printName();
 	
 	solutionses_t makeSolutionses() const;
 	void findBestNonOptimizedSolutions(const solutionses_t &solutionses);
@@ -37,5 +40,6 @@ public:
 	void solve();
 	void printHuman();
 	void printVerilog();
+	void printVhdl();
 	void print();
 };

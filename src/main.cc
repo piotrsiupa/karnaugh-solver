@@ -31,13 +31,14 @@ static void printHelp()
 			"    -S, --no-status\t- Same as `--status=never`.\n"
 			"    -O, --no-optimize\t- Skip the common subexpression elimination optimization\n\t\t\t  and only show a raw solution for each function.\n"
 			"    -f, --format=X\t- Set the output format. (See \"Output formats\".)\n"
-			"    -n, --name=X\t- Set module name for Verilog output.\n\t\t\t  (By default, the name of the input file is used,\n\t\t\t  or \"Karnaugh\" if input is read from stdin.)\n"
+			"    -n, --name=X\t- Set module name for Verilog output or entity name for\n\t\t\t  VHDL output.\n\t\t\t  (By default, the name of the input file is used,\n\t\t\t  or \"Karnaugh\" if input is read from stdin.)\n"
 			"\n"
 			"Output formats:\n"
 			"\thuman-long\t- The default format which displays all the information\n\t\t\t  in a human-readable way.\n"
 			"\thuman\t\t- It's similar to \"human-long\" but it doesn't print\n\t\t\t  graphical representations of Karnaugh maps which\n\t\t\t  normally take most of the vertical space.\n"
 			"\thuman-short\t- Only the result of the program without any additional\n\t\t\t  fluff, in a human-readable way.\n"
 			"\tverilog\t\t- A Verilog module.\n"
+			"\tvhdl\t\t- A VHDL entity.\n"
 			"\n"
 			"Input:\n"
 			"The input is read from the stdin and has the following format:\nINPUTS_DESCRIPTION <line-break> LIST_OF_FUNCTIONS\n"
@@ -96,7 +97,7 @@ static bool parseInputBits(Input &input)
 			return false;
 		}
 		::bits = static_cast<::bits_t>(names.size());
-		::inputNames = Names(true, std::move(names), "in");
+		::inputNames = Names(true, std::move(names), "i");
 	}
 	else
 	{
@@ -135,7 +136,7 @@ static bool parseInputBits(Input &input)
 		names.reserve(::bits);
 		for (bits_t i = 0; i != ::bits; ++i)
 			names.push_back("i" + std::to_string(i));
-		::inputNames = Names(false, std::move(names), "in");
+		::inputNames = Names(false, std::move(names), "i");
 	}
 	::maxMinterm = ::bits == 0 ? 0 : ((Minterm(1) << (::bits - 1)) - 1) * 2 + 1;
 	return true;
