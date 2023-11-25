@@ -47,9 +47,9 @@ void OptimizedSolutions::printVerilogImmediates(std::ostream &o, const std::size
 	{
 		o << "\t// Internal signals\n";
 		if (immediateProductCount != 0)
-			o << "\twire [" << (immediateProductCount - 1) << ":0] int_prods;\n";
+			o << "\twire [" << (immediateProductCount - 1) << ":0] prods;\n";
 		if (immediateSumCount != 0)
-			o << "\twire [" << (immediateSumCount - 1) << ":0] int_sums;\n";
+			o << "\twire [" << (immediateSumCount - 1) << ":0] sums;\n";
 		o << "\t\n";
 	}
 }
@@ -60,9 +60,9 @@ void OptimizedSolutions::printVhdlImmediates(std::ostream &o, const std::size_t 
 	{
 		o << "\t-- Internal signals\n";
 		if (immediateProductCount != 0)
-			o << "\tsignal int_prods : std_logic_vector(" << (immediateProductCount - 1) << " downto 0);\n";
+			o << "\tsignal prods : std_logic_vector(" << (immediateProductCount - 1) << " downto 0);\n";
 		if (immediateSumCount != 0)
-			o << "\tsignal int_sums : std_logic_vector(" << (immediateSumCount - 1) << " downto 0);\n";
+			o << "\tsignal sums : std_logic_vector(" << (immediateSumCount - 1) << " downto 0);\n";
 		o << "\t\n";
 	}
 }
@@ -75,17 +75,17 @@ void OptimizedSolutions::printHumanId(std::ostream &o, const id_t id) const
 void OptimizedSolutions::printVerilogId(std::ostream &o, const id_t id) const
 {
 	if (isProduct(id))
-		o << "int_prods[" << normalizedIds[id] << ']';
+		o << "prods[" << normalizedIds[id] << ']';
 	else
-		o << "int_sums[" << normalizedIds[id] << ']';
+		o << "sums[" << normalizedIds[id] << ']';
 }
 
 void OptimizedSolutions::printVhdlId(std::ostream &o, const id_t id) const
 {
 	if (isProduct(id))
-		o << "int_prods(" << normalizedIds[id] << ')';
+		o << "prods(" << normalizedIds[id] << ')';
 	else
-		o << "int_sums(" << normalizedIds[id] << ')';
+		o << "sums(" << normalizedIds[id] << ')';
 }
 
 void OptimizedSolutions::printHumanNegatedInputs(std::ostream &o) const

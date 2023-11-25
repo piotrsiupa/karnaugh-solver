@@ -10,34 +10,34 @@ end very_optimizable;
 
 architecture behavioural of very_optimizable is
 	-- Internal signals
-	signal int_prods : std_logic_vector(9 downto 0);
-	signal int_sums : std_logic_vector(4 downto 0);
+	signal prods : std_logic_vector(9 downto 0);
+	signal sums : std_logic_vector(4 downto 0);
 	
 begin
 	
 	-- Products
-	int_prods(0) <= a and b and c and d;
-	int_prods(1) <= not c and d;
-	int_prods(2) <= not a and b;
-	int_prods(3) <= int_prods(2) and int_prods(1);
-	int_prods(4) <= c and not d;
-	int_prods(5) <= int_prods(2) and int_prods(4);
-	int_prods(6) <= a and not b;
-	int_prods(7) <= int_prods(1) and int_prods(6);
-	int_prods(8) <= int_prods(4) and int_prods(6);
-	int_prods(9) <= not a and not b and not c and not d;
+	prods(0) <= a and b and c and d;
+	prods(1) <= not c and d;
+	prods(2) <= not a and b;
+	prods(3) <= prods(2) and prods(1);
+	prods(4) <= c and not d;
+	prods(5) <= prods(2) and prods(4);
+	prods(6) <= a and not b;
+	prods(7) <= prods(1) and prods(6);
+	prods(8) <= prods(4) and prods(6);
+	prods(9) <= not a and not b and not c and not d;
 	
 	-- Sums
-	int_sums(0) <= int_prods(5) or int_prods(7);
-	int_sums(1) <= int_prods(3) or int_sums(0);
-	int_sums(2) <= int_prods(8) or int_sums(1);
-	int_sums(3) <= int_prods(0) or int_sums(1);
-	int_sums(4) <= int_prods(9) or int_sums(0);
+	sums(0) <= prods(5) or prods(7);
+	sums(1) <= prods(3) or sums(0);
+	sums(2) <= prods(8) or sums(1);
+	sums(3) <= prods(0) or sums(1);
+	sums(4) <= prods(9) or sums(0);
 	
 	-- Results
-	first <= int_sums(2);
-	second <= int_sums(3);
-	third <= int_sums(1);
-	fourth <= int_sums(4);
+	first <= sums(2);
+	second <= sums(3);
+	third <= sums(1);
+	fourth <= sums(4);
 	
 end behavioural;

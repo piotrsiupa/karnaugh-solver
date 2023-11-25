@@ -4,14 +4,14 @@ module without_function_names (
 );
 	
 	// Internal signals
-	wire [1:0] int_prods;
+	wire [1:0] prods;
 	
 	// Products
-	assign int_prods[0] = !a & !b;
-	assign int_prods[1] = c & int_prods[0];
+	assign prods[0] = !a & !b;
+	assign prods[1] = c & prods[0];
 	
 	// Results
-	assign o[0] = int_prods[0];
-	assign o[1] = int_prods[1];
+	assign o[0] = prods[0];
+	assign o[1] = prods[1];
 	
 endmodule

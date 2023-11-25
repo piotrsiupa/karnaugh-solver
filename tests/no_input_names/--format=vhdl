@@ -10,19 +10,19 @@ end no_input_names;
 
 architecture behavioural of no_input_names is
 	-- Internal signals
-	signal int_prods : std_logic_vector(1 downto 0);
-	signal int_sums : std_logic_vector(0 downto 0);
+	signal prods : std_logic_vector(1 downto 0);
+	signal sums : std_logic_vector(0 downto 0);
 	
 begin
 	
 	-- Products
-	int_prods(0) <= i(0) and i(2) and i(3);
-	int_prods(1) <= i(1) and i(3);
+	prods(0) <= i(0) and i(2) and i(3);
+	prods(1) <= i(1) and i(3);
 	
 	-- Sums
-	int_sums(0) <= int_prods(0) or int_prods(1);
+	sums(0) <= prods(0) or prods(1);
 	
 	-- Results
-	o(0) <= int_sums(0);
+	o(0) <= sums(0);
 	
 end behavioural;
