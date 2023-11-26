@@ -40,22 +40,22 @@ def run_test(test_name: str, program: Path, input_file: Path, output_file: Path,
     options = output_file.name.split('_')
     if show_all:
         print(f'Running "{test_name}" ({" ".join(options)})...', end=' ', flush=True)
-    process = subprocess.Popen(['./' + str(program), '--no-status', '--name', test_name] + options + [input_file], text=True, stdout=subprocess.PIPE)
+    process = subprocess.Popen(['./' + str(program), '--no-status', '--name', test_name] + options + [input_file], stdout=subprocess.PIPE)
     elapsed_time = time_process(process)
     if process.returncode != 0:
         if not show_all:
             print(f'Test "{test_name}" ({" ".join(options)})', end=' ')
         print(f'FAIL ({elapsed_time:.2f}s, return code is {process.returncode})')
         return False
-    with open(output_file, 'r') as f:
+    with open(output_file, 'r', encoding='utf-8', newline='') as f:
         expected_output = f.read()
-    actual_output = process.stdout.read()
+    actual_output = process.stdout.read().decode('utf-8')
     if actual_output != expected_output:
         if not show_all:
             print(f'Test "{test_name}" ({" ".join(options)})', end=' ')
         print(f'FAIL ({elapsed_time:.2f}s)')
         if show_diff:
-            print('\n'.join('\t' + x for x in difflib.unified_diff(expected_output.split('\n'), actual_output.split('\n'), fromfile=str(output_file), tofile='-', lineterm='')))
+            print('\n'.join('\t' + repr(x) for x in difflib.unified_diff(expected_output.split('\n'), actual_output.split('\n'), fromfile=str(output_file), tofile='-', lineterm='')))
         return False
     if show_all:
         print(f'SUCCESS ({elapsed_time:.2f}s)')
