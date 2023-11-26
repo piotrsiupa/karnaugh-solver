@@ -75,7 +75,7 @@ namespace options
 		[[nodiscard]] bool needsArgument() const final { return false; }
 		[[nodiscard]] bool parse(std::string_view argument) final;
 		
-		void setValue(const bool value) { undecided = false; this->value = value; }
+		void setValue(const bool newValue) { undecided = false; value = newValue; }
 		void resetValue() { undecided = true; }
 		[[nodiscard]] bool getValue() { if (undecided) { value = getDefault(); undecided = false; } return value; }
 	};
@@ -115,8 +115,8 @@ namespace options
 		[[nodiscard]] bool needsArgument() const final { return true; }
 		[[nodiscard]] bool parse(std::string_view argument) final { value = argument; return true; }
 		
-		void setValue(const std::string &value) { this->value = value; }
-		void setValue(std::string &&value) { this->value = std::move(value); }
+		void setValue(const std::string &newValue) { value = newValue; }
+		void setValue(std::string &&newValue) { value = std::move(newValue); }
 		[[nodiscard]] const std::optional<std::string>& getValue() const { return value; }
 	};
 	

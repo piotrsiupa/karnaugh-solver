@@ -175,7 +175,7 @@ void Implicant::printMath(std::ostream &o, const bool parentheses) const
 			switch (options::outputFormat.getValue())
 			{
 			case options::OutputFormat::MATH_FORMAL:
-				o << "\u22A5";
+				o << u8"\u22A5";
 				break;
 			case options::OutputFormat::MATH_ASCII:
 				o << 'F';
@@ -195,7 +195,7 @@ void Implicant::printMath(std::ostream &o, const bool parentheses) const
 			switch (options::outputFormat.getValue())
 			{
 			case options::OutputFormat::MATH_FORMAL:
-				o << "\u22A4";
+				o << u8"\u22A4";
 				break;
 			case options::OutputFormat::MATH_ASCII:
 				o << 'T';
@@ -227,7 +227,7 @@ void Implicant::printMath(std::ostream &o, const bool parentheses) const
 			switch (options::outputFormat.getValue())
 			{
 			case options::OutputFormat::MATH_FORMAL:
-				o << " \u2227 ";
+				o << u8" \u2227 ";
 				break;
 			case options::OutputFormat::MATH_ASCII:
 				o << " /\\ ";
@@ -247,7 +247,7 @@ void Implicant::printMath(std::ostream &o, const bool parentheses) const
 			switch (options::outputFormat.getValue())
 			{
 			case options::OutputFormat::MATH_FORMAL:
-				o << "\u00AC";
+				o << u8"\u00AC";
 				break;
 			case options::OutputFormat::MATH_ASCII:
 				o << '~';
