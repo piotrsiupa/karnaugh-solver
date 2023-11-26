@@ -3,7 +3,6 @@
 #include <algorithm>
 #include <cctype>
 #include <iostream>
-#include <regex>
 
 #include "global.hh"
 
@@ -50,8 +49,8 @@ namespace options
 	
 	bool Trilean::parse(std::string_view argument)
 	{
-		static const std::regex trueRegex("y(es)?|a(lways)?|t(rue)?", std::regex_constants::icase | std::regex_constants::nosubs);
-		static const std::regex falseRegex("n(o)?|n(ever)?|f(alse)?", std::regex_constants::icase | std::regex_constants::nosubs);
+		static const std::regex trueRegex("y(es)?|a(lways)?|t(rue)?|1", std::regex_constants::icase | std::regex_constants::nosubs);
+		static const std::regex falseRegex("n(o)?|n(ever)?|f(alse)?|0", std::regex_constants::icase | std::regex_constants::nosubs);
 		static const std::regex defaultRegex("d(efault)?|auto", std::regex_constants::icase | std::regex_constants::nosubs);
 		std::cmatch match;
 		if (std::regex_match(&*argument.begin(), &*argument.end(), match, trueRegex) || argument.empty())
@@ -76,6 +75,49 @@ namespace options
 		return true;
 	}
 	
+	template<typename T, T DEFAULT_VALUE>
+	void Mapped<T, DEFAULT_VALUE>::prepareRegex()
+	{
+		if (!regexReady)
+		{
+			std::string pattern;
+			bool first = true;
+			for (const Mapping &mapping : mappings)
+			{
+				if (first)
+					first = false;
+				else
+					pattern += '|';
+				pattern += '(' + std::string(mapping.first) + ')';
+			}
+			regex = std::regex(pattern, std::regex_constants::icase);
+			regexReady = true;
+		}
+	}
+	
+	template<typename T, T DEFAULT_VALUE>
+	bool Mapped<T, DEFAULT_VALUE>::parse(std::string_view argument)
+	{
+		prepareRegex();
+		std::cmatch match;
+		if (!std::regex_match(&*argument.begin(), &*argument.end(), match, regex))
+		{
+			std::cerr << "Invalid value \"" << argument << "\" for the option \"--" << getLongNames().front() << "\"!\n";
+			return false;
+		}
+		for (std::size_t i = 0; i != mappings.size(); ++i)
+		{
+			if (match[i + 1].length() != 0)
+			{
+				value = mappings[i].second;
+				return true;
+			}
+		}
+		// This should be unreachable in practice.
+		std::cerr << "Internal error while matching a value for the option \"--" << getLongNames().front() << "\"!\n";
+		return false;
+	}
+	
 	
 	Flag help({"help"}, 'h');
 	Flag version({"version"}, 'v');
@@ -84,6 +126,19 @@ namespace options
 	Trilean status({"status", "progress", "progress-bar", "progress-bars", "stat", "stats"}, 's', [](){ return ::terminalStderr; });
 	
 	Flag skipOptimization({"no-optimize", "no-cse", "no-optimization", "skip-optimize", "skip-cse", "skip-optimization"}, 'O');
+	Mapped<OutputFormat, OutputFormat::HUMAN_LONG> outputFormat({"format", "output-format", "notation", "output-notation"}, 'f', {
+			{"human(?:[-_]readable)?[-_](?:long|big)|(?:long|big)[-_]human(?:[-_]readable)?|h[-_]?(?:r[-_]?)?l|l[-_]?h(?:[-_]?r)?|full|default", OutputFormat::HUMAN_LONG},
+			{"human(?:[-_]readable)?(?:[-_](?:medium|middle))?|(?:(?:medium|middle)[-_])?human(?:[-_]readable)?|h(?:[-_]?r)?(?:[-_]?m)?|(?:m[-_]?)?h(?:[-_]?r)?|medium|middle|shorter", OutputFormat::HUMAN},
+			{"human(?:[-_]readable)?[-_](?:short|small)|(?:short|small)[-_]human(?:[-_]readable)?|h[-_]?(?:r[-_]?)?s|s[-_]?h(?:[-_]?r)?|short|small|tiny|minimal", OutputFormat::HUMAN_SHORT},
+			{"verilog", OutputFormat::VERILOG},
+			{"vhdl", OutputFormat::VHDL},
+			{"cpp|c\\+\\+|cc|hpp|h\\+\\+|hh", OutputFormat::CPP},
+			{"math(?:ematic(?:s|al)?)?(?:[-_]formal|formal[-_]math(?:ematic(?:s|al)?)?)?|m(?:[-_]?f)?|f[-_]?m", OutputFormat::MATH_FORMAL},
+			{"math(?:ematic(?:s|al)?)?[-_]prog(?:ram(?:ing)?)?|prog(?:ram(?:ming)?)?[-_]math(?:ematic(?:s|al)?)?|m[-_]?p|p[-_]?m", OutputFormat::MATH_PROG},
+			{"math(?:ematic(?:s|al)?)?[-_]ascii|ascii[-_]math(?:ematic(?:s|al)?)?|m[-_]?a|a[-_]?m", OutputFormat::MATH_ASCII},
+			{"math(?:ematic(?:s|al)?)?[-_](?:names?|words?|text)|(?:names?|words?|text)[-_]math(?:ematic(?:s|al)?)?|m[-_]?[nwt]|[nwt][-_]?m", OutputFormat::MATH_NAMES},
+		});
+	Text name({"name", "module-name", "class-name"}, 'n');
 	
 	std::vector<std::string_view> freeArgs;
 	
@@ -113,7 +168,7 @@ namespace options
 			[[nodiscard]] static bool parse(const int argc, const char *const *const argv) { return Parser(argc, argv).parse(); }
 		};
 		
-		Option *const Parser::allOptions[] = {&help, &version, &prompt, &prompt.getNegatedOption(), &status, &status.getNegatedOption(), &skipOptimization};
+		Option *const Parser::allOptions[] = {&help, &version, &prompt, &prompt.getNegatedOption(), &status, &status.getNegatedOption(), &skipOptimization, &outputFormat, &name};
 		
 		bool Parser::parseShortOption(const char *&shortName, Option &option)
 		{

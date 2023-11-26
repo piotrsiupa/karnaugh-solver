@@ -1,0 +1,8 @@
+module no_input_names (
+	input wire [3:0] i,
+	output wire [0:0] o,
+);
+	
+	assign o[0] = (i[1] & i[3]) | (i[0] & i[2] & i[3]);
+	
+endmodule

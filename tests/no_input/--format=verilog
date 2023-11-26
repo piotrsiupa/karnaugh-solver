@@ -1,0 +1,10 @@
+module no_input (
+	output wire always_true, always_false, dont_care,
+);
+	
+	// Results
+	assign always_true = 1;
+	assign always_false = 0;
+	assign dont_care = 0;
+	
+endmodule

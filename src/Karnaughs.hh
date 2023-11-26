@@ -1,9 +1,12 @@
 #pragma once
 
+#include <string>
+#include <string_view>
 #include <vector>
 
 #include "Implicants.hh"
 #include "Input.hh"
+#include "Names.hh"
 #include "Karnaugh.hh"
 #include "OptimizedSolutions.hh"
 
@@ -18,8 +21,18 @@ class Karnaughs
 	solutions_t bestSolutions;
 	OptimizedSolutions optimizedSolutions;
 	
-	void printBestSolutions() const;
-	void printOptimizedSolution() const;
+	[[nodiscard]] bool shouldFunctionNamesBeUsed() const;
+	Names gatherFunctionNames() const;
+	void printHumanBestSolutions() const;
+	void printHumanOptimizedSolution() const;
+	void printVerilogBestSolutions(const Names &functionNames) const;
+	void printVerilogOptimizedSolution(const Names &functionNames) const;
+	void printVhdlBestSolutions(const Names &functionNames) const;
+	void printVhdlOptimizedSolution(const Names &functionNames) const;
+	void printCppBestSolutions(const Names &functionNames) const;
+	void printCppOptimizedSolution(const Names &functionNames) const;
+	[[nodiscard]] static std::string getName();
+	[[nodiscard]] bool areInputsUsed() const;
 	
 	solutionses_t makeSolutionses() const;
 	void findBestNonOptimizedSolutions(const solutionses_t &solutionses);
@@ -27,7 +40,12 @@ class Karnaughs
 	void findBestSolutions(const solutionses_t &solutionses);
 	
 public:
-	bool loadData(Input &input);
+	[[nodiscard]] bool loadData(Input &input);
 	void solve();
+	void printHuman();
+	void printVerilog();
+	void printVhdl();
+	void printCpp();
+	void printMath();
 	void print();
 };

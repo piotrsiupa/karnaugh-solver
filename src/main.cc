@@ -15,13 +15,10 @@
 static void printHelp()
 {
 	std::cout <<
-			"This performs logic function minimization of a function described as a list of\nminterms and don't-cares to a SOP form followed by common subexpression\nelimination, using a brute-force approach.\n"
+			"This program performs a logic function minimization of a function described as\na list of minterms and don't-cares to a SOP form and after that it performs\na common subexpression elimination.\n"
 			"It searches for a solution that uses a minimal number of logic gates.\n"
-			"It can accept many functions at once to make the most of the CSE.\n"
-			"The input format is flexible and easy to generate by a script.\n"
-			"The solution is printed in a human readable format.\n"
 			"\n"
-			"Usage:\tkarnough [OPTIONS...]\n"
+			"Usage:\tkarnaugh [OPTIONS...]\n"
 			"Options:\n"
 			"    -h, --help\t\t- Print this help text.\n"
 			"    -v, --version\t- Print version information.\n"
@@ -29,7 +26,21 @@ static void printHelp()
 			"    -P, --no-prompt\t- Same as `--prompt=never`.\n"
 			"    -s, --status[=X]\t- Set whether things like the current operation,\n\t\t\t  progress bar, ET, ETA and so on are shown.\n\t\t\t  Valid values are \"never\", \"always\" and \"default\".\n\t\t\t  (No value means \"always\".) By default, they are shown\n\t\t\t  only when the stderr is a TTY.\n"
 			"    -S, --no-status\t- Same as `--status=never`.\n"
-			"\t--no-optimize\t- Skip the common subexpression elimination optimization\n\t\t\t  and only show a raw solution for each function.\n"
+			"    -O, --no-optimize\t- Skip the common subexpression elimination optimization\n\t\t\t  and show only a raw solution for each function.\n"
+			"    -f, --format=X\t- Set the output format. (See \"Output formats\".)\n\t\t\t  (Mathematical formats imply `--no-optimize`.)\n"
+			"    -n, --name=X\t- Set module name for Verilog output or entity name for\n\t\t\t  VHDL output or class name for C++ output.\n\t\t\t  (By default, the name of the input file is used,\n\t\t\t  or \"Karnaugh\" if input is read from stdin.)\n"
+			"\n"
+			"Output formats:\n"
+			"\thuman-long\t- The default format which displays all the information\n\t\t\t  in a human-readable way.\n"
+			"\thuman\t\t- A format similar to \"human-long\" but it without the\n\t\t\t  graphical representations of Karnaugh maps which\n\t\t\t  normally take most of the vertical space.\n"
+			"\thuman-short\t- A minimalistic result of the program without any\n\t\t\t  additional fluff, in a human-readable way.\n"
+			"\tverilog\t\t- A Verilog module.\n"
+			"\tvhdl\t\t- A VHDL entity.\n"
+			"\tcpp\t\t- A C++ class (both a functor and static functions).\n"
+			"\tmath-formal\t- The formal mathematical notation. (It uses Unicode.)\n"
+			"\tmath-ascii\t- A notation like \"math-formal\" but it uses only ASCII.\n"
+			"\tmath-prog\t- A mathematical notation with programming operators.\n"
+			"\tmath-names\t- A mathematical notation that uses names of operators.\n"
 			"\n"
 			"Input:\n"
 			"The input is read from the stdin and has the following format:\nINPUTS_DESCRIPTION <line-break> LIST_OF_FUNCTIONS\n"
@@ -58,7 +69,7 @@ static void printHelp()
 static void printVersion()
 {
 	std::cout <<
-			"karnaugh (Karnaugh Map Solver) version 0.1.3\n"
+			"karnaugh (Karnaugh Map Solver) version 0.2.0\n"
 			"Author: Piotr Siupa\n"
 #ifndef NDEBUG
 			"This is a development build which contains additional assertions. This may slow down the execution.\n"
@@ -81,13 +92,14 @@ static bool parseInputBits(Input &input)
 	{
 		Progress progress(Progress::Stage::LOADING, "Loading input names", 1);
 		progress.step();
-		::inputNames = input.popParts(progress);
-		if (::inputNames.size() > ::maxBits)
+		Names::names_t names = input.popParts(progress);
+		if (names.size() > ::maxBits)
 		{
 			progress.cerr() << "Too many input variables!\n";
 			return false;
 		}
-		::bits = static_cast<::bits_t>(::inputNames.size());
+		::bits = static_cast<::bits_t>(names.size());
+		::inputNames = Names(true, std::move(names), "i");
 	}
 	else
 	{
@@ -95,6 +107,7 @@ static bool parseInputBits(Input &input)
 		if (line == "-")
 		{
 			::bits = 0;
+			::inputNames = Names(true, {}, "i");
 			return true;
 		}
 		try
@@ -122,8 +135,11 @@ static bool parseInputBits(Input &input)
 			std::cerr << '"' << line << "\" is out of range!\n";
 			return false;
 		}
+		Names::names_t names;
+		names.reserve(::bits);
 		for (bits_t i = 0; i != ::bits; ++i)
-			::inputNames.push_back("i" + std::to_string(i));
+			names.push_back("i" + std::to_string(i));
+		::inputNames = Names(false, std::move(names), "i");
 	}
 	::maxMinterm = ::bits == 0 ? 0 : ((Minterm(1) << (::bits - 1)) - 1) * 2 + 1;
 	return true;
@@ -149,6 +165,7 @@ static IstreamUniquePtr prepareIstream()
 		}
 		else
 		{
+			::inputFilePath = options::freeArgs.front();
 			IstreamUniquePtr ifstream(new std::ifstream(path), deleteIstream);
 			if (!*ifstream)
 			{
@@ -189,6 +206,8 @@ int main(const int argc, const char *const *const argv)
 {
 	if (!options::parse(argc, argv))
 		return 1;
+	if (options::outputFormat.getValue() == options::OutputFormat::MATH_FORMAL || options::outputFormat.getValue() == options::OutputFormat::MATH_PROG || options::outputFormat.getValue() == options::OutputFormat::MATH_ASCII || options::outputFormat.getValue() == options::OutputFormat::MATH_NAMES)
+		options::skipOptimization.raise();
 	
 	if (options::help.isRaised())
 	{

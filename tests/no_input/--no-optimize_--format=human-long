@@ -1,0 +1,31 @@
+--- always_true ---
+
+goal:
+  
+0 T
+
+solution:
+<True>
+
+--- always_false ---
+
+goal:
+  
+0 F
+
+solution:
+<False>
+
+--- dont_care ---
+
+goal:
+  
+0 -
+
+best fit:
+  
+0 F
+
+solution:
+<False>
+

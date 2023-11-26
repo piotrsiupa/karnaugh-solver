@@ -2,13 +2,16 @@
 
 #include <cstdint>
 #include <list>
-#include <string>
-#include <vector>
+#include <optional>
+#include <string_view>
+
+#include "Names.hh"
 
 
 extern bool terminalStdin, terminalInput, terminalStderr;
 
-extern std::vector<std::string> inputNames;
+extern std::optional<std::string_view> inputFilePath;
+extern Names inputNames;
 
 using bits_t = std::uint_fast8_t;
 constexpr bits_t maxBits = 32;

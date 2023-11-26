@@ -1,5 +1,7 @@
 #include "Implicant.hh"
 
+#include "options.hh"
+
 
 bool Implicant::operator<(const Implicant &other) const
 {
@@ -52,7 +54,7 @@ Implicant Implicant::merge(const Implicant &x, const Implicant &y)
 	return Implicant(x.trueBits & y.trueBits, x.falseBits & y.falseBits, x.bitCount - 1);
 }
 
-void Implicant::print(std::ostream &o, const bool parentheses) const
+void Implicant::printHuman(std::ostream &o, const bool parentheses) const
 {
 	if (bitCount == 0)
 	{
@@ -74,7 +76,193 @@ void Implicant::print(std::ostream &o, const bool parentheses) const
 			o << " && ";
 		if (negated)
 			o << '!';
-		o << ::inputNames[bitIndex];
+		::inputNames.printHumanName(o, bitIndex);
+	}
+	if (needsParentheses)
+		o << ')';
+}
+
+void Implicant::printVerilog(std::ostream &o, const bool parentheses) const
+{
+	if (bitCount == 0)
+	{
+		if (isError())
+			o << '0';
+		else
+			o << '1';
+		return;
+	}
+	const bool needsParentheses = parentheses && bitCount != 1;
+	if (needsParentheses)
+		o << '(';
+	bool first = true;
+	for (const auto &[bitIndex, negated] : splitBits())
+	{
+		if (first)
+			first = false;
+		else
+			o << " & ";
+		if (negated)
+			o << '!';
+		::inputNames.printVerilogName(o, bitIndex);
+	}
+	if (needsParentheses)
+		o << ')';
+}
+
+void Implicant::printVhdl(std::ostream &o, const bool parentheses) const
+{
+	if (bitCount == 0)
+	{
+		if (isError())
+			o << "'0'";
+		else
+			o << "'1'";
+		return;
+	}
+	const bool needsParentheses = parentheses && bitCount != 1;
+	if (needsParentheses)
+		o << '(';
+	bool first = true;
+	for (const auto &[bitIndex, negated] : splitBits())
+	{
+		if (first)
+			first = false;
+		else
+			o << " and ";
+		if (negated)
+			o << "not ";
+		::inputNames.printVhdlName(o, bitIndex);
+	}
+	if (needsParentheses)
+		o << ')';
+}
+
+void Implicant::printCpp(std::ostream &o, const bool parentheses) const
+{
+	if (bitCount == 0)
+	{
+		if (isError())
+			o << "false";
+		else
+			o << "true";
+		return;
+	}
+	const bool needsParentheses = parentheses && bitCount != 1;
+	if (needsParentheses)
+		o << '(';
+	bool first = true;
+	for (const auto &[bitIndex, negated] : splitBits())
+	{
+		if (first)
+			first = false;
+		else
+			o << " && ";
+		if (negated)
+			o << "!";
+		::inputNames.printCppName(o, bitIndex);
+	}
+	if (needsParentheses)
+		o << ')';
+}
+
+void Implicant::printMath(std::ostream &o, const bool parentheses) const
+{
+	if (bitCount == 0)
+	{
+		if (isError())
+		{
+			switch (options::outputFormat.getValue())
+			{
+			case options::OutputFormat::MATH_FORMAL:
+				o << u8"\u22A5";
+				break;
+			case options::OutputFormat::MATH_ASCII:
+				o << 'F';
+				break;
+			case options::OutputFormat::MATH_PROG:
+				o << "false";
+				break;
+			case options::OutputFormat::MATH_NAMES:
+				o << "FALSE";
+				break;
+			default:
+				break;
+			}
+		}
+		else
+		{
+			switch (options::outputFormat.getValue())
+			{
+			case options::OutputFormat::MATH_FORMAL:
+				o << u8"\u22A4";
+				break;
+			case options::OutputFormat::MATH_ASCII:
+				o << 'T';
+				break;
+			case options::OutputFormat::MATH_PROG:
+				o << "true";
+				break;
+			case options::OutputFormat::MATH_NAMES:
+				o << "TRUE";
+				break;
+			default:
+				break;
+			}
+		}
+		return;
+	}
+	const bool needsParentheses = parentheses && bitCount != 1;
+	if (needsParentheses)
+		o << '(';
+	bool first = true;
+	for (const auto &[bitIndex, negated] : splitBits())
+	{
+		if (first)
+		{
+			first = false;
+		}
+		else
+		{
+			switch (options::outputFormat.getValue())
+			{
+			case options::OutputFormat::MATH_FORMAL:
+				o << u8" \u2227 ";
+				break;
+			case options::OutputFormat::MATH_ASCII:
+				o << " /\\ ";
+				break;
+			case options::OutputFormat::MATH_PROG:
+				o << " && ";
+				break;
+			case options::OutputFormat::MATH_NAMES:
+				o << " AND ";
+				break;
+			default:
+				break;
+			}
+		}
+		if (negated)
+		{
+			switch (options::outputFormat.getValue())
+			{
+			case options::OutputFormat::MATH_FORMAL:
+				o << u8"\u00AC";
+				break;
+			case options::OutputFormat::MATH_ASCII:
+				o << '~';
+				break;
+			case options::OutputFormat::MATH_PROG:
+				o << '!';
+				break;
+			case options::OutputFormat::MATH_NAMES:
+				o << "NOT ";
+				break;
+			default:
+				break;
+			}
+		}
+		::inputNames.printMathName(o, bitIndex);
 	}
 	if (needsParentheses)
 		o << ')';

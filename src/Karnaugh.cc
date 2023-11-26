@@ -155,11 +155,11 @@ bool Karnaugh::loadData(Input &input)
 	
 	if (input.hasError(&progress))
 		return false;
-	const bool hasName = input.isName();
-	if (hasName)
+	nameIsCustom = input.isName();
+	if (nameIsCustom)
 		functionName = input.popLine();
 	
-	if (hasName && options::prompt.getValue())
+	if (nameIsCustom && options::prompt.getValue())
 		std::cerr << "Enter a list of minterms of the function \"" << functionName << "\":\n";
 	if (input.hasError(&progress))
 		return false;
@@ -174,7 +174,7 @@ bool Karnaugh::loadData(Input &input)
 	if (options::prompt.getValue())
 	{
 		std::cerr << "Enter a list of don't-cares of the function";
-		if (hasName)
+		if (nameIsCustom)
 			std::cerr << " \"" << functionName << "\":\n";
 		else
 			std::cerr << ":\n";
@@ -209,25 +209,48 @@ Karnaugh::solutions_t Karnaugh::solve() const
 	return solutions;
 }
 
-void Karnaugh::printSolution(const Implicants &solution) const
+void Karnaugh::printHumanSolution(const Implicants &solution) const
 {
-	if (::bits <= 8)
+	if (options::outputFormat.getValue() == options::OutputFormat::HUMAN_LONG)
 	{
-		std::cout << "goal:\n";
-		prettyPrintTable();
-		
-		if (targetMinterms.size() != allowedMinterms.size())
+		if (::bits <= 8)
 		{
-			std::cout << "best fit:\n";
-			prettyPrintSolution(solution);
+			std::cout << "goal:\n";
+			prettyPrintTable();
+			
+			if (targetMinterms.size() != allowedMinterms.size())
+			{
+				std::cout << "best fit:\n";
+				prettyPrintSolution(solution);
+			}
 		}
+		else
+		{
+			std::cout << "The Karnaugh map is too big to be displayed.\n\n";
+		}
+		std::cout << "solution:\n";
 	}
-	else
-	{
-		std::cout << "The Karnaugh map is too big to be displayed.\n\n";
-	}
-	
-	std::cout << "solution:\n";
-	Implicants(solution).sort().print(std::cout);
-	std::cout << std::endl;
+	Implicants(solution).sort().printHuman(std::cout);
+	if (options::outputFormat.getValue() != options::OutputFormat::HUMAN_SHORT)
+		std::cout << '\n';
+}
+
+void Karnaugh::printVerilogSolution(const Implicants &solution) const
+{
+	Implicants(solution).sort().printVerilog(std::cout);
+}
+
+void Karnaugh::printVhdlSolution(const Implicants &solution) const
+{
+	Implicants(solution).sort().printVhdl(std::cout);
+}
+
+void Karnaugh::printCppSolution(const Implicants &solution) const
+{
+	Implicants(solution).sort().printCpp(std::cout);
+}
+
+void Karnaugh::printMathSolution(const Implicants &solution) const
+{
+	Implicants(solution).sort().printMath(std::cout);
 }

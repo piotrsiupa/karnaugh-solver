@@ -1,0 +1,11 @@
+module very_optimizable (
+	input wire a, b, c, d,
+	output wire first, second, third, fourth,
+);
+	
+	assign first = (a & !b & c & !d) | (a & !b & !c & d) | (!a & b & c & !d) | (!a & b & !c & d);
+	assign second = (a & b & c & d) | (a & !b & !c & d) | (!a & b & c & !d) | (!a & b & !c & d);
+	assign third = (a & !b & !c & d) | (!a & b & c & !d) | (!a & b & !c & d);
+	assign fourth = (a & !b & !c & d) | (!a & b & c & !d) | (!a & !b & !c & !d);
+	
+endmodule

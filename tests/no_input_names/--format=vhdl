@@ -1,0 +1,28 @@
+library IEEE;
+use IEEE.std_logic_1164.all;
+
+entity no_input_names is
+	port(
+		i : in std_logic_vector(3 downto 0);
+		o : out std_logic_vector(0 downto 0)
+	);
+end no_input_names;
+
+architecture behavioural of no_input_names is
+	-- Internal signals
+	signal prods : std_logic_vector(1 downto 0);
+	signal sums : std_logic_vector(0 downto 0);
+	
+begin
+	
+	-- Products
+	prods(0) <= i(0) and i(2) and i(3);
+	prods(1) <= i(1) and i(3);
+	
+	-- Sums
+	sums(0) <= prods(0) or prods(1);
+	
+	-- Results
+	o(0) <= sums(0);
+	
+end behavioural;

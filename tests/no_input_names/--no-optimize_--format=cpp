@@ -1,0 +1,21 @@
+#include <array>
+
+class no_input_names
+{
+public:
+	using input_t = std::array<bool, 4>;
+	using output_t = std::array<bool, 1>;
+	
+	[[nodiscard]] constexpr output_t operator()(const bool i0, const bool i1, const bool i2, const bool i3) const { return (*this)({i0, i1, i2, i3}); }
+	[[nodiscard]] constexpr output_t operator()(const input_t &i) const { return calc(i); }
+	
+	[[nodiscard]] static constexpr output_t calc(const bool i0, const bool i1, const bool i2, const bool i3) { return calc({i0, i1, i2, i3}); }
+	[[nodiscard]] static constexpr output_t calc(const input_t &i);
+};
+
+constexpr no_input_names::output_t no_input_names::calc(const input_t &i)
+{
+	output_t o = {};
+	o[0] = (i[1] && i[3]) || (i[0] && i[2] && i[3]);
+	return o;
+}

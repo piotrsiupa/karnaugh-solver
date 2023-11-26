@@ -1,9 +1,12 @@
 #pragma once
 
 #include <functional>
-#include <vector>
+#include <optional>
+#include <regex>
 #include <string>
 #include <string_view>
+#include <utility>
+#include <vector>
 
 
 namespace options
@@ -13,9 +16,6 @@ namespace options
 	{
 		const std::vector<std::string_view> longNames;
 		const char shortName;
-		
-		friend class OptionWithArg;
-		friend class OptionWithoutArg;
 		
 	public:
 		Option(std::vector<std::string_view> &&longNames, const char shortName = '\0') : longNames(std::move(longNames)), shortName(shortName) {}
@@ -46,6 +46,7 @@ namespace options
 		
 		[[nodiscard]] bool parse() final { raised = true; return true; }
 		
+		void raise() { raised = true; }
 		[[nodiscard]] bool isRaised() const { return raised; }
 	};
 	
@@ -74,9 +75,65 @@ namespace options
 		[[nodiscard]] bool needsArgument() const final { return false; }
 		[[nodiscard]] bool parse(std::string_view argument) final;
 		
+		void setValue(const bool newValue) { undecided = false; value = newValue; }
+		void resetValue() { undecided = true; }
 		[[nodiscard]] bool getValue() { if (undecided) { value = getDefault(); undecided = false; } return value; }
 	};
 	
+	template<typename T, T DEFAULT_VALUE>
+	class Mapped : public Option
+	{
+	public:
+		using Mapping = std::pair<std::string_view, T>;
+		using Mappings = std::vector<Mapping>;
+		
+	private:
+		const Mappings mappings;
+		bool regexReady = false;
+		std::regex regex;
+		T value = DEFAULT_VALUE;
+		
+		void prepareRegex();
+		
+	public:
+		Mapped(std::vector<std::string_view> &&longNames, const char shortName, Mappings &&mappings) : Option(std::move(longNames), shortName), mappings(std::move(mappings)) {}
+		
+		[[nodiscard]] bool needsArgument() const final { return true; }
+		[[nodiscard]] bool parse(std::string_view argument) final;
+		
+		void setValue(const T value) { this->value = value; }
+		[[nodiscard]] T getValue() const { return value; }
+	};
+	
+	class Text : public Option
+	{
+		std::optional<std::string> value;
+		
+	public:
+		using Option::Option;
+		
+		[[nodiscard]] bool needsArgument() const final { return true; }
+		[[nodiscard]] bool parse(std::string_view argument) final { value = argument; return true; }
+		
+		void setValue(const std::string &newValue) { value = newValue; }
+		void setValue(std::string &&newValue) { value = std::move(newValue); }
+		[[nodiscard]] const std::optional<std::string>& getValue() const { return value; }
+	};
+	
+	
+	enum class OutputFormat
+	{
+		HUMAN_LONG,
+		HUMAN,
+		HUMAN_SHORT,
+		VERILOG,
+		VHDL,
+		CPP,
+		MATH_FORMAL,
+		MATH_PROG,
+		MATH_ASCII,
+		MATH_NAMES,
+	};
 	
 	extern Flag help;
 	extern Flag version;
@@ -85,6 +142,8 @@ namespace options
 	extern Trilean status;
 	
 	extern Flag skipOptimization;
+	extern Mapped<OutputFormat, OutputFormat::HUMAN_LONG> outputFormat;
+	extern Text name;
 	
 	extern std::vector<std::string_view> freeArgs;
 	

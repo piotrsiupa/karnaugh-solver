@@ -2,14 +2,14 @@
 
 -
 
-true
+always_true
 0
 -
 
-false
+always_false
 -
 -
 
-don't care
+dont_care
 -
 0

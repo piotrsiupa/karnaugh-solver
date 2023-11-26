@@ -37,6 +37,7 @@ public:
 	Implicant& operator=(const Implicant &) = default;
 	
 	constexpr bool operator==(const Implicant &other) const { return this->trueBits == other.trueBits && this->falseBits == other.falseBits && this->bitCount == other.bitCount; }
+	constexpr bool operator!=(const Implicant &other) const { return !operator==(other); }
 	bool operator<(const Implicant &other) const;
 	constexpr bool covers(const Minterm minterm) const { return (trueBits & minterm) == trueBits && (falseBits & ~minterm) == falseBits; }
 	
@@ -58,5 +59,9 @@ public:
 	static bool areMergeable(const Implicant &x, const Implicant &y);
 	static Implicant merge(const Implicant &x, const Implicant &y);
 	
-	void print(std::ostream &o, const bool parentheses) const;
+	void printHuman(std::ostream &o, const bool parentheses) const;
+	void printVerilog(std::ostream &o, const bool parentheses) const;
+	void printVhdl(std::ostream &o, const bool parentheses) const;
+	void printCpp(std::ostream &o, const bool parentheses) const;
+	void printMath(std::ostream &o, const bool parentheses) const;
 };

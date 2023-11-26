@@ -22,6 +22,7 @@ private:
 	
 	static std::size_t nameCount;
 	
+	bool nameIsCustom = false;
 	std::string functionName;
 	Minterms targetMinterms, allowedMinterms;
 	
@@ -41,10 +42,15 @@ public:
 	Karnaugh(Karnaugh &&) = default;
 	Karnaugh& operator=(Karnaugh &&) = default;
 	
-	std::string getFunctionName() const { return functionName; }
+	bool hasCustomName() const { return nameIsCustom; }
+	const std::string& getFunctionName() const { return functionName; }
 	
 	bool loadData(Input &input);
 	solutions_t solve() const;
 	
-	void printSolution(const Implicants &solution) const;
+	void printHumanSolution(const Implicants &solution) const;
+	void printVerilogSolution(const Implicants &solution) const;
+	void printVhdlSolution(const Implicants &solution) const;
+	void printCppSolution(const Implicants &solution) const;
+	void printMathSolution(const Implicants &solution) const;
 };

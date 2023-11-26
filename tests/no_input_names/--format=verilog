@@ -1,0 +1,20 @@
+module no_input_names (
+	input wire [3:0] i,
+	output wire [0:0] o,
+);
+	
+	// Internal signals
+	wire [1:0] prods;
+	wire [0:0] sums;
+	
+	// Products
+	assign prods[0] = i[0] & i[2] & i[3];
+	assign prods[1] = i[1] & i[3];
+	
+	// Sums
+	assign sums[0] = prods[0] | prods[1];
+	
+	// Results
+	assign o[0] = sums[0];
+	
+endmodule
