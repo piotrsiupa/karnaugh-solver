@@ -30,7 +30,7 @@ static void printHelp()
 			"    -s, --status[=X]\t- Set whether things like the current operation,\n\t\t\t  progress bar, ET, ETA and so on are shown.\n\t\t\t  Valid values are \"never\", \"always\" and \"default\".\n\t\t\t  (No value means \"always\".) By default, they are shown\n\t\t\t  only when the stderr is a TTY.\n"
 			"    -S, --no-status\t- Same as `--status=never`.\n"
 			"    -O, --no-optimize\t- Skip the common subexpression elimination optimization\n\t\t\t  and only show a raw solution for each function.\n"
-			"    -f, --format=X\t- Set the output format. (See \"Output formats\".)\n"
+			"    -f, --format=X\t- Set the output format. (See \"Output formats\".)\n\t\t\t  (Mathematical formats imply `--no-optimize`.)\n"
 			"    -n, --name=X\t- Set module name for Verilog output or entity name for\n\t\t\t  VHDL output.\n\t\t\t  (By default, the name of the input file is used,\n\t\t\t  or \"Karnaugh\" if input is read from stdin.)\n"
 			"\n"
 			"Output formats:\n"
@@ -40,6 +40,10 @@ static void printHelp()
 			"\tverilog\t\t- A Verilog module.\n"
 			"\tvhdl\t\t- A VHDL entity.\n"
 			"\tcpp\t\t- A C++ class (a functor with static functions too).\n"
+			"\tmath-formal\t- A formal mathematical notation using Unicode.\n"
+			"\tmath-ascii\t- A notation like \"math-formal\" but it uses only ASCII.\n"
+			"\tmath-prog\t- A mathematical notation with programming operators.\n"
+			"\tmath-names\t- A mathematical notation that uses names of operators.\n"
 			"\n"
 			"Input:\n"
 			"The input is read from the stdin and has the following format:\nINPUTS_DESCRIPTION <line-break> LIST_OF_FUNCTIONS\n"
@@ -205,6 +209,8 @@ int main(const int argc, const char *const *const argv)
 {
 	if (!options::parse(argc, argv))
 		return 1;
+	if (options::outputFormat.getValue() == options::OutputFormat::MATH_FORMAL || options::outputFormat.getValue() == options::OutputFormat::MATH_PROG || options::outputFormat.getValue() == options::OutputFormat::MATH_ASCII || options::outputFormat.getValue() == options::OutputFormat::MATH_NAMES)
+		options::skipOptimization.raise();
 	
 	if (options::help.isRaised())
 	{

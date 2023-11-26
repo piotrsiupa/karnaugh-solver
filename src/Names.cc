@@ -68,3 +68,16 @@ void Names::printCppType(std::ostream &o) const
 		o << "std::array<bool, " << names.size() << '>';
 	}
 }
+
+void Names::printMathNames(std::ostream &o) const
+{
+	bool first = true;
+	for (const std::string &name : names)
+	{
+		if (first)
+			first = false;
+		else
+			o << ", ";
+		o << name;
+	}
+}

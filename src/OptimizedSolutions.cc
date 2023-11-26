@@ -685,7 +685,7 @@ void OptimizedSolutions::printHuman(std::ostream &o, const Names &functionNames)
 	printHumanProducts(o);
 	printHumanSums(o);
 	printHumanFinalSums(o, functionNames);
-	if (options::outputFormat.getValue() != options::OutputFormat::SHORT_HUMAN)
+	if (options::outputFormat.getValue() != options::OutputFormat::HUMAN_SHORT)
 		printGateScores(o);
 }
 

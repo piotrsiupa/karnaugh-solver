@@ -33,6 +33,8 @@ public:
 	void printCppRawName(std::ostream &o, const std::size_t i) const { o << names[i]; }
 	void printCppName(std::ostream &o, const std::size_t i) const { if (useInCode) o << replacementName << '.' << names[i]; else o << replacementName << '[' << i << ']'; }
 	void printCppType(std::ostream &o) const;
+	void printMathName(std::ostream &o, const std::size_t i) const { o << names[i]; }
+	void printMathNames(std::ostream &o) const;
 	
 	[[nodiscard]] bool isEmpty() const { return names.empty(); }
 	[[nodiscard]] std::size_t getSize() const { return names.size(); }

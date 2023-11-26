@@ -46,6 +46,7 @@ namespace options
 		
 		[[nodiscard]] bool parse() final { raised = true; return true; }
 		
+		void raise() { raised = true; }
 		[[nodiscard]] bool isRaised() const { return raised; }
 	};
 	
@@ -74,6 +75,8 @@ namespace options
 		[[nodiscard]] bool needsArgument() const final { return false; }
 		[[nodiscard]] bool parse(std::string_view argument) final;
 		
+		void setValue(const bool value) { undecided = false; this->value = value; }
+		void resetValue() { undecided = true; }
 		[[nodiscard]] bool getValue() { if (undecided) { value = getDefault(); undecided = false; } return value; }
 	};
 	
@@ -98,6 +101,7 @@ namespace options
 		[[nodiscard]] bool needsArgument() const final { return true; }
 		[[nodiscard]] bool parse(std::string_view argument) final;
 		
+		void setValue(const T value) { this->value = value; }
 		[[nodiscard]] T getValue() const { return value; }
 	};
 	
@@ -111,18 +115,24 @@ namespace options
 		[[nodiscard]] bool needsArgument() const final { return true; }
 		[[nodiscard]] bool parse(std::string_view argument) final { value = argument; return true; }
 		
+		void setValue(const std::string &value) { this->value = value; }
+		void setValue(std::string &&value) { this->value = std::move(value); }
 		[[nodiscard]] const std::optional<std::string>& getValue() const { return value; }
 	};
 	
 	
 	enum class OutputFormat
 	{
-		LONG_HUMAN,
+		HUMAN_LONG,
 		HUMAN,
-		SHORT_HUMAN,
+		HUMAN_SHORT,
 		VERILOG,
 		VHDL,
 		CPP,
+		MATH_FORMAL,
+		MATH_PROG,
+		MATH_ASCII,
+		MATH_NAMES,
 	};
 	
 	extern Flag help;
@@ -132,7 +142,7 @@ namespace options
 	extern Trilean status;
 	
 	extern Flag skipOptimization;
-	extern Mapped<OutputFormat, OutputFormat::LONG_HUMAN> outputFormat;
+	extern Mapped<OutputFormat, OutputFormat::HUMAN_LONG> outputFormat;
 	extern Text name;
 	
 	extern std::vector<std::string_view> freeArgs;

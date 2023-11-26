@@ -2,6 +2,8 @@
 
 #include <algorithm>
 
+#include "options.hh"
+
 
 Implicants& Implicants::sort()
 {
@@ -73,6 +75,41 @@ void Implicants::printCpp(std::ostream &o) const
 			if (&implicant != &front())
 				o << " || ";
 			implicant.printCpp(o, true);
+		}
+	}
+}
+
+void Implicants::printMath(std::ostream &o) const
+{
+	if (size() == 1)
+	{
+		front().printMath(o, false);
+	}
+	else
+	{
+		for (const Implicant &implicant : *this)
+		{
+			if (&implicant != &front())
+			{
+				switch (options::outputFormat.getValue())
+				{
+				case options::OutputFormat::MATH_FORMAL:
+					o << " \u2228 ";
+					break;
+				case options::OutputFormat::MATH_ASCII:
+					o << " \\/ ";
+					break;
+				case options::OutputFormat::MATH_PROG:
+					o << " || ";
+					break;
+				case options::OutputFormat::MATH_NAMES:
+					o << " OR ";
+					break;
+				default:
+					break;
+				}
+			}
+			implicant.printMath(o, true);
 		}
 	}
 }

@@ -52,4 +52,5 @@ public:
 	void printVerilogSolution(const Implicants &solution) const;
 	void printVhdlSolution(const Implicants &solution) const;
 	void printCppSolution(const Implicants &solution) const;
+	void printMathSolution(const Implicants &solution) const;
 };

@@ -1,5 +1,7 @@
 #include "Implicant.hh"
 
+#include "options.hh"
+
 
 bool Implicant::operator<(const Implicant &other) const
 {
@@ -159,6 +161,108 @@ void Implicant::printCpp(std::ostream &o, const bool parentheses) const
 		if (negated)
 			o << "!";
 		::inputNames.printCppName(o, bitIndex);
+	}
+	if (needsParentheses)
+		o << ')';
+}
+
+void Implicant::printMath(std::ostream &o, const bool parentheses) const
+{
+	if (bitCount == 0)
+	{
+		if (isError())
+		{
+			switch (options::outputFormat.getValue())
+			{
+			case options::OutputFormat::MATH_FORMAL:
+				o << "\u22A5";
+				break;
+			case options::OutputFormat::MATH_ASCII:
+				o << 'F';
+				break;
+			case options::OutputFormat::MATH_PROG:
+				o << "false";
+				break;
+			case options::OutputFormat::MATH_NAMES:
+				o << "FALSE";
+				break;
+			default:
+				break;
+			}
+		}
+		else
+		{
+			switch (options::outputFormat.getValue())
+			{
+			case options::OutputFormat::MATH_FORMAL:
+				o << "\u22A4";
+				break;
+			case options::OutputFormat::MATH_ASCII:
+				o << 'T';
+				break;
+			case options::OutputFormat::MATH_PROG:
+				o << "true";
+				break;
+			case options::OutputFormat::MATH_NAMES:
+				o << "TRUE";
+				break;
+			default:
+				break;
+			}
+		}
+		return;
+	}
+	const bool needsParentheses = parentheses && bitCount != 1;
+	if (needsParentheses)
+		o << '(';
+	bool first = true;
+	for (const auto &[bitIndex, negated] : splitBits())
+	{
+		if (first)
+		{
+			first = false;
+		}
+		else
+		{
+			switch (options::outputFormat.getValue())
+			{
+			case options::OutputFormat::MATH_FORMAL:
+				o << " \u2227 ";
+				break;
+			case options::OutputFormat::MATH_ASCII:
+				o << " /\\ ";
+				break;
+			case options::OutputFormat::MATH_PROG:
+				o << " && ";
+				break;
+			case options::OutputFormat::MATH_NAMES:
+				o << " AND ";
+				break;
+			default:
+				break;
+			}
+		}
+		if (negated)
+		{
+			switch (options::outputFormat.getValue())
+			{
+			case options::OutputFormat::MATH_FORMAL:
+				o << "\u00AC";
+				break;
+			case options::OutputFormat::MATH_ASCII:
+				o << '~';
+				break;
+			case options::OutputFormat::MATH_PROG:
+				o << '!';
+				break;
+			case options::OutputFormat::MATH_NAMES:
+				o << "NOT ";
+				break;
+			default:
+				break;
+			}
+		}
+		::inputNames.printMathName(o, bitIndex);
 	}
 	if (needsParentheses)
 		o << ')';

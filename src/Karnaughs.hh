@@ -46,5 +46,6 @@ public:
 	void printVerilog();
 	void printVhdl();
 	void printCpp();
+	void printMath();
 	void print();
 };

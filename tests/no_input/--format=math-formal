@@ -1,0 +1,3 @@
+always_true() = ⊤
+always_false() = ⊥
+dont_care() = ⊥

@@ -14,7 +14,7 @@ void Karnaughs::printHumanBestSolutions() const
 	for (std::size_t i = 0; i != karnaughs.size(); ++i)
 	{
 		std::cout << "--- " << karnaughs[i].getFunctionName() << " ---\n";
-		if (options::outputFormat.getValue() == options::OutputFormat::LONG_HUMAN)
+		if (options::outputFormat.getValue() == options::OutputFormat::HUMAN_LONG)
 			std::cout << '\n';
 		karnaughs[i].printHumanSolution(bestSolutions[i]);
 		std::cout << '\n';
@@ -252,12 +252,12 @@ void Karnaughs::solve()
 
 void Karnaughs::printHuman()
 {
-	const bool bestSolutionsVisible = options::skipOptimization.isRaised() || options::outputFormat.getValue() != options::OutputFormat::SHORT_HUMAN;
+	const bool bestSolutionsVisible = options::skipOptimization.isRaised() || options::outputFormat.getValue() != options::OutputFormat::HUMAN_SHORT;
 	if (bestSolutionsVisible)
 		printHumanBestSolutions();
 	if (!options::skipOptimization.isRaised())
 	{
-		if (options::outputFormat.getValue() != options::OutputFormat::SHORT_HUMAN)
+		if (options::outputFormat.getValue() != options::OutputFormat::HUMAN_SHORT)
 			std::cout << "=== optimized solution ===\n\n";
 		printHumanOptimizedSolution();
 		std::cout << std::flush;
@@ -403,13 +403,27 @@ void Karnaughs::printCpp()
 	std::cout << "}\n";
 }
 
+void Karnaughs::printMath()
+{
+	const Names functionNames = gatherFunctionNames();
+	for (std::size_t i = 0; i != karnaughs.size(); ++i)
+	{
+		functionNames.printMathName(std::cout, i);
+		std::cout << '(';
+		::inputNames.printMathNames(std::cout);
+		std::cout << ") = ";
+		karnaughs[i].printMathSolution(bestSolutions[i]);
+		std::cout << "\n";
+	}
+}
+
 void Karnaughs::print()
 {
 	switch (options::outputFormat.getValue())
 	{
-	case options::OutputFormat::LONG_HUMAN:
+	case options::OutputFormat::HUMAN_LONG:
 	case options::OutputFormat::HUMAN:
-	case options::OutputFormat::SHORT_HUMAN:
+	case options::OutputFormat::HUMAN_SHORT:
 		printHuman();
 		break;
 	case options::OutputFormat::VERILOG:
@@ -420,6 +434,12 @@ void Karnaughs::print()
 		break;
 	case options::OutputFormat::CPP:
 		printCpp();
+		break;
+	case options::OutputFormat::MATH_FORMAL:
+	case options::OutputFormat::MATH_ASCII:
+	case options::OutputFormat::MATH_PROG:
+	case options::OutputFormat::MATH_NAMES:
+		printMath();
 		break;
 	}
 }

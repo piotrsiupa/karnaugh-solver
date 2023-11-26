@@ -126,13 +126,17 @@ namespace options
 	Trilean status({"status", "progress", "progress-bar", "progress-bars", "stat", "stats"}, 's', [](){ return ::terminalStderr; });
 	
 	Flag skipOptimization({"no-optimize", "no-cse", "no-optimization", "skip-optimize", "skip-cse", "skip-optimization"}, 'O');
-	Mapped<OutputFormat, OutputFormat::LONG_HUMAN> outputFormat({"format", "output-format", "notation", "output-notation"}, 'f', {
-			{"human(?:[-_]readable)?[-_](?:long|big)|(?:long|big)[-_]human(?:[-_]readable)?|hr?l|lhr?|full|default", OutputFormat::LONG_HUMAN},
-			{"human(?:[-_]readable)?(?:[-_](?:medium|middle))?|(?:(?:medium|middle)[-_])?human(?:[-_]readable)?|hr?m?|m?hr?|medium|middle|shorter", OutputFormat::HUMAN},
-			{"human(?:[-_]readable)?[-_](?:short|small)|(?:short|small)[-_]human(?:[-_]readable)?|hr?s|shr?|short|small|tiny|minimal", OutputFormat::SHORT_HUMAN},
+	Mapped<OutputFormat, OutputFormat::HUMAN_LONG> outputFormat({"format", "output-format", "notation", "output-notation"}, 'f', {
+			{"human(?:[-_]readable)?[-_](?:long|big)|(?:long|big)[-_]human(?:[-_]readable)?|h[-_]?(?:r[-_]?)?l|l[-_]?h(?:[-_]?r)?|full|default", OutputFormat::HUMAN_LONG},
+			{"human(?:[-_]readable)?(?:[-_](?:medium|middle))?|(?:(?:medium|middle)[-_])?human(?:[-_]readable)?|h(?:[-_]?r)?(?:[-_]?m)?|(?:m[-_]?)?h(?:[-_]?r)?|medium|middle|shorter", OutputFormat::HUMAN},
+			{"human(?:[-_]readable)?[-_](?:short|small)|(?:short|small)[-_]human(?:[-_]readable)?|h[-_]?(?:r[-_]?)?s|s[-_]?h(?:[-_]?r)?|short|small|tiny|minimal", OutputFormat::HUMAN_SHORT},
 			{"verilog", OutputFormat::VERILOG},
 			{"vhdl", OutputFormat::VHDL},
-			{"cpp|c\\+\\+", OutputFormat::CPP},
+			{"cpp|c\\+\\+|cc|hpp|h\\+\\+|hh", OutputFormat::CPP},
+			{"math(?:ematic(?:s|al)?)?(?:[-_]formal|formal[-_]math(?:ematic(?:s|al)?)?)?|m(?:[-_]?f)?|f[-_]?m", OutputFormat::MATH_FORMAL},
+			{"math(?:ematic(?:s|al)?)?[-_]prog(?:ram(?:ing)?)?|prog(?:ram(?:ming)?)?[-_]math(?:ematic(?:s|al)?)?|m[-_]?p|p[-_]?m", OutputFormat::MATH_PROG},
+			{"math(?:ematic(?:s|al)?)?[-_]ascii|ascii[-_]math(?:ematic(?:s|al)?)?|m[-_]?a|a[-_]?m", OutputFormat::MATH_ASCII},
+			{"math(?:ematic(?:s|al)?)?[-_](?:names?|words?|text)|(?:names?|words?|text)[-_]math(?:ematic(?:s|al)?)?|m[-_]?[nwt]|[nwt][-_]?m", OutputFormat::MATH_NAMES},
 		});
 	Text name({"name", "module-name", "class-name"}, 'n');
 	

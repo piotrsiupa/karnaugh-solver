@@ -1,0 +1,3 @@
+always_true() = true
+always_false() = false
+dont_care() = false

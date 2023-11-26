@@ -211,7 +211,7 @@ Karnaugh::solutions_t Karnaugh::solve() const
 
 void Karnaugh::printHumanSolution(const Implicants &solution) const
 {
-	if (options::outputFormat.getValue() == options::OutputFormat::LONG_HUMAN)
+	if (options::outputFormat.getValue() == options::OutputFormat::HUMAN_LONG)
 	{
 		if (::bits <= 8)
 		{
@@ -231,7 +231,7 @@ void Karnaugh::printHumanSolution(const Implicants &solution) const
 		std::cout << "solution:\n";
 	}
 	Implicants(solution).sort().printHuman(std::cout);
-	if (options::outputFormat.getValue() != options::OutputFormat::SHORT_HUMAN)
+	if (options::outputFormat.getValue() != options::OutputFormat::HUMAN_SHORT)
 		std::cout << '\n';
 }
 
@@ -248,4 +248,9 @@ void Karnaugh::printVhdlSolution(const Implicants &solution) const
 void Karnaugh::printCppSolution(const Implicants &solution) const
 {
 	Implicants(solution).sort().printCpp(std::cout);
+}
+
+void Karnaugh::printMathSolution(const Implicants &solution) const
+{
+	Implicants(solution).sort().printMath(std::cout);
 }
