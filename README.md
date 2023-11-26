@@ -1,29 +1,34 @@
 # Karnaugh Solver
 
+A CLI aplication to minimize big (up to 32 variables) logic functions, that can handle multiple mappings at once and eliminates common subexpressions.
+
 
 ## What does this do?
 
-This program takes a description of multiple logic functions in the form of lists of minterms and don't-cares (up to 32 input variables).
+This program takes a description of multiple logic functions (up to 32 input variables) in the form of lists of minterms and don't-cares.
 It performs [logic optimization](https://en.wikipedia.org/wiki/Logic_optimization) on them to find the minimal matching [SOPs](https://en.wikipedia.org/wiki/Canonical_normal_form#SOP). (Using the [Petrick's method](https://en.wikipedia.org/wiki/Petrick%27s_method).)
 
-Then it (optionally) performs a [common subexpression elimination](https://en.wikipedia.org/wiki/Common_subexpression_elimination) to further reduce the number of logic gates required to build the circuit.
+After that, it (optionally) performs a [common subexpression elimination](https://en.wikipedia.org/wiki/Common_subexpression_elimination) to further reduce the number of logic gates required to build the circuit.
 (This is the main reason for which the program has ability to solve multiple functions in a single run.)
 
 If there are multiple solutions, the one with the smallest cost in logic gates is chosen.
 (The cost calculation takes the CSE into account.)
 
+The result is printed in a human readable format (default) or in variety of other formats, including Verilog, VHDL, C++ and more.
+
 ### I haven't understood any of that; speak human!
 
 OK, basically you tell it that you want an electronic circuit that e.g. have input pins `a`, `b`, `c` and output pins `x`, `y`, `z`.
-Then you list all the combinations of inputs for which each output pin should be 1. (You can also list combinations where output doesn't matter to you because e.g. they will never happen.)
+Then for each output you list all the combinations of input values for which the output pin should be 1. (You can also list combinations where output doesn't matter to you because e.g. they will never happen.)
 The program then looks for a smallest logic circuit that does that.
 (It looks only for the results in the SOP form which means that it always first uses AND gates to calculate a bunch of immediate values and then OR gates to make the final results.)
 
 The popular way to do it by hand for smaller circuits are [Karnaugh maps](https://en.wikipedia.org/wiki/Karnaugh_map).
 This program doesn't really do that under the hood. It uses a different (faster) method that gives the same result.
-However, the result is displayed as a Karnaugh map and hence the program name.
+However, the result is displayed (by default) as a Karnaugh map and hence the program name.
+There are also other output formats, including Verilog and VHDL (popular formats of hardware description) or even C++ code.
 
-Additionally, the program can find common parts of the resulting circuits and reuses them in multiple places to not waste gates for doing the same thing multiple times.
+Additionally, the program can find common parts of the resulting circuits and reuse them in multiple places to not waste logic gates for doing the same thing multiple times.
 (This is one of the main selling points.)
 
 
@@ -33,9 +38,8 @@ Currently there is quite a few limitations both because the program is still in 
  - The search for the solution is done using a **brute force** method which returns the best possible result but often takes too much time and memory to be realistically useful. (Heuristics will be added in the future.)
  - The theoretical limit for the number of input variables is 32, however, the real **input limit is 5 (6 without CSE)** because of how much time the brute-force method takes (unless the logic function is trivial).
  - The number of underlying transistors are not taken into account. Instead **NOT gate, 2-input AND gate and 2-input OR gate** are treated as basic building blocks with respective costs 1, 2 and 2. (Although, this shouldn't change the result dramatically.)
- - **Delay** of the resulting circuit is not taken under account in the deduplication phase.
+ - **Delay** of the resulting circuit is not taken under account in the deduplication phase (CSE).
  - **Hazards** in the resulting circuit are not taken into account at any stage.
- - The output of the program is made to be **human-readable**, which makes it hard to use in another program. (More output formats are planned.)
  - The logic function is solved to the **SOP** form. (The POS form is planned for the future.)
 
 
