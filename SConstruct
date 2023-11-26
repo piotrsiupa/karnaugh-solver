@@ -23,5 +23,5 @@ program = env.Program('karnaugh', env.Glob('./src/*.cc'))
 env.Alias('build', program)
 
 env.Replace(PYTHON_EXECUTABLE=sys.executable)
-test = env.Alias('test', program, '${ESCAPE(PYTHON_EXECUTABLE)} tests/run.py $SOURCE')
+test = env.Alias('test', program, '${ESCAPE(PYTHON_EXECUTABLE)} tests/run.py --diff $SOURCE')
 env.AlwaysBuild(test)
