@@ -2,11 +2,11 @@
 
 -
 
-true
+always_true
 0
 -
 
-false
+always_false
 -
 -
 

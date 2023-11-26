@@ -1,0 +1,21 @@
+class no_input
+{
+public:
+	using input_t = struct { };
+	using output_t = struct { bool always_true, always_false, dont_care; };
+	
+	[[nodiscard]] constexpr output_t operator()() const { return (*this)({}); }
+	[[nodiscard]] constexpr output_t operator()(const input_t &i) const { return calc(i); }
+	
+	[[nodiscard]] static constexpr output_t calc() { return calc({}); }
+	[[nodiscard]] static constexpr output_t calc(const input_t &i);
+};
+
+constexpr no_input::output_t no_input::calc(const input_t &)
+{
+	output_t o = {};
+	o.always_true = true;
+	o.always_false = false;
+	o.dont_care = false;
+	return o;
+}

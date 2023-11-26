@@ -1,6 +1,6 @@
 Negated inputs: <none>
 Products:
 Sums:
-	"true" = <True>
-	"false" = <False>
+	"always_true" = <True>
+	"always_false" = <False>
 	"dont_care" = <False>

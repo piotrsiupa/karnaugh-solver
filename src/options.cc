@@ -132,6 +132,7 @@ namespace options
 			{"human(?:[-_]readable)?[-_](?:short|small)|(?:short|small)[-_]human(?:[-_]readable)?|hr?s|shr?|short|small|tiny|minimal", OutputFormat::SHORT_HUMAN},
 			{"verilog", OutputFormat::VERILOG},
 			{"vhdl", OutputFormat::VHDL},
+			{"cpp|c\\+\\+", OutputFormat::CPP},
 		});
 	Text name({"name", "module-name", "class-name"}, 'n');
 	

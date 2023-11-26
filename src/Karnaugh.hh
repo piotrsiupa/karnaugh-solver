@@ -51,4 +51,5 @@ public:
 	void printHumanSolution(const Implicants &solution) const;
 	void printVerilogSolution(const Implicants &solution) const;
 	void printVhdlSolution(const Implicants &solution) const;
+	void printCppSolution(const Implicants &solution) const;
 };

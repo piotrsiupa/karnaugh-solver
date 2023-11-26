@@ -67,6 +67,19 @@ void OptimizedSolutions::printVhdlImmediates(std::ostream &o, const std::size_t 
 	}
 }
 
+void OptimizedSolutions::printCppImmediates(std::ostream &o, const std::size_t immediateProductCount, const std::size_t immediateSumCount) const
+{
+	if (immediateProductCount != 0 || immediateSumCount != 0)
+	{
+		o << "\t// Intermediary values\n";
+		if (immediateProductCount != 0)
+			o << "\tbool prods[" << immediateProductCount << "] = {};\n";
+		if (immediateSumCount != 0)
+			o << "\tbool sums[" << immediateSumCount << "] = {};\n";
+		o << "\t\n";
+	}
+}
+
 void OptimizedSolutions::printHumanId(std::ostream &o, const id_t id) const
 {
 	o << '[' << normalizedIds[id] << ']';
@@ -86,6 +99,14 @@ void OptimizedSolutions::printVhdlId(std::ostream &o, const id_t id) const
 		o << "prods(" << normalizedIds[id] << ')';
 	else
 		o << "sums(" << normalizedIds[id] << ')';
+}
+
+void OptimizedSolutions::printCppId(std::ostream &o, const id_t id) const
+{
+	if (isProduct(id))
+		o << "prods[" << normalizedIds[id] << ']';
+	else
+		o << "sums[" << normalizedIds[id] << ']';
 }
 
 void OptimizedSolutions::printHumanNegatedInputs(std::ostream &o) const
@@ -234,6 +255,49 @@ void OptimizedSolutions::printVhdlProducts(std::ostream &o) const
 	}
 }
 
+void OptimizedSolutions::printCppProductBody(std::ostream &o, const id_t productId) const
+{
+	const auto &[primeImplicant, ids] = getProduct(productId);
+	bool needsAnd = primeImplicant != Implicant::all();
+	if (needsAnd || ids.empty())
+		primeImplicant.printCpp(o, false);
+	for (const auto &id : ids)
+	{
+		if (needsAnd)
+			o << " && ";
+		else
+			needsAnd = true;
+		printCppId(o, id);
+	}
+}
+
+void OptimizedSolutions::printCppProduct(std::ostream &o, const id_t productId) const
+{
+	o << '\t';
+	printCppId(o, productId);
+	o << " = ";
+	printCppProductBody(o, productId);
+	o << ";\n";
+}
+
+void OptimizedSolutions::printCppProducts(std::ostream &o) const
+{
+	bool anyIsPrinted = false;
+	for (std::size_t i = 0; i != products.size(); ++i)
+	{
+		if (!isProductWorthPrinting(makeProductId(i)))
+			continue;
+		if (!anyIsPrinted)
+		{
+			anyIsPrinted = true;
+			o << "\t// Products\n";
+		}
+		printCppProduct(o, makeProductId(i));
+	}
+	if (anyIsPrinted)
+		o << "\t\n";
+}
+
 void OptimizedSolutions::printHumanSumBody(std::ostream &o, const id_t sumId) const
 {
 	bool first = true;
@@ -355,6 +419,49 @@ void OptimizedSolutions::printVhdlSums(std::ostream &o) const
 	}
 }
 
+void OptimizedSolutions::printCppSumBody(std::ostream &o, const id_t sumId) const
+{
+	bool first = true;
+	for (const auto &partId : getSum(sumId))
+	{
+		if (first)
+			first = false;
+		else
+			o << " || ";
+		if (!isProduct(partId) || isProductWorthPrinting(partId))
+			printCppId(o, partId);
+		else
+			getProduct(partId).first.printCpp(o, false);
+	}
+}
+
+void OptimizedSolutions::printCppSum(std::ostream &o, const id_t sumId) const
+{
+	o << '\t';
+	printCppId(o, sumId);
+	o << " = ";
+	printCppSumBody(o, sumId);
+	o << ";\n";
+}
+
+void OptimizedSolutions::printCppSums(std::ostream &o) const
+{
+	bool anyIsPrinted = false;
+	for (std::size_t i = 0; i != sums.size(); ++i)
+	{
+		if (!isSumWorthPrinting(makeSumId(i), true))
+			continue;
+		if (!anyIsPrinted)
+		{
+			anyIsPrinted = true;
+			o << "\t// Sums\n";
+		}
+		printCppSum(o, makeSumId(i));
+	}
+	if (anyIsPrinted)
+		o << "\t\n";
+}
+
 void OptimizedSolutions::printHumanFinalSums(std::ostream &o, const Names &functionNames) const
 {
 	for (std::size_t i = 0; i != finalSums.size(); ++i)
@@ -411,6 +518,32 @@ void OptimizedSolutions::printVhdlFinalSums(std::ostream &o, const Names &functi
 			o << ";\n";
 		}
 		o << "\t\n";
+	}
+}
+
+void OptimizedSolutions::printCppFinalSums(std::ostream &o, const Names &functionNames) const
+{
+	if (finalSums.empty())
+	{
+		o << "\treturn {};\n";
+	}
+	else
+	{
+		o << "\t// Results\n";
+		o << "\toutput_t o = {};\n";
+		for (std::size_t i = 0; i != finalSums.size(); ++i)
+		{
+			o << '\t';
+			functionNames.printCppName(o, i);
+			o << " = ";
+			const id_t sumId = finalSums[i];
+			if (isSumWorthPrinting(sumId, true))
+				printCppId(o, finalSums[i]);
+			else
+				printCppSumBody(o, sumId);
+			o << ";\n";
+		}
+		o << "\treturn o;\n";
 	}
 }
 
@@ -573,4 +706,13 @@ void OptimizedSolutions::printVhdl(std::ostream &o, const Names &functionNames) 
 	printVhdlProducts(o);
 	printVhdlSums(o);
 	printVhdlFinalSums(o, functionNames);
+}
+
+void OptimizedSolutions::printCpp(std::ostream &o, const Names &functionNames) const
+{
+	const auto [immediateProductCount, immediateSumCount] = generateNormalizedIds();
+	printCppImmediates(o, immediateProductCount, immediateSumCount);
+	printCppProducts(o);
+	printCppSums(o);
+	printCppFinalSums(o, functionNames);
 }

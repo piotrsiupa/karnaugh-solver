@@ -1,0 +1,19 @@
+#include <array>
+
+class nothing
+{
+public:
+	using input_t = std::array<bool, 0>;
+	using output_t = std::array<bool, 0>;
+	
+	[[nodiscard]] constexpr output_t operator()() const { return (*this)({}); }
+	[[nodiscard]] constexpr output_t operator()(const input_t &i) const { return calc(i); }
+	
+	[[nodiscard]] static constexpr output_t calc() { return calc({}); }
+	[[nodiscard]] static constexpr output_t calc(const input_t &i);
+};
+
+constexpr nothing::output_t nothing::calc(const input_t &)
+{
+	return {};
+}

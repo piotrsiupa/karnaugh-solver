@@ -17,6 +17,7 @@ public:
 	void printHuman(std::ostream &o) const;
 	void printVerilog(std::ostream &o) const;
 	void printVhdl(std::ostream &o) const;
+	void printCpp(std::ostream &o) const;
 	
 #ifndef NDEBUG
 	bool covers(const Minterm minterm) const;

@@ -38,9 +38,11 @@ private:
 	std::pair<std::size_t, std::size_t> generateNormalizedIds() const;
 	void printVerilogImmediates(std::ostream &o, const std::size_t immediateProductCount, const std::size_t immediateSumCount) const;
 	void printVhdlImmediates(std::ostream &o, const std::size_t immediateProductCount, const std::size_t immediateSumCount) const;
+	void printCppImmediates(std::ostream &o, const std::size_t immediateProductCount, const std::size_t immediateSumCount) const;
 	void printHumanId(std::ostream &o, const id_t id) const;
 	void printVerilogId(std::ostream &o, const id_t id) const;
 	void printVhdlId(std::ostream &o, const id_t id) const;
+	void printCppId(std::ostream &o, const id_t id) const;
 	void printHumanNegatedInputs(std::ostream &o) const;
 	bool isProductWorthPrinting(const id_t productId) const { const product_t &product = getProduct(productId); return product.first.getBitCount() >= 2 || !product.second.empty(); }
 	void printHumanProductBody(std::ostream &o, const id_t productId) const;
@@ -52,6 +54,9 @@ private:
 	void printVhdlProductBody(std::ostream &o, const id_t productId) const;
 	void printVhdlProduct(std::ostream &o, const id_t productId) const;
 	void printVhdlProducts(std::ostream &o) const;
+	void printCppProductBody(std::ostream &o, const id_t productId) const;
+	void printCppProduct(std::ostream &o, const id_t productId) const;
+	void printCppProducts(std::ostream &o) const;
 	bool isSumWorthPrinting(const id_t sumId, const bool simpleFinalSums) const { if (simpleFinalSums) return getSum(sumId).size() >= 2; for (const sum_t &sum : sums) for (const id_t &id : sum) if (id == sumId) return true; return false; }
 	void printHumanSumBody(std::ostream &o, const id_t sumId) const;
 	void printHumanSum(std::ostream &o, const id_t sumId) const;
@@ -62,9 +67,13 @@ private:
 	void printVhdlSumBody(std::ostream &o, const id_t sumId) const;
 	void printVhdlSum(std::ostream &o, const id_t sumId) const;
 	void printVhdlSums(std::ostream &o) const;
+	void printCppSumBody(std::ostream &o, const id_t sumId) const;
+	void printCppSum(std::ostream &o, const id_t sumId) const;
+	void printCppSums(std::ostream &o) const;
 	void printHumanFinalSums(std::ostream &o, const Names &functionNames) const;
 	void printVerilogFinalSums(std::ostream &o, const Names &functionNames) const;
 	void printVhdlFinalSums(std::ostream &o, const Names &functionNames) const;
+	void printCppFinalSums(std::ostream &o, const Names &functionNames) const;
 	void printGateScores(std::ostream &o) const;
 	
 	void createNegatedInputs(const solutions_t &solutions);
@@ -97,4 +106,5 @@ public:
 	void printHuman(std::ostream &o, const Names &functionNames) const;
 	void printVerilog(std::ostream &o, const Names &functionNames) const;
 	void printVhdl(std::ostream &o, const Names &functionNames) const;
+	void printCpp(std::ostream &o, const Names &functionNames) const;
 };

@@ -244,3 +244,8 @@ void Karnaugh::printVhdlSolution(const Implicants &solution) const
 {
 	Implicants(solution).sort().printVhdl(std::cout);
 }
+
+void Karnaugh::printCppSolution(const Implicants &solution) const
+{
+	Implicants(solution).sort().printCpp(std::cout);
+}

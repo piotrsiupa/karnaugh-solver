@@ -65,11 +65,6 @@ void Karnaughs::printVerilogOptimizedSolution(const Names &functionNames) const
 	optimizedSolutions.printVerilog(std::cout, functionNames);
 }
 
-void Karnaughs::printVhdlOptimizedSolution(const Names &functionNames) const
-{
-	optimizedSolutions.printVhdl(std::cout, functionNames);
-}
-
 void Karnaughs::printVhdlBestSolutions(const Names &functionNames) const
 {
 	std::cout << "begin\n";
@@ -88,14 +83,54 @@ void Karnaughs::printVhdlBestSolutions(const Names &functionNames) const
 	}
 }
 
-void Karnaughs::printName()
+void Karnaughs::printVhdlOptimizedSolution(const Names &functionNames) const
+{
+	optimizedSolutions.printVhdl(std::cout, functionNames);
+}
+
+void Karnaughs::printCppBestSolutions(const Names &functionNames) const
+{
+	if (karnaughs.empty())
+	{
+		std::cout << "\treturn {};\n";
+	}
+	else
+	{
+		std::cout << "\toutput_t o = {};\n";
+		for (std::size_t i = 0; i != karnaughs.size(); ++i)
+		{
+			std::cout << '\t';
+			functionNames.printCppName(std::cout, i);
+			std::cout << " = ";
+			karnaughs[i].printCppSolution(bestSolutions[i]);
+			std::cout << ";\n";
+		}
+		std::cout << "\treturn o;\n";
+	}
+}
+
+void Karnaughs::printCppOptimizedSolution(const Names &functionNames) const
+{
+	optimizedSolutions.printCpp(std::cout, functionNames);
+}
+
+std::string Karnaughs::getName()
 {
 	if (options::name.getValue())
-		std::cout << *options::name.getValue();
+		return *options::name.getValue();
 	else if (::inputFilePath)
-		std::cout << std::filesystem::path(*::inputFilePath).stem().string();
+		return std::filesystem::path(*::inputFilePath).stem().string();
 	else
-		std::cout << "Karnaugh";
+		return "Karnaugh";
+}
+
+bool Karnaughs::areInputsUsed() const
+{
+	for (const Implicants &bestSolution : bestSolutions)
+		for (const Implicant &implicant : bestSolution)
+			if (implicant.getBitCount() != 0)
+				return true;
+	return false;
 }
 
 bool Karnaughs::loadData(Input &input)
@@ -231,9 +266,7 @@ void Karnaughs::printHuman()
 
 void Karnaughs::printVerilog()
 {
-	std::cout << "module ";
-	printName();
-	std::cout << " (\n";
+	std::cout << "module " << getName() << " (\n";
 	if (!::inputNames.isEmpty())
 	{
 		std::cout << "\tinput wire";
@@ -261,9 +294,7 @@ void Karnaughs::printVhdl()
 	std::cout << "library IEEE;\n"
 			"use IEEE.std_logic_1164.all;\n";
 	std::cout << '\n';
-	std::cout << "entity ";
-	printName();
-	std::cout << " is\n";
+	std::cout << "entity " << getName() << " is\n";
 	const Names functionNames = gatherFunctionNames();
 	if (!::inputNames.isEmpty() || !karnaughs.empty())
 	{
@@ -288,18 +319,88 @@ void Karnaughs::printVhdl()
 		}
 		std::cout << "\t);\n";
 	}
-	std::cout << "end ";
-	printName();
-	std::cout << ";\n";
+	std::cout << "end " << getName() << ";\n";
 	std::cout << '\n';
-	std::cout << "architecture behavioural of ";
-	printName();
-	std::cout << " is\n";
+	std::cout << "architecture behavioural of " << getName() << " is\n";
 	if (options::skipOptimization.isRaised())
 		printVhdlBestSolutions(functionNames);
 	else
 		printVhdlOptimizedSolution(functionNames);
 	std::cout << "end behavioural;\n";
+}
+
+void Karnaughs::printCpp()
+{
+	const Names functionNames = gatherFunctionNames();
+	if (!::inputNames.areNamesUsedInCode() || !functionNames.areNamesUsedInCode())
+		std::cout << "#include <array>\n"
+				"\n";
+	std::cout << "class " << getName() << "\n"
+			"{\n"
+			"public:\n";
+	std::cout << "\tusing input_t = ";
+	::inputNames.printCppType(std::cout);
+	std::cout << ";\n";
+	std::cout << "\tusing output_t = ";
+	functionNames.printCppType(std::cout);
+	std::cout << ";\n";
+	std::cout << "\t\n";
+	std::cout << "\t[[nodiscard]] constexpr output_t operator()(";
+	bool first = true;
+	for (std::size_t i = 0; i != ::inputNames.getSize(); ++i)
+	{
+		if (first)
+			first = false;
+		else
+			std::cout << ", ";
+		std::cout << "const bool ";
+		::inputNames.printCppRawName(std::cout, i);
+	}
+	std::cout << ") const { return (*this)({";
+	first = true;
+	for (std::size_t i = 0; i != ::inputNames.getSize(); ++i)
+	{
+		if (first)
+			first = false;
+		else
+			std::cout << ", ";
+		::inputNames.printCppRawName(std::cout, i);
+	}
+	std::cout << "}); }\n";
+	std::cout << "\t[[nodiscard]] constexpr output_t operator()(const input_t &i) const { return calc(i); }\n";
+	std::cout << "\t\n";
+	std::cout << "\t[[nodiscard]] static constexpr output_t calc(";
+	first = true;
+	for (std::size_t i = 0; i != ::inputNames.getSize(); ++i)
+	{
+		if (first)
+			first = false;
+		else
+			std::cout << ", ";
+		std::cout << "const bool ";
+		::inputNames.printCppRawName(std::cout, i);
+	}
+	std::cout << ") { return calc({";
+	first = true;
+	for (std::size_t i = 0; i != ::inputNames.getSize(); ++i)
+	{
+		if (first)
+			first = false;
+		else
+			std::cout << ", ";
+		::inputNames.printCppRawName(std::cout, i);
+	}
+	std::cout << "}); }\n";
+	std::cout << "\t[[nodiscard]] static constexpr output_t calc(const input_t &i);\n";
+	std::cout << "};" << std::endl;
+	std::cout << '\n';
+	std::cout << "constexpr " << getName() << "::output_t " << getName() << "::calc(const input_t &" << (areInputsUsed() ? "i" : "") << ")\n";
+	std::cout << "{\n";
+	if (options::skipOptimization.isRaised())
+		printCppBestSolutions(functionNames);
+	else
+		printCppOptimizedSolution(functionNames);
+	std::cout << "}\n";
 }
 
 void Karnaughs::print()
@@ -316,6 +417,9 @@ void Karnaughs::print()
 		break;
 	case options::OutputFormat::VHDL:
 		printVhdl();
+		break;
+	case options::OutputFormat::CPP:
+		printCpp();
 		break;
 	}
 }

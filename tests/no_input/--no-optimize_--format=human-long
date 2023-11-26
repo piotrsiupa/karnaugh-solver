@@ -1,4 +1,4 @@
---- true ---
+--- always_true ---
 
 goal:
   
@@ -7,7 +7,7 @@ goal:
 solution:
 <True>
 
---- false ---
+--- always_false ---
 
 goal:
   

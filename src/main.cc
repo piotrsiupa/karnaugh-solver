@@ -39,6 +39,7 @@ static void printHelp()
 			"\thuman-short\t- Only the result of the program without any additional\n\t\t\t  fluff, in a human-readable way.\n"
 			"\tverilog\t\t- A Verilog module.\n"
 			"\tvhdl\t\t- A VHDL entity.\n"
+			"\tcpp\t\t- A C++ class (a functor with static functions too).\n"
 			"\n"
 			"Input:\n"
 			"The input is read from the stdin and has the following format:\nINPUTS_DESCRIPTION <line-break> LIST_OF_FUNCTIONS\n"
@@ -105,6 +106,7 @@ static bool parseInputBits(Input &input)
 		if (line == "-")
 		{
 			::bits = 0;
+			::inputNames = Names(true, {}, "i");
 			return true;
 		}
 		try

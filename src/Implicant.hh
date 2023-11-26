@@ -62,4 +62,5 @@ public:
 	void printHuman(std::ostream &o, const bool parentheses) const;
 	void printVerilog(std::ostream &o, const bool parentheses) const;
 	void printVhdl(std::ostream &o, const bool parentheses) const;
+	void printCpp(std::ostream &o, const bool parentheses) const;
 };

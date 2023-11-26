@@ -135,3 +135,31 @@ void Implicant::printVhdl(std::ostream &o, const bool parentheses) const
 	if (needsParentheses)
 		o << ')';
 }
+
+void Implicant::printCpp(std::ostream &o, const bool parentheses) const
+{
+	if (bitCount == 0)
+	{
+		if (isError())
+			o << "false";
+		else
+			o << "true";
+		return;
+	}
+	const bool needsParentheses = parentheses && bitCount != 1;
+	if (needsParentheses)
+		o << '(';
+	bool first = true;
+	for (const auto &[bitIndex, negated] : splitBits())
+	{
+		if (first)
+			first = false;
+		else
+			o << " && ";
+		if (negated)
+			o << "!";
+		::inputNames.printCppName(o, bitIndex);
+	}
+	if (needsParentheses)
+		o << ')';
+}

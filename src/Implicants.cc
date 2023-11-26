@@ -60,6 +60,23 @@ void Implicants::printVhdl(std::ostream &o) const
 	}
 }
 
+void Implicants::printCpp(std::ostream &o) const
+{
+	if (size() == 1)
+	{
+		front().printCpp(o, false);
+	}
+	else
+	{
+		for (const Implicant &implicant : *this)
+		{
+			if (&implicant != &front())
+				o << " || ";
+			implicant.printCpp(o, true);
+		}
+	}
+}
+
 #ifndef NDEBUG
 bool Implicants::covers(const Minterm minterm) const
 {

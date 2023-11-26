@@ -122,6 +122,7 @@ namespace options
 		SHORT_HUMAN,
 		VERILOG,
 		VHDL,
+		CPP,
 	};
 	
 	extern Flag help;

@@ -1,7 +1,7 @@
---- true ---
+--- always_true ---
 <True>
 
---- false ---
+--- always_false ---
 <False>
 
 --- dont_care ---

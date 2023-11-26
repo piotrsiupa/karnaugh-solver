@@ -41,3 +41,30 @@ void Names::printVhdlType(std::ostream &o) const
 	else
 		o << "std_logic_vector(" << (names.size() - 1) << " downto 0)";
 }
+
+void Names::printCppType(std::ostream &o) const
+{
+	if (useInCode)
+	{
+		o << "struct { ";
+		if (!names.empty())
+		{
+			o << "bool ";
+			bool first = true;
+			for (const std::string &name : names)
+			{
+				if (first)
+					first = false;
+				else
+					o << ", ";
+				o << name;
+			}
+			o << "; ";
+		}
+		o << '}';
+	}
+	else
+	{
+		o << "std::array<bool, " << names.size() << '>';
+	}
+}
