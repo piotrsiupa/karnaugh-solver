@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import os
 from pathlib import Path
 import random
 import sys
@@ -10,7 +11,7 @@ def print_help() -> None:
     print('The default proportions of 0s to 1s to don\'t-cares in the table are 1 to 2 to 1.')
     print()
     print(f'Usage:\t{Path(sys.argv[0]).name} --help')
-    print(f'\t{Path(sys.argv[0]).name} INPUT_SIZE FUNCTION_COUNT [0S_PROP 1S_PROP DCS_PROP]')
+    print(f'\t{Path(sys.argv[0]).name} INPUT_SIZE FUNCTION_COUNT [0S_PROP 1S_PROP DCS_PROP] OUTPUT_FILE')
     print()
     print('INPUT_SIZE is the number of inputs to the functions (between 0 and 32).')
     print()
@@ -20,38 +21,63 @@ def print_help() -> None:
     print('(The amount won\'t be exact because it\'s all randomly generated.')
 
 
-def print_inputs(input_size: int) -> None:
-    print(input_size)
+def print_inputs(output, input_size: int) -> None:
+    output.write(str(input_size).encode('utf-8') + b'\n')
 
 
-def print_function(proportions: (int, int, int), input_size: int) -> None:
-    minterms = []
-    dont_cares = []
+def reread_number(reread):
+    number = reread.read(1)
+    if number in (b'\n', b'-'):
+        return None
+    while (x := reread.read(1)) not in (b' ', b'\n'):
+        number += x
+    if x == b'\n':
+        reread.seek(-1, os.SEEK_CUR)
+    return int(number)
+
+
+def print_function(output, output_path: str, proportions: (int, int, int), input_size: int) -> None:
+    start_pos = output.tell()
     
-    rand_max = sum(proportions)
-    max_for_1 = proportions[1]
-    max_for_dc = proportions[1] + proportions[2]
+    rand_range = sum(proportions)
+    rand_threshold = proportions[1]
     for i in range(1 << input_size):
-        r = random.randint(1, rand_max)
-        if r <= max_for_1:
-            minterms.append(i)
-        elif r <= max_for_dc:
-            dont_cares.append(i)
+        r = random.randint(1, rand_range)
+        if r <= rand_threshold:
+            output.write(str(i).encode('utf-8') + b' ')
+    output.seek(-1, os.SEEK_CUR)
+    if output.read(1) == b'\n':
+        output.write(b'-')
+    else:
+        output.seek(-1, os.SEEK_CUR)
+    output.write(b'\n')
     
-    def format_values(values: [int]) -> str:
-        if values:
-            return ' '.join(str(x) for x in values)
+    output.flush()
+    with open(output_path, 'rb') as reread:
+        reread.seek(start_pos, os.SEEK_SET)
+        rand_range = proportions[0] + proportions[2]
+        rand_threshold = proportions[2]
+        next_one = reread_number(reread)
+        for i in range(1 << input_size):
+            if i == next_one:
+                next_one = reread_number(reread)
+                continue
+            r = random.randint(1, rand_range)
+            if r <= rand_threshold:
+                output.write(str(i).encode('utf-8') + b' ')
+        output.seek(-1, os.SEEK_CUR)
+        if output.read(1) == b'\n':
+            output.write(b'-')
         else:
-            return '-'
-    print(format_values(minterms))
-    print(format_values(dont_cares))
+            output.seek(-1, os.SEEK_CUR)
+        output.write(b'\n')
 
 
 def main() -> None:
     if len(sys.argv) > 1 and sys.argv[1] == '--help':
         print_help()
         return
-    elif len(sys.argv) in (3, 6):
+    elif len(sys.argv) in (4, 7):
         input_size = int(sys.argv[1])
         if input_size not in range(33):
             print('INPUT_SIZE is out of range!', file=sys.stderr)
@@ -60,7 +86,7 @@ def main() -> None:
         if function_count < 0:
             print('FUNCTION_COUNT cannot be negative!', file=sys.stderr)
             sys.exit(1)
-        if len(sys.argv) == 6:
+        if len(sys.argv) == 7:
             proportions = (int(sys.argv[3]), int(sys.argv[4]), int(sys.argv[5]))
             if any(prop < 0 for prop in proportions):
                 print('Proportions cannot be negative!', file=sys.stderr)
@@ -70,14 +96,16 @@ def main() -> None:
                 sys.exit(1)
         else:
             proportions = (1, 2, 1)
+        output_path = sys.argv[-1];
     else:
-        print('Expected 2 or 5 arguments!', file=sys.stderr)
+        print('Expected 3 or 6 arguments!', file=sys.stderr)
         sys.exit(1)
     
-    print_inputs(input_size)
-    for _ in range(function_count):
-        print()
-        print_function(proportions, input_size)
+    with open(output_path, 'w+b') as output:
+        print_inputs(output, input_size)
+        for _ in range(function_count):
+            output.write(b'\n')
+            print_function(output, output_path, proportions, input_size)
 
 if __name__ == '__main__':
     main()
