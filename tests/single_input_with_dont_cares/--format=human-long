@@ -13,7 +13,7 @@ best fit:
 solution:
 <False>
 
---- 0 must be F ---
+--- zero must be F ---
 
 goal:
    
@@ -28,7 +28,7 @@ best fit:
 solution:
 <False>
 
---- 1 must be F ---
+--- one must be F ---
 
 goal:
    
@@ -43,7 +43,7 @@ best fit:
 solution:
 <False>
 
---- 0 must be T ---
+--- zero must be T ---
 
 goal:
    
@@ -58,7 +58,7 @@ best fit:
 solution:
 <True>
 
---- 1 must be T ---
+--- one must be T ---
 
 goal:
    
@@ -79,8 +79,8 @@ Negated inputs: <none>
 Products:
 Sums:
 	"don't care" = <False>
-	"0 must be F" = <False>
-	"1 must be F" = <False>
-	"0 must be T" = <True>
-	"1 must be T" = <True>
+	"zero must be F" = <False>
+	"one must be F" = <False>
+	"zero must be T" = <True>
+	"one must be T" = <True>
 Gate scores: NOTs = 0, ANDs = 0, ORs = 0
