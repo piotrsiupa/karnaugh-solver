@@ -1,34 +1,39 @@
 #pragma once
 
+#include <stdexcept>
 #include <istream>
 #include <string>
-#include <vector>
 
 #include "Progress.hh"
+#include "Minterm.hh"
 
 
 class Input
 {
-	enum class State
-	{
-		NOT_LOADED,
-		LOADED,
-		ERROR,
-	};
-	
 	std::istream &istream;
-	std::string line;
-	State state = State::NOT_LOADED;
+	char firstChar = '\n';
+	static Minterm maxMintermForMultiplying;
 	
-	void trimLine();
-	void load(Progress *const progress);
+	[[noreturn]] static void throwInputError(Progress *const progress);
+	inline char getChar(Progress *const progress);
 	
 public:
+	class Error : std::runtime_error
+	{
+	public:
+		using std::runtime_error::runtime_error;
+	};
+	
 	Input(std::istream &istream) : istream(istream) {}
 	
-	bool hasError(Progress *const progress = nullptr);
-	bool isEmpty() const { return line.empty(); }
-	bool isName() const;
-	std::string popLine() { state = State::NOT_LOADED; return std::move(line); }
-	std::vector<std::string> popParts(Progress &progress);
+	static void recomputeMintermSize() { maxMintermForMultiplying = ::maxMinterm / 10; }
+	
+	[[nodiscard]] bool hasNext(Progress *const progress = nullptr);
+	[[nodiscard]] bool hasNextInLine(Progress *const progress = nullptr);
+	[[nodiscard]] bool isNextText() const;
+	[[nodiscard]] bool doesNextStartWithDash() const;
+	[[nodiscard]] std::string getLine(Progress *const progress = nullptr);
+	[[nodiscard]] std::string getWord(Progress *const progress = nullptr);
+	[[nodiscard]] Minterm getMinterm(Progress &progress);
+	[[nodiscard]] bool hasError() const;
 };

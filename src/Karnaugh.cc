@@ -86,43 +86,24 @@ void Karnaugh::prettyPrintSolution(const Implicants &solution)
 
 bool Karnaugh::loadMinterms(Minterms &minterms, Input &input, Progress &progress) const
 {
-	std::vector<std::string> parts;
+	if (input.doesNextStartWithDash())
 	{
-		const auto subtaskGuard = progress.enterSubtask("splitting input line");
-		progress.step(true);
-		parts = input.popParts(progress);
+		const std::string word = input.getWord(&progress);
+		if (word == "-" && !input.hasNextInLine(&progress))
+			return true;
+		progress.cerr() << "\"-\" cannot be followed by anything!\n";
+		return false;
 	}
 	
+	progress.step(true);
+	Minterm lastMinterm = 0;
+	const Progress::calcSubstepCompletion_t calcSubstepCompletion = [&lastMinterm = std::as_const(lastMinterm)](){ return static_cast<Progress::completion_t>(lastMinterm) / static_cast<Progress::completion_t>(::maxMinterm); };
+	do
 	{
-		const auto subtaskGuard = progress.enterSubtask("parsing numbers");
-		progress.step(true);
-		Progress::CountingSubsteps substeps = progress.makeCountingSubsteps(static_cast<Progress::completion_t>(parts.size()));
-		for (const std::string &string : parts)
-		{
-			substeps.substep();
-			try
-			{
-				const unsigned long n = std::stoul(string);
-				static_assert(sizeof(unsigned long) * CHAR_BIT >= ::maxBits);
-				if (n > ::maxMinterm)
-				{
-					progress.cerr() << '"' << string << "\" is too big!\n";
-					return false;
-				}
-				minterms.insert(n);
-			}
-			catch (std::invalid_argument &)
-			{
-				progress.cerr() << '"' << string << "\" is not a number!\n";
-				return false;
-			}
-			catch (std::out_of_range &)
-			{
-				progress.cerr() << '"' << string << "\" is out of range!\n";
-				return false;
-			}
-		}
-	}
+		progress.substep(calcSubstepCompletion);
+		lastMinterm = input.getMinterm(progress);
+		minterms.insert(lastMinterm);
+	} while (input.hasNextInLine(&progress));
 	return true;
 }
 
@@ -151,19 +132,15 @@ void Karnaugh::validate(const solutions_t &solutions) const
 bool Karnaugh::loadData(Input &input)
 {
 	const std::string progressName = "Loading function \"" + functionName + '"';
-	Progress progress(Progress::Stage::LOADING, progressName.c_str(), 5, !options::prompt.getValue());
+	Progress progress(Progress::Stage::LOADING, progressName.c_str(), 2, !options::prompt.getValue());
 	
-	if (input.hasError(&progress))
-		return false;
-	nameIsCustom = input.isName();
+	nameIsCustom = input.isNextText();
 	if (nameIsCustom)
-		functionName = input.popLine();
+		functionName = input.getLine(&progress);
 	
 	if (nameIsCustom && options::prompt.getValue())
 		std::cerr << "Enter a list of minterms of the function \"" << functionName << "\":\n";
-	if (input.hasError(&progress))
-		return false;
-	if (input.isEmpty())
+	if (!input.hasNext(&progress))
 	{
 		progress.cerr() << "A list of minterms is mandatory!\n";
 		return false;
@@ -179,9 +156,7 @@ bool Karnaugh::loadData(Input &input)
 		else
 			std::cerr << ":\n";
 	}
-	if (input.hasError(&progress))
-		return false;
-	if (!input.isEmpty())
+	if (input.hasNext(&progress))
 		if (!loadMinterms(allowedMinterms, input, progress))
 			return false;
 	

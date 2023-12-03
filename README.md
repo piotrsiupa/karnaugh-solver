@@ -103,9 +103,9 @@ The description of inputs is either a list of their names or just their count.
 
 Input names, minterms and don't-cares are lists of numbers separated by whitespaces and/or and punctuation characters except `-` and `_`. (A single dash may be used to indicate an empty list.)
 
-Lines with any letters in them are considered to contain names.
-
 Leading and trailing whitespaces are stripped.
+
+Lines stating with a letter or an underscore are considered to contain names.
 
 Empty lines and lines starting with `#` (comments) are ignored.
 

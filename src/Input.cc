@@ -1,73 +1,153 @@
 #include "./Input.hh"
 
 #include <algorithm>
-#include <iostream>
-#include <regex>
-#include <utility>
+#include <cctype>
 
 
-void Input::trimLine()
+Minterm Input::maxMintermForMultiplying;
+
+void Input::throwInputError(Progress *const progress)
 {
-    line.erase(line.begin(), std::find_if(line.begin(), line.end(), [](unsigned char ch) { return !std::isspace(ch); }));
-    line.erase(std::find_if(line.rbegin(), line.rend(), [](unsigned char ch) { return !std::isspace(ch); }).base(), line.end());
+	if (progress == nullptr)
+		std::cerr << "Cannot read input!\n";
+	else
+		progress->cerr() << "Cannot read input!\n";
+	throw Error("input error");
 }
 
-void Input::load(Progress *const progress)
+char Input::getChar(Progress *const progress)
 {
-	if (istream.eof())
+	char c;
+	istream.get(c);
+	if (!istream)
 	{
-		line.clear();
-		state = State::LOADED;
-		return;
-	}
-	do
-	{
-		std::getline(istream, line);
 		if (istream.eof())
-			break;
-		if (!istream)
-		{
-			if (progress != nullptr)
-				progress->cerr() << "Cannot read from stdin!\n";
-			else
-				std::cerr << "Cannot read from stdin!\n";
-			state = State::ERROR;
-			return;
-		}
-		trimLine();
-	} while (line.empty() || line.front() == '#');
-	state = State::LOADED;
-}
-
-bool Input::hasError(Progress *const progress)
-{
-	if (state == State::NOT_LOADED)
-		load(progress);
-	return state == State::ERROR;
-}
-
-
-bool Input::isName() const
-{
-	return std::any_of(line.cbegin(), line.cend(), [](const char c){ return std::isalpha(c); });
-}
-
-std::vector<std::string> Input::popParts(Progress &progress)
-{
-	state = State::NOT_LOADED;
-	std::vector<std::string> parts;
-	if (line == "-")
-		return parts;
-	static const std::regex separator("\\s*(?![-_])[[:punct:]]\\s*|\\s+");
-	static const std::sregex_token_iterator rend;
-	std::sregex_token_iterator::value_type match;
-	const Progress::calcSubstepCompletion_t calcSubstepCompletion = [&line = std::as_const(line), &match = std::as_const(match)](){ return static_cast<Progress::completion_t>(match.second - line.cbegin()) / static_cast<Progress::completion_t>(line.size()); };
-	for (std::sregex_token_iterator iter(line.cbegin(), line.cend(), separator, -1); iter != rend; ++iter)
-	{
-		match = *iter;
-		progress.substep(calcSubstepCompletion);
-		if (match.length() != 0)
-			parts.emplace_back(match);
+			return '\0';
+		throwInputError(progress);
 	}
-	return parts;
+	return c;
+}
+
+bool Input::hasNext(Progress *const progress)
+{
+	while (true)
+	{
+		if (firstChar == '\0')
+		{
+			return false;
+		}
+		else if (firstChar == '#')
+		{
+			while (true)
+			{
+				firstChar = getChar(progress);
+				if (firstChar == '\0')
+					return false;
+				if (firstChar == '\n')
+					break;
+			}
+		}
+		else if (!std::isspace(firstChar) && (firstChar == '-' || firstChar == '_' || !std::ispunct(firstChar)))
+		{
+			return true;
+		}
+		firstChar = getChar(progress);
+	}
+}
+
+bool Input::hasNextInLine(Progress *const progress)
+{
+	while (true)
+	{
+		if (firstChar == '\0' || firstChar == '\n')
+			return false;
+		if (!std::isspace(firstChar) && (firstChar == '-' || firstChar == '_' || !std::ispunct(firstChar)))
+			return true;
+		firstChar = getChar(progress);
+	}
+}
+
+bool Input::isNextText() const
+{
+	return firstChar == '_' || std::isalpha(firstChar);
+}
+
+bool Input::doesNextStartWithDash() const
+{
+	return firstChar == '-';
+}
+
+std::string Input::getLine(Progress *const progress)
+{
+	std::string line(1, firstChar);
+	char c;
+	while (true)
+	{
+		c = getChar(progress);
+		if (c == '\n' || c == '\0')
+			break;
+		line += c;
+	}
+	firstChar = c;
+    line.erase(std::find_if(line.rbegin(), line.rend(), [](unsigned char ch) { return !std::isspace(ch); }).base(), line.end());
+	return line;
+}
+
+std::string Input::getWord(Progress *const progress)
+{
+	std::string word(1, firstChar);
+	char c;
+	while (true)
+	{
+		c = getChar(progress);
+		if (std::isspace(c) || (c != '-' && c != '_' && std::ispunct(c)) || c == '\0')
+			break;
+		word += c;
+	}
+	firstChar = c;
+	return word;
+}
+
+Minterm Input::getMinterm(Progress &progress)
+{
+	Minterm minterm = 0;
+	char c = firstChar;
+	while (true)
+	{
+		if (!std::isdigit(c))
+		{
+			progress.cerr() << '"' << c << "\" is not a digit!\n";
+			throw Error("not a digit");
+		}
+		if (minterm > maxMintermForMultiplying)
+		{
+			too_big:
+			auto cerr = progress.cerr();
+			cerr << '"' << minterm;
+			while (!std::isspace(c) && (c == '-' || c == '_' || !std::ispunct(c)) && c != '\0')
+			{
+				cerr << c;
+				c = getChar(&progress);
+			}
+			cerr << "\" is too big!\n";
+			throw Error("number too big");
+		}
+		minterm *= 10;
+		if (::maxMinterm - minterm < static_cast<Minterm>(c - '0'))
+		{
+			minterm /= 10;
+			goto too_big;
+		}
+		minterm += c - '0';
+		c = getChar(&progress);
+		if (std::isspace(c) || (c != '-' && c != '_' && std::ispunct(c)) || c == '\0')
+			break;
+	}
+	firstChar = c;
+	return minterm;
+}
+
+bool Input::hasError() const
+{
+	return istream.bad();
 }
