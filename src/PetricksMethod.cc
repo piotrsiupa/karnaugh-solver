@@ -39,29 +39,36 @@ Implicants PetricksMethod<INDEX_T>::extractEssentials(const std::string &functio
 	Progress::CountingSubsteps substeps = progress.makeCountingSubsteps(static_cast<Progress::completion_t>(minterms.size()));
 	
 	Implicants essentials;
-	for (typename minterms_t::const_iterator iter = minterms.cbegin(); iter != minterms.cend();)
+	for (std::size_t i = 0; i != minterms.size();)
 	{
 		substeps.substep();
-		const index_t essentialPrimeImplicantIndex = findEssentialPrimeImplicantIndex(*iter);
+		const index_t essentialPrimeImplicantIndex = findEssentialPrimeImplicantIndex(minterms[i]);
 		if (essentialPrimeImplicantIndex == NO_INDEX)
 		{
-			++iter;
+			++i;
 			continue;
 		}
 		essentials.emplace_back(std::move(primeImplicants[essentialPrimeImplicantIndex]));
 		primeImplicants.erase(primeImplicants.begin() + essentialPrimeImplicantIndex);
 		const Implicant &primeImplicant = essentials.back();
-		for (typename minterms_t::const_iterator jiter = minterms.cbegin(); jiter != iter;)
-			if (primeImplicant.covers(*jiter))
-				jiter = minterms.erase(jiter);
+		for (std::size_t j = 0; j != i;)
+		{
+			if (primeImplicant.covers(minterms[j]))
+			{
+				minterms.erase(std::next(minterms.begin(), j));
+				--i;
+			}
 			else
-				++jiter;
-		for (typename minterms_t::const_iterator jiter = std::next(iter); jiter != minterms.cend();)
-			if (primeImplicant.covers(*jiter))
-				jiter = minterms.erase(jiter);
+			{
+				++j;
+			}
+		}
+		for (std::size_t j = i + 1; j != minterms.size();)
+			if (primeImplicant.covers(minterms[j]))
+				minterms.erase(std::next(minterms.begin(), j));
 			else
-				++jiter;
-		iter = minterms.erase(iter);
+				++j;
+		minterms.erase(std::next(minterms.begin(), i));
 	}
 	return essentials;
 }

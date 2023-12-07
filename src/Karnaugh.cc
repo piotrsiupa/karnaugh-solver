@@ -1,5 +1,6 @@
 #include "./Karnaugh.hh"
 
+#include <algorithm>
 #include <cassert>
 #include <cctype>
 #include <iostream>
@@ -9,6 +10,54 @@
 
 
 std::size_t Karnaugh::nameCount = 0;
+
+Minterms Karnaugh::extractDuplicates(Minterms &minterms)
+{
+	if (minterms.empty())
+        return {};
+	
+	const Minterms::const_iterator last = minterms.end();
+	
+    Minterms::iterator current = minterms.begin();
+    while (true)
+	{
+		const Minterms::iterator next = std::next(current);
+		if (next == last)
+			return {};
+		if (*current == *next)
+			break;
+		current = next;
+	}
+	
+	Minterms duplicates;
+	Minterms::iterator result = current;
+	while (true)
+	{
+		const Minterms::iterator next = std::next(current);
+		if (next == last)
+			break;
+		if (*current == *next)
+			duplicates.emplace_back(std::move(*next));
+		else
+			*++result = std::move(*next);
+		current = next;
+	}
+	minterms.erase(std::next(result), last);
+    return duplicates;
+}
+
+void Karnaugh::printMinterms(const Minterms &minterms, Progress::CerrGuard &cerr)
+{
+	bool first = true;
+	for (const Minterm &minterm : minterms)
+	{
+		if (first)
+			first = false;
+		else
+			cerr << ',';
+		cerr << ' ' << minterm;
+	}
+}
 
 Karnaugh::grayCode_t Karnaugh::makeGrayCode(const bits_t bitCount)
 {
@@ -61,7 +110,7 @@ void Karnaugh::prettyPrintTable(const Minterms &target, const Minterms &allowed)
 				for (int i = 0; i != hBits; ++i)
 					std::cout << ' ';
 			const Minterm minterm = (x << hBits) | y;
-			std::cout << (target.find(minterm) != target.cend() ? 'T' : (allowed.find(minterm) != allowed.cend() ? '-' : 'F'));
+			std::cout << (std::find(target.cbegin(), target.cend(), minterm) != target.cend() ? 'T' : (std::find(allowed.cbegin(), allowed.cend(), minterm) != allowed.cend() ? '-' : 'F'));
 		}
 		std::cout << '\n';
 	}
@@ -79,12 +128,12 @@ void Karnaugh::prettyPrintSolution(const Implicants &solution)
 	for (const auto &implicant : solution)
 	{
 		const auto newMinterms = implicant.findMinterms();
-		minterms.insert(newMinterms.cbegin(), newMinterms.end());
+		minterms.insert(minterms.end(), newMinterms.begin(), newMinterms.end());
 	}
 	prettyPrintTable(minterms);
 }
 
-bool Karnaugh::loadMinterms(Minterms &minterms, Input &input, Progress &progress) const
+bool Karnaugh::loadMinterms(Minterms &minterms, Input &input, Progress &progress, const std::string &name) const
 {
 	if (input.doesNextStartWithDash())
 	{
@@ -95,15 +144,37 @@ bool Karnaugh::loadMinterms(Minterms &minterms, Input &input, Progress &progress
 		return false;
 	}
 	
-	progress.step(true);
-	Minterm lastMinterm = 0;
-	const Progress::calcSubstepCompletion_t calcSubstepCompletion = [&lastMinterm = std::as_const(lastMinterm)](){ return static_cast<Progress::completion_t>(lastMinterm) / static_cast<Progress::completion_t>(::maxMinterm); };
-	do
 	{
-		progress.substep(calcSubstepCompletion);
-		lastMinterm = input.getMinterm(progress);
-		minterms.insert(lastMinterm);
-	} while (input.hasNextInLine(&progress));
+		const std::string subtaskName = "loading " + name;
+		const auto subtaskGuard = progress.enterSubtask(subtaskName.c_str());
+		progress.step(true);
+		Minterm lastMinterm = 0;
+		const Progress::calcSubstepCompletion_t calcSubstepCompletion = [&lastMinterm = std::as_const(lastMinterm)](){ return static_cast<Progress::completion_t>(lastMinterm) / static_cast<Progress::completion_t>(::maxMinterm); };
+		do
+		{
+			progress.substep(calcSubstepCompletion);
+			lastMinterm = input.getMinterm(progress);
+			minterms.push_back(lastMinterm);
+		} while (input.hasNextInLine(&progress));
+	}
+	
+	{
+		const std::string subtaskName = "sorting " + name + " (*)";
+		const auto subtaskGuard = progress.enterSubtask(subtaskName.c_str());
+		progress.step(true);
+		progress.substep([](){ return 0.0; }, true);
+		std::sort(minterms.begin(), minterms.end());
+		progress.substep([](){ return 0.8; }, true);
+		const Minterms duplicates = extractDuplicates(minterms);
+		if (!duplicates.empty())
+		{
+			Progress::CerrGuard cerr = progress.cerr();
+			cerr << "There are duplicates on the " << name << " list:";
+			printMinterms(duplicates, cerr);
+			cerr << "! (They will be ignored.)\n";
+		}
+		minterms.shrink_to_fit();
+	}
 	return true;
 }
 
@@ -118,9 +189,9 @@ void Karnaugh::validate(const solutions_t &solutions) const
 		for (Minterm i = 0;; ++i)
 		{
 			progress.substep([i = std::as_const(i)](){ return static_cast<Progress::completion_t>(i) / (static_cast<Progress::completion_t>(::maxMinterm) + 1.0); });
-			if (targetMinterms.find(i) != targetMinterms.cend())
+			if (std::find(targetMinterms.cbegin(), targetMinterms.cend(), i) != targetMinterms.cend())
 				assert(solution.covers(i));
-			else if (allowedMinterms.find(i) == allowedMinterms.cend())
+			else if (std::find(allowedMinterms.cbegin(), allowedMinterms.cend(), i) == allowedMinterms.cend())
 				assert(!solution.covers(i));
 			if (i == ::maxMinterm)
 				break;
@@ -132,7 +203,7 @@ void Karnaugh::validate(const solutions_t &solutions) const
 bool Karnaugh::loadData(Input &input)
 {
 	const std::string progressName = "Loading function \"" + functionName + '"';
-	Progress progress(Progress::Stage::LOADING, progressName.c_str(), 2, !options::prompt.getValue());
+	Progress progress(Progress::Stage::LOADING, progressName.c_str(), 5, !options::prompt.getValue());
 	
 	nameIsCustom = input.isNextText();
 	if (nameIsCustom)
@@ -145,7 +216,7 @@ bool Karnaugh::loadData(Input &input)
 		progress.cerr() << "A list of minterms is mandatory!\n";
 		return false;
 	}
-	if (!loadMinterms(targetMinterms, input, progress))
+	if (!loadMinterms(targetMinterms, input, progress, "minterms"))
 		return false;
 	
 	if (options::prompt.getValue())
@@ -157,19 +228,26 @@ bool Karnaugh::loadData(Input &input)
 			std::cerr << ":\n";
 	}
 	if (input.hasNext(&progress))
-		if (!loadMinterms(allowedMinterms, input, progress))
+		if (!loadMinterms(allowedMinterms, input, progress, "don't cares"))
 			return false;
 	
-	const auto conflictsSubtask = progress.enterSubtask("checking for conflicts");
-	progress.step(true);
-	Progress::CountingSubsteps substeps = progress.makeCountingSubsteps(static_cast<Progress::completion_t>(targetMinterms.size()));
-	for (const Minterm &targetMinterm : targetMinterms)
 	{
-		substeps.substep();
-		if (allowedMinterms.find(targetMinterm) == allowedMinterms.cend())
-			allowedMinterms.insert(targetMinterm);
-		else
-			progress.cerr() << targetMinterm << " on the \"don't care\" list of \"" << functionName << "\" will be ignored because it is already a minterm!\n";
+		const auto conflictsSubtask = progress.enterSubtask("listing possible minterms (*)");
+		progress.step(true);
+		progress.substep([](){ return 0.0; }, true);
+		allowedMinterms.reserve(targetMinterms.size() + allowedMinterms.size());
+		allowedMinterms.insert(allowedMinterms.end(), targetMinterms.cbegin(), targetMinterms.cend());
+		progress.substep([](){ return 0.1; }, true);
+		std::sort(allowedMinterms.begin(), allowedMinterms.end());
+		progress.substep([](){ return 0.8; }, true);
+		const Minterms duplicates = extractDuplicates(allowedMinterms);
+		if (!duplicates.empty())
+		{
+			Progress::CerrGuard cerr = progress.cerr();
+			cerr << "There are numbers in \"don't cares\" that are already minterms:";
+			printMinterms(duplicates, cerr);
+			cerr << "! (They will be ignored.)\n";
+		}
 	}
 	
 	return true;

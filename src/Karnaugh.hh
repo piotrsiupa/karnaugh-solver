@@ -26,13 +26,16 @@ private:
 	std::string functionName;
 	Minterms targetMinterms, allowedMinterms;
 	
+	static Minterms extractDuplicates(Minterms &minterms);
+	static void printMinterms(const Minterms &minterms, Progress::CerrGuard &cerr);
+	
 	static grayCode_t makeGrayCode(const bits_t bitCount);
 	static void printBits(const Minterm minterm, const bits_t bitCount);
 	static void prettyPrintTable(const Minterms &target, const Minterms &allowed = {});
 	void prettyPrintTable() const;
 	static void prettyPrintSolution(const Implicants &solution);
 	
-	bool loadMinterms(Minterms &minterms, Input &input, Progress &progress) const;
+	bool loadMinterms(Minterms &minterms, Input &input, Progress &progress, const std::string &name) const;
 #ifndef NDEBUG
 	void validate(const solutions_t &solutions) const;
 #endif

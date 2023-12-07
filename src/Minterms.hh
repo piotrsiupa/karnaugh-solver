@@ -1,8 +1,8 @@
 #pragma once
 
-#include <set>
+#include <vector>
 
 #include "Minterm.hh"
 
 
-using Minterms = std::set<Minterm>;
+using Minterms = std::vector<Minterm>;
