@@ -94,7 +94,7 @@ void Implicants::printMath(std::ostream &o) const
 				switch (options::outputFormat.getValue())
 				{
 				case options::OutputFormat::MATH_FORMAL:
-					o << u8" \u2228 ";
+					o << " \u2228 ";
 					break;
 				case options::OutputFormat::MATH_ASCII:
 					o << " \\/ ";
