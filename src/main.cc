@@ -170,7 +170,7 @@ static IstreamUniquePtr prepareIstream()
 		else
 		{
 			::inputFilePath = options::freeArgs.front();
-			IstreamUniquePtr ifstream(new std::ifstream(path), deleteIstream);
+			IstreamUniquePtr ifstream(new std::ifstream(path, std::ios_base::in | std::ios_base::binary), deleteIstream);
 			if (!*ifstream)
 			{
 				std::cerr << "Cannot open \"" << path << "\"!\n";
