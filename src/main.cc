@@ -1,4 +1,5 @@
 #include <fstream>
+#include <ios>
 #include <iostream>
 #include <istream>
 #include <memory>
@@ -154,6 +155,9 @@ static IstreamUniquePtr prepareIstream()
 {
 	if (options::freeArgs.empty())
 	{
+		use_stdin:
+		std::ios_base::sync_with_stdio(false);
+		std::cin.tie(nullptr);
 		return {&std::cin, deleteIstream};
 	}
 	else if (options::freeArgs.size() == 1)
@@ -161,7 +165,7 @@ static IstreamUniquePtr prepareIstream()
 		const std::string path(options::freeArgs.front());
 		if (path == "-")
 		{
-			return {&std::cin, deleteIstream};
+			goto use_stdin;
 		}
 		else
 		{
