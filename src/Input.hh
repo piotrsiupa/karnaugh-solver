@@ -17,9 +17,10 @@ class Input
 	char buffer[bufferCapacity];
 	std::uint16_t bufferSize = bufferCapacity, bufferPos = bufferCapacity;
 	
-	std::istream &istream;
-	char firstChar = '\n';
 	static Minterm maxMintermForMultiplying;
+	
+	std::istream &istream;
+	char currentChar = '\n';
 	
 	[[noreturn]] static void throwInputError(Progress *const progress);
 	inline char getChar(Progress *const progress);
@@ -68,26 +69,26 @@ bool Input::hasNext(Progress *const progress)
 {
 	while (true)
 	{
-		if (firstChar == '\0') [[unlikely]]
+		if (currentChar == '\0') [[unlikely]]
 		{
 			return false;
 		}
-		else if (firstChar == '#')
+		else if (currentChar == '#')
 		{
 			while (true)
 			{
-				firstChar = getChar(progress);
-				if (firstChar == '\0') [[unlikely]]
+				currentChar = getChar(progress);
+				if (currentChar == '\0') [[unlikely]]
 					return false;
-				else if (firstChar == '\n') [[unlikely]]
+				else if (currentChar == '\n') [[unlikely]]
 					break;
 			}
 		}
-		else if (!std::isspace(firstChar) && (firstChar == '-' || firstChar == '_' || !std::ispunct(firstChar)))
+		else if (!std::isspace(currentChar) && (currentChar == '-' || currentChar == '_' || !std::ispunct(currentChar)))
 		{
 			return true;
 		}
-		firstChar = getChar(progress);
+		currentChar = getChar(progress);
 	}
 }
 
@@ -95,64 +96,59 @@ bool Input::hasNextInLine(Progress *const progress)
 {
 	while (true)
 	{
-		if (firstChar == '\0' || firstChar == '\n') [[unlikely]]
+		if (currentChar == '\0' || currentChar == '\n') [[unlikely]]
 			return false;
-		if (!std::isspace(firstChar) && (firstChar == '-' || firstChar == '_' || !std::ispunct(firstChar)))
+		if (!std::isspace(currentChar) && (currentChar == '-' || currentChar == '_' || !std::ispunct(currentChar)))
 			return true;
-		firstChar = getChar(progress);
+		currentChar = getChar(progress);
 	}
 }
 
 bool Input::isNextText() const
 {
-	return firstChar == '_' || std::isalpha(firstChar);
+	return currentChar == '_' || std::isalpha(currentChar);
 }
 
 bool Input::doesNextStartWithDash() const
 {
-	return firstChar == '-';
+	return currentChar == '-';
 }
 
 std::string Input::getLine(Progress *const progress)
 {
-	std::string line(1, firstChar);
-	char c;
+	std::string line(1, currentChar);
 	while (true)
 	{
-		c = getChar(progress);
-		if (c == '\n' || c == '\0') [[unlikely]]
+		currentChar = getChar(progress);
+		if (currentChar == '\n' || currentChar == '\0') [[unlikely]]
 			break;
-		line += c;
+		line += currentChar;
 	}
-	firstChar = c;
     line.erase(std::find_if(line.rbegin(), line.rend(), [](unsigned char ch) { return !std::isspace(ch); }).base(), line.end());
 	return line;
 }
 
 std::string Input::getWord(Progress *const progress)
 {
-	std::string word(1, firstChar);
-	char c;
+	std::string word(1, currentChar);
 	while (true)
 	{
-		c = getChar(progress);
-		if (std::isspace(c) || (c != '-' && c != '_' && std::ispunct(c)) || c == '\0') [[unlikely]]
+		currentChar = getChar(progress);
+		if (std::isspace(currentChar) || (currentChar != '-' && currentChar != '_' && std::ispunct(currentChar)) || currentChar == '\0') [[unlikely]]
 			break;
-		word += c;
+		word += currentChar;
 	}
-	firstChar = c;
 	return word;
 }
 
 Minterm Input::getMinterm(Progress &progress)
 {
 	Minterm minterm = 0;
-	char c = firstChar;
 	while (true)
 	{
-		if (!std::isdigit(c)) [[unlikely]]
+		if (!std::isdigit(currentChar)) [[unlikely]]
 		{
-			progress.cerr() << '"' << c << "\" is not a digit!\n";
+			progress.cerr() << '"' << currentChar << "\" is not a digit!\n";
 			throw Error("not a digit");
 		}
 		if (minterm > maxMintermForMultiplying) [[unlikely]]
@@ -160,25 +156,24 @@ Minterm Input::getMinterm(Progress &progress)
 			too_big:
 			auto cerr = progress.cerr();
 			cerr << '"' << minterm;
-			while (!std::isspace(c) && (c == '-' || c == '_' || !std::ispunct(c)) && c != '\0')
+			while (!std::isspace(currentChar) && (currentChar == '-' || currentChar == '_' || !std::ispunct(currentChar)) && currentChar != '\0')
 			{
-				cerr << c;
-				c = getChar(&progress);
+				cerr << currentChar;
+				currentChar = getChar(&progress);
 			}
 			cerr << "\" is too big!\n";
 			throw Error("number too big");
 		}
 		minterm *= 10;
-		if (::maxMinterm - minterm < static_cast<Minterm>(c - '0')) [[unlikely]]
+		if (::maxMinterm - minterm < static_cast<Minterm>(currentChar - '0')) [[unlikely]]
 		{
 			minterm /= 10;
 			goto too_big;
 		}
-		minterm += c - '0';
-		c = getChar(&progress);
-		if (std::isspace(c) || (c != '-' && c != '_' && std::ispunct(c)) || c == '\0') [[unlikely]]
+		minterm += currentChar - '0';
+		currentChar = getChar(&progress);
+		if (std::isspace(currentChar) || (currentChar != '-' && currentChar != '_' && std::ispunct(currentChar)) || currentChar == '\0') [[unlikely]]
 			break;
 	}
-	firstChar = c;
 	return minterm;
 }
