@@ -172,7 +172,8 @@ bool Karnaugh::loadMinterms(Minterms &minterms, Input &input, Progress &progress
 		const auto subtaskGuard = progress.enterSubtask(subtaskName.c_str());
 		progress.step(true);
 		progress.substep([](){ return 0.0; }, true);
-		std::sort(minterms.begin(), minterms.end());
+		if (!std::is_sorted(minterms.cbegin(), minterms.cend()))
+			std::sort(minterms.begin(), minterms.end());
 		progress.substep([](){ return 0.8; }, true);
 		const Minterms duplicates = extractDuplicates(minterms);
 		if (!duplicates.empty())
