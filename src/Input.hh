@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cctype>
+#include <cstdint>
 #include <istream>
 #include <stdexcept>
 #include <string>
@@ -12,6 +13,10 @@
 
 class Input
 {
+	static constexpr std::uint16_t bufferCapacity = 4096;
+	char buffer[bufferCapacity];
+	std::uint16_t bufferSize = bufferCapacity, bufferPos = bufferCapacity;
+	
 	std::istream &istream;
 	char firstChar = '\n';
 	static Minterm maxMintermForMultiplying;
@@ -42,15 +47,21 @@ public:
 
 char Input::getChar(Progress *const progress)
 {
-	char c;
-	istream.get(c);
-	if (!istream) [[unlikely]]
+	if (bufferPos == bufferSize) [[unlikely]]
 	{
-		if (istream.eof()) [[likely]]
-			return '\0';
-		throwInputError(progress);
+		istream.read(buffer, bufferCapacity);
+		if (!istream) [[unlikely]]
+		{
+			if (!istream.eof()) [[unlikely]]
+				throwInputError(progress);
+			bufferSize = istream.gcount();
+			if (bufferSize == 0)
+				return '\0';
+			istream.clear();
+		}
+		bufferPos = 0;
 	}
-	return c;
+	return buffer[bufferPos++];
 }
 
 bool Input::hasNext(Progress *const progress)
