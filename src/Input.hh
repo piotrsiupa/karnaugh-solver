@@ -44,9 +44,9 @@ char Input::getChar(Progress *const progress)
 {
 	char c;
 	istream.get(c);
-	if (!istream)
+	if (!istream) [[unlikely]]
 	{
-		if (istream.eof())
+		if (istream.eof()) [[likely]]
 			return '\0';
 		throwInputError(progress);
 	}
@@ -57,7 +57,7 @@ bool Input::hasNext(Progress *const progress)
 {
 	while (true)
 	{
-		if (firstChar == '\0')
+		if (firstChar == '\0') [[unlikely]]
 		{
 			return false;
 		}
@@ -66,9 +66,9 @@ bool Input::hasNext(Progress *const progress)
 			while (true)
 			{
 				firstChar = getChar(progress);
-				if (firstChar == '\0')
+				if (firstChar == '\0') [[unlikely]]
 					return false;
-				if (firstChar == '\n')
+				else if (firstChar == '\n') [[unlikely]]
 					break;
 			}
 		}
@@ -84,7 +84,7 @@ bool Input::hasNextInLine(Progress *const progress)
 {
 	while (true)
 	{
-		if (firstChar == '\0' || firstChar == '\n')
+		if (firstChar == '\0' || firstChar == '\n') [[unlikely]]
 			return false;
 		if (!std::isspace(firstChar) && (firstChar == '-' || firstChar == '_' || !std::ispunct(firstChar)))
 			return true;
@@ -109,7 +109,7 @@ std::string Input::getLine(Progress *const progress)
 	while (true)
 	{
 		c = getChar(progress);
-		if (c == '\n' || c == '\0')
+		if (c == '\n' || c == '\0') [[unlikely]]
 			break;
 		line += c;
 	}
@@ -125,7 +125,7 @@ std::string Input::getWord(Progress *const progress)
 	while (true)
 	{
 		c = getChar(progress);
-		if (std::isspace(c) || (c != '-' && c != '_' && std::ispunct(c)) || c == '\0')
+		if (std::isspace(c) || (c != '-' && c != '_' && std::ispunct(c)) || c == '\0') [[unlikely]]
 			break;
 		word += c;
 	}
@@ -139,12 +139,12 @@ Minterm Input::getMinterm(Progress &progress)
 	char c = firstChar;
 	while (true)
 	{
-		if (!std::isdigit(c))
+		if (!std::isdigit(c)) [[unlikely]]
 		{
 			progress.cerr() << '"' << c << "\" is not a digit!\n";
 			throw Error("not a digit");
 		}
-		if (minterm > maxMintermForMultiplying)
+		if (minterm > maxMintermForMultiplying) [[unlikely]]
 		{
 			too_big:
 			auto cerr = progress.cerr();
@@ -158,14 +158,14 @@ Minterm Input::getMinterm(Progress &progress)
 			throw Error("number too big");
 		}
 		minterm *= 10;
-		if (::maxMinterm - minterm < static_cast<Minterm>(c - '0'))
+		if (::maxMinterm - minterm < static_cast<Minterm>(c - '0')) [[unlikely]]
 		{
 			minterm /= 10;
 			goto too_big;
 		}
 		minterm += c - '0';
 		c = getChar(&progress);
-		if (std::isspace(c) || (c != '-' && c != '_' && std::ispunct(c)) || c == '\0')
+		if (std::isspace(c) || (c != '-' && c != '_' && std::ispunct(c)) || c == '\0') [[unlikely]]
 			break;
 	}
 	firstChar = c;

@@ -52,7 +52,7 @@ private:
 	void reportStage() const;
 	void reportProgress();
 	void reportProgress(const calcSubstepCompletion_t &calcSubstepCompletion) { completion = calcSubstepCompletion() / allSteps + calcStepCompletion(); return reportProgress(); }
-	void handleStep(const calcSubstepCompletion_t &calcSubstepCompletion, const bool force);
+	void handleStep(const calcSubstepCompletion_t &calcSubstepCompletion, const bool force) { if (checkReportInterval(force)) reportProgress(calcSubstepCompletion); }
 	
 	completion_t calcStepCompletion() const { return static_cast<completion_t>(stepsSoFar - 1) / allSteps; }
 	
@@ -106,7 +106,7 @@ public:
 	[[nodiscard]] CerrGuard cerr() { return {*this}; }
 	
 	void step(const bool force = false);
-	void substep(const calcSubstepCompletion_t &calcSubstepCompletion, const bool force = false) { if (visible) { if (--substepsToSkip == 0 || force) handleStep(calcSubstepCompletion, force); ++substepsSoFar; } }
+	void substep(const calcSubstepCompletion_t &calcSubstepCompletion, const bool force = false) { if (visible) { if (--substepsToSkip == 0 || force) [[unlikely]] handleStep(calcSubstepCompletion, force); ++substepsSoFar; } }
 	template<typename T = std::size_t>
 	[[nodiscard]] CountingSubsteps<T> makeCountingSubsteps(const completion_t n) { return {*this, n}; }
 	
