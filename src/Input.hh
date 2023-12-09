@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cctype>
+#include <cstddef>
 #include <cstdint>
 #include <istream>
 #include <stdexcept>
@@ -44,6 +45,9 @@ public:
 	[[nodiscard]] inline std::string getWord(Progress *const progress = nullptr);
 	[[nodiscard]] inline Minterm getMinterm(Progress &progress);
 	[[nodiscard]] inline bool hasError() const { return istream.bad(); }
+	
+	[[nodiscard]] bool isFile() const;
+	[[nodiscard]] std::size_t getRemainingFileSize(); // Only for files and may of-by-one at the begining / end of file.
 };
 
 char Input::getChar(Progress *const progress)
