@@ -237,18 +237,18 @@ bool Karnaugh::loadData(Input &input)
 		else
 			std::cerr << ":\n";
 	}
+	Minterms dontCares;
 	if (input.hasNext(&progress))
-		if (!loadMinterms(allowedMinterms, input, progress, "don't cares"))
+		if (!loadMinterms(dontCares, input, progress, "don't cares"))
 			return false;
 	
 	{
 		const auto conflictsSubtask = progress.enterSubtask("listing possible minterms (*)");
 		progress.step(true);
 		progress.substep([](){ return 0.0; }, true);
-		allowedMinterms.reserve(targetMinterms.size() + allowedMinterms.size());
-		allowedMinterms.insert(allowedMinterms.end(), targetMinterms.cbegin(), targetMinterms.cend());
-		progress.substep([](){ return 0.1; }, true);
-		std::sort(allowedMinterms.begin(), allowedMinterms.end());
+		allowedMinterms.resize(targetMinterms.size() + dontCares.size()); // C++ doesn't provide a variant of this function that doesn't 0-initialize.
+		progress.substep([](){ return 0.3; }, true);
+		std::merge(targetMinterms.cbegin(), targetMinterms.cend(), dontCares.cbegin(), dontCares.cend(), allowedMinterms.begin());
 		progress.substep([](){ return 0.8; }, true);
 		const Minterms duplicates = extractDuplicates(allowedMinterms);
 		if (!duplicates.empty())
