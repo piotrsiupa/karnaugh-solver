@@ -20,7 +20,7 @@ Progress::steps_t Progress::calcStepsToSkip(const double secondsToSkip, const do
 
 bool Progress::checkReportInterval(const bool force)
 {
-	if (substepsSoFar == 0)
+	if (substepsSoFar == 0) [[unlikely]]
 	{
 		substepsToSkip = 1;
 		return false;
@@ -111,7 +111,7 @@ void Progress::reportStage() const
 
 void Progress::reportProgress()
 {
-	if (!reported)
+	if (!reported) [[unlikely]]
 		reportStage();
 	
 	clearReport(false);
@@ -146,12 +146,6 @@ void Progress::reportProgress()
 	std::clog.copyfmt(oldClogState);
 	
 	reported = true;
-}
-
-void Progress::handleStep(const calcSubstepCompletion_t &calcSubstepCompletion, const bool force)
-{
-	if (checkReportInterval(force))
-		reportProgress(calcSubstepCompletion);
 }
 
 Progress::Progress(const Stage stage, const char processName[], const steps_t allSteps, const bool visible) :

@@ -139,9 +139,7 @@ bool Karnaughs::loadData(Input &input)
 	{
 		if (options::prompt.getValue())
 			std::cerr << "Either end the input or enter a name of the next function (optional) or a list of its minterms:\n";
-		if (input.hasError())
-			return false;
-		if (input.isEmpty())
+		if (!input.hasNext())
 			break;
 		karnaughs.push_back({});
 		if (!karnaughs.back().loadData(input))

@@ -8,6 +8,7 @@
 
 #include "Implicants.hh"
 #include "Minterm.hh"
+#include "Minterms.hh"
 #include "HasseDiagram.hh"
 #include "Progress.hh"
 
@@ -16,7 +17,6 @@ template<typename INDEX_T>
 class PetricksMethod
 {
 public:
-	using minterms_t = std::set<Minterm>;
 	using solutions_t = std::vector<Implicants>;
 	
 private:
@@ -26,10 +26,10 @@ private:
 	using sumOfProducts_t = std::vector<product_t>;
 	using productOfSumsOfProducts_t = std::vector<sumOfProducts_t>;
 	
-	minterms_t minterms;
+	Minterms minterms;
 	Implicants primeImplicants;
 	
-	PetricksMethod(minterms_t &&minterms, Implicants &&primeImplicants) : minterms(std::move(minterms)), primeImplicants(std::move(primeImplicants)) {}
+	PetricksMethod(Minterms &&minterms, Implicants &&primeImplicants) : minterms(std::move(minterms)), primeImplicants(std::move(primeImplicants)) {}
 	
 	index_t findEssentialPrimeImplicantIndex(const Minterm minterm);
 	Implicants extractEssentials(const std::string &functionName);
@@ -44,5 +44,5 @@ private:
 public:
 	static constexpr std::size_t MAX_PRIME_IMPL_COUNT = HasseDiagram<index_t>::MAX_VALUE;
 	
-	static solutions_t solve(minterms_t minterms, Implicants primeImplicants, const std::string &functionName) { return PetricksMethod(std::move(minterms), std::move(primeImplicants)).solve(functionName); }
+	static solutions_t solve(Minterms minterms, Implicants primeImplicants, const std::string &functionName) { return PetricksMethod(std::move(minterms), std::move(primeImplicants)).solve(functionName); }
 };

@@ -52,7 +52,7 @@ private:
 	void reportStage() const;
 	void reportProgress();
 	void reportProgress(const calcSubstepCompletion_t &calcSubstepCompletion) { completion = calcSubstepCompletion() / allSteps + calcStepCompletion(); return reportProgress(); }
-	void handleStep(const calcSubstepCompletion_t &calcSubstepCompletion, const bool force);
+	void handleStep(const calcSubstepCompletion_t &calcSubstepCompletion, const bool force) { if (checkReportInterval(force)) reportProgress(calcSubstepCompletion); }
 	
 	completion_t calcStepCompletion() const { return static_cast<completion_t>(stepsSoFar - 1) / allSteps; }
 	
@@ -62,10 +62,10 @@ public:
 		Progress &progress;
 		const bool reportedBefore;
 		CerrGuard(Progress &progress) : progress(progress), reportedBefore(progress.reported) { progress.clearReport(true); std::clog << std::flush; }
-		CerrGuard(const CerrGuard&) = delete;
-		CerrGuard& operator=(const CerrGuard&) = delete;
 		friend class Progress;
 	public:
+		CerrGuard(const CerrGuard&) = delete;
+		CerrGuard& operator=(const CerrGuard&) = delete;
 		~CerrGuard() { if (reportedBefore) progress.reportProgress(); }
 		template<typename T>
 		const CerrGuard& operator<<(T val) const { std::cerr << std::forward<T>(val); return *this; }
@@ -74,8 +74,8 @@ public:
 	class SubtaskGuard
 	{
 		Progress &progress;
-		friend class Progress;
 		SubtaskGuard(Progress &progress) : progress(progress) {}
+		friend class Progress;
 	public:
 		SubtaskGuard(const SubtaskGuard&) = delete;
 		SubtaskGuard& operator=(const SubtaskGuard&) = delete;
@@ -88,11 +88,11 @@ public:
 		Progress &progress;
 		T i = 0;
 		const calcSubstepCompletion_t calcCompletion;
-		friend class Progress;
 		CountingSubsteps(Progress &progress, const completion_t n) : progress(progress), calcCompletion([&i = std::as_const(i), n](){ return static_cast<completion_t>(i) / n; }) {}
+		friend class Progress;
+	public:
 		CountingSubsteps(const CountingSubsteps&) = delete;
 		CountingSubsteps& operator=(const CountingSubsteps&) = delete;
-	public:
 		void substep(const bool force = false) { progress.substep(calcCompletion, force); ++i; }
 		void substep(const T increment, const bool force = false) { progress.substep(calcCompletion, force); i += increment; }
 	};
@@ -106,7 +106,7 @@ public:
 	[[nodiscard]] CerrGuard cerr() { return {*this}; }
 	
 	void step(const bool force = false);
-	void substep(const calcSubstepCompletion_t &calcSubstepCompletion, const bool force = false) { if (visible) { if (--substepsToSkip == 0 || force) handleStep(calcSubstepCompletion, force); ++substepsSoFar; } }
+	void substep(const calcSubstepCompletion_t &calcSubstepCompletion, const bool force = false) { if (visible) { if (--substepsToSkip == 0 || force) [[unlikely]] handleStep(calcSubstepCompletion, force); ++substepsSoFar; } }
 	template<typename T = std::size_t>
 	[[nodiscard]] CountingSubsteps<T> makeCountingSubsteps(const completion_t n) { return {*this, n}; }
 	

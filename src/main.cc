@@ -1,4 +1,5 @@
 #include <fstream>
+#include <ios>
 #include <iostream>
 #include <istream>
 #include <memory>
@@ -9,7 +10,6 @@
 #include "Karnaughs.hh"
 #include "non-stdlib-stuff.hh"
 #include "options.hh"
-#include "Progress.hh"
 
 
 static void printHelp()
@@ -47,8 +47,8 @@ static void printHelp()
 			"The description of inputs is either a list of their names or just their count.\n"
 			"The functions are separated by line breaks and have the following format:\n[NAME <line-break>] LIST_OF_MINTERMS <line-break> LIST_OF_DONT_CARES\n"
 			"Input names, minterms and don't-cares are lists of numbers separated by\nwhitespaces and/or and punctuation characters except \"-\" and \"_\".\n(A single dash may be used to indicate an empty list.)\n"
-			"Lines with any letters in them are considered to contain names.\n"
 			"Leading and trailing whitespaces are stripped.\n"
+			"Lines stating with a letter or an underscore are considered to contain names.\n"
 			"Empty lines and lines starting with \"#\" are ignored.\n"
 			"\n"
 			"An example of input:\n"
@@ -83,19 +83,20 @@ static bool parseInputBits(Input &input)
 		std::cerr << "Enter a list of input variables or their count:\n";
 	if (input.hasError())
 		return false;
-	if (input.isEmpty())
+	if (!input.hasNext())
 	{
 		std::cerr << "The description of inputs is missing!\n";
 		return false;
 	}
-	if (input.isName())
+	if (input.isNextText())
 	{
-		Progress progress(Progress::Stage::LOADING, "Loading input names", 1);
-		progress.step();
-		Names::names_t names = input.popParts(progress);
+		Names::names_t names;
+		do
+			names.emplace_back(input.getWord());
+		while (input.hasNextInLine());
 		if (names.size() > ::maxBits)
 		{
-			progress.cerr() << "Too many input variables!\n";
+			std::cerr << "Too many input variables!\n";
 			return false;
 		}
 		::bits = static_cast<::bits_t>(names.size());
@@ -103,7 +104,7 @@ static bool parseInputBits(Input &input)
 	}
 	else
 	{
-		const std::string line = input.popLine();
+		const std::string line = input.getLine();
 		if (line == "-")
 		{
 			::bits = 0;
@@ -154,6 +155,9 @@ static IstreamUniquePtr prepareIstream()
 {
 	if (options::freeArgs.empty())
 	{
+		use_stdin:
+		std::ios_base::sync_with_stdio(false);
+		std::cin.tie(nullptr);
 		return {&std::cin, deleteIstream};
 	}
 	else if (options::freeArgs.size() == 1)
@@ -161,12 +165,12 @@ static IstreamUniquePtr prepareIstream()
 		const std::string path(options::freeArgs.front());
 		if (path == "-")
 		{
-			return {&std::cin, deleteIstream};
+			goto use_stdin;
 		}
 		else
 		{
 			::inputFilePath = options::freeArgs.front();
-			IstreamUniquePtr ifstream(new std::ifstream(path), deleteIstream);
+			IstreamUniquePtr ifstream(new std::ifstream(path, std::ios_base::in | std::ios_base::binary), deleteIstream);
 			if (!*ifstream)
 			{
 				std::cerr << "Cannot open \"" << path << "\"!\n";
@@ -184,11 +188,21 @@ static IstreamUniquePtr prepareIstream()
 
 static bool loadInput(IstreamUniquePtr istream, Karnaughs &karnaughs)
 {
-	Input input(*istream);
-	if (!parseInputBits(input))
+	try
+	{
+		Input input(*istream);
+		if (!parseInputBits(input))
+			return false;
+		Input::recomputeMintermSize();
+		if (!karnaughs.loadData(input))
+			return false;
+		if (input.hasError())
+			return false;
+	}
+	catch (Input::Error &)
+	{
 		return false;
-	if (!karnaughs.loadData(input))
-		return false;
+	}
 	return true;
 }
 
