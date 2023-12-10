@@ -3,7 +3,9 @@
 #include <algorithm>
 #include <cassert>
 #include <cctype>
+#include <cmath>
 #include <iostream>
+#include <numbers>
 
 #include "options.hh"
 #include "QuineMcCluskey.hh"
@@ -133,7 +135,41 @@ void Karnaugh::prettyPrintSolution(const Implicants &solution)
 	prettyPrintTable(minterms);
 }
 
-bool Karnaugh::loadMinterms(Minterms &minterms, Input &input, Progress &progress, const std::string &name) const
+std::size_t Karnaugh::estimateRemainingInputSize(Input &input)
+{
+	if (!input.isFile())
+		return 0;
+	// The second version has a 5% margin of error baked in.
+	//static constexpr double averangeNumsPerChar[::maxBits + 1] = {1.000000000000000000, 0.666666666666666630, 0.571428571428571397, 0.533333333333333326, 0.432432432432432456, 0.376470588235294112, 0.353591160220994460, 0.319201995012468820, 0.280394304490690027, 0.264326277749096561, 0.255425293090546290, 0.224340015335743242, 0.211471939697454703, 0.205576049587191639, 0.187904992373240959, 0.176649757138929470, 0.171513065780348334, 0.162541093486674615, 0.152064769530894234, 0.147317222572673323, 0.144084703848040063, 0.133865565180368712, 0.129280969725633216, 0.127104448540846543, 0.119936776396454628, 0.115355380499279264, 0.113193474308513162, 0.109025600231566433, 0.104317940109521293, 0.102113343599297607, 0.100349244075089231, 0.095396193353198613, 0.093098606926443936};
+	static constexpr double averangeNumsPerChar[::maxBits + 1] = {1.000000000000000000, 0.699999999999999956, 0.599999999999999978, 0.560000000000000053, 0.454054054054054079, 0.395294117647058851, 0.371270718232044217, 0.335162094763092278, 0.294414019715224518, 0.277542591636551428, 0.268196557745073616, 0.235557016102530409, 0.222045536682327460, 0.215854852066551223, 0.197300241991903019, 0.185482244995875956, 0.180088719069365771, 0.170668148161008365, 0.159668008007438939, 0.154683083701306984, 0.151288939040442078, 0.140558843439387154, 0.135745018211914870, 0.133459670967888883, 0.125933615216277356, 0.121123149524243232, 0.118853148023938829, 0.114476880243144757, 0.109533837114997368, 0.107219010779262491, 0.105366706278843703, 0.100166003020858554, 0.097753537272766131};
+	const std::size_t remainingFileSize = input.getRemainingFileSize();
+	const std::size_t estimatedSize = remainingFileSize * averangeNumsPerChar[::bits] + 10;
+	return estimatedSize;
+}
+
+Progress::completion_t Karnaugh::MintermLoadingCompletionCalculator::operator()()
+{
+	if (inOrderSoFar)
+	{
+		const Minterm currentMinterm = minterms.back();
+		if (currentMinterm >= lastMinterm) [[likely]]
+		{
+			lastMinterm = currentMinterm;
+			return static_cast<Progress::completion_t>(currentMinterm) / static_cast<Progress::completion_t>(::maxMinterm);
+		}
+		inOrderSoFar = false;
+	}
+	const Progress::completion_t currentSize = static_cast<Progress::completion_t>(minterms.size());
+	const Progress::completion_t maxSize = estimatedSize == 0
+			? static_cast<Progress::completion_t>(::maxMinterm) + Progress::completion_t(1.0)
+			: static_cast<Progress::completion_t>(estimatedSize);
+	const Progress::completion_t expectedFraction = estimatedSize == 0 ? 0.4 : (dontCares ? 1.0 : 0.6);
+	const Progress::completion_t fractionOfAll = currentSize / maxSize;
+	const double scalingFactor = 1.0 - ((1.0 - expectedFraction) * std::cos(std::numbers::pi * 0.5 * fractionOfAll)); // The expected fraction gradually raises, faster and faster.
+	return static_cast<Progress::completion_t>(fractionOfAll / scalingFactor);
+}
+
+bool Karnaugh::loadMinterms(Minterms &minterms, Input &input, Progress &progress, const bool dontCares) const
 {
 	if (input.doesNextStartWithDash())
 	{
@@ -144,26 +180,19 @@ bool Karnaugh::loadMinterms(Minterms &minterms, Input &input, Progress &progress
 		return false;
 	}
 	
+	const std::string name = dontCares ? "don't cares" : "minterms";
+	
 	{
 		const std::string subtaskName = "loading " + name;
 		const auto subtaskGuard = progress.enterSubtask(subtaskName.c_str());
 		progress.step(true);
-		if (input.isFile())
-		{
-			// The second version has a 10% margin of error baked in.
-			//static constexpr double averangeNumsPerChar[::maxBits + 1] = {1.000000000000000000, 0.666666666666666630, 0.571428571428571397, 0.533333333333333326, 0.432432432432432456, 0.376470588235294112, 0.353591160220994460, 0.319201995012468820, 0.280394304490690027, 0.264326277749096561, 0.255425293090546290, 0.224340015335743242, 0.211471939697454703, 0.205576049587191639, 0.187904992373240959, 0.176649757138929470, 0.171513065780348334, 0.162541093486674615, 0.152064769530894234, 0.147317222572673323, 0.144084703848040063, 0.133865565180368712, 0.129280969725633216, 0.127104448540846543, 0.119936776396454628, 0.115355380499279264, 0.113193474308513162, 0.109025600231566433, 0.104317940109521293, 0.102113343599297607, 0.100349244075089231, 0.095396193353198613, 0.093098606926443936};
-			static constexpr double averangeNumsPerChar[::maxBits + 1] = {1.000000000000000000, 0.699999999999999956, 0.599999999999999978, 0.560000000000000053, 0.454054054054054079, 0.395294117647058851, 0.371270718232044217, 0.335162094763092278, 0.294414019715224518, 0.277542591636551428, 0.268196557745073616, 0.235557016102530409, 0.222045536682327460, 0.215854852066551223, 0.197300241991903019, 0.185482244995875956, 0.180088719069365771, 0.170668148161008365, 0.159668008007438939, 0.154683083701306984, 0.151288939040442078, 0.140558843439387154, 0.135745018211914870, 0.133459670967888883, 0.125933615216277356, 0.121123149524243232, 0.118853148023938829, 0.114476880243144757, 0.109533837114997368, 0.107219010779262491, 0.105366706278843703, 0.100166003020858554, 0.097753537272766131};
-			const std::size_t remainingFileSize = input.getRemainingFileSize();
-			const std::size_t estimatedSize = remainingFileSize * averangeNumsPerChar[::bits] + 10;
-			minterms.reserve(estimatedSize);
-		}
-		Minterm lastMinterm = 0;
-		const Progress::calcSubstepCompletion_t calcSubstepCompletion = [&lastMinterm = std::as_const(lastMinterm)](){ return static_cast<Progress::completion_t>(lastMinterm) / static_cast<Progress::completion_t>(::maxMinterm); };
+		const std::size_t estimatedSize = estimateRemainingInputSize(input);
+		minterms.reserve(estimatedSize);
+		const Progress::calcSubstepCompletion_t calcSubstepCompletion(MintermLoadingCompletionCalculator(minterms, dontCares, estimatedSize));
 		do
 		{
 			progress.substep(calcSubstepCompletion);
-			lastMinterm = input.getMinterm(progress);
-			minterms.push_back(lastMinterm);
+			minterms.push_back(input.getMinterm(progress));
 		} while (input.hasNextInLine(&progress));
 	}
 	
@@ -226,7 +255,7 @@ bool Karnaugh::loadData(Input &input)
 		progress.cerr() << "A list of minterms is mandatory!\n";
 		return false;
 	}
-	if (!loadMinterms(targetMinterms, input, progress, "minterms"))
+	if (!loadMinterms(targetMinterms, input, progress, false))
 		return false;
 	
 	if (options::prompt.getValue())
@@ -239,7 +268,7 @@ bool Karnaugh::loadData(Input &input)
 	}
 	Minterms dontCares;
 	if (input.hasNext(&progress))
-		if (!loadMinterms(dontCares, input, progress, "don't cares"))
+		if (!loadMinterms(dontCares, input, progress, true))
 			return false;
 	
 	{
