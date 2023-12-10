@@ -27,7 +27,7 @@ class Input
 	inline char getChar(Progress *const progress);
 	
 public:
-	class Error : std::runtime_error
+	class Error : public std::runtime_error
 	{
 	public:
 		using std::runtime_error::runtime_error;
@@ -59,7 +59,7 @@ char Input::getChar(Progress *const progress)
 		{
 			if (!istream.eof()) [[unlikely]]
 				throwInputError(progress);
-			bufferSize = istream.gcount();
+			bufferSize = static_cast<std::uint16_t>(istream.gcount());
 			if (bufferSize == 0)
 				return '\0';
 			istream.clear();
