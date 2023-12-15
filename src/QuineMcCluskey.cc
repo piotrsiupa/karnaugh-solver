@@ -1,5 +1,6 @@
 #include "./QuineMcCluskey.hh"
 
+#include <algorithm>
 #include <cstdint>
 #include <cstring>
 #include <iostream>
@@ -27,32 +28,40 @@ Implicants QuineMcCluskey::findPrimeImplicants(const Minterms &allowedMinterms, 
 	const auto subtaskGuard = progress.enterSubtask(subtaskDescription);
 	while (!implicants.empty())
 	{
-		std::uintmax_t operationsSoFar = 0, expectedOperations = 0;
 		if (progress.isVisible())
 		{
 			std::strcpy(subtaskDescription, std::to_string(implicants.size()).c_str());
 			std::strcat(subtaskDescription, " left (");
 			std::strcat(subtaskDescription, std::to_string(implicantSize--).c_str());
 			std::strcat(subtaskDescription, " literals each)");
-			expectedOperations = static_cast<std::uintmax_t>(implicants.size()) * static_cast<std::uintmax_t>(implicants.size() - 1) / 2;
 		}
-		const Progress::calcSubstepCompletion_t calcSubstepCompletion = [&operationsSoFar = std::as_const(operationsSoFar), expectedOperations](){ return static_cast<Progress::completion_t>(operationsSoFar) / static_cast<Progress::completion_t>(expectedOperations); };
+		Progress::CountingSubsteps substeps = progress.makeCountingSubsteps(::bits * 2);
 		progress.step(true);
 		
 		std::set<Implicant> newImplicants;
-		
-		for (auto iter = implicants.begin(); iter != implicants.end(); ++iter)
+		for (::bits_t bits = 0; bits != ::bits; ++bits)
 		{
-			progress.substep(calcSubstepCompletion);
-			operationsSoFar += implicants.cend() - iter - 1;
-			for (auto jiter = std::next(iter); jiter != implicants.end(); ++jiter)
+			substeps.substep();
+			const Minterm mask = ~(Minterm(1) << bits);
+			std::sort(implicants.begin(), implicants.end(), [mask](const std::pair<Implicant, bool> &x, const std::pair<Implicant, bool> &y){
+					Implicant xm = x.first & mask, ym = y.first & mask;
+					return xm.getTrueBits() != ym.getTrueBits()
+						? xm.getTrueBits() < ym.getTrueBits()
+						: xm.getFalseBits() < ym.getFalseBits();
+				});
+			substeps.substep();
+			std::pair<Implicant, bool> *previous = &implicants.front();
+			for (auto iter = std::next(implicants.begin()); iter != implicants.end(); ++iter)
 			{
-				if (Implicant::areMergeable(iter->first, jiter->first))
+				if ((previous->first & mask) == (iter->first & mask))
 				{
-					newImplicants.insert(Implicant::merge(iter->first, jiter->first));
+					newImplicants.insert(Implicant::merge(previous->first, iter->first));
+					previous->second = true;
 					iter->second = true;
-					jiter->second = true;
+					if (++iter == implicants.end())
+						break;
 				}
+				previous = &*iter;
 			}
 		}
 		
@@ -66,6 +75,7 @@ Implicants QuineMcCluskey::findPrimeImplicants(const Minterms &allowedMinterms, 
 			implicants.emplace_back(newImplicant, false);
 	}
 	
+	std::sort(primeImplicants.begin(), primeImplicants.end());
 	return primeImplicants;
 }
 

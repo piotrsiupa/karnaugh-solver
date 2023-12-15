@@ -43,6 +43,8 @@ public:
 	
 	Implicant& operator&=(const Implicant &other) { this->trueBits &= other.trueBits; this->falseBits &= other.falseBits; recalculateBits(); if (bitCount == 0) *this = error(); return *this; }
 	Implicant operator&(const Implicant &other) const { Implicant copy = *this; copy &= other; return copy; }
+	Implicant& operator&=(const mask_t &mask) { this->trueBits &= mask; this->falseBits &= mask; recalculateBits(); if (bitCount == 0) *this = error(); return *this; }
+	Implicant operator&(const mask_t &mask) const { Implicant copy = *this; copy &= mask; return copy; }
 	Implicant& operator|=(const Implicant &other) { this->trueBits |= other.trueBits; this->falseBits |= other.falseBits; recalculateBits(); return *this; }
 	Implicant operator|(const Implicant &other) const { Implicant copy = *this; copy |= other; return copy; }
 	Implicant& operator-=(const Implicant &other) { this->trueBits &= ~other.trueBits; this->falseBits &= ~other.falseBits; recalculateBits(); return *this; }
