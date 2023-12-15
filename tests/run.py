@@ -25,13 +25,17 @@ def find_test_dirs(test_dir: Path) -> list[str]:
 
 
 def time_process(process: subprocess.Popen):
+    timeout = 1.0
     starttime = time.perf_counter()
     while True:
         try:
-            process.wait()
+            process.wait(timeout=timeout)
             break
         except KeyboardInterrupt:
             process.send_signal(signal.SIGINT)
+        except subprocess.TimeoutExpired:
+            process.send_signal(signal.SIGINT)
+            return timeout
     endtime = time.perf_counter()
     return endtime - starttime
 
