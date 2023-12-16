@@ -44,16 +44,19 @@ Implicants QuineMcCluskey::findPrimeImplicants(const Minterms &allowedMinterms, 
 			substeps.substep();
 			const Minterm mask = ~(Minterm(1) << bits);
 			std::sort(implicants.begin(), implicants.end(), [mask](const std::pair<Implicant, bool> &x, const std::pair<Implicant, bool> &y){
-					Implicant xm = x.first & mask, ym = y.first & mask;
-					return xm.getTrueBits() != ym.getTrueBits()
-						? xm.getTrueBits() < ym.getTrueBits()
-						: xm.getFalseBits() < ym.getFalseBits();
+					const Minterm xmt = x.first.getRawTrueBits() & mask, ymt = y.first.getRawTrueBits() & mask;
+					if (xmt != ymt)
+						return xmt < ymt;
+					const Minterm xmf = x.first.getRawFalseBits() & mask, ymf = y.first.getRawFalseBits() & mask;
+					return xmf < ymf;
 				});
 			substeps.substep();
 			std::pair<Implicant, bool> *previous = &implicants.front();
 			for (auto iter = std::next(implicants.begin()); iter != implicants.end(); ++iter)
 			{
-				if ((previous->first & mask) == (iter->first & mask))
+				const bool maskMakesThemEqual = (previous->first.getRawTrueBits() & mask) == (iter->first.getRawTrueBits() & mask)
+						&& (previous->first.getRawFalseBits() & mask) == (iter->first.getRawFalseBits() & mask);
+				if (maskMakesThemEqual)
 				{
 					newImplicants.insert(Implicant::merge(previous->first, iter->first));
 					previous->second = true;

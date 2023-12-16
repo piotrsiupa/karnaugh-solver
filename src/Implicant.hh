@@ -43,8 +43,6 @@ public:
 	
 	Implicant& operator&=(const Implicant &other) { this->trueBits &= other.trueBits; this->falseBits &= other.falseBits; recalculateBits(); if (bitCount == 0) *this = error(); return *this; }
 	Implicant operator&(const Implicant &other) const { Implicant copy = *this; copy &= other; return copy; }
-	Implicant& operator&=(const mask_t &mask) { this->trueBits &= mask; this->falseBits &= mask; recalculateBits(); if (bitCount == 0) *this = error(); return *this; }
-	Implicant operator&(const mask_t &mask) const { Implicant copy = *this; copy &= mask; return copy; }
 	Implicant& operator|=(const Implicant &other) { this->trueBits |= other.trueBits; this->falseBits |= other.falseBits; recalculateBits(); return *this; }
 	Implicant operator|(const Implicant &other) const { Implicant copy = *this; copy |= other; return copy; }
 	Implicant& operator-=(const Implicant &other) { this->trueBits &= ~other.trueBits; this->falseBits &= ~other.falseBits; recalculateBits(); return *this; }
@@ -52,6 +50,8 @@ public:
 	Implicant& setBit(const bits_t bit, const bool negated) { const mask_t mask = 1 << (::bits - bit - 1); if (negated) falseBits |= mask; else trueBits |= mask; ++bitCount; return *this; }
 	
 	constexpr bool isError() const { return falseBits != 0 && bitCount == 0; }
+	constexpr mask_t getRawTrueBits() const { return trueBits; }
+	constexpr mask_t getRawFalseBits() const { return falseBits; }
 	constexpr mask_t getTrueBits() const { return isError() ? 0 : trueBits; }
 	constexpr mask_t getFalseBits() const { return isError() ? 0 : falseBits; }
 	constexpr bits_t getBitCount() const { return bitCount; }
