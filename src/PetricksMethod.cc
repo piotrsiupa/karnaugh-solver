@@ -36,39 +36,21 @@ Implicants PetricksMethod<INDEX_T>::extractEssentials(const std::string &functio
 	const std::string progressName = "Extracting essentials of \"" + functionName + '"';
 	Progress progress(Progress::Stage::SOLVING, progressName.c_str(), 1);
 	progress.step();
-	Progress::CountingSubsteps substeps = progress.makeCountingSubsteps(static_cast<Progress::completion_t>(minterms.size()));
+	Progress::CountingSubsteps substeps = progress.makeCountingSubsteps(static_cast<Progress::completion_t>(minterms.getSize()));
 	
 	Implicants essentials;
-	for (std::size_t i = 0; i != minterms.size();)
+	for (const Minterm minterm : minterms)
 	{
 		substeps.substep();
-		const index_t essentialPrimeImplicantIndex = findEssentialPrimeImplicantIndex(minterms[i]);
+		const index_t essentialPrimeImplicantIndex = findEssentialPrimeImplicantIndex(minterm);
 		if (essentialPrimeImplicantIndex == NO_INDEX)
-		{
-			++i;
 			continue;
-		}
 		essentials.emplace_back(std::move(primeImplicants[essentialPrimeImplicantIndex]));
 		primeImplicants.erase(primeImplicants.begin() + essentialPrimeImplicantIndex);
 		const Implicant &primeImplicant = essentials.back();
-		for (std::size_t j = 0; j != i;)
-		{
-			if (primeImplicant.covers(minterms[j]))
-			{
-				minterms.erase(std::next(minterms.begin(), j));
-				--i;
-			}
-			else
-			{
-				++j;
-			}
-		}
-		for (std::size_t j = i + 1; j != minterms.size();)
-			if (primeImplicant.covers(minterms[j]))
-				minterms.erase(std::next(minterms.begin(), j));
-			else
-				++j;
-		minterms.erase(std::next(minterms.begin(), i));
+		for (const Minterm minterm1 : minterms)
+			if (primeImplicant.covers(minterm1))
+				minterms.remove(minterm1);
 	}
 	return essentials;
 }
@@ -79,7 +61,7 @@ typename PetricksMethod<INDEX_T>::productOfSumsOfProducts_t PetricksMethod<INDEX
 	const std::string progressName = "Creating initial solution space for \"" + functionName + '"';
 	Progress progress(Progress::Stage::SOLVING, progressName.c_str(), 1);
 	progress.step();
-	Progress::CountingSubsteps substeps = progress.makeCountingSubsteps(static_cast<Progress::completion_t>(minterms.size()));
+	Progress::CountingSubsteps substeps = progress.makeCountingSubsteps(static_cast<Progress::completion_t>(minterms.getSize()));
 	productOfSumsOfProducts_t productOfSums;
 	for (const Minterm &minterm : minterms)
 	{
