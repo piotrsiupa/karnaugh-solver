@@ -37,12 +37,13 @@ private:
 	
 	class MintermLoadingCompletionCalculator {
 		const Minterms &minterms;
+		const Minterm &currentMinterm;
 		const bool dontCares;
 		const std::size_t estimatedSize;
 		Minterm lastMinterm = 0;
 		bool inOrderSoFar = true;
 	public:
-		MintermLoadingCompletionCalculator(const Minterms &minterms, const bool dontCares, const std::size_t estimatedSize = 0) : minterms(minterms), dontCares(dontCares), estimatedSize(estimatedSize) {}
+		MintermLoadingCompletionCalculator(const Minterms &minterms, const Minterm &currentMinterm, const bool dontCares, const std::size_t estimatedSize = 0) : minterms(minterms), currentMinterm(currentMinterm), dontCares(dontCares), estimatedSize(estimatedSize) {}
 		Progress::completion_t operator()();
 	};
 	static std::size_t estimateRemainingInputSize(Input &input);

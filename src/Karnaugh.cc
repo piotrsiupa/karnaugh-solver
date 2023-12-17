@@ -117,7 +117,6 @@ Progress::completion_t Karnaugh::MintermLoadingCompletionCalculator::operator()(
 {
 	if (inOrderSoFar)
 	{
-		const Minterm currentMinterm = minterms.back();
 		if (currentMinterm >= lastMinterm) [[likely]]
 		{
 			lastMinterm = currentMinterm;
@@ -152,15 +151,16 @@ bool Karnaugh::loadMinterms(Minterms &minterms, Input &input, Progress &progress
 	
 	const auto subtaskGuard = progress.enterSubtask(subtaskName.c_str());
 	progress.step(true);
+	Minterm currentMinterm;
 	const std::size_t estimatedSize = estimateRemainingInputSize(input);
-	const Progress::calcSubstepCompletion_t calcSubstepCompletion(MintermLoadingCompletionCalculator(minterms, dontCares, estimatedSize));
+	const Progress::calcSubstepCompletion_t calcSubstepCompletion(MintermLoadingCompletionCalculator(minterms, currentMinterm, dontCares, estimatedSize));
 	duplicates_t duplicates;
 	do
 	{
 		progress.substep(calcSubstepCompletion);
-		const Minterm minterm = input.getMinterm(progress);
-		if (!minterms.add(minterm))
-			duplicates.push_back(minterm);
+		currentMinterm = input.getMinterm(progress);
+		if (!minterms.add(currentMinterm))
+			duplicates.push_back(currentMinterm);
 	} while (input.hasNextInLine(&progress));
 	if (!duplicates.empty())
 	{
