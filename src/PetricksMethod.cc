@@ -36,10 +36,10 @@ Implicants PetricksMethod<INDEX_T>::extractEssentials(const std::string &functio
 	const std::string progressName = "Extracting essentials of \"" + functionName + '"';
 	Progress progress(Progress::Stage::SOLVING, progressName.c_str(), 1);
 	progress.step();
-	Progress::CountingSubsteps substeps = progress.makeCountingSubsteps(static_cast<Progress::completion_t>(minterms.getSize()));
+	Progress::CountingSubsteps substeps = progress.makeCountingSubsteps(static_cast<Progress::completion_t>(minterms->getSize()));
 	
 	Implicants essentials;
-	for (const Minterm minterm : minterms)
+	for (const Minterm minterm : *minterms)
 	{
 		substeps.substep();
 		const index_t essentialPrimeImplicantIndex = findEssentialPrimeImplicantIndex(minterm);
@@ -48,9 +48,9 @@ Implicants PetricksMethod<INDEX_T>::extractEssentials(const std::string &functio
 		essentials.emplace_back(std::move(primeImplicants[essentialPrimeImplicantIndex]));
 		primeImplicants.erase(primeImplicants.begin() + essentialPrimeImplicantIndex);
 		const Implicant &primeImplicant = essentials.back();
-		for (const Minterm minterm1 : minterms)
+		for (const Minterm minterm1 : *minterms)
 			if (primeImplicant.covers(minterm1))
-				minterms.remove(minterm1);
+				minterms->remove(minterm1);
 	}
 	return essentials;
 }
@@ -61,9 +61,9 @@ typename PetricksMethod<INDEX_T>::productOfSumsOfProducts_t PetricksMethod<INDEX
 	const std::string progressName = "Creating initial solution space for \"" + functionName + '"';
 	Progress progress(Progress::Stage::SOLVING, progressName.c_str(), 1);
 	progress.step();
-	Progress::CountingSubsteps substeps = progress.makeCountingSubsteps(static_cast<Progress::completion_t>(minterms.getSize()));
+	Progress::CountingSubsteps substeps = progress.makeCountingSubsteps(static_cast<Progress::completion_t>(minterms->getSize()));
 	productOfSumsOfProducts_t productOfSums;
-	for (const Minterm &minterm : minterms)
+	for (const Minterm &minterm : *minterms)
 	{
 		substeps.substep();
 		sumOfProducts_t &sum = productOfSums.emplace_back();
@@ -107,9 +107,10 @@ void PetricksMethod<INDEX_T>::removeRedundantSums(productOfSumsOfProducts_t &pro
 }
 
 template<typename INDEX_T>
-typename PetricksMethod<INDEX_T>::productOfSumsOfProducts_t PetricksMethod<INDEX_T>::createProductOfSums(const std::string &functionName) const
+typename PetricksMethod<INDEX_T>::productOfSumsOfProducts_t PetricksMethod<INDEX_T>::createProductOfSums(const std::string &functionName)
 {
 	productOfSumsOfProducts_t productOfSums = createPreliminaryProductOfSums(functionName);
+	minterms.reset();
 	removeRedundantSums(productOfSums, functionName);
 	return productOfSums;
 }
@@ -154,7 +155,7 @@ std::string PetricksMethod<INDEX_T>::ld2integerString(const long double value)
 }
 
 template<typename INDEX_T>
-typename PetricksMethod<INDEX_T>::sumOfProducts_t PetricksMethod<INDEX_T>::findSumOfProducts(const std::string &functionName) const
+typename PetricksMethod<INDEX_T>::sumOfProducts_t PetricksMethod<INDEX_T>::findSumOfProducts(const std::string &functionName)
 {
 	productOfSumsOfProducts_t productOfSumsOfProducts = createProductOfSums(functionName);
 	if (productOfSumsOfProducts.empty())

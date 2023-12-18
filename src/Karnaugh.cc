@@ -184,9 +184,9 @@ void Karnaugh::validate(const solutions_t &solutions) const
 		for (Minterm i = 0;; ++i)
 		{
 			progress.substep([i = std::as_const(i)](){ return static_cast<Progress::completion_t>(i) / (static_cast<Progress::completion_t>(::maxMinterm) + 1.0); });
-			if (std::find(targetMinterms.cbegin(), targetMinterms.cend(), i) != targetMinterms.cend())
+			if (targetMinterms.check(i))
 				assert(solution.covers(i));
-			else if (std::find(allowedMinterms.cbegin(), allowedMinterms.cend(), i) == allowedMinterms.cend())
+			else if (!allowedMinterms.check(i))
 				assert(!solution.covers(i));
 			if (i == ::maxMinterm)
 				break;
@@ -239,7 +239,7 @@ bool Karnaugh::loadData(Input &input)
 			cerr << "! (They will be ignored.)\n";
 		}
 		progress.substep([](){ return 0.5; }, true);
-		allowedMinterms |= targetMinterms;
+		allowedMinterms.add(targetMinterms, duplicates.size());
 	}
 	
 	return true;

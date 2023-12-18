@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstddef>
+#include <optional>
 #include <set>
 #include <string>
 #include <utility>
@@ -26,19 +27,19 @@ private:
 	using sumOfProducts_t = std::vector<product_t>;
 	using productOfSumsOfProducts_t = std::vector<sumOfProducts_t>;
 	
-	Minterms minterms;
+	std::optional<Minterms> minterms;
 	Implicants primeImplicants;
 	
-	PetricksMethod(Minterms &&minterms, Implicants &&primeImplicants) : minterms(std::move(minterms)), primeImplicants(std::move(primeImplicants)) {}
+	PetricksMethod(Minterms &&minterms, Implicants &&primeImplicants) : minterms(std::in_place, std::move(minterms)), primeImplicants(std::move(primeImplicants)) {}
 	
 	index_t findEssentialPrimeImplicantIndex(const Minterm minterm);
 	Implicants extractEssentials(const std::string &functionName);
 	productOfSumsOfProducts_t createPreliminaryProductOfSums(const std::string &functionName) const;
 	static void removeRedundantSums(productOfSumsOfProducts_t &productOfSums, const std::string &functionName);
-	productOfSumsOfProducts_t createProductOfSums(const std::string &functionName) const;
+	productOfSumsOfProducts_t createProductOfSums(const std::string &functionName);
 	static sumOfProducts_t multiplySumsOfProducts(const sumOfProducts_t &multiplier0, const sumOfProducts_t &multiplier1, long double &actualOperations, const long double expectedOperations, Progress &progress);
 	static std::string ld2integerString(const long double value);
-	sumOfProducts_t findSumOfProducts(const std::string &functionName) const;
+	sumOfProducts_t findSumOfProducts(const std::string &functionName);
 	solutions_t solve(const std::string &functionName);
 	
 public:
