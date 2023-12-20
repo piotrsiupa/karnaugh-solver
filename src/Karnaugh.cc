@@ -225,6 +225,11 @@ bool Karnaugh::loadData(Input &input)
 	if (input.hasNext(&progress))
 		if (!loadMinterms(allowedMinterms, input, progress, true))
 			return false;
+
+#ifndef NDEBUG
+	targetMinterms.validate();
+	allowedMinterms.validate();
+#endif
 	
 	{
 		const auto conflictsSubtask = progress.enterSubtask("listing possible minterms (*)");
@@ -241,6 +246,10 @@ bool Karnaugh::loadData(Input &input)
 		progress.substep([](){ return 0.5; }, true);
 		allowedMinterms.add(targetMinterms, duplicates.size());
 	}
+
+#ifndef NDEBUG
+	allowedMinterms.validate();
+#endif
 	
 	return true;
 }

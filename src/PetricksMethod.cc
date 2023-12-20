@@ -52,6 +52,9 @@ Implicants PetricksMethod<INDEX_T>::extractEssentials(const std::string &functio
 			if (primeImplicant.covers(minterm1))
 				minterms->remove(minterm1);
 	}
+#ifndef NDEBUG
+	minterms->validate();
+#endif
 	return essentials;
 }
 

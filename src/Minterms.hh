@@ -40,12 +40,16 @@ public:
 	[[nodiscard]] std::size_t getSize() const { return size; }
 	[[nodiscard]] bool check(const Minterm minterm) const { return bitset[minterm]; }
 	duplicates_t findDuplicates(const Minterms &other) const { duplicates_t duplicates; std::set_intersection(this->cbegin(), this->cend(), other.cbegin(), other.cend(), std::back_inserter(duplicates)); return duplicates; }
-	bool add(const Minterm minterm) { const bool previous = check(minterm); bitset[minterm] = true; if (!previous) ++size; return !previous; }
+	bool add(const Minterm minterm) { const bool previous = check(minterm); if (!previous) bitset[minterm] = true; ++size; return !previous; }
 	void add(const Minterms &other, const std::size_t duplicateCount) { std::transform(other.bitset.begin(), other.bitset.end(), this->bitset.begin(), this->bitset.begin(), std::logical_or<bool>()); this->size += other.size - duplicateCount; }
-	bool remove(const Minterm minterm) { const bool previous = check(minterm); bitset[minterm] = false; if (previous) --size; return previous; }
+	bool remove(const Minterm minterm) { const bool previous = check(minterm); if (previous) bitset[minterm] = false; --size; return previous; }
 	
 	ConstIterator begin() const { ConstIterator iter{*this, 0}; if (!bitset.empty() && !bitset[0]) ++iter; return iter; }
 	ConstIterator end() const { return {*this, bitset.size()}; }
 	ConstIterator cbegin() const { return begin(); }
 	ConstIterator cend() const { return end(); }
+	
+#ifndef NDEBUG
+	void validate() const;
+#endif
 };
