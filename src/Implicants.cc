@@ -5,9 +5,9 @@
 #include "options.hh"
 
 
-Implicants& Implicants::sort()
+Implicants& Implicants::humanSort()
 {
-	std::sort(begin(), end());
+	std::sort(begin(), end(), [](const Implicant &x, const Implicant &y){ return x.humanLess(y); });
 	return *this;
 }
 

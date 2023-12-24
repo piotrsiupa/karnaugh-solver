@@ -12,7 +12,7 @@ class Implicants : public std::vector<Implicant>
 public:
 	using std::vector<Implicant>::vector;
 	
-	Implicants& sort();
+	Implicants& humanSort();
 	
 	void printHuman(std::ostream &o) const;
 	void printVerilog(std::ostream &o) const;

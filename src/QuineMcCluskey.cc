@@ -39,26 +39,28 @@ Implicants QuineMcCluskey::findPrimeImplicants(const Minterms &allowedMinterms, 
 		progress.step(true);
 		
 		std::set<Implicant> newImplicants;
-		for (::bits_t bits = 0; bits != ::bits; ++bits)
+		for (::bits_t bit = 0; bit != ::bits; ++bit)
 		{
 			substeps.substep();
-			const Minterm mask = ~(Minterm(1) << bits);
+			const Minterm mask = ~(Minterm(1) << bit);
 			std::sort(implicants.begin(), implicants.end(), [mask](const std::pair<Implicant, bool> &x, const std::pair<Implicant, bool> &y){
-					const Minterm xmt = x.first.getRawTrueBits() & mask, ymt = y.first.getRawTrueBits() & mask;
-					if (xmt != ymt)
-						return xmt < ymt;
-					const Minterm xmf = x.first.getRawFalseBits() & mask, ymf = y.first.getRawFalseBits() & mask;
-					return xmf < ymf;
+					const Minterm xm = x.first.getRawMask(), ym = y.first.getRawMask();
+					if (xm != ym)
+						return xm < ym;
+					const Minterm xmb = x.first.getRawBits() & mask, ymb = y.first.getRawBits() & mask;
+					return xmb < ymb;
 				});
 			substeps.substep();
 			std::pair<Implicant, bool> *previous = &implicants.front();
 			for (auto iter = std::next(implicants.begin()); iter != implicants.end(); ++iter)
 			{
-				const bool maskMakesThemEqual = (previous->first.getRawTrueBits() & mask) == (iter->first.getRawTrueBits() & mask)
-						&& (previous->first.getRawFalseBits() & mask) == (iter->first.getRawFalseBits() & mask);
+				const bool maskMakesThemEqual = previous->first.getRawMask() == iter->first.getRawMask()
+						&& (previous->first.getRawBits() & mask) == (iter->first.getRawBits() & mask);
 				if (maskMakesThemEqual)
 				{
-					newImplicants.insert(Implicant::merge(previous->first, iter->first));
+					Implicant newImplicant = previous->first;
+					newImplicant.applyMask(mask);
+					newImplicants.insert(std::move(newImplicant));
 					previous->second = true;
 					iter->second = true;
 					if (++iter == implicants.end())
@@ -78,7 +80,7 @@ Implicants QuineMcCluskey::findPrimeImplicants(const Minterms &allowedMinterms, 
 			implicants.emplace_back(newImplicant, false);
 	}
 	
-	std::sort(primeImplicants.begin(), primeImplicants.end());
+	primeImplicants.humanSort();
 	return primeImplicants;
 }
 

@@ -128,7 +128,7 @@ bool Karnaughs::areInputsUsed() const
 {
 	for (const Implicants &bestSolution : bestSolutions)
 		for (const Implicant &implicant : bestSolution)
-			if (implicant.getBitCount() != 0)
+			if (!implicant.isEmpty())
 				return true;
 	return false;
 }

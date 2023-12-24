@@ -93,11 +93,7 @@ void Karnaugh::prettyPrintSolution(const Implicants &solution)
 {
 	Minterms minterms;
 	for (const auto &implicant : solution)
-	{
-		const auto newMinterms = implicant.findMinterms();
-		for (const Minterm &newMinterm : newMinterms)
-			minterms.add(newMinterm);
-	}
+		implicant.addToMinterms(minterms);
 	prettyPrintTable(minterms);
 }
 
@@ -284,27 +280,27 @@ void Karnaugh::printHumanSolution(const Implicants &solution) const
 		}
 		std::cout << "solution:\n";
 	}
-	Implicants(solution).sort().printHuman(std::cout);
+	Implicants(solution).humanSort().printHuman(std::cout);
 	if (options::outputFormat.getValue() != options::OutputFormat::HUMAN_SHORT)
 		std::cout << '\n';
 }
 
 void Karnaugh::printVerilogSolution(const Implicants &solution) const
 {
-	Implicants(solution).sort().printVerilog(std::cout);
+	Implicants(solution).humanSort().printVerilog(std::cout);
 }
 
 void Karnaugh::printVhdlSolution(const Implicants &solution) const
 {
-	Implicants(solution).sort().printVhdl(std::cout);
+	Implicants(solution).humanSort().printVhdl(std::cout);
 }
 
 void Karnaugh::printCppSolution(const Implicants &solution) const
 {
-	Implicants(solution).sort().printCpp(std::cout);
+	Implicants(solution).humanSort().printCpp(std::cout);
 }
 
 void Karnaugh::printMathSolution(const Implicants &solution) const
 {
-	Implicants(solution).sort().printMath(std::cout);
+	Implicants(solution).humanSort().printMath(std::cout);
 }

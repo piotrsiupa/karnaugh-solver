@@ -216,7 +216,7 @@ typename PetricksMethod<INDEX_T>::solutions_t PetricksMethod<INDEX_T>::solve(con
 	if (sumOfProducts.empty())
 		return !essentials.empty()
 			? solutions_t{std::move(essentials)}
-			: solutions_t{{Implicant::error()}};
+			: solutions_t{{Implicant::none()}};
 	
 	solutions_t solutions;
 	solutions.reserve(sumOfProducts.size());
