@@ -4,7 +4,6 @@
 #include <cstdint>
 #include <cstring>
 #include <iostream>
-#include <set>
 #include <string>
 
 #include "options.hh"
@@ -38,7 +37,7 @@ Implicants QuineMcCluskey::findPrimeImplicants(const Minterms &allowedMinterms, 
 		Progress::CountingSubsteps substeps = progress.makeCountingSubsteps(::bits * 2);
 		progress.step(true);
 		
-		std::set<Implicant> newImplicants;
+		std::vector<Implicant> newImplicants;
 		for (::bits_t bit = 0; bit != ::bits; ++bit)
 		{
 			substeps.substep();
@@ -60,7 +59,7 @@ Implicants QuineMcCluskey::findPrimeImplicants(const Minterms &allowedMinterms, 
 				{
 					Implicant newImplicant = previous->first;
 					newImplicant.applyMask(mask);
-					newImplicants.insert(std::move(newImplicant));
+					newImplicants.push_back(std::move(newImplicant));
 					previous->second = true;
 					iter->second = true;
 					if (++iter == implicants.end())
@@ -75,6 +74,8 @@ Implicants QuineMcCluskey::findPrimeImplicants(const Minterms &allowedMinterms, 
 				primeImplicants.push_back(implicant);
 		implicants.clear();
 		
+		std::sort(newImplicants.begin(), newImplicants.end());
+		newImplicants.erase(std::unique(newImplicants.begin(), newImplicants.end()), newImplicants.end());
 		implicants.reserve(newImplicants.size());
 		for (const auto &newImplicant : newImplicants)
 			implicants.emplace_back(newImplicant, false);
