@@ -23,13 +23,28 @@ Implicant::splitBits_t Implicant::splitBits() const
 
 void Implicant::addToMinterms(Minterms &minterms) const
 {
-	for (Minterm minterm = 0;; ++minterm)
+	if (isEmpty() && !isEmptyTrue()) [[unlikely]]
+		return;
+	const Minterm inversedMask = ~mask & ::maxMinterm;
+	Minterm unmaskedPart = 0;
+	do
 	{
-		if (covers(minterm))
-			minterms.add(minterm);
-		if (minterm == ::maxMinterm)
-			break;
-	}
+		minterms.add(bits | unmaskedPart);
+		unmaskedPart = (unmaskedPart - inversedMask) & inversedMask;
+	} while (unmaskedPart != 0);
+}
+
+void Implicant::removeFromMinterms(Minterms &minterms) const
+{
+	if (isEmpty() && !isEmptyTrue()) [[unlikely]]
+		return;
+	const Minterm inversedMask = ~mask & ::maxMinterm;
+	Minterm unmaskedPart = 0;
+	do
+	{
+		minterms.remove(bits | unmaskedPart);
+		unmaskedPart = (unmaskedPart - inversedMask) & inversedMask;
+	} while (unmaskedPart != 0);
 }
 
 void Implicant::printHuman(std::ostream &o, const bool parentheses) const

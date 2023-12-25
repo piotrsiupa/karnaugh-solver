@@ -54,6 +54,7 @@ public:
 	void applyMask(const mask_t maskToApply) { bits &= maskToApply; mask &= maskToApply; }
 	
 	void addToMinterms(Minterms &minterms) const;
+	void removeFromMinterms(Minterms &minterms) const;
 	
 	void printHuman(std::ostream &o, const bool parentheses) const;
 	void printVerilog(std::ostream &o, const bool parentheses) const;
