@@ -25,9 +25,8 @@ public:
 private:
 	mask_t bits, mask;
 	
-	constexpr Implicant(const mask_t bits, const mask_t mask) : bits(bits), mask(mask) {}
-	
 public:
+	constexpr Implicant(const mask_t bits, const mask_t mask) : bits(bits), mask(mask) {}
 	explicit Implicant(const Minterm minterm) : bits(minterm), mask(maxMinterm) {}
 	constexpr Implicant(const Implicant &) = default;
 	constexpr Implicant& operator=(const Implicant &) = default;
@@ -53,8 +52,14 @@ public:
 	void unsetBit(const bits_t bit) { const mask_t bitMask = ~(1 << (::bits - bit - 1)); bits &= bitMask; mask &= bitMask; }
 	void applyMask(const mask_t maskToApply) { bits &= maskToApply; mask &= maskToApply; }
 	
+	constexpr Minterm firstMinterm() const { return bits; }
+	Minterm nextMinterm(const Minterm minterm) const;
+	Minterm lastMinterm() const { return bits | (~mask & ::maxMinterm); }
 	void addToMinterms(Minterms &minterms) const;
 	void removeFromMinterms(Minterms &minterms) const;
+	
+	static Implicant findBiggestInUnion(const Implicant &x, const Implicant &y);
+	bool contains(const Implicant &other) const { return (this->mask & other.mask) == this->mask && (this->mask & other.bits) == this->bits; }
 	
 	void printHuman(std::ostream &o, const bool parentheses) const;
 	void printVerilog(std::ostream &o, const bool parentheses) const;

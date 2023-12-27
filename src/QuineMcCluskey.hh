@@ -9,7 +9,7 @@
 
 class QuineMcCluskey
 {
-	Implicants findPrimeImplicants(const Minterms &allowedMinterms, const std::string &functionName) const;
+	Implicants findPrimeImplicants(Minterms allowedMinterms, const std::string &functionName) const;
 	
 public:
 	using solutions_t = std::vector<Implicants>;

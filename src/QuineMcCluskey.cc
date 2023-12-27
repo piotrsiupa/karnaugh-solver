@@ -11,77 +11,184 @@
 #include "Progress.hh"
 
 
-Implicants QuineMcCluskey::findPrimeImplicants(const Minterms &allowedMinterms, const std::string &functionName) const
+class Minterator
 {
-	const std::string progressName = "Merging implicants of \"" + functionName + '"';
-	Progress progress(Progress::Stage::SOLVING, progressName.c_str(), ::bits + 1);
+	Minterm minterm;
+	bool overflow = false;
 	
-	std::vector<std::pair<Implicant, bool>> implicants;
-	for (const Minterm &minterm : allowedMinterms)
-		implicants.emplace_back(Implicant{minterm}, false);
+public:
+	constexpr Minterator(const Implicant &implicant) : minterm(implicant.firstMinterm()) {}
 	
-	Implicants primeImplicants;
+	[[nodiscard]] constexpr operator bool() const { return !overflow; }
+	void step(const Implicant &implicant) { if (minterm == implicant.lastMinterm()) overflow = true; else minterm = implicant.nextMinterm(minterm); }
+	[[nodiscard]] constexpr Minterm operator*() const { return minterm; }
+};
+
+
+Implicants QuineMcCluskey::findPrimeImplicants(Minterms allowedMinterms, const std::string &functionName) const
+{
+	const std::string progressName = "Finding prime impl. of \"" + functionName + '"';
+	Progress progress(Progress::Stage::SOLVING, progressName.c_str(), 5);
 	
-	::bits_t implicantSize = ::bits;
-	char subtaskDescription[96] = "";
-	const auto subtaskGuard = progress.enterSubtask(subtaskDescription);
-	while (!implicants.empty())
+	std::vector<Minterm> masks(std::size_t(::maxMinterm) + 1);
 	{
-		if (progress.isVisible())
+		const auto subtaskGuard = progress.enterSubtask("listing minterm neighbours");
+		progress.step();
+		Progress::CountingSubsteps substeps = progress.makeCountingSubsteps(allowedMinterms.getSize());
+		if (::bits != 0)
 		{
-			std::strcpy(subtaskDescription, std::to_string(implicants.size()).c_str());
-			std::strcat(subtaskDescription, " left (");
-			std::strcat(subtaskDescription, std::to_string(implicantSize--).c_str());
-			std::strcat(subtaskDescription, " literals each)");
-		}
-		Progress::CountingSubsteps substeps = progress.makeCountingSubsteps(::bits * 2);
-		progress.step(true);
-		
-		std::vector<Implicant> newImplicants;
-		for (::bits_t bit = 0; bit != ::bits; ++bit)
-		{
-			substeps.substep();
-			const Minterm mask = ~(Minterm(1) << bit);
-			std::sort(implicants.begin(), implicants.end(), [mask](const std::pair<Implicant, bool> &x, const std::pair<Implicant, bool> &y){
-					const Minterm xm = x.first.getRawMask(), ym = y.first.getRawMask();
-					if (xm != ym)
-						return xm < ym;
-					const Minterm xmb = x.first.getRawBits() & mask, ymb = y.first.getRawBits() & mask;
-					return xmb < ymb;
-				});
-			substeps.substep();
-			std::pair<Implicant, bool> *previous = &implicants.front();
-			for (auto iter = std::next(implicants.begin()); iter != implicants.end(); ++iter)
+			const Minterm maxBit = 1 << (::bits - 1);
+			for (const Minterm minterm : allowedMinterms)
 			{
-				const bool maskMakesThemEqual = previous->first.getRawMask() == iter->first.getRawMask()
-						&& (previous->first.getRawBits() & mask) == (iter->first.getRawBits() & mask);
-				if (maskMakesThemEqual)
+				substeps.substep();
+				Minterm mask = ::maxMinterm;
+				for (Minterm bit = 1;; bit <<= 1)
 				{
-					Implicant newImplicant = previous->first;
-					newImplicant.applyMask(mask);
-					newImplicants.push_back(std::move(newImplicant));
-					previous->second = true;
-					iter->second = true;
-					if (++iter == implicants.end())
+					if (allowedMinterms.check(minterm ^ bit))
+						mask &= ~bit;
+					if (bit == maxBit)
 						break;
 				}
-				previous = &*iter;
+				masks[minterm] = mask;
 			}
 		}
-		
-		for (const auto &[implicant, merged] : implicants)
-			if (!merged)
-				primeImplicants.push_back(implicant);
-		implicants.clear();
-		
-		std::sort(newImplicants.begin(), newImplicants.end());
-		newImplicants.erase(std::unique(newImplicants.begin(), newImplicants.end()), newImplicants.end());
-		implicants.reserve(newImplicants.size());
-		for (const auto &newImplicant : newImplicants)
-			implicants.emplace_back(newImplicant, false);
 	}
 	
-	primeImplicants.humanSort();
+	std::vector<Implicant> newImplicants;
+	
+	{
+		progress.step();
+		Progress::CountingSubsteps substeps = progress.makeCountingSubsteps(allowedMinterms.getSize() + (allowedMinterms.getSize() / 5));
+		{
+			const auto subtaskGuard = progress.enterSubtask("merging implicants with a heuristic");
+			for (const Minterm minterm : allowedMinterms)
+			{
+				substeps.substep();
+				Implicant implicant(minterm & masks[minterm], masks[minterm]);
+				for (Minterator iter(implicant); iter; iter.step(implicant))
+				{
+					if (allowedMinterms.check(*iter))
+					{
+						implicant.add({static_cast<Implicant::mask_t>(*iter & masks[*iter]), static_cast<Implicant::mask_t>(masks[*iter])});
+					}
+					else
+					{
+						implicant = Implicant::none();
+						break;
+					}
+				}
+				if (implicant != Implicant::none())
+					newImplicants.push_back(implicant);
+			}
+		}
+		{
+			const auto subtaskGuard = progress.enterSubtask("cleaning up the heuristic (*)");
+			substeps.substep(true);
+			std::sort(newImplicants.begin(), newImplicants.end());
+			newImplicants.erase(std::unique(newImplicants.begin(), newImplicants.end()), newImplicants.end());
+			for (const Implicant &newImplicant : newImplicants)
+				newImplicant.removeFromMinterms(allowedMinterms);
+		}
+	}
+	
+	{
+		const auto subtaskGuard = progress.enterSubtask("adding missing implicants");
+		progress.step();
+		Progress::CountingSubsteps substeps = progress.makeCountingSubsteps(allowedMinterms.getSize());
+		newImplicants.reserve(newImplicants.size() + allowedMinterms.getSize());
+		for (const Minterm minterm : allowedMinterms)
+		{
+			substeps.substep();
+			newImplicants.push_back(Implicant(minterm));
+		}
+	}
+	
+	Implicants primeImplicants;
+	{
+		progress.step();
+		struct Thingy  // This is temporary. The code will be refactored.
+		{
+			Implicant implicant;
+			bool used, obsolete;
+		};
+		std::vector<Thingy> implicants;
+		char subtaskDescription[0x80] = "";
+		const auto subtaskGuard = progress.enterSubtask(subtaskDescription);
+		::bits_t bitCountLimit;
+		decltype(implicants.begin()) iter;
+		Progress::calcSubstepCompletion_t calcSubstepCompletion = [&bitCountLimit = std::as_const(bitCountLimit), &implicants = std::as_const(implicants), &iter = std::as_const(iter)](){
+				const Progress::completion_t majorProgress = static_cast<Progress::completion_t>(::bits - bitCountLimit) / static_cast<Progress::completion_t>(::bits + 1);
+				const Progress::completion_t minorProgress = static_cast<Progress::completion_t>(iter - implicants.cbegin()) / static_cast<Progress::completion_t>(implicants.size()) / static_cast<Progress::completion_t>(::bits + 1);
+				return majorProgress + minorProgress;
+			};
+		for (bitCountLimit = ::bits; !newImplicants.empty() || !implicants.empty(); --bitCountLimit)
+		{
+			iter = implicants.begin();
+			progress.substep(calcSubstepCompletion, true);
+			
+			const std::size_t oldImplicantCount = implicants.size();
+			std::sort(newImplicants.begin(), newImplicants.end());
+			newImplicants.erase(std::unique(newImplicants.begin(), newImplicants.end()), newImplicants.end());
+			implicants.reserve(implicants.size() + newImplicants.size());
+			for (Thingy &implicant : implicants)
+				implicant.used = false;
+			std::sort(implicants.begin(), implicants.end(), [](const Thingy &x, const Thingy &y){ return x.implicant < y.implicant; });
+			for (const auto &newImplicant : newImplicants)
+				implicants.emplace_back(newImplicant, false, false);
+			newImplicants.clear();
+			const decltype(implicants.begin()) firstNewImplicant = std::next(implicants.begin(), oldImplicantCount);
+			
+			if (progress.isVisible())
+			{
+				std::strcpy(subtaskDescription, "merging impl. stage ");
+				std::strcat(subtaskDescription, std::to_string(::bits - bitCountLimit + 1).c_str());
+				std::strcat(subtaskDescription, "/");
+				std::strcat(subtaskDescription, std::to_string(::bits + 1).c_str());
+				std::strcat(subtaskDescription, " (");
+				std::strcat(subtaskDescription, std::to_string(firstNewImplicant - implicants.cbegin()).c_str());
+				std::strcat(subtaskDescription, "+");
+				std::strcat(subtaskDescription, std::to_string(implicants.cend() - firstNewImplicant).c_str());
+				std::strcat(subtaskDescription, ")");
+			}
+			
+			for (iter = implicants.begin(); iter != implicants.end(); ++iter)
+			{
+				progress.substep(calcSubstepCompletion);
+				for (auto jiter = std::max(std::next(iter), firstNewImplicant); jiter != implicants.end(); ++jiter)
+				{
+					Implicant newImplicant = Implicant::findBiggestInUnion(iter->implicant, jiter->implicant);
+					if (newImplicant != Implicant::none() && newImplicant.getBitCount() < bitCountLimit)
+					{
+						iter->used = jiter->used = true;
+						if (newImplicant.contains(iter->implicant))
+							iter->obsolete = true;
+						if (newImplicant.contains(jiter->implicant))
+							jiter->obsolete = true;
+						auto foundThingy = std::partition_point(implicants.begin(), firstNewImplicant, [newImplicant](const Thingy &thingy){ return thingy.implicant < newImplicant; });
+						if (foundThingy == firstNewImplicant || foundThingy->implicant != newImplicant)
+						{
+							foundThingy = std::partition_point(firstNewImplicant, implicants.end(), [newImplicant](const Thingy &thingy){ return thingy.implicant < newImplicant; });
+							if (foundThingy == implicants.end() || foundThingy->implicant != newImplicant)
+								if (!std::binary_search(primeImplicants.cbegin(), primeImplicants.cend(), newImplicant))
+									newImplicants.push_back(std::move(newImplicant));
+						}
+					}
+				}
+			}
+			
+			implicants.erase(std::remove_if(implicants.begin(), implicants.end(), [&primeImplicants](const Thingy &x){ if (x.obsolete) return true; if (!x.used) primeImplicants.push_back(std::move(x.implicant)); return !x.used; }), implicants.end());
+			std::sort(primeImplicants.begin(), primeImplicants.end());
+		}
+	}
+	
+	
+	{
+		const auto subtaskGuard = progress.enterSubtask("sorting prime implicants (*)");
+		progress.step();
+		progress.substep([](){ return 0.0; }, true);
+		primeImplicants.humanSort();
+		primeImplicants.shrink_to_fit();
+	}
 	return primeImplicants;
 }
 

@@ -21,6 +21,14 @@ Implicant::splitBits_t Implicant::splitBits() const
 	return splitBits;
 }
 
+Minterm Implicant::nextMinterm(const Minterm minterm) const
+{
+	const Minterm inversedMask = ~mask & ::maxMinterm;
+	const Minterm unmaskedMinterm = minterm & inversedMask;
+	const Minterm nextUnmaskedMinterm = (unmaskedMinterm - inversedMask) & inversedMask;
+	return nextUnmaskedMinterm | bits;
+}
+
 void Implicant::addToMinterms(Minterms &minterms) const
 {
 	if (isEmpty() && !isEmptyTrue()) [[unlikely]]
@@ -45,6 +53,15 @@ void Implicant::removeFromMinterms(Minterms &minterms) const
 		minterms.remove(bits | unmaskedPart);
 		unmaskedPart = (unmaskedPart - inversedMask) & inversedMask;
 	} while (unmaskedPart != 0);
+}
+
+Implicant Implicant::findBiggestInUnion(const Implicant &x, const Implicant &y)
+{
+	const mask_t conflicts = (x.bits ^ y.bits) & (x.mask & y.mask);
+	const bits_t conflictCount = static_cast<bits_t>(std::bitset<::maxBits>(conflicts).count());
+	return conflictCount == 1  // Implicants are "touching". ("1" means touching; "0" means intersecting.)
+		? Implicant((x.bits | y.bits) & ~conflicts, (x.mask | y.mask) & ~conflicts)
+		: none();
 }
 
 void Implicant::printHuman(std::ostream &o, const bool parentheses) const
