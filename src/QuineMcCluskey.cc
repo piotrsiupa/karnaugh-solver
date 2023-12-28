@@ -9,6 +9,7 @@
 #include "options.hh"
 #include "PetricksMethod.hh"
 #include "Progress.hh"
+#include "utils.hh"
 
 
 class Minterator
@@ -106,35 +107,30 @@ Implicants QuineMcCluskey::findPrimeImplicants(Minterms allowedMinterms, const s
 	Implicants primeImplicants;
 	{
 		progress.step();
-		struct Thingy  // This is temporary. The code will be refactored.
-		{
-			Implicant implicant;
-			bool used, obsolete;
-		};
-		std::vector<Thingy> implicants;
+		std::vector<Implicant> implicants;
+		std::vector<bool> usedImplicants, obsoleteImplicants;
 		char subtaskDescription[0x80] = "";
 		const auto subtaskGuard = progress.enterSubtask(subtaskDescription);
 		::bits_t bitCountLimit;
-		decltype(implicants.begin()) iter;
-		Progress::calcSubstepCompletion_t calcSubstepCompletion = [&bitCountLimit = std::as_const(bitCountLimit), &implicants = std::as_const(implicants), &iter = std::as_const(iter)](){
+		std::size_t i;
+		Progress::calcSubstepCompletion_t calcSubstepCompletion = [&bitCountLimit = std::as_const(bitCountLimit), &implicants = std::as_const(implicants), &i = std::as_const(i)](){
 				const Progress::completion_t majorProgress = static_cast<Progress::completion_t>(::bits - bitCountLimit) / static_cast<Progress::completion_t>(::bits + 1);
-				const Progress::completion_t minorProgress = static_cast<Progress::completion_t>(iter - implicants.cbegin()) / static_cast<Progress::completion_t>(implicants.size()) / static_cast<Progress::completion_t>(::bits + 1);
+				const Progress::completion_t minorProgress = static_cast<Progress::completion_t>(i) / static_cast<Progress::completion_t>(implicants.size()) / static_cast<Progress::completion_t>(::bits + 1);
 				return majorProgress + minorProgress;
 			};
 		for (bitCountLimit = ::bits; !newImplicants.empty() || !implicants.empty(); --bitCountLimit)
 		{
-			iter = implicants.begin();
+			i = 0;
 			progress.substep(calcSubstepCompletion, true);
 			
 			const std::size_t oldImplicantCount = implicants.size();
 			std::sort(newImplicants.begin(), newImplicants.end());
 			newImplicants.erase(std::unique(newImplicants.begin(), newImplicants.end()), newImplicants.end());
 			implicants.reserve(implicants.size() + newImplicants.size());
-			for (Thingy &implicant : implicants)
-				implicant.used = false;
-			std::sort(implicants.begin(), implicants.end(), [](const Thingy &x, const Thingy &y){ return x.implicant < y.implicant; });
-			for (const auto &newImplicant : newImplicants)
-				implicants.emplace_back(newImplicant, false, false);
+			std::sort(implicants.begin(), implicants.end());
+			implicants.insert(implicants.end(), newImplicants.begin(), newImplicants.end());
+			usedImplicants.assign(implicants.size(), false);
+			obsoleteImplicants.assign(implicants.size(), false);
 			newImplicants.clear();
 			const decltype(implicants.begin()) firstNewImplicant = std::next(implicants.begin(), oldImplicantCount);
 			
@@ -151,36 +147,41 @@ Implicants QuineMcCluskey::findPrimeImplicants(Minterms allowedMinterms, const s
 				std::strcat(subtaskDescription, ")");
 			}
 			
-			for (iter = implicants.begin(); iter != implicants.end(); ++iter)
+			for (i = 0; i != implicants.size(); ++i)
 			{
 				progress.substep(calcSubstepCompletion);
-				for (auto jiter = std::max(std::next(iter), firstNewImplicant); jiter != implicants.end(); ++jiter)
+				for (std::size_t j = std::max(i + 1, static_cast<std::size_t>(firstNewImplicant - implicants.cbegin())); j != implicants.size(); ++j)
 				{
-					Implicant newImplicant = Implicant::findBiggestInUnion(iter->implicant, jiter->implicant);
+					Implicant newImplicant = Implicant::findBiggestInUnion(implicants[i], implicants[j]);
 					if (newImplicant != Implicant::none() && newImplicant.getBitCount() < bitCountLimit)
 					{
-						iter->used = jiter->used = true;
-						if (newImplicant.contains(iter->implicant))
-							iter->obsolete = true;
-						if (newImplicant.contains(jiter->implicant))
-							jiter->obsolete = true;
-						auto foundThingy = std::partition_point(implicants.begin(), firstNewImplicant, [newImplicant](const Thingy &thingy){ return thingy.implicant < newImplicant; });
-						if (foundThingy == firstNewImplicant || foundThingy->implicant != newImplicant)
-						{
-							foundThingy = std::partition_point(firstNewImplicant, implicants.end(), [newImplicant](const Thingy &thingy){ return thingy.implicant < newImplicant; });
-							if (foundThingy == implicants.end() || foundThingy->implicant != newImplicant)
-								if (!std::binary_search(primeImplicants.cbegin(), primeImplicants.cend(), newImplicant))
-									newImplicants.push_back(std::move(newImplicant));
-						}
+						usedImplicants[i] = usedImplicants[j] = true;
+						if (newImplicant.contains(implicants[i]))
+							obsoleteImplicants[i] = true;
+						if (newImplicant.contains(implicants[j]))
+							obsoleteImplicants[j] = true;
+						if (!std::binary_search(implicants.begin(), firstNewImplicant, newImplicant)
+								&& !std::binary_search(firstNewImplicant, implicants.end(), newImplicant)
+								&& !std::binary_search(primeImplicants.cbegin(), primeImplicants.cend(), newImplicant))
+							newImplicants.push_back(std::move(newImplicant));
 					}
 				}
 			}
 			
-			implicants.erase(std::remove_if(implicants.begin(), implicants.end(), [&primeImplicants](const Thingy &x){ if (x.obsolete) return true; if (!x.used) primeImplicants.push_back(std::move(x.implicant)); return !x.used; }), implicants.end());
+			implicants.erase(remove_if_index(implicants.begin(), implicants.end(), [&primeImplicants, &usedImplicants = std::as_const(usedImplicants), &obsoleteImplicants = std::as_const(obsoleteImplicants)](const Implicant &x, const std::size_t &i)
+				{
+					if (obsoleteImplicants[i])
+						return true;
+					if (!usedImplicants[i])
+					{
+						primeImplicants.push_back(std::move(x));
+						return true;
+					}
+					return false;
+				}), implicants.end());
 			std::sort(primeImplicants.begin(), primeImplicants.end());
 		}
 	}
-	
 	
 	{
 		const auto subtaskGuard = progress.enterSubtask("sorting prime implicants (*)");
