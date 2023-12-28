@@ -106,19 +106,19 @@ bool Karnaugh::loadMinterms(Minterms &minterms, Input &input, Progress &progress
 				static_assert(sizeof(unsigned long) * CHAR_BIT >= ::maxBits);
 				if (n > ::maxMinterm)
 				{
-					progress.cerr() << '"' << string << "\" is too big!\n";
+					Progress::cerr() << '"' << string << "\" is too big!\n";
 					return false;
 				}
 				minterms.insert(n);
 			}
 			catch (std::invalid_argument &)
 			{
-				progress.cerr() << '"' << string << "\" is not a number!\n";
+				Progress::cerr() << '"' << string << "\" is not a number!\n";
 				return false;
 			}
 			catch (std::out_of_range &)
 			{
-				progress.cerr() << '"' << string << "\" is out of range!\n";
+				Progress::cerr() << '"' << string << "\" is out of range!\n";
 				return false;
 			}
 		}
@@ -165,7 +165,7 @@ bool Karnaugh::loadData(Input &input)
 		return false;
 	if (input.isEmpty())
 	{
-		progress.cerr() << "A list of minterms is mandatory!\n";
+		Progress::cerr() << "A list of minterms is mandatory!\n";
 		return false;
 	}
 	if (!loadMinterms(targetMinterms, input, progress))
@@ -194,7 +194,7 @@ bool Karnaugh::loadData(Input &input)
 		if (allowedMinterms.find(targetMinterm) == allowedMinterms.cend())
 			allowedMinterms.insert(targetMinterm);
 		else
-			progress.cerr() << targetMinterm << " on the \"don't care\" list of \"" << functionName << "\" will be ignored because it is already a minterm!\n";
+			Progress::cerr() << targetMinterm << " on the \"don't care\" list of \"" << functionName << "\" will be ignored because it is already a minterm!\n";
 	}
 	
 	return true;

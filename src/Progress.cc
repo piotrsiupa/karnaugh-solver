@@ -4,6 +4,7 @@
 #include <cassert>
 #include <iomanip>
 #include <ios>
+#include <stdexcept>
 
 #include "options.hh"
 
@@ -11,6 +12,8 @@
 Progress::calcSubstepCompletion_t Progress::calc0SubstepCompletion = [](){ return 0.0; };
 
 std::uint_fast8_t Progress::stageCounters[STAGE_COUNT] = {};
+
+Progress *Progress::progress = nullptr;
 
 Progress::steps_t Progress::calcStepsToSkip(const double secondsToSkip, const double secondsPerStep) const
 {
@@ -160,6 +163,10 @@ Progress::Progress(const Stage stage, const char processName[], const steps_t al
 	allSteps(allSteps),
 	visible(visible && options::status.getValue())
 {
+	if (progress != nullptr) [[unlikely]]
+		throw std::runtime_error("There cannot be two object of class \"Progress\" existing at the same time!");
+	else
+		progress = this;
 	assert(static_cast<std::size_t>(stage) < STAGE_COUNT);
 	if (static_cast<std::size_t>(stage) != STAGE_COUNT - 1)
 		assert(stageCounters[static_cast<std::size_t>(stage) + 1] == 0);

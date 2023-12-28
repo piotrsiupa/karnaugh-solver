@@ -95,7 +95,7 @@ static bool parseInputBits(Input &input)
 		Names::names_t names = input.popParts(progress);
 		if (names.size() > ::maxBits)
 		{
-			progress.cerr() << "Too many input variables!\n";
+			Progress::cerr() << "Too many input variables!\n";
 			return false;
 		}
 		::bits = static_cast<::bits_t>(names.size());

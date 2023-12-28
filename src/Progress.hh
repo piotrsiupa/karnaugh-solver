@@ -34,6 +34,8 @@ private:
 	
 	static constexpr double reportInterval = 1.0;
 	
+	static Progress *progress;
+	
 	const Stage stage;
 	const char *const processName;
 	timePoint_t startTime, lastReportTime;
@@ -59,14 +61,14 @@ private:
 public:
 	class CerrGuard
 	{
-		Progress &progress;
+		Progress *const progress;
 		const bool reportedBefore;
-		CerrGuard(Progress &progress) : progress(progress), reportedBefore(progress.reported) { progress.clearReport(true); std::clog << std::flush; }
+		CerrGuard(Progress *const progress) : progress(progress), reportedBefore(progress != nullptr && progress->reported) { if (progress != nullptr) { progress->clearReport(true); std::clog << std::flush; } }
 		CerrGuard(const CerrGuard&) = delete;
 		CerrGuard& operator=(const CerrGuard&) = delete;
 		friend class Progress;
 	public:
-		~CerrGuard() { if (reportedBefore) progress.reportProgress(); }
+		~CerrGuard() { if (reportedBefore) progress->reportProgress(); }
 		template<typename T>
 		const CerrGuard& operator<<(T val) const { std::cerr << std::forward<T>(val); return *this; }
 	};
@@ -100,10 +102,10 @@ public:
 	Progress(const Stage stage, const char processName[], const steps_t allSteps, const bool visible = true);
 	Progress(const Progress&) = delete;
 	Progress& operator=(const Progress&) = delete;
-	~Progress() { clearReport(true); }
+	~Progress() { clearReport(true); progress = nullptr; }
 	
 	[[nodiscard]] bool isVisible() const { return visible; }
-	[[nodiscard]] CerrGuard cerr() { return {*this}; }
+	[[nodiscard]] static CerrGuard cerr() { return {progress}; }
 	
 	void step(const bool force = false);
 	void substep(const calcSubstepCompletion_t &calcSubstepCompletion, const bool force = false) { if (visible) { if (--substepsToSkip == 0 || force) handleStep(calcSubstepCompletion, force); ++substepsSoFar; } }
