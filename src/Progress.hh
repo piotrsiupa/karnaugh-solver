@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <functional>
 #include <iostream>
+#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -35,6 +36,7 @@ private:
 	static constexpr double reportInterval = 1.0;
 	
 	static Progress *progress;
+	static timePoint_t programStartTime;
 	
 	const Stage stage;
 	const char *const processName;
@@ -48,6 +50,8 @@ private:
 	bool reported = false;
 	
 	steps_t calcStepsToSkip(const double secondsToSkip, const double secondsPerStep) const;
+	static double getSecondsSinceStart(const timePoint_t currentTime);
+	static bool checkProgramRunTime(const timePoint_t currentTime);
 	bool checkReportInterval(const bool force);
 	static void printTime(const double seconds);
 	void clearReport(const bool clearStage);
@@ -59,6 +63,8 @@ private:
 	completion_t calcStepCompletion() const { return static_cast<completion_t>(stepsSoFar - 1) / allSteps; }
 	
 public:
+	static void init();
+	
 	class CerrGuard
 	{
 		Progress *const progress;
@@ -113,4 +119,6 @@ public:
 	[[nodiscard]] CountingSubsteps<T> makeCountingSubsteps(const completion_t n) { return {*this, n}; }
 	
 	[[nodiscard]] SubtaskGuard enterSubtask(const char subtaskName[]) { subtaskNames.push_back(subtaskName); return {*this}; }
+	
+	static void reportTime(const std::string_view eventName);
 };

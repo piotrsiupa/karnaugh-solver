@@ -204,6 +204,8 @@ static bool processInput(IstreamUniquePtr istream)
 
 int main(const int argc, const char *const *const argv)
 {
+	Progress::init();
+	
 	if (!options::parse(argc, argv))
 		return 1;
 	if (options::outputFormat.getValue() == options::OutputFormat::MATH_FORMAL || options::outputFormat.getValue() == options::OutputFormat::MATH_PROG || options::outputFormat.getValue() == options::OutputFormat::MATH_ASCII || options::outputFormat.getValue() == options::OutputFormat::MATH_NAMES)

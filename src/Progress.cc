@@ -14,6 +14,7 @@ Progress::calcSubstepCompletion_t Progress::calc0SubstepCompletion = [](){ retur
 std::uint_fast8_t Progress::stageCounters[STAGE_COUNT] = {};
 
 Progress *Progress::progress = nullptr;
+Progress::timePoint_t Progress::programStartTime;
 
 Progress::steps_t Progress::calcStepsToSkip(const double secondsToSkip, const double secondsPerStep) const
 {
@@ -21,19 +22,34 @@ Progress::steps_t Progress::calcStepsToSkip(const double secondsToSkip, const do
 	return std::max<steps_t>(1, newSubstepsToSkip);
 }
 
+double Progress::getSecondsSinceStart(const timePoint_t currentTime)
+{
+	return std::chrono::duration<double>(currentTime - programStartTime).count();
+}
+
+bool Progress::checkProgramRunTime(const timePoint_t currentTime)
+{
+	static bool alreadyPassed = false;
+	if (alreadyPassed) [[likely]]
+		return true;
+	const double secondsSinceStart = getSecondsSinceStart(currentTime);
+	alreadyPassed = secondsSinceStart >= 3.0;
+	return alreadyPassed;
+}
+
 bool Progress::checkReportInterval(const bool force)
 {
 	if (substepsSoFar == 0)
 	{
 		substepsToSkip = 1;
-		return false;
+		return force && checkProgramRunTime(std::chrono::steady_clock::now());
 	}
 	const timePoint_t currentTime = std::chrono::steady_clock::now();
 	const double secondsSinceStart = std::chrono::duration<double>(currentTime - startTime).count();
 	const double secondsSinceLastReport = std::chrono::duration<double>(currentTime - lastReportTime).count();
 	const double remainingSeconds = reportInterval - secondsSinceLastReport;
 	const double secondsPerStep = secondsSinceStart / substepsSoFar;
-	if (secondsSinceStart < 1.0 || (!force && remainingSeconds > secondsPerStep)) // Not even `force` can show progress before 1 second has passed. This is by design.
+	if (!checkProgramRunTime(currentTime) || (!force && remainingSeconds > secondsPerStep)) // Not even `force` can show progress before the initial delay has passed. This is by design.
 	{
 		substepsToSkip = calcStepsToSkip(remainingSeconds, secondsPerStep);
 		return false;
@@ -157,6 +173,11 @@ void Progress::handleStep(const calcSubstepCompletion_t &calcSubstepCompletion, 
 		reportProgress(calcSubstepCompletion);
 }
 
+void Progress::init()
+{
+	programStartTime = std::chrono::steady_clock::now();
+}
+
 Progress::Progress(const Stage stage, const char processName[], const steps_t allSteps, const bool visible) :
 	stage(stage),
 	processName(processName),
@@ -185,4 +206,12 @@ void Progress::step(const bool force)
 		substepsSoFar = 0;
 		substepsToSkip = 2;
 	}
+}
+
+void Progress::reportTime(const std::string_view eventName)
+{
+	CerrGuard cerrGuard = cerr();
+	std::clog << "Time at \"" << eventName << "\": ";
+	printTime(getSecondsSinceStart(std::chrono::steady_clock::now()));
+	std::clog << std::endl;
 }
