@@ -24,6 +24,7 @@ class Input
 	char currentChar = '\n';
 	
 	[[noreturn]] static void throwInputError(Progress *const progress);
+	bool refillBuffer(Progress *const progress);
 	inline char getChar(Progress *const progress);
 	
 public:
@@ -53,19 +54,8 @@ public:
 char Input::getChar(Progress *const progress)
 {
 	if (bufferPos == bufferSize) [[unlikely]]
-	{
-		istream.read(buffer, bufferCapacity);
-		if (!istream) [[unlikely]]
-		{
-			if (!istream.eof()) [[unlikely]]
-				throwInputError(progress);
-			bufferSize = static_cast<std::uint16_t>(istream.gcount());
-			if (bufferSize == 0)
-				return '\0';
-			istream.clear();
-		}
-		bufferPos = 0;
-	}
+		if (!refillBuffer(progress)) [[unlikely]]
+			return '\0';
 	return buffer[bufferPos++];
 }
 

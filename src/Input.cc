@@ -3,6 +3,8 @@
 #include <ios>
 #include <fstream>
 
+#include "options.hh"
+
 
 Minterm Input::maxMintermForMultiplying;
 
@@ -13,6 +15,43 @@ void Input::throwInputError(Progress *const progress)
 	else
 		progress->cerr() << "Cannot read input!\n";
 	throw Error("input error");
+}
+
+bool Input::refillBuffer(Progress *const progress)
+{
+	if (options::prompt.getValue()) [[unlikely]]
+	{
+		istream.read(buffer, 1);
+		if (istream) [[likely]]
+			bufferSize = istream.readsome(buffer + 1, bufferCapacity - 1) + 1;
+		else if (istream.eof()) [[likely]]
+			return false;
+		if (!istream) [[unlikely]]
+		{
+			if (!istream.eof()) [[unlikely]]
+				throwInputError(progress);
+			istream.clear();
+		}
+		else if (bufferSize == 0) [[unlikely]]
+		{
+			return false;
+		}
+	}
+	else
+	{
+		istream.read(buffer, bufferCapacity);
+		if (!istream) [[unlikely]]
+		{
+			if (!istream.eof()) [[unlikely]]
+				throwInputError(progress);
+			bufferSize = static_cast<std::uint16_t>(istream.gcount());
+			if (bufferSize == 0)
+				return false;
+			istream.clear();
+		}
+	}
+	bufferPos = 0;
+	return true;
 }
 
 bool Input::isFile() const
