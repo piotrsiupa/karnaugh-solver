@@ -161,7 +161,7 @@ Karnaughs::solutionses_t Karnaughs::makeSolutionses() const
 
 void Karnaughs::findBestNonOptimizedSolutions(const solutionses_t &solutionses)
 {
-	Progress progress(Progress::Stage::OPTIMIZING, "Electing the best solutions", solutionses.size());
+	Progress progress(Progress::Stage::OPTIMIZING, "Electing the best solutions", solutionses.size(), true);
 	bestSolutions.reserve(solutionses.size());
 	for (const solutions_t &solutions : solutionses)
 	{
@@ -207,7 +207,7 @@ void Karnaughs::findBestOptimizedSolutions(const solutionses_t &solutionses)
 	if (options::status.getValue())
 		for (const solutions_t &solutions : solutionses)
 			steps *= solutions.size();
-	Progress progress(Progress::Stage::OPTIMIZING, "Eliminating common subexpressions", steps);
+	Progress progress(Progress::Stage::OPTIMIZING, "Eliminating common subexpressions", steps, true);
 	for (std::vector<std::size_t> indexes(solutionses.size(), 0);;)
 	{
 		progress.step();

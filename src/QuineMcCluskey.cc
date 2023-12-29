@@ -14,7 +14,7 @@
 Implicants QuineMcCluskey::findPrimeImplicants(const Minterms &allowedMinterms, const std::string &functionName) const
 {
 	const std::string progressName = "Merging implicants of \"" + functionName + '"';
-	Progress progress(Progress::Stage::SOLVING, progressName.c_str(), ::bits + 1);
+	Progress progress(Progress::Stage::SOLVING, progressName.c_str(), ::bits + 1, true);
 	
 	std::vector<std::pair<Implicant, bool>> implicants;
 	for (const Minterm &minterm : allowedMinterms)

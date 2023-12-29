@@ -151,7 +151,7 @@ void Karnaugh::validate(const solutions_t &solutions) const
 bool Karnaugh::loadData(Input &input)
 {
 	const std::string progressName = "Loading function \"" + functionName + '"';
-	Progress progress(Progress::Stage::LOADING, progressName.c_str(), 5, !options::prompt.getValue());
+	Progress progress(Progress::Stage::LOADING, progressName.c_str(), 5, false, !options::prompt.getValue());
 	
 	if (input.hasError(&progress))
 		return false;

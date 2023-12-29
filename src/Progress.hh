@@ -46,6 +46,7 @@ private:
 	steps_t stepsSoFar = 0;
 	steps_t substepsSoFar, substepsToSkip;
 	completion_t stepCompletion;
+	bool relatedSteps;
 	bool visible;
 	std::vector<const char*> subtaskNames;
 	std::uint_fast8_t reportLines = 0;
@@ -105,7 +106,7 @@ public:
 		void substep(const T increment, const bool force = false) { progress.substep(calcCompletion, force); i += increment; }
 	};
 	
-	Progress(const Stage stage, const char processName[], const steps_t allSteps, const bool visible = true);
+	Progress(const Stage stage, const char processName[], const steps_t allSteps, const bool relatedSteps = true, const bool visible = true);
 	Progress(const Progress&) = delete;
 	Progress& operator=(const Progress&) = delete;
 	~Progress() { clearReport(true); progress = nullptr; }
