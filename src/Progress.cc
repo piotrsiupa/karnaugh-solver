@@ -68,7 +68,7 @@ void Progress::printTime(double time)
 	static constexpr std::uintmax_t tooManySeconds = 10 * 365 * 24 * 60 * 60;  // 10 years
 	if (time >= tooManySeconds)
 	{
-		std::clog << "never (more or less)";
+		std::clog << "over 10 years";
 		return;
 	}
 	
@@ -80,23 +80,13 @@ void Progress::printTime(double time)
 	x /= 60;
 	const uint_fast8_t hours = static_cast<std::uint_fast8_t>(x % 24);
 	x /= 24;
-	const uint_fast8_t days = static_cast<std::uint_fast8_t>(x % 365);
+	const uint_fast16_t days = static_cast<std::uint_fast16_t>(x % 365);
 	x /= 365;
 	const uintmax_t years = x;
 	if (years != 0)
-	{
-		std::clog << static_cast<unsigned>(years) << " year";
-		if (years > 1)
-			std::clog << 's';
-		std::clog << ' ';
-	}
+		std::clog << static_cast<unsigned>(years) << " y ";
 	if (days != 0)
-	{
-		std::clog << static_cast<unsigned>(days) << " day";
-		if (days > 1)
-			std::clog << 's';
-		std::clog << ' ';
-	}
+		std::clog << static_cast<unsigned>(days) << " d ";
 	std::clog << std::setfill('0')
 			<< std::setw(2) << static_cast<unsigned>(hours) << ':'
 			<< std::setw(2) << static_cast<unsigned>(minutes) << ':'
@@ -146,7 +136,8 @@ void Progress::reportSingleLevel(const bool indentMore, const completion_t compl
 	std::clog << "    ";
 	if (indentMore)
 		std::clog << "    ";
-	std::clog << std::fixed << "Estimated completion: " << std::setprecision(5) << std::abs(completion) * 100.0 << "%  ET: ";
+	static const double day = 24.0 * 60.0 * 60.0;
+	std::clog << (eta >= day ? "Est. compl.: " : "Estimated completion: ") << std::fixed << std::setprecision(5) << std::abs(completion) * 100.0 << "%  ET: ";
 	printTime(et);
 	std::clog << "  ETA: ";
 	if (std::isnan(eta))
