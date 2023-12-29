@@ -207,7 +207,11 @@ void Karnaughs::findBestOptimizedSolutions(const solutionses_t &solutionses)
 	if (options::status.getValue())
 		for (const solutions_t &solutions : solutionses)
 			steps *= solutions.size();
+#ifdef NDEBUG
 	Progress progress(Progress::Stage::OPTIMIZING, "Eliminating common subexpressions", steps, true);
+#else
+	Progress progress(Progress::Stage::OPTIMIZING, "Eliminating common subexpressions", steps * 2, false);
+#endif
 	for (std::vector<std::size_t> indexes(solutionses.size(), 0);;)
 	{
 		progress.step();
