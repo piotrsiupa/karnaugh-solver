@@ -2,6 +2,7 @@
 
 #include <chrono>
 #include <cstddef>
+#include <cstdint>
 #include <functional>
 #include <iostream>
 #include <string_view>
@@ -47,7 +48,7 @@ private:
 	completion_t stepCompletion;
 	bool visible;
 	std::vector<const char*> subtaskNames;
-	bool reported = false;
+	std::uint_fast8_t reportLines = 0;
 	
 	steps_t calcStepsToSkip(const double secondsToSkip, const double secondsPerStep) const;
 	static double getSecondsSinceStart(const timePoint_t currentTime);
@@ -68,7 +69,7 @@ public:
 	{
 		Progress *const progress;
 		const bool reportedBefore;
-		CerrGuard(Progress *const progress) : progress(progress), reportedBefore(progress != nullptr && progress->reported) { if (progress != nullptr) { progress->clearReport(true); std::clog << std::flush; } }
+		CerrGuard(Progress *const progress) : progress(progress), reportedBefore(progress != nullptr && progress->reportLines != 0) { if (progress != nullptr) { progress->clearReport(true); std::clog << std::flush; } }
 		CerrGuard(const CerrGuard&) = delete;
 		CerrGuard& operator=(const CerrGuard&) = delete;
 		friend class Progress;

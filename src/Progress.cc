@@ -105,14 +105,10 @@ void Progress::printTime(double time)
 
 void Progress::clearReport(const bool clearStage)
 {
-	if (reported)
+	if (reportLines != 0)
 	{
-		if (clearStage)
-			std::clog << "\033[7A";
-		else
-			std::clog << "\033[6A";
-		std::clog << "\r\033[J";
-		reported = false;
+		std::clog << "\033[" << (clearStage ? reportLines : reportLines - 1) << "A\r\033[J";
+		reportLines = clearStage ? 0 : 1;
 	}
 }
 
@@ -163,7 +159,7 @@ void Progress::reportSingleLevel(const bool indentMore, const completion_t compl
 
 void Progress::reportProgress()
 {
-	if (!reported)
+	if (reportLines == 0)
 		reportStage();
 	
 	clearReport(false);
@@ -178,16 +174,26 @@ void Progress::reportProgress()
 		? ((finishedStepsSeconds < 0.1 || stepsSoFar == 1) ? NAN : finishedStepsSeconds * (static_cast<double>(allSteps) / static_cast<double>(stepsSoFar - 1) - 1.0))
 		: estimatedStepTime + (finishedStepsSeconds + estimatedStepTime / (1.0 - stepCompletion)) * (static_cast<double>(allSteps) / static_cast<double>(stepsSoFar) - 1.0);
 	
-	std::clog << "    " << processName << "...\n";
+	const bool twoBars = allSteps != 1 && !std::isnan(estimatedStepTime);
+	
+	std::clog << "    " << processName;
+	if (allSteps == 1)
+		for (const auto &subtaskName : subtaskNames)
+			std::clog << " -> " << subtaskName;
+	std::clog << "...\n";
 	reportSingleLevel(false, completion, finishedStepsSeconds + currentStepSeconds, estimatedTime);
 	
-	std::clog << "        Step " << stepsSoFar << '/' << allSteps;
-	for (const auto &subtaskName : subtaskNames)
-		std::clog << " -> " << subtaskName;
-	std::clog << "...\n";
-	reportSingleLevel(true, stepCompletion, currentStepSeconds, estimatedStepTime);
+	if (allSteps != 1)
+	{
+		std::clog << "        Step " << stepsSoFar << '/' << allSteps;
+		for (const auto &subtaskName : subtaskNames)
+			std::clog << " -> " << subtaskName;
+		std::clog << "...\n";
+		if (twoBars)
+			reportSingleLevel(true, stepCompletion, currentStepSeconds, estimatedStepTime);
+	}
 	
-	reported = true;
+	reportLines = twoBars ? 7 : (allSteps == 1 ? 4 : 5);
 }
 
 void Progress::handleStep(const calcStepCompletion_t &calcStepCompletion, const bool force)
