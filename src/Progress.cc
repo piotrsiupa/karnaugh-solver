@@ -31,7 +31,7 @@ double Progress::getSecondsSinceStart(const timePoint_t currentTime)
 bool Progress::checkProgramRunTime(const timePoint_t currentTime)
 {
 	static bool alreadyPassed = false;
-	if (alreadyPassed) [[likely]]
+	if (alreadyPassed)
 		return true;
 	const double secondsSinceStart = getSecondsSinceStart(currentTime);
 	alreadyPassed = secondsSinceStart >= reportInterval;
@@ -211,7 +211,7 @@ Progress::Progress(const Stage stage, const char processName[], const steps_t al
 	relatedSteps(relatedSteps),
 	visible(visible && options::status.getValue())
 {
-	if (progress != nullptr) [[unlikely]]
+	if (progress != nullptr)
 		throw std::runtime_error("There cannot be two object of class \"Progress\" existing at the same time!");
 	else
 		progress = this;
