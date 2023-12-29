@@ -24,7 +24,7 @@ Implicants QuineMcCluskey::findPrimeImplicants(const Minterms &allowedMinterms, 
 	
 	::bits_t implicantSize = ::bits;
 	char subtaskDescription[96] = "";
-	const auto subtaskGuard = progress.enterSubtask(subtaskDescription);
+	const auto infoGuard = progress.addInfo(subtaskDescription);
 	while (!implicants.empty())
 	{
 		std::uintmax_t operationsSoFar = 0, expectedOperations = 0;

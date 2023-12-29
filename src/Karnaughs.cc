@@ -166,13 +166,13 @@ void Karnaughs::findBestNonOptimizedSolutions(const solutionses_t &solutionses)
 	for (const solutions_t &solutions : solutionses)
 	{
 		progress.step();
-		auto substeps = progress.makeCountingSubsteps(static_cast<Progress::completion_t>(solutions.size()));
+		auto progressStep = progress.makeCountingStepHelper(static_cast<Progress::completion_t>(solutions.size()));
 		using score_t = std::size_t;
 		const Implicants *bestSolution = nullptr;
 		score_t bestScore = std::numeric_limits<score_t>::max();
 		for (const Implicants &solution : solutions)
 		{
-			substeps.substep();
+			progressStep.substep();
 			if (solution.empty())
 			{
 				bestSolution = &solution;

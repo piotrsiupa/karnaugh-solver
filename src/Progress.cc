@@ -178,8 +178,8 @@ void Progress::reportProgress()
 	
 	std::clog << "    " << processName;
 	if (allSteps == 1)
-		for (const auto &subtaskName : subtaskNames)
-			std::clog << " -> " << subtaskName;
+		for (const auto &infoText : infoTexts)
+			std::clog << " -> " << infoText;
 	std::clog << "...";
 	if (!relatedSteps)
 		std::clog << " (*)";
@@ -189,8 +189,8 @@ void Progress::reportProgress()
 	if (allSteps != 1)
 	{
 		std::clog << "        Step " << stepsSoFar << '/' << allSteps;
-		for (const auto &subtaskName : subtaskNames)
-			std::clog << " -> " << subtaskName;
+		for (const auto &infoText : infoTexts)
+			std::clog << " -> " << infoText;
 		std::clog << "...";
 		if (std::signbit(stepCompletion))
 			std::clog << " (*)";

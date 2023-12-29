@@ -88,18 +88,18 @@ bool Karnaugh::loadMinterms(Minterms &minterms, Input &input, Progress &progress
 {
 	std::vector<std::string> parts;
 	{
-		const auto subtaskGuard = progress.enterSubtask("splitting input line");
+		const auto infoGuard = progress.addInfo("splitting input line");
 		progress.step(true);
 		parts = input.popParts(progress);
 	}
 	
 	{
-		const auto subtaskGuard = progress.enterSubtask("parsing numbers");
+		const auto infoGuard = progress.addInfo("parsing numbers");
 		progress.step(true);
-		Progress::CountingSubsteps substeps = progress.makeCountingSubsteps(static_cast<Progress::completion_t>(parts.size()));
+		auto progressStep = progress.makeCountingStepHelper(static_cast<Progress::completion_t>(parts.size()));
 		for (const std::string &string : parts)
 		{
-			substeps.substep();
+			progressStep.substep();
 			try
 			{
 				const unsigned long n = std::stoul(string);
@@ -185,12 +185,12 @@ bool Karnaugh::loadData(Input &input)
 		if (!loadMinterms(allowedMinterms, input, progress))
 			return false;
 	
-	const auto conflictsSubtask = progress.enterSubtask("checking for conflicts");
+	const auto infoGuard = progress.addInfo("checking for conflicts");
 	progress.step(true);
-	Progress::CountingSubsteps substeps = progress.makeCountingSubsteps(static_cast<Progress::completion_t>(targetMinterms.size()));
+	auto progressStep = progress.makeCountingStepHelper(static_cast<Progress::completion_t>(targetMinterms.size()));
 	for (const Minterm &targetMinterm : targetMinterms)
 	{
-		substeps.substep();
+		progressStep.substep();
 		if (allowedMinterms.find(targetMinterm) == allowedMinterms.cend())
 			allowedMinterms.insert(targetMinterm);
 		else
