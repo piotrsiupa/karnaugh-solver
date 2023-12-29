@@ -24,4 +24,21 @@ bool isStderrTerminal()
 {
 	return isTerminal(STD_ERROR_HANDLE);
 }
+
+static void enableAnsiSequences(const DWORD stream)
+{
+	const HANDLE handle = GetStdHandle(stream);
+	DWORD consoleMode;
+	if (handle != INVALID_HANDLE_VALUE && GetConsoleMode(handle, &consoleMode))
+	{
+		consoleMode |= ENABLE_PROCESSED_OUTPUT | ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+		SetConsoleMode(handle, consoleMode);
+	}
+}
+
+void enableAnsiSequences()
+{
+	enableAnsiSequences(STD_OUTPUT_HANDLE);
+	enableAnsiSequences(STD_ERROR_HANDLE);
+}
 #endif

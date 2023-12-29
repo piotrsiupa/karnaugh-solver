@@ -97,7 +97,7 @@ void Progress::clearReport(const bool clearStage)
 {
 	if (reportLines != 0)
 	{
-		std::clog << "\033[" << (clearStage ? reportLines : reportLines - 1) << "A\r\033[J";
+		std::clog << "\033[" << static_cast<unsigned>(clearStage ? reportLines : reportLines - 1) << "A\r\033[J";
 		reportLines = clearStage ? 0 : 1;
 	}
 }

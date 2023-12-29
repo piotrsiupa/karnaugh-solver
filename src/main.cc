@@ -222,6 +222,8 @@ int main(const int argc, const char *const *const argv)
 		return 0;
 	}
 	
+	enableAnsiSequences();
+	
 	IstreamUniquePtr istream = prepareIstream();
 	if (!istream)
 		return 1;
