@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <cmath>
 #include <iomanip>
 #include <ios>
 #include <stdexcept>
@@ -9,7 +10,7 @@
 #include "options.hh"
 
 
-Progress::calcSubstepCompletion_t Progress::calc0SubstepCompletion = [](){ return 0.0; };
+Progress::calcStepCompletion_t Progress::calc0StepCompletion = [](){ return 0.0; };
 
 std::uint_fast8_t Progress::stageCounters[STAGE_COUNT] = {};
 
@@ -100,9 +101,9 @@ void Progress::clearReport(const bool clearStage)
 	if (reported)
 	{
 		if (clearStage)
-			std::clog << "\033[4A";
+			std::clog << "\033[7A";
 		else
-			std::clog << "\033[3A";
+			std::clog << "\033[6A";
 		std::clog << "\r\033[J";
 		reported = false;
 	}
@@ -128,6 +129,31 @@ void Progress::reportStage() const
 	std::clog << '\n';
 }
 
+void Progress::reportSingleLevel(const bool indentMore, const completion_t completion, const double et, const double eta)
+{
+	std::clog << "    ";
+	if (indentMore)
+		std::clog << "    ";
+	const std::uint_fast8_t barLength = indentMore ? 70 : 74;
+	const std::uint_fast8_t progressBarLenght = static_cast<std::uint_fast8_t>(barLength * completion);
+	std::clog << '[' << std::setfill('#') << std::setw(progressBarLenght) << "" << std::setfill('.') << std::setw(barLength - progressBarLenght) << "" << ']' << '\n';
+	
+	std::ios oldClogState(nullptr);
+	oldClogState.copyfmt(std::clog);
+	std::clog << "    ";
+	if (indentMore)
+		std::clog << "    ";
+	std::clog << std::fixed << "Estimated completion: " << std::setprecision(5) << completion * 100.0 << "%  ET: ";
+	printTime(et);
+	std::clog << "  ETA: ";
+	if (std::isnan(eta))
+		std::clog << "N/A";
+	else
+		printTime(eta);
+	std::clog << std::endl;
+	std::clog.copyfmt(oldClogState);
+}
+
 void Progress::reportProgress()
 {
 	if (!reported)
@@ -135,42 +161,32 @@ void Progress::reportProgress()
 	
 	clearReport(false);
 	
-	std::clog << processName;
-	if (allSteps != 1)
-		std::clog << ' ' << '(' << stepsSoFar << '/' << allSteps << ')';
+	const timePoint_t currentTime = std::chrono::steady_clock::now();
+	
+	const completion_t completion = (stepCompletion + stepsSoFar - 1) / allSteps;
+	const double finishedStepsSeconds = std::chrono::duration<double>(stepStartTime - startTime).count();
+	const double currentStepSeconds = std::chrono::duration<double>(currentTime - stepStartTime).count();
+	const double estimatedStepTime = (currentStepSeconds < 0.1 || stepCompletion == 0.0) ? NAN : currentStepSeconds * (1.0 / stepCompletion - 1.0);
+	const double estimatedTime = std::isnan(estimatedStepTime)
+		? ((finishedStepsSeconds < 0.1 || stepsSoFar == 1) ? NAN : finishedStepsSeconds * (static_cast<double>(allSteps) / static_cast<double>(stepsSoFar - 1) - 1.0))
+		: estimatedStepTime + (finishedStepsSeconds + estimatedStepTime / (1.0 - stepCompletion)) * (static_cast<double>(allSteps) / static_cast<double>(stepsSoFar) - 1.0);
+	
+	std::clog << "    " << processName << "...\n";
+	reportSingleLevel(false, completion, finishedStepsSeconds + currentStepSeconds, estimatedTime);
+	
+	std::clog << "        Step " << stepsSoFar << '/' << allSteps;
 	for (const auto &subtaskName : subtaskNames)
 		std::clog << " -> " << subtaskName;
 	std::clog << "...\n";
-	
-	const std::uint_fast8_t progressBarLenght = static_cast<std::uint_fast8_t>(78 * completion);
-	std::clog << '[' << std::setfill('#') << std::setw(progressBarLenght) << "" << std::setfill('.') << std::setw(78 - progressBarLenght) << "" << ']' << '\n';
-	
-	const timePoint_t currentTime = std::chrono::steady_clock::now();
-	const double secondsSinceStart = std::chrono::duration<double>(currentTime - startTime).count();
-	std::ios oldClogState(nullptr);
-	oldClogState.copyfmt(std::clog);
-	std::clog << std::fixed << "Estimated completion: " << std::setprecision(5) << completion * 100.0 << "%  ET: ";
-	printTime(secondsSinceStart);
-	std::clog << "  ETA: ";
-	if (secondsSinceStart < 0.1 || completion == 0.0)
-	{
-		std::clog << "N/A";
-	}
-	else
-	{
-		const double estimatedTime = secondsSinceStart / completion * (1.0 - completion);
-		printTime(estimatedTime);
-	}
-	std::clog << std::endl;
-	std::clog.copyfmt(oldClogState);
+	reportSingleLevel(true, stepCompletion, currentStepSeconds, estimatedStepTime);
 	
 	reported = true;
 }
 
-void Progress::handleStep(const calcSubstepCompletion_t &calcSubstepCompletion, const bool force)
+void Progress::handleStep(const calcStepCompletion_t &calcStepCompletion, const bool force)
 {
 	if (checkReportInterval(force))
-		reportProgress(calcSubstepCompletion);
+		reportProgress(calcStepCompletion);
 }
 
 void Progress::init()
@@ -201,8 +217,9 @@ void Progress::step(const bool force)
 	if (visible)
 	{
 		++stepsSoFar;
-		handleStep(calc0SubstepCompletion, force);
-		lastReportTime = std::chrono::steady_clock::now();
+		stepStartTime = std::chrono::steady_clock::now();
+		handleStep(calc0StepCompletion, force);
+		lastReportTime = stepStartTime;
 		substepsSoFar = 0;
 		substepsToSkip = 2;
 	}

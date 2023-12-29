@@ -23,9 +23,9 @@ public:
 	
 	using steps_t = std::uintmax_t;
 	using completion_t = double;
-	using calcSubstepCompletion_t = std::function<completion_t()>;
+	using calcStepCompletion_t = std::function<completion_t()>;
 	
-	static calcSubstepCompletion_t calc0SubstepCompletion;
+	static calcStepCompletion_t calc0StepCompletion;
 	
 private:
 	static constexpr std::size_t STAGE_COUNT = 3;
@@ -40,11 +40,11 @@ private:
 	
 	const Stage stage;
 	const char *const processName;
-	timePoint_t startTime, lastReportTime;
+	timePoint_t startTime, stepStartTime, lastReportTime;
 	steps_t allSteps;
 	steps_t stepsSoFar = 0;
 	steps_t substepsSoFar, substepsToSkip;
-	completion_t completion;
+	completion_t stepCompletion;
 	bool visible;
 	std::vector<const char*> subtaskNames;
 	bool reported = false;
@@ -56,11 +56,10 @@ private:
 	static void printTime(const double seconds);
 	void clearReport(const bool clearStage);
 	void reportStage() const;
+	static void reportSingleLevel(const bool indentMore, const completion_t completion, const double et, const double eta);
 	void reportProgress();
-	void reportProgress(const calcSubstepCompletion_t &calcSubstepCompletion) { completion = calcSubstepCompletion() / allSteps + calcStepCompletion(); return reportProgress(); }
-	void handleStep(const calcSubstepCompletion_t &calcSubstepCompletion, const bool force);
-	
-	completion_t calcStepCompletion() const { return static_cast<completion_t>(stepsSoFar - 1) / allSteps; }
+	void reportProgress(const calcStepCompletion_t &calcStepCompletion) { stepCompletion = calcStepCompletion(); return reportProgress(); }
+	void handleStep(const calcStepCompletion_t &calcStepCompletion, const bool force);
 	
 public:
 	static void init();
@@ -95,7 +94,7 @@ public:
 	{
 		Progress &progress;
 		T i = 0;
-		const calcSubstepCompletion_t calcCompletion;
+		const calcStepCompletion_t calcCompletion;
 		friend class Progress;
 		CountingSubsteps(Progress &progress, const completion_t n) : progress(progress), calcCompletion([&i = std::as_const(i), n](){ return static_cast<completion_t>(i) / n; }) {}
 		CountingSubsteps(const CountingSubsteps&) = delete;
@@ -114,7 +113,7 @@ public:
 	[[nodiscard]] static CerrGuard cerr() { return {progress}; }
 	
 	void step(const bool force = false);
-	void substep(const calcSubstepCompletion_t &calcSubstepCompletion, const bool force = false) { if (visible) { if (--substepsToSkip == 0 || force) handleStep(calcSubstepCompletion, force); ++substepsSoFar; } }
+	void substep(const calcStepCompletion_t &calcStepCompletion, const bool force = false) { if (visible) { if (--substepsToSkip == 0 || force) handleStep(calcStepCompletion, force); ++substepsSoFar; } }
 	template<typename T = std::size_t>
 	[[nodiscard]] CountingSubsteps<T> makeCountingSubsteps(const completion_t n) { return {*this, n}; }
 	

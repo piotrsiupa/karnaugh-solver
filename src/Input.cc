@@ -61,11 +61,11 @@ std::vector<std::string> Input::popParts(Progress &progress)
 	static const std::regex separator("\\s*(?![-_])[[:punct:]]\\s*|\\s+");
 	static const std::sregex_token_iterator rend;
 	std::sregex_token_iterator::value_type match;
-	const Progress::calcSubstepCompletion_t calcSubstepCompletion = [&line = std::as_const(line), &match = std::as_const(match)](){ return static_cast<Progress::completion_t>(match.second - line.cbegin()) / static_cast<Progress::completion_t>(line.size()); };
+	const Progress::calcStepCompletion_t calcStepCompletion = [&line = std::as_const(line), &match = std::as_const(match)](){ return static_cast<Progress::completion_t>(match.second - line.cbegin()) / static_cast<Progress::completion_t>(line.size()); };
 	for (std::sregex_token_iterator iter(line.cbegin(), line.cend(), separator, -1); iter != rend; ++iter)
 	{
 		match = *iter;
-		progress.substep(calcSubstepCompletion);
+		progress.substep(calcStepCompletion);
 		if (match.length() != 0)
 			parts.emplace_back(match);
 	}
