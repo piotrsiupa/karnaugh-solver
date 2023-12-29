@@ -34,7 +34,7 @@ bool Progress::checkProgramRunTime(const timePoint_t currentTime)
 	if (alreadyPassed) [[likely]]
 		return true;
 	const double secondsSinceStart = getSecondsSinceStart(currentTime);
-	alreadyPassed = secondsSinceStart >= 3.0;
+	alreadyPassed = secondsSinceStart >= reportInterval;
 	return alreadyPassed;
 }
 
