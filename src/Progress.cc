@@ -46,10 +46,10 @@ bool Progress::checkReportInterval(const bool force)
 		return force && checkProgramRunTime(std::chrono::steady_clock::now());
 	}
 	const timePoint_t currentTime = std::chrono::steady_clock::now();
-	const double secondsSinceStart = std::chrono::duration<double>(currentTime - startTime).count();
+	const double secondsSinceStepStart = std::chrono::duration<double>(currentTime - stepStartTime).count();
 	const double secondsSinceLastReport = std::chrono::duration<double>(currentTime - lastReportTime).count();
 	const double remainingSeconds = reportInterval - secondsSinceLastReport;
-	const double secondsPerStep = secondsSinceStart / substepsSoFar;
+	const double secondsPerStep = secondsSinceStepStart / substepsSoFar;
 	if (!checkProgramRunTime(currentTime) || (!force && remainingSeconds > secondsPerStep)) // Not even `force` can show progress before the initial delay has passed. This is by design.
 	{
 		substepsToSkip = calcStepsToSkip(remainingSeconds, secondsPerStep);
@@ -164,10 +164,12 @@ void Progress::reportProgress()
 	const double estimatedTime = std::isnan(estimatedStepTime)
 		? ((finishedStepsSeconds < 0.1 || stepsSoFar == 1) ? NAN : finishedStepsSeconds * (static_cast<double>(allSteps) / static_cast<double>(stepsSoFar - 1) - 1.0))
 		: estimatedStepTime + (finishedStepsSeconds + estimatedStepTime / (1.0 - std::abs(stepCompletion))) * (static_cast<double>(allSteps) / static_cast<double>(stepsSoFar) - 1.0);
+	const bool stepProgressIsUnsure = std::signbit(stepCompletion);
+	const bool mainProgressIsUnsure = stepProgressIsUnsure || (stepsSoFar != allSteps && !relatedSteps);
 	
-	const bool twoBars = allSteps != 1 && !std::isnan(estimatedStepTime);
+	const bool twoBars = allSteps != 1 && (!std::isnan(estimatedStepTime) || stepProgressIsUnsure);
 	
-	std::clog << "    " << processName;
+	std::clog << "\\__ " << processName;
 	if (allSteps == 1)
 		for (const auto &infoText : infoTexts)
 			std::clog << " -> " << infoText;
@@ -175,11 +177,11 @@ void Progress::reportProgress()
 	if (!relatedSteps)
 		std::clog << " (*)";
 	std::clog << '\n';
-	reportSingleLevel(false, relatedSteps ? completion : -completion, finishedStepsSeconds + currentStepSeconds, estimatedTime);
+	reportSingleLevel(false, mainProgressIsUnsure ? -completion : completion, finishedStepsSeconds + currentStepSeconds, estimatedTime);
 	
 	if (allSteps != 1)
 	{
-		std::clog << "        Step " << stepsSoFar << '/' << allSteps;
+		std::clog << "    \\__ Step " << stepsSoFar << '/' << allSteps;
 		for (const auto &infoText : infoTexts)
 			std::clog << " -> " << infoText;
 		std::clog << "...";
