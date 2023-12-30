@@ -29,7 +29,7 @@ public:
 Implicants QuineMcCluskey::findPrimeImplicants(Minterms allowedMinterms, const std::string &functionName) const
 {
 	const std::string progressName = "Finding prime impl. of \"" + functionName + '"';
-	Progress progress(Progress::Stage::SOLVING, progressName.c_str(), 5, false);
+	Progress progress(Progress::Stage::SOLVING, progressName.c_str(), 4, false);
 	
 	std::vector<Minterm> masks(std::size_t(::maxMinterm) + 1);
 	{
@@ -67,19 +67,9 @@ Implicants QuineMcCluskey::findPrimeImplicants(Minterms allowedMinterms, const s
 				progressStep.substep();
 				Implicant implicant(minterm & masks[minterm], masks[minterm]);
 				for (Minterator iter(implicant); iter; iter.step(implicant))
-				{
 					if (allowedMinterms.check(*iter))
-					{
-						implicant.add({static_cast<Implicant::mask_t>(*iter & masks[*iter]), static_cast<Implicant::mask_t>(masks[*iter])});
-					}
-					else
-					{
-						implicant = Implicant::none();
-						break;
-					}
-				}
-				if (implicant != Implicant::none())
-					newImplicants.push_back(implicant);
+						implicant.add({static_cast<Implicant::mask_t>(minterm & masks[*iter]), static_cast<Implicant::mask_t>(masks[*iter])});
+				newImplicants.push_back(implicant);
 			}
 		}
 		{
@@ -87,22 +77,9 @@ Implicants QuineMcCluskey::findPrimeImplicants(Minterms allowedMinterms, const s
 			progress.substep([](){ return -0.8; }, true);
 			std::sort(newImplicants.begin(), newImplicants.end());
 			newImplicants.erase(std::unique(newImplicants.begin(), newImplicants.end()), newImplicants.end());
-			for (const Implicant &newImplicant : newImplicants)
-				newImplicant.removeFromMinterms(allowedMinterms);
 		}
 	}
 	
-	{
-		const auto infoGuard = progress.addInfo("adding missing implicants");
-		progress.step();
-		auto progressStep = progress.makeCountingStepHelper(allowedMinterms.getSize());
-		newImplicants.reserve(newImplicants.size() + allowedMinterms.getSize());
-		for (const Minterm minterm : allowedMinterms)
-		{
-			progressStep.substep();
-			newImplicants.push_back(Implicant(minterm));
-		}
-	}
 	
 	Implicants primeImplicants;
 	{
