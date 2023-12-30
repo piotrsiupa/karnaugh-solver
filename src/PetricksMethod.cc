@@ -36,12 +36,12 @@ Implicants PetricksMethod<INDEX_T>::extractEssentials(const std::string &functio
 	const std::string progressName = "Extracting essentials of \"" + functionName + '"';
 	Progress progress(Progress::Stage::SOLVING, progressName.c_str(), 1);
 	progress.step();
-	Progress::CountingSubsteps substeps = progress.makeCountingSubsteps(static_cast<Progress::completion_t>(minterms.size()));
+	auto progressStep = progress.makeCountingStepHelper(static_cast<Progress::completion_t>(minterms.size()));
 	
 	Implicants essentials;
 	for (std::size_t i = 0; i != minterms.size();)
 	{
-		substeps.substep();
+		progressStep.substep();
 		const index_t essentialPrimeImplicantIndex = findEssentialPrimeImplicantIndex(minterms[i]);
 		if (essentialPrimeImplicantIndex == NO_INDEX)
 		{
@@ -79,11 +79,11 @@ typename PetricksMethod<INDEX_T>::productOfSumsOfProducts_t PetricksMethod<INDEX
 	const std::string progressName = "Creating initial solution space for \"" + functionName + '"';
 	Progress progress(Progress::Stage::SOLVING, progressName.c_str(), 1);
 	progress.step();
-	Progress::CountingSubsteps substeps = progress.makeCountingSubsteps(static_cast<Progress::completion_t>(minterms.size()));
+	auto progressStep = progress.makeCountingStepHelper(static_cast<Progress::completion_t>(minterms.size()));
 	productOfSumsOfProducts_t productOfSums;
 	for (const Minterm &minterm : minterms)
 	{
-		substeps.substep();
+		progressStep.substep();
 		sumOfProducts_t &sum = productOfSums.emplace_back();
 		for (index_t i = 0; i != primeImplicants.size(); ++i)
 			if (primeImplicants[i].covers(minterm))
@@ -98,10 +98,10 @@ void PetricksMethod<INDEX_T>::removeRedundantSums(productOfSumsOfProducts_t &pro
 	const std::string progressName = "Cleaning up solution space for \"" + functionName + '"';
 	Progress progress(Progress::Stage::SOLVING, progressName.c_str(), 1);
 	progress.step();
-	Progress::CountingSubsteps substeps = progress.makeCountingSubsteps(static_cast<Progress::completion_t>(productOfSums.size()));
+	auto progressStep = progress.makeCountingStepHelper(static_cast<Progress::completion_t>(productOfSums.size()));
 	for (auto x = productOfSums.begin(); x != productOfSums.end(); ++x)
 	{
-		substeps.substep();
+		progressStep.substep();
 		if (!x->empty())
 		{
 			for (auto y = std::next(x); y != productOfSums.end(); ++y)
@@ -141,7 +141,7 @@ inline typename PetricksMethod<INDEX_T>::sumOfProducts_t PetricksMethod<INDEX_T>
 	{
 		std::size_t operationsThisTime = 0;
 		const auto estimateCompletion = [actualOperations, &operationsThisTime = std::as_const(operationsThisTime), expectedOperations](){ return static_cast<Progress::completion_t>((actualOperations + operationsThisTime) / expectedOperations); };
-		Progress::SubtaskGuard progressSubtask = progress.enterSubtask("expanding");
+		const auto infoGuard = progress.addInfo("expanding");
 		for (const product_t &x : multiplier0)
 		{
 			for (const product_t &y : multiplier1)
@@ -157,7 +157,7 @@ inline typename PetricksMethod<INDEX_T>::sumOfProducts_t PetricksMethod<INDEX_T>
 	}
 	{	
 		const auto estimateCompletion = [&actualOperations = std::as_const(actualOperations), expectedOperations](){ return static_cast<Progress::completion_t>(actualOperations / expectedOperations); };
-		Progress::SubtaskGuard progressSubtask = progress.enterSubtask("refining");
+		const auto infoGuard = progress.addInfo("refining");
 		progress.substep(estimateCompletion, true);
 		return hasseDiagram.getSets();
 	}
@@ -182,7 +182,7 @@ typename PetricksMethod<INDEX_T>::sumOfProducts_t PetricksMethod<INDEX_T>::findS
 	Progress progress(Progress::Stage::SOLVING, progressName.c_str(), 1);
 	char progressInfo[128] = ""; // 128 should be enough even if the number is huge.
 	long double actualOperations = 0.0, expectedOperations = 0.0, expectedSolutions = 0.0;
-	Progress::SubtaskGuard progressSubtask = progress.enterSubtask(progressInfo);
+	const auto infoGuard = progress.addInfo(progressInfo);
 	progress.step();
 	
 	while (productOfSumsOfProducts.size() != 1)

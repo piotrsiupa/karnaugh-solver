@@ -8,16 +8,13 @@
 
 Minterm Input::maxMintermForMultiplying;
 
-void Input::throwInputError(Progress *const progress)
+void Input::throwInputError()
 {
-	if (progress == nullptr)
-		std::cerr << "Cannot read input!\n";
-	else
-		progress->cerr() << "Cannot read input!\n";
+	Progress::cerr() << "Cannot read input!\n";
 	throw Error("input error");
 }
 
-bool Input::refillBuffer(Progress *const progress)
+bool Input::refillBuffer()
 {
 	if (options::prompt.getValue()) [[unlikely]]
 	{
@@ -29,7 +26,7 @@ bool Input::refillBuffer(Progress *const progress)
 		if (!istream) [[unlikely]]
 		{
 			if (!istream.eof()) [[unlikely]]
-				throwInputError(progress);
+				throwInputError();
 			istream.clear();
 		}
 		else if (bufferSize == 0) [[unlikely]]
@@ -43,7 +40,7 @@ bool Input::refillBuffer(Progress *const progress)
 		if (!istream) [[unlikely]]
 		{
 			if (!istream.eof()) [[unlikely]]
-				throwInputError(progress);
+				throwInputError();
 			bufferSize = static_cast<std::uint16_t>(istream.gcount());
 			if (bufferSize == 0)
 				return false;

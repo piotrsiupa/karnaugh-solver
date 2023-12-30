@@ -173,10 +173,10 @@ bool Karnaugh::loadMinterms(Minterms &minterms, Input &input, Progress &progress
 {
 	if (input.doesNextStartWithDash())
 	{
-		const std::string word = input.getWord(&progress);
-		if (word == "-" && !input.hasNextInLine(&progress))
+		const std::string word = input.getWord();
+		if (word == "-" && !input.hasNextInLine())
 			return true;
-		progress.cerr() << "\"-\" cannot be followed by anything!\n";
+		Progress::cerr() << "\"-\" cannot be followed by anything!\n";
 		return false;
 	}
 	
@@ -184,30 +184,30 @@ bool Karnaugh::loadMinterms(Minterms &minterms, Input &input, Progress &progress
 	
 	{
 		const std::string subtaskName = "loading " + name;
-		const auto subtaskGuard = progress.enterSubtask(subtaskName.c_str());
+		const auto infoGuard = progress.addInfo(subtaskName.c_str());
 		progress.step(true);
 		const std::size_t estimatedSize = estimateRemainingInputSize(input);
 		minterms.reserve(estimatedSize);
-		const Progress::calcSubstepCompletion_t calcSubstepCompletion(MintermLoadingCompletionCalculator(minterms, dontCares, estimatedSize));
+		const Progress::calcStepCompletion_t calcStepCompletion(MintermLoadingCompletionCalculator(minterms, dontCares, estimatedSize));
 		do
 		{
-			progress.substep(calcSubstepCompletion);
-			minterms.push_back(input.getMinterm(progress));
-		} while (input.hasNextInLine(&progress));
+			progress.substep(calcStepCompletion);
+			minterms.push_back(input.getMinterm());
+		} while (input.hasNextInLine());
 	}
 	
 	{
-		const std::string subtaskName = "sorting " + name + " (*)";
-		const auto subtaskGuard = progress.enterSubtask(subtaskName.c_str());
+		const std::string subtaskName = "sorting " + name;
+		const auto infoGuard = progress.addInfo(subtaskName.c_str());
 		progress.step(true);
-		progress.substep([](){ return 0.0; }, true);
+		progress.substep([](){ return -0.0; }, true);
 		if (!std::is_sorted(minterms.cbegin(), minterms.cend()))
 			std::sort(minterms.begin(), minterms.end());
-		progress.substep([](){ return 0.8; }, true);
+		progress.substep([](){ return -0.8; }, true);
 		const Minterms duplicates = extractDuplicates(minterms);
 		if (!duplicates.empty())
 		{
-			Progress::CerrGuard cerr = progress.cerr();
+			Progress::CerrGuard cerr = Progress::cerr();
 			cerr << "There are duplicates on the " << name << " list:";
 			printMinterms(duplicates, cerr);
 			cerr << "! (They will be ignored.)\n";
@@ -221,7 +221,7 @@ bool Karnaugh::loadMinterms(Minterms &minterms, Input &input, Progress &progress
 void Karnaugh::validate(const solutions_t &solutions) const
 {
 	const std::string progressName = "Validating solutions for \"" + functionName + "\" (development build)";
-	Progress progress(Progress::Stage::SOLVING, progressName.c_str(), solutions.size());
+	Progress progress(Progress::Stage::SOLVING, progressName.c_str(), solutions.size(), true);
 	for (const Implicants &solution : solutions)
 	{
 		progress.step();
@@ -242,17 +242,17 @@ void Karnaugh::validate(const solutions_t &solutions) const
 bool Karnaugh::loadData(Input &input)
 {
 	const std::string progressName = "Loading function \"" + functionName + '"';
-	Progress progress(Progress::Stage::LOADING, progressName.c_str(), 5, !options::prompt.getValue());
+	Progress progress(Progress::Stage::LOADING, progressName.c_str(), 5, false, !options::prompt.getValue());
 	
 	nameIsCustom = input.isNextText();
 	if (nameIsCustom)
-		functionName = input.getLine(&progress);
+		functionName = input.getLine();
 	
 	if (nameIsCustom && options::prompt.getValue())
 		std::cerr << "Enter a list of minterms of the function \"" << functionName << "\":\n";
-	if (!input.hasNext(&progress))
+	if (!input.hasNext())
 	{
-		progress.cerr() << "A list of minterms is mandatory!\n";
+		Progress::cerr() << "A list of minterms is mandatory!\n";
 		return false;
 	}
 	if (!loadMinterms(targetMinterms, input, progress, false))
@@ -267,22 +267,22 @@ bool Karnaugh::loadData(Input &input)
 			std::cerr << ":\n";
 	}
 	Minterms dontCares;
-	if (input.hasNext(&progress))
+	if (input.hasNext())
 		if (!loadMinterms(dontCares, input, progress, true))
 			return false;
 	
 	{
-		const auto conflictsSubtask = progress.enterSubtask("listing possible minterms (*)");
+		const auto infoGuard = progress.addInfo("listing possible minterms");
 		progress.step(true);
-		progress.substep([](){ return 0.0; }, true);
+		progress.substep([](){ return -0.0; }, true);
 		allowedMinterms.resize(targetMinterms.size() + dontCares.size()); // C++ doesn't provide a variant of this function that doesn't 0-initialize.
-		progress.substep([](){ return 0.3; }, true);
+		progress.substep([](){ return -0.3; }, true);
 		std::merge(targetMinterms.cbegin(), targetMinterms.cend(), dontCares.cbegin(), dontCares.cend(), allowedMinterms.begin());
-		progress.substep([](){ return 0.8; }, true);
+		progress.substep([](){ return -0.8; }, true);
 		const Minterms duplicates = extractDuplicates(allowedMinterms);
 		if (!duplicates.empty())
 		{
-			Progress::CerrGuard cerr = progress.cerr();
+			Progress::CerrGuard cerr = Progress::cerr();
 			cerr << "There are numbers in \"don't cares\" that are already minterms:";
 			printMinterms(duplicates, cerr);
 			cerr << "! (They will be ignored.)\n";
