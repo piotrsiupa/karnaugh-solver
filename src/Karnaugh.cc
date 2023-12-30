@@ -88,37 +88,37 @@ bool Karnaugh::loadMinterms(Minterms &minterms, Input &input, Progress &progress
 {
 	std::vector<std::string> parts;
 	{
-		const auto subtaskGuard = progress.enterSubtask("splitting input line");
+		const auto infoGuard = progress.addInfo("splitting input line");
 		progress.step(true);
 		parts = input.popParts(progress);
 	}
 	
 	{
-		const auto subtaskGuard = progress.enterSubtask("parsing numbers");
+		const auto infoGuard = progress.addInfo("parsing numbers");
 		progress.step(true);
-		Progress::CountingSubsteps substeps = progress.makeCountingSubsteps(static_cast<Progress::completion_t>(parts.size()));
+		auto progressStep = progress.makeCountingStepHelper(static_cast<Progress::completion_t>(parts.size()));
 		for (const std::string &string : parts)
 		{
-			substeps.substep();
+			progressStep.substep();
 			try
 			{
 				const unsigned long n = std::stoul(string);
 				static_assert(sizeof(unsigned long) * CHAR_BIT >= ::maxBits);
 				if (n > ::maxMinterm)
 				{
-					progress.cerr() << '"' << string << "\" is too big!\n";
+					Progress::cerr() << '"' << string << "\" is too big!\n";
 					return false;
 				}
 				minterms.insert(n);
 			}
 			catch (std::invalid_argument &)
 			{
-				progress.cerr() << '"' << string << "\" is not a number!\n";
+				Progress::cerr() << '"' << string << "\" is not a number!\n";
 				return false;
 			}
 			catch (std::out_of_range &)
 			{
-				progress.cerr() << '"' << string << "\" is out of range!\n";
+				Progress::cerr() << '"' << string << "\" is out of range!\n";
 				return false;
 			}
 		}
@@ -151,7 +151,7 @@ void Karnaugh::validate(const solutions_t &solutions) const
 bool Karnaugh::loadData(Input &input)
 {
 	const std::string progressName = "Loading function \"" + functionName + '"';
-	Progress progress(Progress::Stage::LOADING, progressName.c_str(), 5, !options::prompt.getValue());
+	Progress progress(Progress::Stage::LOADING, progressName.c_str(), 5, false, !options::prompt.getValue());
 	
 	if (input.hasError(&progress))
 		return false;
@@ -165,7 +165,7 @@ bool Karnaugh::loadData(Input &input)
 		return false;
 	if (input.isEmpty())
 	{
-		progress.cerr() << "A list of minterms is mandatory!\n";
+		Progress::cerr() << "A list of minterms is mandatory!\n";
 		return false;
 	}
 	if (!loadMinterms(targetMinterms, input, progress))
@@ -185,16 +185,16 @@ bool Karnaugh::loadData(Input &input)
 		if (!loadMinterms(allowedMinterms, input, progress))
 			return false;
 	
-	const auto conflictsSubtask = progress.enterSubtask("checking for conflicts");
+	const auto infoGuard = progress.addInfo("checking for conflicts");
 	progress.step(true);
-	Progress::CountingSubsteps substeps = progress.makeCountingSubsteps(static_cast<Progress::completion_t>(targetMinterms.size()));
+	auto progressStep = progress.makeCountingStepHelper(static_cast<Progress::completion_t>(targetMinterms.size()));
 	for (const Minterm &targetMinterm : targetMinterms)
 	{
-		substeps.substep();
+		progressStep.substep();
 		if (allowedMinterms.find(targetMinterm) == allowedMinterms.cend())
 			allowedMinterms.insert(targetMinterm);
 		else
-			progress.cerr() << targetMinterm << " on the \"don't care\" list of \"" << functionName << "\" will be ignored because it is already a minterm!\n";
+			Progress::cerr() << targetMinterm << " on the \"don't care\" list of \"" << functionName << "\" will be ignored because it is already a minterm!\n";
 	}
 	
 	return true;

@@ -14,7 +14,7 @@
 Implicants QuineMcCluskey::findPrimeImplicants(const Minterms &allowedMinterms, const std::string &functionName) const
 {
 	const std::string progressName = "Merging implicants of \"" + functionName + '"';
-	Progress progress(Progress::Stage::SOLVING, progressName.c_str(), ::bits + 1);
+	Progress progress(Progress::Stage::SOLVING, progressName.c_str(), ::bits + 1, true);
 	
 	std::vector<std::pair<Implicant, bool>> implicants;
 	for (const Minterm &minterm : allowedMinterms)
@@ -24,7 +24,7 @@ Implicants QuineMcCluskey::findPrimeImplicants(const Minterms &allowedMinterms, 
 	
 	::bits_t implicantSize = ::bits;
 	char subtaskDescription[96] = "";
-	const auto subtaskGuard = progress.enterSubtask(subtaskDescription);
+	const auto infoGuard = progress.addInfo(subtaskDescription);
 	while (!implicants.empty())
 	{
 		std::uintmax_t operationsSoFar = 0, expectedOperations = 0;
@@ -36,14 +36,14 @@ Implicants QuineMcCluskey::findPrimeImplicants(const Minterms &allowedMinterms, 
 			std::strcat(subtaskDescription, " literals each)");
 			expectedOperations = static_cast<std::uintmax_t>(implicants.size()) * static_cast<std::uintmax_t>(implicants.size() - 1) / 2;
 		}
-		const Progress::calcSubstepCompletion_t calcSubstepCompletion = [&operationsSoFar = std::as_const(operationsSoFar), expectedOperations](){ return static_cast<Progress::completion_t>(operationsSoFar) / static_cast<Progress::completion_t>(expectedOperations); };
+		const Progress::calcStepCompletion_t calcStepCompletion = [&operationsSoFar = std::as_const(operationsSoFar), expectedOperations](){ return static_cast<Progress::completion_t>(operationsSoFar) / static_cast<Progress::completion_t>(expectedOperations); };
 		progress.step(true);
 		
 		std::set<Implicant> newImplicants;
 		
 		for (auto iter = implicants.begin(); iter != implicants.end(); ++iter)
 		{
-			progress.substep(calcSubstepCompletion);
+			progress.substep(calcStepCompletion);
 			operationsSoFar += implicants.cend() - iter - 1;
 			for (auto jiter = std::next(iter); jiter != implicants.end(); ++jiter)
 			{

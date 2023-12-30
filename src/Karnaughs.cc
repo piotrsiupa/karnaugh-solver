@@ -161,18 +161,18 @@ Karnaughs::solutionses_t Karnaughs::makeSolutionses() const
 
 void Karnaughs::findBestNonOptimizedSolutions(const solutionses_t &solutionses)
 {
-	Progress progress(Progress::Stage::OPTIMIZING, "Electing the best solutions", solutionses.size());
+	Progress progress(Progress::Stage::OPTIMIZING, "Electing the best solutions", solutionses.size(), true);
 	bestSolutions.reserve(solutionses.size());
 	for (const solutions_t &solutions : solutionses)
 	{
 		progress.step();
-		auto substeps = progress.makeCountingSubsteps(static_cast<Progress::completion_t>(solutions.size()));
+		auto progressStep = progress.makeCountingStepHelper(static_cast<Progress::completion_t>(solutions.size()));
 		using score_t = std::size_t;
 		const Implicants *bestSolution = nullptr;
 		score_t bestScore = std::numeric_limits<score_t>::max();
 		for (const Implicants &solution : solutions)
 		{
-			substeps.substep();
+			progressStep.substep();
 			if (solution.empty())
 			{
 				bestSolution = &solution;
@@ -207,7 +207,11 @@ void Karnaughs::findBestOptimizedSolutions(const solutionses_t &solutionses)
 	if (options::status.getValue())
 		for (const solutions_t &solutions : solutionses)
 			steps *= solutions.size();
-	Progress progress(Progress::Stage::OPTIMIZING, "Eliminating common subexpressions", steps);
+#ifdef NDEBUG
+	Progress progress(Progress::Stage::OPTIMIZING, "Eliminating common subexpressions", steps, true);
+#else
+	Progress progress(Progress::Stage::OPTIMIZING, "Eliminating common subexpressions", steps * 2, false);
+#endif
 	for (std::vector<std::size_t> indexes(solutionses.size(), 0);;)
 	{
 		progress.step();

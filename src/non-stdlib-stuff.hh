@@ -27,3 +27,9 @@ inline bool isStderrTerminal()
 	return true; // Fallback - just assume tty and print the progress reports.
 }
 #endif
+
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
+void enableAnsiSequences();
+#else
+inline void enableAnsiSequences() {}
+#endif

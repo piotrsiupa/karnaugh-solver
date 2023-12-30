@@ -69,7 +69,7 @@ static void printHelp()
 static void printVersion()
 {
 	std::cout <<
-			"karnaugh (Karnaugh Map Solver) version 0.2.0\n"
+			"karnaugh (Karnaugh Map Solver) version 0.2.1\n"
 			"Author: Piotr Siupa\n"
 #ifndef NDEBUG
 			"This is a development build which contains additional assertions. This may slow down the execution.\n"
@@ -95,7 +95,7 @@ static bool parseInputBits(Input &input)
 		Names::names_t names = input.popParts(progress);
 		if (names.size() > ::maxBits)
 		{
-			progress.cerr() << "Too many input variables!\n";
+			Progress::cerr() << "Too many input variables!\n";
 			return false;
 		}
 		::bits = static_cast<::bits_t>(names.size());
@@ -204,6 +204,8 @@ static bool processInput(IstreamUniquePtr istream)
 
 int main(const int argc, const char *const *const argv)
 {
+	Progress::init();
+	
 	if (!options::parse(argc, argv))
 		return 1;
 	if (options::outputFormat.getValue() == options::OutputFormat::MATH_FORMAL || options::outputFormat.getValue() == options::OutputFormat::MATH_PROG || options::outputFormat.getValue() == options::OutputFormat::MATH_ASCII || options::outputFormat.getValue() == options::OutputFormat::MATH_NAMES)
@@ -219,6 +221,8 @@ int main(const int argc, const char *const *const argv)
 		printVersion();
 		return 0;
 	}
+	
+	enableAnsiSequences();
 	
 	IstreamUniquePtr istream = prepareIstream();
 	if (!istream)

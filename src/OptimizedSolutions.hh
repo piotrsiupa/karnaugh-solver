@@ -89,7 +89,7 @@ private:
 #ifndef NDEBUG
 	using normalizedSolution_t = std::set<Implicant>;
 	normalizedSolution_t normalizeSolution(const id_t finalSumId) const;
-	void validate(const solutions_t &solutions) const;
+	void validate(const solutions_t &solutions, Progress &progress) const;
 #endif
 	
 public:
