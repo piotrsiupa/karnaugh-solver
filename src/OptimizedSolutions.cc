@@ -650,17 +650,16 @@ OptimizedSolutions::normalizedSolution_t OptimizedSolutions::normalizeSolution(c
 	return normalizedSolution;
 }
 
-void OptimizedSolutions::validate(const solutions_t &solutions) const
+void OptimizedSolutions::validate(const solutions_t &solutions, Progress &progress) const
 {
 	assert(solutions.size() == finalSums.size());
 	
-	Progress progress(Progress::Stage::OPTIMIZING, "Validating the optimized solution", solutions.size());
+	const auto infoGuard = progress.addInfo("validating");
 	progress.step();
-	std::size_t i;
-	const Progress::calcSubstepCompletion_t calcSubstepCompletion = [&i = std::as_const(i), n = solutions.size()](){ return static_cast<Progress::completion_t>(i) / static_cast<Progress::completion_t>(n); };
-	for (i = 0; i != solutions.size(); ++i)
+	auto progressStep = progress.makeCountingStepHelper(solutions.size());
+	for (std::size_t i = 0; i != solutions.size(); ++i)
 	{
-		progress.substep(calcSubstepCompletion);
+		progressStep.substep();
 		const normalizedSolution_t expectedSolution(solutions[i]->cbegin(), solutions[i]->cend());
 		const normalizedSolution_t actualSolution = normalizeSolution(finalSums[i]);
 		assert(actualSolution == expectedSolution);
@@ -674,7 +673,7 @@ OptimizedSolutions::OptimizedSolutions(const solutions_t &solutions, Progress &p
 	const finalPrimeImplicants_t finalPrimeImplicants = extractCommonProductParts(solutions, progress);
 	extractCommonSumParts(solutions, finalPrimeImplicants, progress);
 #ifndef NDEBUG
-	validate(solutions);
+	validate(solutions, progress);
 #endif
 }
 

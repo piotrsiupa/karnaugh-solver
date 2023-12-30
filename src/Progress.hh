@@ -2,8 +2,10 @@
 
 #include <chrono>
 #include <cstddef>
+#include <cstdint>
 #include <functional>
 #include <iostream>
+#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -22,9 +24,9 @@ public:
 	
 	using steps_t = std::uintmax_t;
 	using completion_t = double;
-	using calcSubstepCompletion_t = std::function<completion_t()>;
+	using calcStepCompletion_t = std::function<completion_t()>;
 	
-	static calcSubstepCompletion_t calc0SubstepCompletion;
+	static calcStepCompletion_t calc0StepCompletion;
 	
 private:
 	static constexpr std::size_t STAGE_COUNT = 3;
@@ -34,81 +36,90 @@ private:
 	
 	static constexpr double reportInterval = 1.0;
 	
+	static Progress *progress;
+	static timePoint_t programStartTime;
+	
 	const Stage stage;
 	const char *const processName;
-	timePoint_t startTime, lastReportTime;
+	timePoint_t startTime, stepStartTime, lastReportTime;
 	steps_t allSteps;
 	steps_t stepsSoFar = 0;
 	steps_t substepsSoFar, substepsToSkip;
-	completion_t completion;
+	completion_t stepCompletion;
+	bool relatedSteps;
 	bool visible;
-	std::vector<const char*> subtaskNames;
-	bool reported = false;
+	std::vector<const char*> infoTexts;
+	std::uint_fast8_t reportLines = 0;
 	
 	steps_t calcStepsToSkip(const double secondsToSkip, const double secondsPerStep) const;
+	static double getSecondsSinceStart(const timePoint_t currentTime);
+	static bool checkProgramRunTime(const timePoint_t currentTime);
 	bool checkReportInterval(const bool force);
 	static void printTime(const double seconds);
 	void clearReport(const bool clearStage);
 	void reportStage() const;
+	static void reportSingleLevel(const bool indentMore, const completion_t completion, const double et, const double eta);
 	void reportProgress();
-	void reportProgress(const calcSubstepCompletion_t &calcSubstepCompletion) { completion = calcSubstepCompletion() / allSteps + calcStepCompletion(); return reportProgress(); }
-	void handleStep(const calcSubstepCompletion_t &calcSubstepCompletion, const bool force) { if (checkReportInterval(force)) reportProgress(calcSubstepCompletion); }
-	
-	completion_t calcStepCompletion() const { return static_cast<completion_t>(stepsSoFar - 1) / allSteps; }
+	void reportProgress(const calcStepCompletion_t &calcStepCompletion) { stepCompletion = calcStepCompletion(); return reportProgress(); }
+	void handleStep(const calcStepCompletion_t &calcStepCompletion, const bool force) { if (checkReportInterval(force)) reportProgress(calcStepCompletion); }
 	
 public:
+	static void init();
+	
 	class CerrGuard
 	{
-		Progress &progress;
+		Progress *const progress;
 		const bool reportedBefore;
-		CerrGuard(Progress &progress) : progress(progress), reportedBefore(progress.reported) { progress.clearReport(true); std::clog << std::flush; }
+		CerrGuard(Progress *const progress) : progress(progress), reportedBefore(progress != nullptr && progress->reportLines != 0) { if (progress != nullptr) { progress->clearReport(true); std::clog << std::flush; } }
 		friend class Progress;
 	public:
 		CerrGuard(const CerrGuard&) = delete;
 		CerrGuard& operator=(const CerrGuard&) = delete;
-		~CerrGuard() { if (reportedBefore) progress.reportProgress(); }
+		~CerrGuard() { if (reportedBefore) progress->reportProgress(); }
 		template<typename T>
 		const CerrGuard& operator<<(T val) const { std::cerr << std::forward<T>(val); return *this; }
 	};
 	
-	class SubtaskGuard
+	class InfoGuard
 	{
 		Progress &progress;
-		SubtaskGuard(Progress &progress) : progress(progress) {}
+		InfoGuard(Progress &progress) : progress(progress) {}
 		friend class Progress;
 	public:
-		SubtaskGuard(const SubtaskGuard&) = delete;
-		SubtaskGuard& operator=(const SubtaskGuard&) = delete;
-		~SubtaskGuard() { progress.subtaskNames.pop_back(); }
+		InfoGuard(const InfoGuard&) = delete;
+		InfoGuard& operator=(const InfoGuard&) = delete;
+		~InfoGuard() { progress.infoTexts.pop_back(); }
 	};
 	
 	template<typename T = std::size_t>
-	class CountingSubsteps
+	class CountingStepHelper
 	{
 		Progress &progress;
 		T i = 0;
-		const calcSubstepCompletion_t calcCompletion;
-		CountingSubsteps(Progress &progress, const completion_t n) : progress(progress), calcCompletion([&i = std::as_const(i), n](){ return static_cast<completion_t>(i) / n; }) {}
+		const calcStepCompletion_t calcCompletion;
+		CountingStepHelper(Progress &progress, const completion_t n) : progress(progress), calcCompletion([&i = std::as_const(i), n](){ return static_cast<completion_t>(i) / n; }) {}
 		friend class Progress;
 	public:
-		CountingSubsteps(const CountingSubsteps&) = delete;
-		CountingSubsteps& operator=(const CountingSubsteps&) = delete;
+		CountingStepHelper(const CountingStepHelper&) = delete;
+		CountingStepHelper& operator=(const CountingStepHelper&) = delete;
 		void substep(const bool force = false) { progress.substep(calcCompletion, force); ++i; }
 		void substep(const T increment, const bool force = false) { progress.substep(calcCompletion, force); i += increment; }
 	};
 	
-	Progress(const Stage stage, const char processName[], const steps_t allSteps, const bool visible = true);
+	Progress(const Stage stage, const char processName[], const steps_t allSteps, const bool relatedSteps = true, const bool visible = true);
 	Progress(const Progress&) = delete;
 	Progress& operator=(const Progress&) = delete;
-	~Progress() { clearReport(true); }
+	~Progress() { clearReport(true); progress = nullptr; }
 	
 	[[nodiscard]] bool isVisible() const { return visible; }
-	[[nodiscard]] CerrGuard cerr() { return {*this}; }
+	[[nodiscard]] static CerrGuard cerr() { return {progress}; }
 	
 	void step(const bool force = false);
-	void substep(const calcSubstepCompletion_t &calcSubstepCompletion, const bool force = false) { if (visible) { if (--substepsToSkip == 0 || force) [[unlikely]] handleStep(calcSubstepCompletion, force); ++substepsSoFar; } }
+	void substep(const calcStepCompletion_t &calcStepCompletion, const bool force = false) { if (visible) { if (--substepsToSkip == 0 || force) [[unlikely]] handleStep(calcStepCompletion, force); ++substepsSoFar; } }
 	template<typename T = std::size_t>
-	[[nodiscard]] CountingSubsteps<T> makeCountingSubsteps(const completion_t n) { return {*this, n}; }
+	[[nodiscard]] CountingStepHelper<T> makeCountingStepHelper(const completion_t n) { return {*this, n}; }
 	
-	[[nodiscard]] SubtaskGuard enterSubtask(const char subtaskName[]) { subtaskNames.push_back(subtaskName); return {*this}; }
+	[[nodiscard]] InfoGuard addInfo(const char infoText[]) { infoTexts.push_back(infoText); return {*this}; }
+	
+	static void reportTime(const std::string_view eventName);
 };

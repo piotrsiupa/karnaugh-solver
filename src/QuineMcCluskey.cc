@@ -29,19 +29,19 @@ public:
 Implicants QuineMcCluskey::findPrimeImplicants(Minterms allowedMinterms, const std::string &functionName) const
 {
 	const std::string progressName = "Finding prime impl. of \"" + functionName + '"';
-	Progress progress(Progress::Stage::SOLVING, progressName.c_str(), 5);
+	Progress progress(Progress::Stage::SOLVING, progressName.c_str(), 5, false);
 	
 	std::vector<Minterm> masks(std::size_t(::maxMinterm) + 1);
 	{
-		const auto subtaskGuard = progress.enterSubtask("listing minterm neighbours");
+		const auto infoGuard = progress.addInfo("listing minterm neighbours");
 		progress.step();
-		Progress::CountingSubsteps substeps = progress.makeCountingSubsteps(allowedMinterms.getSize());
+		auto progressStep = progress.makeCountingStepHelper(allowedMinterms.getSize());
 		if (::bits != 0)
 		{
 			const Minterm maxBit = 1 << (::bits - 1);
 			for (const Minterm minterm : allowedMinterms)
 			{
-				substeps.substep();
+				progressStep.substep();
 				Minterm mask = ::maxMinterm;
 				for (Minterm bit = 1;; bit <<= 1)
 				{
@@ -59,12 +59,12 @@ Implicants QuineMcCluskey::findPrimeImplicants(Minterms allowedMinterms, const s
 	
 	{
 		progress.step();
-		Progress::CountingSubsteps substeps = progress.makeCountingSubsteps(allowedMinterms.getSize() + (allowedMinterms.getSize() / 5));
+		auto progressStep = progress.makeCountingStepHelper(allowedMinterms.getSize() + (allowedMinterms.getSize() / 4));
 		{
-			const auto subtaskGuard = progress.enterSubtask("merging implicants with a heuristic");
+			const auto infoGuard = progress.addInfo("merging implicants with a heuristic");
 			for (const Minterm minterm : allowedMinterms)
 			{
-				substeps.substep();
+				progressStep.substep();
 				Implicant implicant(minterm & masks[minterm], masks[minterm]);
 				for (Minterator iter(implicant); iter; iter.step(implicant))
 				{
@@ -83,8 +83,8 @@ Implicants QuineMcCluskey::findPrimeImplicants(Minterms allowedMinterms, const s
 			}
 		}
 		{
-			const auto subtaskGuard = progress.enterSubtask("cleaning up the heuristic (*)");
-			substeps.substep(true);
+			const auto infoGuard = progress.addInfo("cleaning up the heuristic");
+			progress.substep([](){ return -0.8; }, true);
 			std::sort(newImplicants.begin(), newImplicants.end());
 			newImplicants.erase(std::unique(newImplicants.begin(), newImplicants.end()), newImplicants.end());
 			for (const Implicant &newImplicant : newImplicants)
@@ -93,13 +93,13 @@ Implicants QuineMcCluskey::findPrimeImplicants(Minterms allowedMinterms, const s
 	}
 	
 	{
-		const auto subtaskGuard = progress.enterSubtask("adding missing implicants");
+		const auto infoGuard = progress.addInfo("adding missing implicants");
 		progress.step();
-		Progress::CountingSubsteps substeps = progress.makeCountingSubsteps(allowedMinterms.getSize());
+		auto progressStep = progress.makeCountingStepHelper(allowedMinterms.getSize());
 		newImplicants.reserve(newImplicants.size() + allowedMinterms.getSize());
 		for (const Minterm minterm : allowedMinterms)
 		{
-			substeps.substep();
+			progressStep.substep();
 			newImplicants.push_back(Implicant(minterm));
 		}
 	}
@@ -109,11 +109,11 @@ Implicants QuineMcCluskey::findPrimeImplicants(Minterms allowedMinterms, const s
 		progress.step();
 		std::vector<Implicant> implicants;
 		std::vector<bool> usedImplicants, obsoleteImplicants;
-		char subtaskDescription[0x80] = "";
-		const auto subtaskGuard = progress.enterSubtask(subtaskDescription);
+		char infoText[0x80] = "";
+		const auto infoGuard = progress.addInfo(infoText);
 		::bits_t bitCountLimit;
 		std::size_t i;
-		Progress::calcSubstepCompletion_t calcSubstepCompletion = [&bitCountLimit = std::as_const(bitCountLimit), &implicants = std::as_const(implicants), &i = std::as_const(i)](){
+		Progress::calcStepCompletion_t calcStepCompletion = [&bitCountLimit = std::as_const(bitCountLimit), &implicants = std::as_const(implicants), &i = std::as_const(i)](){
 				const Progress::completion_t majorProgress = static_cast<Progress::completion_t>(::bits - bitCountLimit) / static_cast<Progress::completion_t>(::bits + 1);
 				const Progress::completion_t minorProgress = static_cast<Progress::completion_t>(i) / static_cast<Progress::completion_t>(implicants.size()) / static_cast<Progress::completion_t>(::bits + 1);
 				return majorProgress + minorProgress;
@@ -121,7 +121,7 @@ Implicants QuineMcCluskey::findPrimeImplicants(Minterms allowedMinterms, const s
 		for (bitCountLimit = ::bits; !newImplicants.empty() || !implicants.empty(); --bitCountLimit)
 		{
 			i = 0;
-			progress.substep(calcSubstepCompletion, true);
+			progress.substep(calcStepCompletion, true);
 			
 			const std::size_t oldImplicantCount = implicants.size();
 			std::sort(newImplicants.begin(), newImplicants.end());
@@ -136,20 +136,20 @@ Implicants QuineMcCluskey::findPrimeImplicants(Minterms allowedMinterms, const s
 			
 			if (progress.isVisible())
 			{
-				std::strcpy(subtaskDescription, "merging impl. stage ");
-				std::strcat(subtaskDescription, std::to_string(::bits - bitCountLimit + 1).c_str());
-				std::strcat(subtaskDescription, "/");
-				std::strcat(subtaskDescription, std::to_string(::bits + 1).c_str());
-				std::strcat(subtaskDescription, " (");
-				std::strcat(subtaskDescription, std::to_string(firstNewImplicant - implicants.cbegin()).c_str());
-				std::strcat(subtaskDescription, "+");
-				std::strcat(subtaskDescription, std::to_string(implicants.cend() - firstNewImplicant).c_str());
-				std::strcat(subtaskDescription, ")");
+				std::strcpy(infoText, "merging impl. stage ");
+				std::strcat(infoText, std::to_string(::bits - bitCountLimit + 1).c_str());
+				std::strcat(infoText, "/");
+				std::strcat(infoText, std::to_string(::bits + 1).c_str());
+				std::strcat(infoText, " (");
+				std::strcat(infoText, std::to_string(firstNewImplicant - implicants.cbegin()).c_str());
+				std::strcat(infoText, "+");
+				std::strcat(infoText, std::to_string(implicants.cend() - firstNewImplicant).c_str());
+				std::strcat(infoText, ")");
 			}
 			
 			for (i = 0; i != implicants.size(); ++i)
 			{
-				progress.substep(calcSubstepCompletion);
+				progress.substep(calcStepCompletion);
 				for (std::size_t j = std::max(i + 1, static_cast<std::size_t>(firstNewImplicant - implicants.cbegin())); j != implicants.size(); ++j)
 				{
 					Implicant newImplicant = Implicant::findBiggestInUnion(implicants[i], implicants[j]);
@@ -184,9 +184,9 @@ Implicants QuineMcCluskey::findPrimeImplicants(Minterms allowedMinterms, const s
 	}
 	
 	{
-		const auto subtaskGuard = progress.enterSubtask("sorting prime implicants (*)");
+		const auto infoGuard = progress.addInfo("sorting prime implicants");
 		progress.step();
-		progress.substep([](){ return 0.0; }, true);
+		progress.substep([](){ return -0.0; }, true);
 		primeImplicants.humanSort();
 		primeImplicants.shrink_to_fit();
 	}

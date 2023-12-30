@@ -134,33 +134,32 @@ bool Karnaugh::loadMinterms(Minterms &minterms, Input &input, Progress &progress
 {
 	if (input.doesNextStartWithDash())
 	{
-		const std::string word = input.getWord(&progress);
-		if (word == "-" && !input.hasNextInLine(&progress))
+		const std::string word = input.getWord();
+		if (word == "-" && !input.hasNextInLine())
 			return true;
-		progress.cerr() << "\"-\" cannot be followed by anything!\n";
+		Progress::cerr() << "\"-\" cannot be followed by anything!\n";
 		return false;
 	}
 	
 	const std::string name = dontCares ? "don't cares" : "minterms";
 	
-	const std::string subtaskName = "loading " + name;
-	
-	const auto subtaskGuard = progress.enterSubtask(subtaskName.c_str());
+	const std::string info = "loading " + name;
+	const auto infoGuard = progress.addInfo(info.c_str());
 	progress.step(true);
 	Minterm currentMinterm;
 	const std::size_t estimatedSize = estimateRemainingInputSize(input);
-	const Progress::calcSubstepCompletion_t calcSubstepCompletion(MintermLoadingCompletionCalculator(minterms, currentMinterm, dontCares, estimatedSize));
+	const Progress::calcStepCompletion_t calcStepCompletion(MintermLoadingCompletionCalculator(minterms, currentMinterm, dontCares, estimatedSize));
 	duplicates_t duplicates;
 	do
 	{
-		progress.substep(calcSubstepCompletion);
-		currentMinterm = input.getMinterm(progress);
+		progress.substep(calcStepCompletion);
+		currentMinterm = input.getMinterm();
 		if (!minterms.add(currentMinterm))
 			duplicates.push_back(currentMinterm);
-	} while (input.hasNextInLine(&progress));
+	} while (input.hasNextInLine());
 	if (!duplicates.empty())
 	{
-		Progress::CerrGuard cerr = progress.cerr();
+		Progress::CerrGuard cerr = Progress::cerr();
 		cerr << "There are duplicates on the " << name << " list:";
 		printDuplicates(duplicates, cerr);
 		cerr << "! (They will be ignored.)\n";
@@ -173,7 +172,7 @@ bool Karnaugh::loadMinterms(Minterms &minterms, Input &input, Progress &progress
 void Karnaugh::validate(const solutions_t &solutions) const
 {
 	const std::string progressName = "Validating solutions for \"" + functionName + "\" (development build)";
-	Progress progress(Progress::Stage::SOLVING, progressName.c_str(), solutions.size());
+	Progress progress(Progress::Stage::SOLVING, progressName.c_str(), solutions.size(), true);
 	for (const Implicants &solution : solutions)
 	{
 		progress.step();
@@ -194,17 +193,17 @@ void Karnaugh::validate(const solutions_t &solutions) const
 bool Karnaugh::loadData(Input &input)
 {
 	const std::string progressName = "Loading function \"" + functionName + '"';
-	Progress progress(Progress::Stage::LOADING, progressName.c_str(), 3, !options::prompt.getValue());
+	Progress progress(Progress::Stage::LOADING, progressName.c_str(), 3, false, !options::prompt.getValue());
 	
 	nameIsCustom = input.isNextText();
 	if (nameIsCustom)
-		functionName = input.getLine(&progress);
+		functionName = input.getLine();
 	
 	if (nameIsCustom && options::prompt.getValue())
 		std::cerr << "Enter a list of minterms of the function \"" << functionName << "\":\n";
-	if (!input.hasNext(&progress))
+	if (!input.hasNext())
 	{
-		progress.cerr() << "A list of minterms is mandatory!\n";
+		Progress::cerr() << "A list of minterms is mandatory!\n";
 		return false;
 	}
 	if (!loadMinterms(targetMinterms, input, progress, false))
@@ -218,7 +217,7 @@ bool Karnaugh::loadData(Input &input)
 		else
 			std::cerr << ":\n";
 	}
-	if (input.hasNext(&progress))
+	if (input.hasNext())
 		if (!loadMinterms(allowedMinterms, input, progress, true))
 			return false;
 
@@ -228,18 +227,18 @@ bool Karnaugh::loadData(Input &input)
 #endif
 	
 	{
-		const auto conflictsSubtask = progress.enterSubtask("listing possible minterms (*)");
+		const auto infoGuard = progress.addInfo("listing possible minterms");
 		progress.step(true);
-		progress.substep([](){ return 0.0; }, true);
+		progress.substep([](){ return -0.0; }, true);
 		const duplicates_t duplicates = allowedMinterms.findDuplicates(targetMinterms);
 		if (!duplicates.empty())
 		{
-			Progress::CerrGuard cerr = progress.cerr();
+			Progress::CerrGuard cerr = Progress::cerr();
 			cerr << "There are numbers in \"don't cares\" that are already minterms:";
 			printDuplicates(duplicates, cerr);
 			cerr << "! (They will be ignored.)\n";
 		}
-		progress.substep([](){ return 0.5; }, true);
+		progress.substep([](){ return -0.5; }, true);
 		allowedMinterms.add(targetMinterms, duplicates.size());
 	}
 
