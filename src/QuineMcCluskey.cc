@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <cstring>
 #include <iostream>
+#include <iterator>
 #include <string>
 
 #include "options.hh"
@@ -26,60 +27,116 @@ public:
 };
 
 
+std::vector<Minterm>::iterator QuineMcCluskey::mergeSomeMinterms(const std::vector<Minterm>::iterator begin, const std::vector<Minterm>::iterator end, std::vector<Minterm>::iterator remaining, std::vector<Minterm> bits, std::vector<Implicant> &implicants, Progress::CountingStepHelper<std::size_t> &progressStep)
+{
+	const std::uint32_t mintermCount = static_cast<std::uint_fast32_t>(std::distance(begin, end));
+	
+	if (mintermCount <= 1)
+	{
+		if (begin == remaining) [[unlikely]]
+			return end;
+		for (std::vector<Minterm>::iterator current = begin; current != end; ++current, ++remaining)
+			*remaining = *current;
+		return remaining;
+	}
+	
+	{
+		std::vector<std::uint_fast32_t> ratings(bits.size());
+		for (std::uint_fast8_t i = 0; i != bits.size(); ++i)
+		{
+			const Minterm bit = bits[i];
+			std::uint_fast32_t &rating = ratings[i];
+			for (std::vector<Minterm>::const_iterator jiter = begin; jiter != end; ++jiter)
+				if ((*jiter & bit) != 0)
+					++rating;
+		}
+		
+		for (std::uint_fast32_t &rating : ratings)
+			rating = std::min(rating, mintermCount - rating) - 1;
+		
+		const std::uint_fast32_t maxCount = std::uint_fast32_t(0) - 1;
+		{
+			std::size_t i, j;
+			for (i = 0, j = 0; i != ratings.size(); ++i)
+			{
+				if (ratings[i] != maxCount)
+				{
+					ratings[j] = ratings[i];
+					bits[j] = bits[i];
+					++j;
+				}
+			}
+			ratings.resize(j);
+			bits.resize(j);
+		}
+		if (mintermCount == std::uint_fast64_t(1) << bits.size())
+		{
+			Minterm mask = ::maxMinterm;
+			for (std::size_t i = 0; i != bits.size(); ++i)
+				if (ratings[i] != maxCount)
+					mask &= ~bits[i];
+			implicants.emplace_back(*begin & mask, mask);
+			progressStep.substep(mintermCount, false);
+			return remaining;
+		}
+		
+		const std::size_t chosenIndex = std::distance(ratings.cbegin(), std::min_element(ratings.cbegin(), ratings.cend()));
+		const Minterm chosenBit = bits[chosenIndex];
+		bits.erase(std::next(bits.begin(), chosenIndex));
+		
+		const std::vector<Minterm>::iterator middle = std::partition(begin, end, [chosenBit](const Minterm &minterm){ return (minterm & chosenBit) == 0; });
+		
+		remaining = mergeSomeMinterms(begin, middle, remaining, bits, implicants, progressStep);
+		remaining = mergeSomeMinterms(middle, end, remaining, std::move(bits), implicants, progressStep);
+		return remaining;
+	}
+}
+
+
 Implicants QuineMcCluskey::findPrimeImplicants(Minterms allowedMinterms, const std::string &functionName) const
 {
-	const std::string progressName = "Finding prime impl. of \"" + functionName + '"';
-	Progress progress(Progress::Stage::SOLVING, progressName.c_str(), 4, false);
+	if (allowedMinterms.getSize() == 0)
+		return {Implicant::none()};
+	else if (allowedMinterms.getSize() - 1 == ::maxMinterm)
+		return {Implicant::all()};
 	
-	std::vector<Minterm> masks(std::size_t(::maxMinterm) + 1);
-	{
-		const auto infoGuard = progress.addInfo("listing minterm neighbours");
-		progress.step();
-		auto progressStep = progress.makeCountingStepHelper(allowedMinterms.getSize());
-		if (::bits != 0)
-		{
-			const Minterm maxBit = 1 << (::bits - 1);
-			for (const Minterm minterm : allowedMinterms)
-			{
-				progressStep.substep();
-				Minterm mask = ::maxMinterm;
-				for (Minterm bit = 1;; bit <<= 1)
-				{
-					if (allowedMinterms.check(minterm ^ bit))
-						mask &= ~bit;
-					if (bit == maxBit)
-						break;
-				}
-				masks[minterm] = mask;
-			}
-		}
-	}
+	const std::string progressName = "Finding prime impl. of \"" + functionName + '"';
+	Progress progress(Progress::Stage::SOLVING, progressName.c_str(), 3, false);
 	
 	std::vector<Implicant> newImplicants;
 	
 	{
+		const auto infoGuard = progress.addInfo("finding prime implicants with heuristic");
 		progress.step();
-		auto progressStep = progress.makeCountingStepHelper(allowedMinterms.getSize() + (allowedMinterms.getSize() / 4));
+		progress.substep([](){ return -0.0; }, true);
+		auto progressStep = progress.makeCountingStepHelper(allowedMinterms.getSize());
+		std::vector<Minterm> bits;
+		if (::bits > 0)
 		{
-			const auto infoGuard = progress.addInfo("merging implicants with a heuristic");
-			for (const Minterm minterm : allowedMinterms)
+			const Minterm maxBit = Minterm(1) << (::bits - 1);
+			bits.reserve(::bits);
+			for (Minterm bit = 1;; bit <<= 1)
 			{
-				progressStep.substep();
-				Implicant implicant(minterm & masks[minterm], masks[minterm]);
-				for (Minterator iter(implicant); iter; iter.step(implicant))
-					if (allowedMinterms.check(*iter))
-						implicant.add({static_cast<Implicant::mask_t>(minterm & masks[*iter]), static_cast<Implicant::mask_t>(masks[*iter])});
-				newImplicants.push_back(implicant);
+				bits.push_back(bit);
+				if (bit == maxBit)
+					break;
 			}
 		}
+		std::vector<Minterm> minterms;
+		minterms.reserve(allowedMinterms.getSize());
+		for (const Minterm minterm : allowedMinterms)
+			minterms.push_back(minterm);
+		Progress::cerr() << "= " << minterms.size() << '\n';
+		while (!minterms.empty())
 		{
-			const auto infoGuard = progress.addInfo("cleaning up the heuristic");
-			progress.substep([](){ return -0.8; }, true);
-			std::sort(newImplicants.begin(), newImplicants.end());
-			newImplicants.erase(std::unique(newImplicants.begin(), newImplicants.end()), newImplicants.end());
+			const auto newEnd = mergeSomeMinterms(minterms.begin(), minterms.end(), minterms.begin(), bits, newImplicants, progressStep);
+			if (newEnd == minterms.cend())
+				break;
+			minterms.erase(newEnd, minterms.end());
 		}
+		for (const Minterm &minterm : minterms)
+			newImplicants.push_back(Implicant(minterm));
 	}
-	
 	
 	Implicants primeImplicants;
 	{
