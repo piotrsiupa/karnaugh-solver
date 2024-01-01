@@ -3,8 +3,10 @@
 #include <algorithm>
 #include <cstdint>
 #include <cstring>
+#include <functional>
 #include <iostream>
 #include <iterator>
+#include <numeric>
 #include <string>
 
 #include "options.hh"
@@ -29,18 +31,21 @@ public:
 
 std::vector<Minterm>::iterator QuineMcCluskey::mergeSomeMinterms(const std::vector<Minterm>::iterator begin, const std::vector<Minterm>::iterator end, std::vector<Minterm>::iterator remaining, std::vector<Minterm> bits, std::vector<Implicant> &implicants, Progress::CountingStepHelper<std::size_t> &progressStep)
 {
-	const std::uint32_t mintermCount = static_cast<std::uint_fast32_t>(std::distance(begin, end));
+	const std::uint_fast32_t mintermCount = static_cast<std::uint_fast32_t>(std::distance(begin, end));
 	
-	if (mintermCount <= 1)
+	switch (mintermCount)
 	{
-		if (begin == remaining) [[unlikely]]
-			return end;
-		for (std::vector<Minterm>::iterator current = begin; current != end; ++current, ++remaining)
-			*remaining = *current;
-		return remaining;
-	}
-	
-	{
+	case 0:
+#if defined(__GNUC__)
+		__builtin_unreachable();
+#elif defined(_MSC_VER)
+		__assume(false);
+#endif
+	[[likely]] case 1:
+		*remaining = *begin;
+		return std::next(remaining);
+		
+	default:
 		std::vector<std::uint_fast32_t> ratings(bits.size());
 		for (std::uint_fast8_t i = 0; i != bits.size(); ++i)
 		{
@@ -71,10 +76,7 @@ std::vector<Minterm>::iterator QuineMcCluskey::mergeSomeMinterms(const std::vect
 		}
 		if (mintermCount == std::uint_fast64_t(1) << bits.size())
 		{
-			Minterm mask = ::maxMinterm;
-			for (std::size_t i = 0; i != bits.size(); ++i)
-				if (ratings[i] != maxCount)
-					mask &= ~bits[i];
+			const Minterm mask = ::maxMinterm & ~std::accumulate(bits.cbegin(), bits.cend(), 0, std::bit_or<Minterm>());
 			implicants.emplace_back(*begin & mask, mask);
 			progressStep.substep(mintermCount, false);
 			return remaining;
