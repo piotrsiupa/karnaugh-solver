@@ -45,6 +45,132 @@ std::vector<Minterm>::iterator QuineMcCluskey::mergeSomeMinterms(const std::vect
 		*remaining = *begin;
 		return std::next(remaining);
 		
+	case 2:
+	{
+		const Minterm minterm0 = *begin, minterm1 = *std::next(begin, 1);
+		const Minterm difference = minterm0 ^ minterm1;
+		const bool differsBy1Bit = (difference & (difference - 1)) == 0;
+		if (differsBy1Bit)
+		{
+			implicants.emplace_back(minterm0 & ~difference, ::maxMinterm & ~difference);
+			progressStep.substep(2, false);
+		}
+		else
+		{
+			*(remaining++) = minterm0;
+			*(remaining++) = minterm1;
+		}
+		return remaining;
+	}
+	
+	case 3:
+	{
+		const Minterm minterm0 = *begin, minterm1 = *std::next(begin, 1), minterm2 = *std::next(begin, 2);
+		Minterm difference = minterm0 ^ minterm1;
+		bool differsBy1Bit = (difference & (difference - 1)) == 0;
+		if (differsBy1Bit)
+		{
+			implicants.emplace_back(minterm0 & ~difference, ::maxMinterm & ~difference);
+			*(remaining++) = minterm2;
+			progressStep.substep(2, false);
+		}
+		else
+		{
+			difference = minterm0 ^ minterm2;
+			differsBy1Bit = (difference & (difference - 1)) == 0;
+			if (differsBy1Bit)
+			{
+				implicants.emplace_back(minterm0 & ~difference, ::maxMinterm & ~difference);
+				*(remaining++) = minterm1;
+				progressStep.substep(2, false);
+			}
+			else
+			{
+				difference = minterm1 ^ minterm2;
+				differsBy1Bit = (difference & (difference - 1)) == 0;
+				if (differsBy1Bit)
+				{
+					implicants.emplace_back(minterm1 & ~difference, ::maxMinterm & ~difference);
+					*(remaining++) = minterm0;
+					progressStep.substep(2, false);
+				}
+				else
+				{
+					*(remaining++) = minterm0;
+					*(remaining++) = minterm1;
+					*(remaining++) = minterm2;
+				}
+			}
+		}
+		return remaining;
+	}
+	
+	case 4:
+	{
+		Minterm minterm0 = *begin, minterm1 = *std::next(begin, 1), minterm2 = *std::next(begin, 2), minterm3 = *std::next(begin, 3);
+		if (minterm0 > minterm2)
+			std::swap(minterm0, minterm2);
+		if (minterm1 > minterm3)
+			std::swap(minterm1, minterm3);
+		Minterm difference = minterm0 ^ minterm1;
+		bool differsBy1Bit = (difference & (difference - 1)) == 0;
+		if (differsBy1Bit)
+		{
+			const Minterm difference1 = minterm2 ^ minterm3;
+			differsBy1Bit = (difference1 & (difference1 - 1)) == 0;
+			if (differsBy1Bit)
+			{
+				const Minterm difference2 = (minterm0 & minterm1) ^ (minterm2 & minterm3);
+				differsBy1Bit = (difference2 & (difference2 - 1)) == 0;
+				if (differsBy1Bit && difference == difference1)
+				{
+					implicants.emplace_back(minterm0 & ~(difference | difference2), ::maxMinterm & ~(difference | difference2));
+				}
+				else
+				{
+					implicants.emplace_back(minterm0 & ~difference, ::maxMinterm & ~difference);
+					implicants.emplace_back(minterm2 & ~difference1, ::maxMinterm & ~difference1);
+				}
+				progressStep.substep(4, false);
+			}
+			else
+			{
+				implicants.emplace_back(minterm0 & ~difference, ::maxMinterm & ~difference);
+				*(remaining++) = minterm2;
+				*(remaining++) = minterm3;
+				progressStep.substep(2, false);
+			}
+		}
+		else
+		{
+			difference = minterm1 ^ minterm2;
+			differsBy1Bit = (difference & (difference - 1)) == 0;
+			if (differsBy1Bit)
+			{
+				implicants.emplace_back(minterm1 & ~difference, ::maxMinterm & ~difference);
+				progressStep.substep(2, false);
+			}
+			else
+			{
+				*(remaining++) = minterm1;
+				*(remaining++) = minterm2;
+			}
+			difference = minterm0 ^ minterm3;
+			differsBy1Bit = (difference & (difference - 1)) == 0;
+			if (differsBy1Bit)
+			{
+				implicants.emplace_back(minterm0 & ~difference, ::maxMinterm & ~difference);
+				progressStep.substep(2, false);
+			}
+			else
+			{
+				*(remaining++) = minterm0;
+				*(remaining++) = minterm3;
+			}
+		}
+		return remaining;
+	}
+	
 	default:
 		std::vector<std::uint_fast32_t> ratings(bits.size());
 		for (std::uint_fast8_t i = 0; i != bits.size(); ++i)
@@ -129,6 +255,7 @@ Implicants QuineMcCluskey::findPrimeImplicants(Minterms allowedMinterms, const s
 		for (const Minterm minterm : allowedMinterms)
 			minterms.push_back(minterm);
 		Progress::cerr() << "= " << minterms.size() << '\n';
+		newImplicants.reserve(minterms.size() / 4 + minterms.size() / 8);
 		while (!minterms.empty())
 		{
 			const auto newEnd = mergeSomeMinterms(minterms.begin(), minterms.end(), minterms.begin(), bits, newImplicants, progressStep);
@@ -136,6 +263,7 @@ Implicants QuineMcCluskey::findPrimeImplicants(Minterms allowedMinterms, const s
 				break;
 			minterms.erase(newEnd, minterms.end());
 		}
+		newImplicants.reserve(newImplicants.size() + minterms.size());
 		for (const Minterm &minterm : minterms)
 			newImplicants.push_back(Implicant(minterm));
 	}
