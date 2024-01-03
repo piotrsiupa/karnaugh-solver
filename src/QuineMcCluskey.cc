@@ -255,9 +255,10 @@ Implicants QuineMcCluskey::findPrimeImplicants(Minterms allowedMinterms, const s
 		while (!minterms.empty())
 		{
 			const auto newEnd = mergeSomeMinterms(minterms.begin(), minterms.end(), minterms.begin(), bits, newImplicants, progressStep);
-			if (newEnd == minterms.cend())
-				break;
+			const std::size_t erasedCount = std::distance(newEnd, minterms.end());
 			minterms.erase(newEnd, minterms.end());
+			if (erasedCount < minterms.size())
+				break;
 		}
 		newImplicants.reserve(newImplicants.size() + minterms.size());
 		for (const Minterm &minterm : minterms)
