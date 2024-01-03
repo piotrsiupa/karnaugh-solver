@@ -180,17 +180,14 @@ std::vector<Minterm>::iterator QuineMcCluskey::mergeSomeMinterms(const std::vect
 			for (std::vector<Minterm>::const_iterator jiter = begin; jiter != end; ++jiter)
 				if ((*jiter & bit) != 0)
 					++rating;
+			rating = std::min(rating, mintermCount - rating);
 		}
 		
-		for (std::uint_fast32_t &rating : ratings)
-			rating = std::min(rating, mintermCount - rating) - 1;
-		
-		const std::uint_fast32_t maxCount = std::uint_fast32_t(0) - 1;
 		{
 			std::size_t i, j;
 			for (i = 0, j = 0; i != ratings.size(); ++i)
 			{
-				if (ratings[i] != maxCount)
+				if (ratings[i] != 0)
 				{
 					ratings[j] = ratings[i];
 					bits[j] = bits[i];
@@ -211,7 +208,6 @@ std::vector<Minterm>::iterator QuineMcCluskey::mergeSomeMinterms(const std::vect
 		const std::size_t chosenIndex = std::distance(ratings.cbegin(), std::min_element(ratings.cbegin(), ratings.cend()));
 		const Minterm chosenBit = bits[chosenIndex];
 		bits.erase(std::next(bits.begin(), chosenIndex));
-		
 		const std::vector<Minterm>::iterator middle = std::partition(begin, end, [chosenBit](const Minterm &minterm){ return (minterm & chosenBit) == 0; });
 		
 		remaining = mergeSomeMinterms(begin, middle, remaining, bits, implicants, progressStep);
