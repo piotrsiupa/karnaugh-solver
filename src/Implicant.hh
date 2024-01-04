@@ -31,8 +31,8 @@ public:
 	constexpr Implicant(const Implicant &) = default;
 	constexpr Implicant& operator=(const Implicant &) = default;
 	
-	constexpr bool operator==(const Implicant &other) const { return this->bits == other.bits && this->mask == other.mask; }
-	constexpr bool operator!=(const Implicant &other) const { return !operator==(other); }
+	constexpr bool operator==(const Implicant &other) const = default;
+	constexpr bool operator!=(const Implicant &other) const = default;
 	inline bool operator<(const Implicant &other) const;
 	bool humanLess(const Implicant &other) const;
 	constexpr bool covers(const Minterm minterm) const { return (minterm & mask) == bits; }

@@ -227,6 +227,19 @@ Implicants QuineMcCluskey::findPrimeImplicants(Minterms allowedMinterms, const s
 	const std::string progressName = "Finding prime impl. of \"" + functionName + '"';
 	Progress progress(Progress::Stage::SOLVING, progressName.c_str(), 3, false);
 	
+	std::vector<Minterm> bits;
+	if (::bits > 0)
+	{
+		const Minterm maxBit = Minterm(1) << (::bits - 1);
+		bits.reserve(::bits);
+		for (Minterm bit = 1;; bit <<= 1)
+		{
+			bits.push_back(bit);
+			if (bit == maxBit)
+				break;
+		}
+	}
+	
 	std::vector<Implicant> newImplicants;
 	
 	{
@@ -234,18 +247,6 @@ Implicants QuineMcCluskey::findPrimeImplicants(Minterms allowedMinterms, const s
 		progress.step();
 		progress.substep([](){ return -0.0; }, true);
 		auto progressStep = progress.makeCountingStepHelper(allowedMinterms.getSize());
-		std::vector<Minterm> bits;
-		if (::bits > 0)
-		{
-			const Minterm maxBit = Minterm(1) << (::bits - 1);
-			bits.reserve(::bits);
-			for (Minterm bit = 1;; bit <<= 1)
-			{
-				bits.push_back(bit);
-				if (bit == maxBit)
-					break;
-			}
-		}
 		std::vector<Minterm> minterms;
 		minterms.reserve(allowedMinterms.getSize());
 		for (const Minterm minterm : allowedMinterms)
@@ -263,6 +264,37 @@ Implicants QuineMcCluskey::findPrimeImplicants(Minterms allowedMinterms, const s
 		newImplicants.reserve(newImplicants.size() + minterms.size());
 		for (const Minterm &minterm : minterms)
 			newImplicants.push_back(Implicant(minterm));
+	}
+	
+	for (::bits_t bitCount = ::bits; bitCount != 0; --bitCount)
+	{
+		const std::vector<Implicant>::iterator partitionEnd = std::partition(newImplicants.begin(), newImplicants.end(), [bitCount](const Implicant &implicant){ return implicant.getBitCount() == bitCount; });
+		if (partitionEnd == newImplicants.begin())
+			continue;
+		std::vector<Implicant>::iterator currentEnd = partitionEnd;
+		for (const Minterm bit : bits)
+		{
+			const Minterm mask = ~bit;
+			std::sort(newImplicants.begin(), currentEnd, [mask](const Implicant &x, const Implicant &y){
+					const Minterm xm = x.getRawMask(), ym = y.getRawMask();
+					if (xm != ym)
+						return xm < ym;
+					const Minterm xmb = x.getRawBits() & mask, ymb = y.getRawBits() & mask;
+					return xmb < ymb;
+				});
+			for (std::vector<Implicant>::iterator current = newImplicants.begin(), next = std::next(newImplicants.begin()); next != currentEnd; current = next, ++next)
+			{
+				if (current->getRawMask() == next->getRawMask() && (current->getRawBits() & mask) == (next->getRawBits() & mask))
+				{
+					current->applyMask(mask);
+					*next = Implicant::none();
+					if (++next == currentEnd)
+						break;
+				}
+			}
+			currentEnd = std::remove(newImplicants.begin(), currentEnd, Implicant::none());
+		}
+		newImplicants.erase(currentEnd, partitionEnd);
 	}
 	
 	Implicants primeImplicants;
