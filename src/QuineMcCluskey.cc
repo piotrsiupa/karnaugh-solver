@@ -15,208 +15,6 @@
 #include "utils.hh"
 
 
-class Minterator
-{
-	Minterm minterm;
-	bool overflow = false;
-	
-public:
-	constexpr Minterator(const Implicant &implicant) : minterm(implicant.firstMinterm()) {}
-	
-	[[nodiscard]] constexpr operator bool() const { return !overflow; }
-	void step(const Implicant &implicant) { if (minterm == implicant.lastMinterm()) overflow = true; else minterm = implicant.nextMinterm(minterm); }
-	[[nodiscard]] constexpr Minterm operator*() const { return minterm; }
-};
-
-
-std::vector<Minterm>::iterator QuineMcCluskey::mergeSomeMinterms(const std::vector<Minterm>::iterator begin, const std::vector<Minterm>::iterator end, std::vector<Minterm>::iterator remaining, std::vector<Minterm> bits, std::vector<Implicant> &implicants, Progress::CountingStepHelper<std::size_t> &progressStep)
-{
-	const std::uint_fast32_t mintermCount = static_cast<std::uint_fast32_t>(std::distance(begin, end));
-	
-	switch (mintermCount)
-	{
-	case 0:
-#if defined(__GNUC__)
-		__builtin_unreachable();
-#elif defined(_MSC_VER)
-		__assume(false);
-#endif
-	[[likely]] case 1:
-		*remaining = *begin;
-		return std::next(remaining);
-		
-	case 2:
-	{
-		const Minterm minterm0 = *begin, minterm1 = *std::next(begin, 1);
-		const Minterm difference = minterm0 ^ minterm1;
-		const bool differsBy1Bit = (difference & (difference - 1)) == 0;
-		if (differsBy1Bit)
-		{
-			implicants.emplace_back(minterm0 & ~difference, ::maxMinterm & ~difference);
-			progressStep.substep(2, false);
-		}
-		else
-		{
-			*(remaining++) = minterm0;
-			*(remaining++) = minterm1;
-		}
-		return remaining;
-	}
-	
-	case 3:
-	{
-		const Minterm minterm0 = *begin, minterm1 = *std::next(begin, 1), minterm2 = *std::next(begin, 2);
-		Minterm difference = minterm0 ^ minterm1;
-		bool differsBy1Bit = (difference & (difference - 1)) == 0;
-		if (differsBy1Bit)
-		{
-			implicants.emplace_back(minterm0 & ~difference, ::maxMinterm & ~difference);
-			*(remaining++) = minterm2;
-			progressStep.substep(2, false);
-		}
-		else
-		{
-			difference = minterm0 ^ minterm2;
-			differsBy1Bit = (difference & (difference - 1)) == 0;
-			if (differsBy1Bit)
-			{
-				implicants.emplace_back(minterm0 & ~difference, ::maxMinterm & ~difference);
-				*(remaining++) = minterm1;
-				progressStep.substep(2, false);
-			}
-			else
-			{
-				difference = minterm1 ^ minterm2;
-				differsBy1Bit = (difference & (difference - 1)) == 0;
-				if (differsBy1Bit)
-				{
-					implicants.emplace_back(minterm1 & ~difference, ::maxMinterm & ~difference);
-					*(remaining++) = minterm0;
-					progressStep.substep(2, false);
-				}
-				else
-				{
-					*(remaining++) = minterm0;
-					*(remaining++) = minterm1;
-					*(remaining++) = minterm2;
-				}
-			}
-		}
-		return remaining;
-	}
-	
-	case 4:
-	{
-		Minterm minterm0 = *begin, minterm1 = *std::next(begin, 1), minterm2 = *std::next(begin, 2), minterm3 = *std::next(begin, 3);
-		if (minterm0 > minterm2)
-			std::swap(minterm0, minterm2);
-		if (minterm1 > minterm3)
-			std::swap(minterm1, minterm3);
-		Minterm difference = minterm0 ^ minterm1;
-		bool differsBy1Bit = (difference & (difference - 1)) == 0;
-		if (differsBy1Bit)
-		{
-			const Minterm difference1 = minterm2 ^ minterm3;
-			differsBy1Bit = (difference1 & (difference1 - 1)) == 0;
-			if (differsBy1Bit)
-			{
-				const Minterm difference2 = (minterm0 & minterm1) ^ (minterm2 & minterm3);
-				differsBy1Bit = (difference2 & (difference2 - 1)) == 0;
-				if (differsBy1Bit && difference == difference1)
-				{
-					implicants.emplace_back(minterm0 & ~(difference | difference2), ::maxMinterm & ~(difference | difference2));
-				}
-				else
-				{
-					implicants.emplace_back(minterm0 & ~difference, ::maxMinterm & ~difference);
-					implicants.emplace_back(minterm2 & ~difference1, ::maxMinterm & ~difference1);
-				}
-				progressStep.substep(4, false);
-			}
-			else
-			{
-				implicants.emplace_back(minterm0 & ~difference, ::maxMinterm & ~difference);
-				*(remaining++) = minterm2;
-				*(remaining++) = minterm3;
-				progressStep.substep(2, false);
-			}
-		}
-		else
-		{
-			difference = minterm1 ^ minterm2;
-			differsBy1Bit = (difference & (difference - 1)) == 0;
-			if (differsBy1Bit)
-			{
-				implicants.emplace_back(minterm1 & ~difference, ::maxMinterm & ~difference);
-				progressStep.substep(2, false);
-			}
-			else
-			{
-				*(remaining++) = minterm1;
-				*(remaining++) = minterm2;
-			}
-			difference = minterm0 ^ minterm3;
-			differsBy1Bit = (difference & (difference - 1)) == 0;
-			if (differsBy1Bit)
-			{
-				implicants.emplace_back(minterm0 & ~difference, ::maxMinterm & ~difference);
-				progressStep.substep(2, false);
-			}
-			else
-			{
-				*(remaining++) = minterm0;
-				*(remaining++) = minterm3;
-			}
-		}
-		return remaining;
-	}
-	
-	default:
-		std::vector<std::uint_fast32_t> ratings(bits.size());
-		for (std::uint_fast8_t i = 0; i != bits.size(); ++i)
-		{
-			const Minterm bit = bits[i];
-			std::uint_fast32_t &rating = ratings[i];
-			for (std::vector<Minterm>::const_iterator jiter = begin; jiter != end; ++jiter)
-				if ((*jiter & bit) != 0)
-					++rating;
-			rating = std::min(rating, mintermCount - rating);
-		}
-		
-		{
-			std::size_t i, j;
-			for (i = 0, j = 0; i != ratings.size(); ++i)
-			{
-				if (ratings[i] != 0)
-				{
-					ratings[j] = ratings[i];
-					bits[j] = bits[i];
-					++j;
-				}
-			}
-			ratings.resize(j);
-			bits.resize(j);
-		}
-		if (mintermCount == std::uint_fast64_t(1) << bits.size())
-		{
-			const Minterm mask = ::maxMinterm & ~std::accumulate(bits.cbegin(), bits.cend(), 0, std::bit_or<Minterm>());
-			implicants.emplace_back(*begin & mask, mask);
-			progressStep.substep(mintermCount, false);
-			return remaining;
-		}
-		
-		const std::size_t chosenIndex = std::distance(ratings.cbegin(), std::min_element(ratings.cbegin(), ratings.cend()));
-		const Minterm chosenBit = bits[chosenIndex];
-		bits.erase(std::next(bits.begin(), chosenIndex));
-		const std::vector<Minterm>::iterator middle = std::partition(begin, end, [chosenBit](const Minterm &minterm){ return (minterm & chosenBit) == 0; });
-		
-		remaining = mergeSomeMinterms(begin, middle, remaining, bits, implicants, progressStep);
-		remaining = mergeSomeMinterms(middle, end, remaining, std::move(bits), implicants, progressStep);
-		return remaining;
-	}
-}
-
-
 Implicants QuineMcCluskey::findPrimeImplicants(Minterms allowedMinterms, const std::string &functionName) const
 {
 	if (allowedMinterms.getSize() == 0)
@@ -225,76 +23,80 @@ Implicants QuineMcCluskey::findPrimeImplicants(Minterms allowedMinterms, const s
 		return {Implicant::all()};
 	
 	const std::string progressName = "Finding prime impl. of \"" + functionName + '"';
-	Progress progress(Progress::Stage::SOLVING, progressName.c_str(), 3, false);
-	
-	std::vector<Minterm> bits;
-	if (::bits > 0)
-	{
-		const Minterm maxBit = Minterm(1) << (::bits - 1);
-		bits.reserve(::bits);
-		for (Minterm bit = 1;; bit <<= 1)
-		{
-			bits.push_back(bit);
-			if (bit == maxBit)
-				break;
-		}
-	}
+	Progress progress(Progress::Stage::SOLVING, progressName.c_str(), 4, false);
 	
 	std::vector<Implicant> newImplicants;
 	
 	{
-		const auto infoGuard = progress.addInfo("finding prime implicants with heuristic");
+		const auto infoGuard = progress.addInfo("creating initial list of implicants");
 		progress.step();
 		progress.substep([](){ return -0.0; }, true);
 		auto progressStep = progress.makeCountingStepHelper(allowedMinterms.getSize());
-		std::vector<Minterm> minterms;
-		minterms.reserve(allowedMinterms.getSize());
+		newImplicants.reserve(allowedMinterms.getSize());
 		for (const Minterm minterm : allowedMinterms)
-			minterms.push_back(minterm);
-		Progress::cerr() << "= " << minterms.size() << '\n';
-		newImplicants.reserve(minterms.size() / 4 + minterms.size() / 8);
-		while (!minterms.empty())
 		{
-			const auto newEnd = mergeSomeMinterms(minterms.begin(), minterms.end(), minterms.begin(), bits, newImplicants, progressStep);
-			const std::size_t erasedCount = std::distance(newEnd, minterms.end());
-			minterms.erase(newEnd, minterms.end());
-			if (erasedCount < minterms.size())
-				break;
-		}
-		newImplicants.reserve(newImplicants.size() + minterms.size());
-		for (const Minterm &minterm : minterms)
+			progressStep.substep();
 			newImplicants.push_back(Implicant(minterm));
+		}
 	}
 	
-	for (::bits_t bitCount = ::bits; bitCount != 0; --bitCount)
 	{
-		const std::vector<Implicant>::iterator partitionEnd = std::partition(newImplicants.begin(), newImplicants.end(), [bitCount](const Implicant &implicant){ return implicant.getBitCount() == bitCount; });
-		if (partitionEnd == newImplicants.begin())
-			continue;
-		std::vector<Implicant>::iterator currentEnd = partitionEnd;
-		for (const Minterm bit : bits)
+		const auto infoGuard = progress.addInfo("merging prime implicants with heuristic");
+		progress.step();
+		progress.substep([](){ return -0.0; }, true);
+		
+		std::vector<Minterm> bits;
+		if (::bits > 0)
 		{
-			const Minterm mask = ~bit;
-			std::sort(newImplicants.begin(), currentEnd, [mask](const Implicant &x, const Implicant &y){
-					const Minterm xm = x.getRawMask(), ym = y.getRawMask();
-					if (xm != ym)
-						return xm < ym;
-					const Minterm xmb = x.getRawBits() & mask, ymb = y.getRawBits() & mask;
-					return xmb < ymb;
-				});
-			for (std::vector<Implicant>::iterator current = newImplicants.begin(), next = std::next(newImplicants.begin()); next != currentEnd; current = next, ++next)
+			const Minterm maxBit = Minterm(1) << (::bits - 1);
+			bits.reserve(::bits);
+			for (Minterm bit = 1;; bit <<= 1)
 			{
-				if (current->getRawMask() == next->getRawMask() && (current->getRawBits() & mask) == (next->getRawBits() & mask))
-				{
-					current->applyMask(mask);
-					*next = Implicant::none();
-					if (++next == currentEnd)
-						break;
-				}
+				bits.push_back(bit);
+				if (bit == maxBit)
+					break;
 			}
-			currentEnd = std::remove(newImplicants.begin(), currentEnd, Implicant::none());
 		}
-		newImplicants.erase(currentEnd, partitionEnd);
+		
+		for (::bits_t bitCount = ::bits; bitCount != 0; --bitCount)
+		{
+			const std::vector<Implicant>::iterator partitionEnd = std::partition(newImplicants.begin(), newImplicants.end(), [bitCount](const Implicant &implicant){ return implicant.getBitCount() == bitCount; });
+			if (partitionEnd == newImplicants.begin())
+				break;
+			std::vector<Implicant>::iterator currentEnd = partitionEnd;
+			for (std::uint_fast8_t i = 0; i != bits.size(); ++i)
+			{
+				const Progress::calcStepCompletion_t calcStepCompletion = [bitCount, i]()
+					{
+						const Minterm currentMinterms = Minterm(1) << (bitCount - 1);
+						const Minterm mintermsBefore = ::maxMinterm & ~currentMinterms & ~(currentMinterms - 1);
+						const Progress::completion_t progressBefore = static_cast<Progress::completion_t>(mintermsBefore);
+						const Progress::completion_t currentProgress = static_cast<Progress::completion_t>(currentMinterms) * static_cast<Progress::completion_t>(i) / static_cast<Progress::completion_t>(::bits);
+						return -(progressBefore + currentProgress) / static_cast<Progress::completion_t>(::maxMinterm);
+					};
+				progress.substep(calcStepCompletion);
+				const Minterm mask = ~bits[i];
+				std::sort(newImplicants.begin(), currentEnd, [mask](const Implicant &x, const Implicant &y){
+						const Minterm xm = x.getRawMask(), ym = y.getRawMask();
+						if (xm != ym)
+							return xm < ym;
+						const Minterm xmb = x.getRawBits() & mask, ymb = y.getRawBits() & mask;
+						return xmb < ymb;
+					});
+				for (std::vector<Implicant>::iterator current = newImplicants.begin(), next = std::next(newImplicants.begin()); next != currentEnd; current = next, ++next)
+				{
+					if (current->getRawMask() == next->getRawMask() && (current->getRawBits() & mask) == (next->getRawBits() & mask))
+					{
+						current->applyMask(mask);
+						*next = Implicant::none();
+						if (++next == currentEnd)
+							break;
+					}
+				}
+				currentEnd = std::remove(newImplicants.begin(), currentEnd, Implicant::none());
+			}
+			newImplicants.erase(currentEnd, partitionEnd);
+		}
 	}
 	
 	Implicants primeImplicants;
