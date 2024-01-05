@@ -58,44 +58,31 @@ Implicants QuineMcCluskey::findPrimeImplicants(Minterms allowedMinterms, const s
 			}
 		}
 		
-		for (::bits_t bitCount = ::bits; bitCount != 0; --bitCount)
+		::bits_t i = 0;
+		const Progress::calcStepCompletion_t calcStepCompletion = [&i = std::as_const(i)]() { return -static_cast<Progress::completion_t>(i) / static_cast<Progress::completion_t>(::bits); };
+		for (i = 0; i != ::bits; ++i)
 		{
-			const std::vector<Implicant>::iterator partitionEnd = std::partition(newImplicants.begin(), newImplicants.end(), [bitCount](const Implicant &implicant){ return implicant.getBitCount() == bitCount; });
-			if (partitionEnd == newImplicants.begin())
-				break;
-			std::vector<Implicant>::iterator currentEnd = partitionEnd;
-			for (std::uint_fast8_t i = 0; i != bits.size(); ++i)
+			std::vector<Implicant>::iterator currentEnd = newImplicants.end();
+			progress.substep(calcStepCompletion, true);
+			const Minterm mask = ~(Minterm(1) << i);
+			std::sort(newImplicants.begin(), currentEnd, [mask](const Implicant &x, const Implicant &y){
+					const Minterm xm = x.getRawMask(), ym = y.getRawMask();
+					if (xm != ym)
+						return xm < ym;
+					const Minterm xmb = x.getRawBits() & mask, ymb = y.getRawBits() & mask;
+					return xmb < ymb;
+				});
+			for (std::vector<Implicant>::iterator current = newImplicants.begin(), next = std::next(newImplicants.begin()); next != currentEnd; current = next, ++next)
 			{
-				const Progress::calcStepCompletion_t calcStepCompletion = [bitCount, i]()
-					{
-						const Minterm currentMinterms = Minterm(1) << (bitCount - 1);
-						const Minterm mintermsBefore = ::maxMinterm & ~currentMinterms & ~(currentMinterms - 1);
-						const Progress::completion_t progressBefore = static_cast<Progress::completion_t>(mintermsBefore);
-						const Progress::completion_t currentProgress = static_cast<Progress::completion_t>(currentMinterms) * static_cast<Progress::completion_t>(i) / static_cast<Progress::completion_t>(::bits);
-						return -(progressBefore + currentProgress) / static_cast<Progress::completion_t>(::maxMinterm);
-					};
-				progress.substep(calcStepCompletion);
-				const Minterm mask = ~bits[i];
-				std::sort(newImplicants.begin(), currentEnd, [mask](const Implicant &x, const Implicant &y){
-						const Minterm xm = x.getRawMask(), ym = y.getRawMask();
-						if (xm != ym)
-							return xm < ym;
-						const Minterm xmb = x.getRawBits() & mask, ymb = y.getRawBits() & mask;
-						return xmb < ymb;
-					});
-				for (std::vector<Implicant>::iterator current = newImplicants.begin(), next = std::next(newImplicants.begin()); next != currentEnd; current = next, ++next)
+				if (current->getRawMask() == next->getRawMask() && (current->getRawBits() & mask) == (next->getRawBits() & mask))
 				{
-					if (current->getRawMask() == next->getRawMask() && (current->getRawBits() & mask) == (next->getRawBits() & mask))
-					{
-						current->applyMask(mask);
-						*next = Implicant::none();
-						if (++next == currentEnd)
-							break;
-					}
+					current->applyMask(mask);
+					*next = Implicant::none();
+					if (++next == currentEnd)
+						break;
 				}
-				currentEnd = std::remove(newImplicants.begin(), currentEnd, Implicant::none());
 			}
-			newImplicants.erase(currentEnd, partitionEnd);
+			newImplicants.erase(std::remove(newImplicants.begin(), currentEnd, Implicant::none()), newImplicants.end());
 		}
 	}
 	
