@@ -11,10 +11,20 @@
 
 class QuineMcCluskey
 {
-	Implicants findPrimeImplicants(Minterms allowedMinterms, const std::string &functionName) const;
-	
 public:
 	using solutions_t = std::vector<Implicants>;
 	
+private:
+	static std::vector<Minterm> listBits();
+	
+	static Implicants createInitialImplicants(const Minterms &minterms, Progress &progress);
+	static void mergeImplicants(Implicants &implicants, Progress &progress);
+	static void createAlternativeImplicants(Implicants &implicants, Progress &progress);
+	static void cleanupImplicants(Implicants &implicants, Progress &progress);
+	static Implicants findPrimeImplicants(Minterms minterms, const std::string &functionName);
+	
+	static solutions_t runPetricksMethod(Implicants &&primeImplicants, const Minterms &targetMinterms, const std::string &functionName);
+	
+public:
 	solutions_t solve(const Minterms &allowedMinterms, const Minterms &targetMinterms, const std::string &functionName) const;
 };
