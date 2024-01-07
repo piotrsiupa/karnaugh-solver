@@ -29,17 +29,17 @@ std::vector<Minterm> QuineMcCluskey::listBits()
 	return bits;
 }
 
-Implicants QuineMcCluskey::createImplicants(const Minterms &minterms, Progress &progress)
+Implicants QuineMcCluskey::createImplicants(const Minterms &allowedMinterms, const Minterms &targetMinterms, Progress &progress)
 {
 	const std::vector<Minterm> bits = listBits();
 	
 	const auto infoGuard = progress.addInfo("Creating implicants with a heuristic");
 	progress.step();
-	auto progressStep = progress.makeCountingStepHelper(minterms.getSize());
+	auto progressStep = progress.makeCountingStepHelper(targetMinterms.getSize());
 	
 	Minterms touchedMinterms;
 	Implicants implicants;
-	for (const Minterm initialMinterm : minterms)
+	for (const Minterm initialMinterm : targetMinterms)
 	{
 		progressStep.substep();
 		if (touchedMinterms.check(initialMinterm))
@@ -49,7 +49,7 @@ Implicants QuineMcCluskey::createImplicants(const Minterms &minterms, Progress &
 		{
 			if ((bit & implicant.getRawMask()) == 0)
 				continue;
-			if (Implicant(implicant.getRawBits() ^ bit, implicant.getRawMask()).areAllInMinterms(minterms))
+			if (Implicant(implicant.getRawBits() ^ bit, implicant.getRawMask()).areAllInMinterms(allowedMinterms))
 				implicant.applyMask(~bit);
 		}
 		implicant.addToMinterms(touchedMinterms);
@@ -149,7 +149,7 @@ void QuineMcCluskey::cleanupImplicants(Implicants &implicants, Progress &progres
 	implicants.shrink_to_fit();
 }
 
-Implicants QuineMcCluskey::findPrimeImplicants(const Minterms &allowedMinterms, const std::string &functionName)
+Implicants QuineMcCluskey::findPrimeImplicants(const Minterms &allowedMinterms, const Minterms &targetMinterms, const std::string &functionName)
 {
 	if (allowedMinterms.getSize() == 0)
 		return {Implicant::none()};
@@ -159,7 +159,7 @@ Implicants QuineMcCluskey::findPrimeImplicants(const Minterms &allowedMinterms, 
 	const std::string progressName = "Finding prime impl. of \"" + functionName + '"';
 	Progress progress(Progress::Stage::SOLVING, progressName.c_str(), 3, false);
 	
-	Implicants implicants = createImplicants(allowedMinterms, progress);
+	Implicants implicants = createImplicants(allowedMinterms, targetMinterms, progress);
 	createAlternativeImplicants(implicants, progress);
 	cleanupImplicants(implicants, progress);
 	return implicants;
@@ -194,7 +194,7 @@ QuineMcCluskey::solutions_t QuineMcCluskey::runPetricksMethod(Implicants &&prime
 
 QuineMcCluskey::solutions_t QuineMcCluskey::solve(const Minterms &allowedMinterms, const Minterms &targetMinterms, const std::string &functionName) const
 {
-	Implicants primeImplicants = findPrimeImplicants(allowedMinterms, functionName);
+	Implicants primeImplicants = findPrimeImplicants(allowedMinterms, allowedMinterms, functionName);
 #ifndef NDEBUG
 	validate(allowedMinterms, targetMinterms, primeImplicants);
 #endif

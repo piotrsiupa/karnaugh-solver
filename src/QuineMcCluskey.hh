@@ -17,10 +17,10 @@ public:
 private:
 	static std::vector<Minterm> listBits();
 	
-	static Implicants createImplicants(const Minterms &minterms, Progress &progress);
+	static Implicants createImplicants(const Minterms &allowedMinterms, const Minterms &targetMinterms, Progress &progress);
 	static void createAlternativeImplicants(Implicants &implicants, Progress &progress);
 	static void cleanupImplicants(Implicants &implicants, Progress &progress);
-	static Implicants findPrimeImplicants(const Minterms &minterms, const std::string &functionName);
+	static Implicants findPrimeImplicants(const Minterms &allowedMinterms, const Minterms &targetMinterms, const std::string &functionName);
 	
 	static void validate(const Minterms &allowedMinterms, Minterms targetMinterms, const Implicants &implicants);
 	
