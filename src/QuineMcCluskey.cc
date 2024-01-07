@@ -1,6 +1,7 @@
 #include "./QuineMcCluskey.hh"
 
 #include <algorithm>
+#include <cassert>
 #include <cmath>
 #include <cstdint>
 #include <cstring>
@@ -63,12 +64,12 @@ void QuineMcCluskey::mergeImplicants(Implicants &implicants, Progress *const pro
 	
 	::bits_t i = 0;
 	const Progress::calcStepCompletion_t calcStepCompletion = [&i = std::as_const(i)]() { return -static_cast<Progress::completion_t>(i) / static_cast<Progress::completion_t>(::bits); };
-	for (i = 0; i != ::bits; ++i)
+	for (i = 0; i != bits.size(); ++i)
 	{
 		std::vector<Implicant>::iterator currentEnd = implicants.end();
 		if (progress != nullptr)
 			progress->substep(calcStepCompletion, true);
-		const Minterm mask = ~(Minterm(1) << i);
+		const Minterm mask = ~bits[i];
 		std::sort(implicants.begin(), currentEnd, [mask](const Implicant &x, const Implicant &y){
 				const Minterm xm = x.getRawMask(), ym = y.getRawMask();
 				if (xm != ym)
@@ -218,7 +219,7 @@ void QuineMcCluskey::cleanupImplicants(Implicants &implicants, Progress &progres
 	implicants.shrink_to_fit();
 }
 
-Implicants QuineMcCluskey::findPrimeImplicants(Minterms allowedMinterms, const std::string &functionName)
+Implicants QuineMcCluskey::findPrimeImplicants(const Minterms &allowedMinterms, const std::string &functionName)
 {
 	if (allowedMinterms.getSize() == 0)
 		return {Implicant::none()};
@@ -234,6 +235,18 @@ Implicants QuineMcCluskey::findPrimeImplicants(Minterms allowedMinterms, const s
 	cleanupImplicants(implicants, progress);
 	return implicants;
 }
+
+#ifndef NDEBUG
+void QuineMcCluskey::validate(const Minterms &allowedMinterms, Minterms targetMinterms, const Implicants &implicants)
+{
+	for (const Implicant &implicant : implicants)
+	{
+		assert(implicant.areAllInMinterms(allowedMinterms));
+		implicant.removeFromMinterms(targetMinterms);
+	}
+	assert(targetMinterms.isEmpty());
+}
+#endif
 
 QuineMcCluskey::solutions_t QuineMcCluskey::runPetricksMethod(Implicants &&primeImplicants, const Minterms &targetMinterms, const std::string &functionName)
 {
@@ -253,5 +266,8 @@ QuineMcCluskey::solutions_t QuineMcCluskey::runPetricksMethod(Implicants &&prime
 QuineMcCluskey::solutions_t QuineMcCluskey::solve(const Minterms &allowedMinterms, const Minterms &targetMinterms, const std::string &functionName) const
 {
 	Implicants primeImplicants = findPrimeImplicants(allowedMinterms, functionName);
+#ifndef NDEBUG
+	validate(allowedMinterms, targetMinterms, primeImplicants);
+#endif
 	return runPetricksMethod(std::move(primeImplicants), targetMinterms, functionName);
 }

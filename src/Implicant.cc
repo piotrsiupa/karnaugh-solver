@@ -21,6 +21,36 @@ Implicant::splitBits_t Implicant::splitBits() const
 	return splitBits;
 }
 
+bool Implicant::isAnyInMinterms(const Minterms &minterms) const
+{
+	if (isEmpty() && !isEmptyTrue()) [[unlikely]]
+		return false;
+	const Minterm inversedMask = ~mask & ::maxMinterm;
+	Minterm unmaskedPart = 0;
+	do
+	{
+		if (minterms.check(bits | unmaskedPart))
+			return true;
+		unmaskedPart = (unmaskedPart - inversedMask) & inversedMask;
+	} while (unmaskedPart != 0);
+	return false;
+}
+
+bool Implicant::areAllInMinterms(const Minterms &minterms) const
+{
+	if (isEmpty() && !isEmptyTrue()) [[unlikely]]
+		return true;
+	const Minterm inversedMask = ~mask & ::maxMinterm;
+	Minterm unmaskedPart = 0;
+	do
+	{
+		if (!minterms.check(bits | unmaskedPart))
+			return false;
+		unmaskedPart = (unmaskedPart - inversedMask) & inversedMask;
+	} while (unmaskedPart != 0);
+	return true;
+}
+
 void Implicant::addToMinterms(Minterms &minterms) const
 {
 	if (isEmpty() && !isEmptyTrue()) [[unlikely]]

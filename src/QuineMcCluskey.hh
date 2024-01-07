@@ -22,7 +22,9 @@ private:
 	static void mergeAndExtendImplicants(Implicants &implicants, Progress &progress);
 	static void createAlternativeImplicants(Implicants &implicants, Progress &progress);
 	static void cleanupImplicants(Implicants &implicants, Progress &progress);
-	static Implicants findPrimeImplicants(Minterms minterms, const std::string &functionName);
+	static Implicants findPrimeImplicants(const Minterms &minterms, const std::string &functionName);
+	
+	static void validate(const Minterms &allowedMinterms, Minterms targetMinterms, const Implicants &implicants);
 	
 	static solutions_t runPetricksMethod(Implicants &&primeImplicants, const Minterms &targetMinterms, const std::string &functionName);
 	

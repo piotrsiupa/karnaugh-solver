@@ -55,6 +55,8 @@ public:
 	constexpr Minterm firstMinterm() const { return bits; }
 	inline Minterm nextMinterm(const Minterm minterm) const;
 	Minterm lastMinterm() const { return bits | (~mask & ::maxMinterm); }
+	bool isAnyInMinterms(const Minterms &minterms) const;
+	bool areAllInMinterms(const Minterms &minterms) const;
 	void addToMinterms(Minterms &minterms) const;
 	void removeFromMinterms(Minterms &minterms) const;
 	
