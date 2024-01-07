@@ -1,6 +1,7 @@
 #include "./QuineMcCluskey.hh"
 
 #include <algorithm>
+#include <cmath>
 #include <cstdint>
 #include <cstring>
 #include <functional>
@@ -49,11 +50,14 @@ Implicants QuineMcCluskey::createInitialImplicants(const Minterms &minterms, Pro
 	return implicants;
 }
 	
-void QuineMcCluskey::mergeImplicants(Implicants &implicants, Progress &progress)
+void QuineMcCluskey::mergeImplicants(Implicants &implicants, Progress *const progress)
 {
-	const auto infoGuard = progress.addInfo("merging implicants with heuristic");
-	progress.step();
-	progress.substep([](){ return -0.0; }, true);
+	if (progress != nullptr)
+	{
+		const auto infoGuard = progress->addInfo("merging implicants with heuristic");
+		progress->step();
+		progress->substep([](){ return -0.0; }, true);
+	}
 	
 	const std::vector<Minterm> bits = listBits();
 	
@@ -62,7 +66,8 @@ void QuineMcCluskey::mergeImplicants(Implicants &implicants, Progress &progress)
 	for (i = 0; i != ::bits; ++i)
 	{
 		std::vector<Implicant>::iterator currentEnd = implicants.end();
-		progress.substep(calcStepCompletion, true);
+		if (progress != nullptr)
+			progress->substep(calcStepCompletion, true);
 		const Minterm mask = ~(Minterm(1) << i);
 		std::sort(implicants.begin(), currentEnd, [mask](const Implicant &x, const Implicant &y){
 				const Minterm xm = x.getRawMask(), ym = y.getRawMask();
@@ -82,6 +87,43 @@ void QuineMcCluskey::mergeImplicants(Implicants &implicants, Progress &progress)
 			}
 		}
 		implicants.erase(std::remove(implicants.begin(), currentEnd, Implicant::none()), implicants.end());
+	}
+}
+
+void QuineMcCluskey::mergeAndExtendImplicants(Implicants &implicants, Progress &progress)
+{
+	const auto infoGuard = progress.addInfo("expanding and merging implicants");
+	progress.step();
+	std::size_t extendedCount = implicants.size();
+	const Progress::calcStepCompletion_t calcStepCompletion = [&implicants = std::as_const(implicants), &extendedCount = std::as_const(extendedCount)]() { return -1.0 + std::log(static_cast<Progress::completion_t>(std::max(std::size_t(1), extendedCount))) / std::log(static_cast<Progress::completion_t>(implicants.size())); };
+	while (extendedCount != 0)
+	{
+		progress.substep(calcStepCompletion, true);
+		extendedCount = 0;
+		
+		mergeImplicants(implicants, nullptr);
+		
+		std::sort(implicants.begin(), implicants.end(), [](const Implicant &x, const Implicant &y){ return x.getBitCount() > y.getBitCount(); });
+		
+		for (auto iter = implicants.begin(), firstBiggerIter = implicants.begin();; ++iter)
+		{
+			if (iter == firstBiggerIter)
+				if ((firstBiggerIter = std::partition_point(iter, implicants.end(), [currentCount = iter->getBitCount()](const Implicant &x){ return x.getBitCount() == currentCount; })) == implicants.end())
+					break;
+			Implicant bestResult = Implicant::none();
+			for (auto jiter = firstBiggerIter; jiter != implicants.end(); ++jiter)
+			{
+				Implicant result = Implicant::findBiggestInUnion(*iter, *jiter);
+				if (result != Implicant::none() && (result.getRawMask() & iter->getRawMask()) == result.getRawMask())
+					if (bestResult == Implicant::none() || result.getRawMask() > bestResult.getRawMask())
+						bestResult = std::move(result);
+			}
+			if (bestResult != Implicant::none())
+			{
+				*iter = std::move(bestResult);
+				++extendedCount;
+			}
+		}
 	}
 }
 
@@ -187,7 +229,7 @@ Implicants QuineMcCluskey::findPrimeImplicants(Minterms allowedMinterms, const s
 	Progress progress(Progress::Stage::SOLVING, progressName.c_str(), 4, false);
 	
 	Implicants implicants = createInitialImplicants(allowedMinterms, progress);
-	mergeImplicants(implicants, progress);
+	mergeAndExtendImplicants(implicants, progress);
 	createAlternativeImplicants(implicants, progress);
 	cleanupImplicants(implicants, progress);
 	return implicants;

@@ -53,12 +53,12 @@ public:
 	void applyMask(const mask_t maskToApply) { bits &= maskToApply; mask &= maskToApply; }
 	
 	constexpr Minterm firstMinterm() const { return bits; }
-	Minterm nextMinterm(const Minterm minterm) const;
+	inline Minterm nextMinterm(const Minterm minterm) const;
 	Minterm lastMinterm() const { return bits | (~mask & ::maxMinterm); }
 	void addToMinterms(Minterms &minterms) const;
 	void removeFromMinterms(Minterms &minterms) const;
 	
-	static Implicant findBiggestInUnion(const Implicant &x, const Implicant &y);
+	static inline Implicant findBiggestInUnion(const Implicant &x, const Implicant &y);
 	bool contains(const Implicant &other) const { return (this->mask & other.mask) == this->mask && (this->mask & other.bits) == this->bits; }
 	
 	void printHuman(std::ostream &o, const bool parentheses) const;
@@ -75,4 +75,21 @@ bool Implicant::operator<(const Implicant &other) const
 	const comp_t x = (static_cast<comp_t>(this->mask) << 32) | this->bits;
 	const comp_t y = (static_cast<comp_t>(other.mask) << 32) | other.bits;
 	return x < y;
+}
+
+Minterm Implicant::nextMinterm(const Minterm minterm) const
+{
+	const Minterm inversedMask = ~mask & ::maxMinterm;
+	const Minterm unmaskedMinterm = minterm & inversedMask;
+	const Minterm nextUnmaskedMinterm = (unmaskedMinterm - inversedMask) & inversedMask;
+	return nextUnmaskedMinterm | bits;
+}
+
+Implicant Implicant::findBiggestInUnion(const Implicant &x, const Implicant &y)
+{
+	const mask_t conflicts = (x.bits ^ y.bits) & (x.mask & y.mask);
+	const bits_t conflictCount = static_cast<bits_t>(std::bitset<::maxBits>(conflicts).count());
+	return conflictCount == 1  // Implicants are "touching". ("1" means touching; "0" means intersecting.)
+		? Implicant((x.bits | y.bits) & ~conflicts, (x.mask | y.mask) & ~conflicts)
+		: none();
 }
