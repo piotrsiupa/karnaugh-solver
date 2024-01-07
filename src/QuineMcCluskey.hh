@@ -17,9 +17,7 @@ public:
 private:
 	static std::vector<Minterm> listBits();
 	
-	static Implicants createInitialImplicants(const Minterms &minterms, Progress &progress);
-	static void mergeImplicants(Implicants &implicants, Progress &progress);
-	static void mergeAndExtendImplicants(const Minterms &minterms, Implicants &implicants, Progress &progress);
+	static Implicants createImplicants(const Minterms &minterms, Progress &progress);
 	static void createAlternativeImplicants(Implicants &implicants, Progress &progress);
 	static void cleanupImplicants(Implicants &implicants, Progress &progress);
 	static Implicants findPrimeImplicants(const Minterms &minterms, const std::string &functionName);

@@ -2,18 +2,13 @@
 
 #include <algorithm>
 #include <cassert>
-#include <cmath>
 #include <cstdint>
 #include <cstring>
-#include <functional>
 #include <iostream>
-#include <iterator>
-#include <numeric>
-#include <string>
+#include <map>
 
 #include "options.hh"
 #include "PetricksMethod.hh"
-#include "Progress.hh"
 #include "utils.hh"
 
 
@@ -34,85 +29,33 @@ std::vector<Minterm> QuineMcCluskey::listBits()
 	return bits;
 }
 
-Implicants QuineMcCluskey::createInitialImplicants(const Minterms &minterms, Progress &progress)
+Implicants QuineMcCluskey::createImplicants(const Minterms &minterms, Progress &progress)
 {
-	const auto infoGuard = progress.addInfo("creating initial list of implicants");
+	const std::vector<Minterm> bits = listBits();
+	
+	const auto infoGuard = progress.addInfo("Creating implicants with a heuristic");
 	progress.step();
-	progress.substep([](){ return -0.0; }, true);
 	auto progressStep = progress.makeCountingStepHelper(minterms.getSize());
 	
+	Minterms touchedMinterms;
 	Implicants implicants;
-	implicants.reserve(minterms.getSize());
-	for (const Minterm minterm : minterms)
+	for (const Minterm initialMinterm : minterms)
 	{
 		progressStep.substep();
-		implicants.push_back(Implicant(minterm));
-	}
-	return implicants;
-}
-	
-void QuineMcCluskey::mergeImplicants(Implicants &implicants, Progress &progress)
-{
-	const auto infoGuard = progress.addInfo("merging implicants with heuristic");
-	progress.step();
-	progress.substep([](){ return -0.0; }, true);
-	
-	const std::vector<Minterm> bits = listBits();
-	
-	::bits_t i = 0;
-	const Progress::calcStepCompletion_t calcStepCompletion = [&i = std::as_const(i)]() { return -static_cast<Progress::completion_t>(i) / static_cast<Progress::completion_t>(::bits); };
-	for (i = 0; i != bits.size(); ++i)
-	{
-		std::vector<Implicant>::iterator currentEnd = implicants.end();
-		progress.substep(calcStepCompletion, true);
-		const Minterm mask = ~bits[i];
-		std::sort(implicants.begin(), currentEnd, [mask](const Implicant &x, const Implicant &y){
-				const Minterm xm = x.getRawMask(), ym = y.getRawMask();
-				if (xm != ym)
-					return xm < ym;
-				const Minterm xmb = x.getRawBits() & mask, ymb = y.getRawBits() & mask;
-				return xmb < ymb;
-			});
-		for (std::vector<Implicant>::iterator current = implicants.begin(), next = std::next(implicants.begin()); next != currentEnd; current = next, ++next)
+		if (touchedMinterms.check(initialMinterm))
+			continue;
+		Implicant implicant(initialMinterm);
+		for (const Minterm bit : bits)
 		{
-			if (current->getRawMask() == next->getRawMask() && (current->getRawBits() & mask) == (next->getRawBits() & mask))
-			{
-				current->applyMask(mask);
-				*next = Implicant::none();
-				if (++next == currentEnd)
-					break;
-			}
-		}
-		implicants.erase(std::remove(implicants.begin(), currentEnd, Implicant::none()), implicants.end());
-	}
-}
-
-void QuineMcCluskey::mergeAndExtendImplicants(const Minterms &minterms, Implicants &implicants, Progress &progress)
-{
-	const std::vector<Minterm> bits = listBits();
-	if (bits.size() < 2)
-		return;
-	
-	const auto infoGuard = progress.addInfo("expanding implicants");
-	progress.step();
-	auto progressStep = progress.makeCountingStepHelper(implicants.size());
-	
-	for (Implicant &implicant : implicants)
-	{
-		progressStep.substep();
-		for (std::size_t i = 1; i != bits.size(); ++i)
-		{
-			const Minterm bit = bits[i];
 			if ((bit & implicant.getRawMask()) == 0)
 				continue;
 			if (Implicant(implicant.getRawBits() ^ bit, implicant.getRawMask()).areAllInMinterms(minterms))
 				implicant.applyMask(~bit);
 		}
+		implicant.addToMinterms(touchedMinterms);
+		implicants.push_back(std::move(implicant));
 	}
-	
-	progress.substep([](){ return -0.993; }, true);
-	std::sort(implicants.begin(), implicants.end());
-	implicants.erase(std::unique(implicants.begin(), implicants.end()), implicants.end());
+	return implicants;
 }
 
 void QuineMcCluskey::createAlternativeImplicants(Implicants &newImplicants, Progress &progress)
@@ -214,11 +157,9 @@ Implicants QuineMcCluskey::findPrimeImplicants(const Minterms &allowedMinterms, 
 		return {Implicant::all()};
 	
 	const std::string progressName = "Finding prime impl. of \"" + functionName + '"';
-	Progress progress(Progress::Stage::SOLVING, progressName.c_str(), 5, false);
+	Progress progress(Progress::Stage::SOLVING, progressName.c_str(), 3, false);
 	
-	Implicants implicants = createInitialImplicants(allowedMinterms, progress);
-	mergeImplicants(implicants, progress);
-	mergeAndExtendImplicants(allowedMinterms, implicants, progress);
+	Implicants implicants = createImplicants(allowedMinterms, progress);
 	createAlternativeImplicants(implicants, progress);
 	cleanupImplicants(implicants, progress);
 	return implicants;
