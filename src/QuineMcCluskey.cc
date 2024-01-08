@@ -47,10 +47,28 @@ Implicants QuineMcCluskey::createImplicants(const Minterms &allowedMinterms, con
 		Implicant implicant(initialMinterm);
 		for (const Minterm bit : bits)
 		{
-			if ((bit & implicant.getRawMask()) == 0)
-				continue;
 			if (Implicant(implicant.getRawBits() ^ bit, implicant.getRawMask()).areAllInMinterms(allowedMinterms))
 				implicant.applyMask(~bit);
+		}
+		if (bits.size() >= 2)
+		{
+			for (auto iter = bits.begin(); iter != std::prev(bits.end()); ++iter)
+			{
+				const Minterm removedBit = *iter;
+				if ((removedBit & implicant.getRawMask()) != 0)
+					continue;
+				Implicant implicantVariant(implicant.getRawBits() | (initialMinterm & removedBit), implicant.getRawMask() | removedBit);
+				for (auto jiter = std::next(iter); jiter != bits.end(); ++jiter)
+				{
+					const Minterm bit = *jiter;
+					if ((bit & implicantVariant.getRawMask()) == 0)
+						continue;
+					if (Implicant(implicantVariant.getRawBits() ^ bit, implicantVariant.getRawMask()).areAllInMinterms(allowedMinterms))
+						implicantVariant.applyMask(~bit);
+				}
+				if (implicantVariant.getBitCount() <= implicant.getBitCount())
+					implicant = std::move(implicantVariant);
+			}
 		}
 		implicant.addToMinterms(touchedMinterms);
 		implicants.push_back(std::move(implicant));
