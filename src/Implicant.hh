@@ -39,8 +39,8 @@ public:
 	
 	constexpr bool isEmpty() const { return mask == 0; }
 	constexpr bool isEmptyTrue() const { return bits == 0; }
-	constexpr mask_t getRawBits() const { return bits; }
-	constexpr mask_t getRawMask() const { return mask; }
+	constexpr mask_t getBits() const { return bits; }
+	constexpr mask_t getMask() const { return mask; }
 	constexpr mask_t getTrueBits() const { return bits & mask; }
 	constexpr mask_t getFalseBits() const { return ~bits & mask; }
 	bits_t getBitCount() const { return static_cast<bits_t>(std::bitset<::maxBits>(mask).count()); } // constexpr since C++23
