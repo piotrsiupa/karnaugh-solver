@@ -29,7 +29,26 @@ std::vector<Minterm> QuineMcCluskey::listBits()
 	return bits;
 }
 
-Implicants QuineMcCluskey::createImplicants(const Minterms &allowedMinterms, const Minterms &targetMinterms, Progress &progress)
+void QuineMcCluskey::removeDontCareOnlyImplicants(const Minterms &targetMinterms, Implicants &implicants, Progress &progress)
+{
+	const auto infoGuard = progress.addInfo("removing useless prime implicants");
+	progress.step();
+	progress.substep([](){ return -0.0; }, true);
+	
+	implicants.erase(std::remove_if(implicants.begin(), implicants.end(), [&targetMinterms](const Implicant &implicant){ return !implicant.isAnyInMinterms(targetMinterms); }), implicants.end());
+}
+
+void QuineMcCluskey::cleanupImplicants(Implicants &implicants, Progress &progress)
+{
+	const auto infoGuard = progress.addInfo("sorting prime implicants");
+	progress.step();
+	progress.substep([](){ return -0.0; }, true);
+	
+	implicants.humanSort();
+	implicants.shrink_to_fit();
+}
+
+Implicants QuineMcCluskey::createImplicantsWithHeuristic(const Minterms &allowedMinterms, const Minterms &targetMinterms, Progress &progress)
 {
 	const std::vector<Minterm> bits = listBits();
 	
@@ -76,98 +95,7 @@ Implicants QuineMcCluskey::createImplicants(const Minterms &allowedMinterms, con
 	return implicants;
 }
 
-void QuineMcCluskey::createAlternativeImplicants(Implicants &newImplicants, Progress &progress)
-{
-	Implicants primeImplicants;
-	progress.step();
-	std::vector<Implicant> implicants;
-	std::vector<bool> usedImplicants, obsoleteImplicants;
-	char infoText[0x80] = "";
-	const auto infoGuard = progress.addInfo(infoText);
-	::bits_t bitCountLimit;
-	std::size_t i;
-	Progress::calcStepCompletion_t calcStepCompletion = [&bitCountLimit = std::as_const(bitCountLimit), &implicants = std::as_const(implicants), &i = std::as_const(i)](){
-			const Progress::completion_t majorProgress = static_cast<Progress::completion_t>(::bits - bitCountLimit) / static_cast<Progress::completion_t>(::bits + 1);
-			const Progress::completion_t minorProgress = static_cast<Progress::completion_t>(i) / static_cast<Progress::completion_t>(implicants.size()) / static_cast<Progress::completion_t>(::bits + 1);
-			return majorProgress + minorProgress;
-		};
-	for (bitCountLimit = ::bits; !newImplicants.empty() || !implicants.empty(); --bitCountLimit)
-	{
-		i = 0;
-		progress.substep(calcStepCompletion, true);
-		
-		const std::size_t oldImplicantCount = implicants.size();
-		std::sort(newImplicants.begin(), newImplicants.end());
-		newImplicants.erase(std::unique(newImplicants.begin(), newImplicants.end()), newImplicants.end());
-		implicants.reserve(implicants.size() + newImplicants.size());
-		std::sort(implicants.begin(), implicants.end());
-		implicants.insert(implicants.end(), newImplicants.begin(), newImplicants.end());
-		usedImplicants.assign(implicants.size(), false);
-		obsoleteImplicants.assign(implicants.size(), false);
-		newImplicants.clear();
-		const decltype(implicants.begin()) firstNewImplicant = std::next(implicants.begin(), oldImplicantCount);
-		
-		if (progress.isVisible())
-		{
-			std::strcpy(infoText, "merging impl. stage ");
-			std::strcat(infoText, std::to_string(::bits - bitCountLimit + 1).c_str());
-			std::strcat(infoText, "/");
-			std::strcat(infoText, std::to_string(::bits + 1).c_str());
-			std::strcat(infoText, " (");
-			std::strcat(infoText, std::to_string(firstNewImplicant - implicants.cbegin()).c_str());
-			std::strcat(infoText, "+");
-			std::strcat(infoText, std::to_string(implicants.cend() - firstNewImplicant).c_str());
-			std::strcat(infoText, ")");
-		}
-		
-		for (i = 0; i != implicants.size(); ++i)
-		{
-			progress.substep(calcStepCompletion);
-			for (std::size_t j = std::max(i + 1, static_cast<std::size_t>(firstNewImplicant - implicants.cbegin())); j != implicants.size(); ++j)
-			{
-				Implicant newImplicant = Implicant::findBiggestInUnion(implicants[i], implicants[j]);
-				if (newImplicant != Implicant::none() && newImplicant.getBitCount() < bitCountLimit)
-				{
-					usedImplicants[i] = usedImplicants[j] = true;
-					if (newImplicant.contains(implicants[i]))
-						obsoleteImplicants[i] = true;
-					if (newImplicant.contains(implicants[j]))
-						obsoleteImplicants[j] = true;
-					if (!std::binary_search(implicants.begin(), firstNewImplicant, newImplicant)
-							&& !std::binary_search(firstNewImplicant, implicants.end(), newImplicant)
-							&& !std::binary_search(primeImplicants.cbegin(), primeImplicants.cend(), newImplicant))
-						newImplicants.push_back(std::move(newImplicant));
-				}
-			}
-		}
-		
-		implicants.erase(remove_if_index(implicants.begin(), implicants.end(), [&primeImplicants, &usedImplicants = std::as_const(usedImplicants), &obsoleteImplicants = std::as_const(obsoleteImplicants)](const Implicant &x, const std::size_t &i)
-			{
-				if (obsoleteImplicants[i])
-					return true;
-				if (!usedImplicants[i])
-				{
-					primeImplicants.push_back(std::move(x));
-					return true;
-				}
-				return false;
-			}), implicants.end());
-		std::sort(primeImplicants.begin(), primeImplicants.end());
-	}
-	newImplicants = std::move(primeImplicants);
-}
-	
-void QuineMcCluskey::cleanupImplicants(Implicants &implicants, Progress &progress)
-{
-	const auto infoGuard = progress.addInfo("sorting prime implicants");
-	progress.step();
-	progress.substep([](){ return -0.0; }, true);
-	
-	implicants.humanSort();
-	implicants.shrink_to_fit();
-}
-
-Implicants QuineMcCluskey::findPrimeImplicants(const Minterms &allowedMinterms, const Minterms &targetMinterms, const std::string &functionName)
+Implicants QuineMcCluskey::findPrimeImplicantsWithHeuristic(const Minterms &allowedMinterms, const Minterms &targetMinterms, const std::string &functionName)
 {
 	if (allowedMinterms.getSize() == 0)
 		return {Implicant::none()};
@@ -175,12 +103,99 @@ Implicants QuineMcCluskey::findPrimeImplicants(const Minterms &allowedMinterms, 
 		return {Implicant::all()};
 	
 	const std::string progressName = "Finding prime impl. of \"" + functionName + '"';
-	Progress progress(Progress::Stage::SOLVING, progressName.c_str(), 3, false);
+	Progress progress(Progress::Stage::SOLVING, progressName.c_str(), 2, false);
 	
-	Implicants implicants = createImplicants(allowedMinterms, targetMinterms, progress);
-	createAlternativeImplicants(implicants, progress);
+	Implicants implicants = createImplicantsWithHeuristic(allowedMinterms, targetMinterms, progress);
 	cleanupImplicants(implicants, progress);
 	return implicants;
+}
+
+Implicants QuineMcCluskey::createPrimeImplicantsWithoutHeuristic(const Minterms &allowedMinterms, Progress &progress)
+{
+	Progress::CountingStepHelper step = progress.makeCountingStepHelper(static_cast<std::size_t>(::bits + 1) * static_cast<std::size_t>(::bits));
+	progress.step();
+	
+	std::vector<std::pair<Implicant, bool>> implicants;
+	{
+		const auto infoGuard = progress.addInfo("preparing initial list of implicants");
+		progress.substep([](){ return -0.0; }, true);
+		for (const Minterm &minterm : allowedMinterms)
+			implicants.emplace_back(Implicant{minterm}, false);
+	}
+	
+	::bits_t implicantSize = ::bits;
+	char subtaskDescription[96] = "";
+	const auto infoGuard = progress.addInfo(subtaskDescription);
+	
+	const std::vector<Minterm> bits = listBits();
+	Implicants primeImplicants;
+	while (!implicants.empty())
+	{
+		if (progress.isVisible())
+		{
+			std::strcpy(subtaskDescription, std::to_string(implicants.size()).c_str());
+			std::strcat(subtaskDescription, " left (");
+			std::strcat(subtaskDescription, std::to_string(implicantSize--).c_str());
+			std::strcat(subtaskDescription, " literals each)");
+		}
+		
+		std::vector<Implicant> newImplicants;
+		for (const Minterm &bit : bits)
+		{
+			step.substep();
+			const Minterm mask = ~bit;
+			static_assert(::maxBits == 32);
+			const auto makeComparisonValue = [mask](const Implicant &implicant){ return ((static_cast<std::uint_fast64_t>(implicant.getMask()) << 32) | static_cast<std::uint_fast64_t>(implicant.getBits())) & static_cast<std::uint_fast64_t>(mask); };
+			std::sort(implicants.begin(), implicants.end(), [makeComparisonValue](const std::pair<Implicant, bool> &x, const std::pair<Implicant, bool> &y){
+					return makeComparisonValue(x.first) < makeComparisonValue(y.first);
+				});
+			std::pair<Implicant, bool> *previous = &implicants.front();
+			for (auto iter = std::next(implicants.begin()); iter != implicants.end(); ++iter)
+			{
+				const bool maskMakesThemEqual = makeComparisonValue(previous->first) == makeComparisonValue(iter->first);
+				if (maskMakesThemEqual)
+				{
+					Implicant newImplicant = previous->first;
+					newImplicant.applyMask(mask);
+					newImplicants.push_back(std::move(newImplicant));
+					previous->second = true;
+					iter->second = true;
+					if (++iter == implicants.end())
+						break;
+				}
+				previous = &*iter;
+			}
+		}
+		
+		for (const auto &[implicant, merged] : implicants)
+			if (!merged)
+				primeImplicants.push_back(implicant);
+		implicants.clear();
+		
+		std::sort(newImplicants.begin(), newImplicants.end());
+		newImplicants.erase(std::unique(newImplicants.begin(), newImplicants.end()), newImplicants.end());
+		implicants.reserve(newImplicants.size());
+		for (const auto &newImplicant : newImplicants)
+			implicants.emplace_back(newImplicant, false);
+	}
+	return primeImplicants;
+}
+
+Implicants QuineMcCluskey::findPrimeImplicantsWithoutHeuristic(const Minterms &allowedMinterms, const Minterms &targetMinterms, const std::string &functionName)
+{
+	const std::string progressName = "Merging implicants of \"" + functionName + '"';
+	Progress progress(Progress::Stage::SOLVING, progressName.c_str(), 3, false);
+	
+	Implicants primeImplicants = createPrimeImplicantsWithoutHeuristic(allowedMinterms, progress);
+	removeDontCareOnlyImplicants(targetMinterms, primeImplicants, progress);
+	cleanupImplicants(primeImplicants, progress);
+	return primeImplicants;
+}
+
+Implicants QuineMcCluskey::findPrimeImplicants(const Minterms &allowedMinterms, const Minterms &targetMinterms, const std::string &functionName)
+{
+	//return findPrimeImplicantsWithHeuristic(allowedMinterms, targetMinterms, functionName);
+	return findPrimeImplicantsWithoutHeuristic(allowedMinterms, targetMinterms, functionName);
 }
 
 #ifndef NDEBUG
@@ -212,7 +227,7 @@ QuineMcCluskey::solutions_t QuineMcCluskey::runPetricksMethod(Implicants &&prime
 
 QuineMcCluskey::solutions_t QuineMcCluskey::solve(const Minterms &allowedMinterms, const Minterms &targetMinterms, const std::string &functionName) const
 {
-	Implicants primeImplicants = findPrimeImplicants(allowedMinterms, allowedMinterms, functionName);
+	Implicants primeImplicants = findPrimeImplicants(allowedMinterms, targetMinterms, functionName);
 #ifndef NDEBUG
 	validate(allowedMinterms, targetMinterms, primeImplicants);
 #endif

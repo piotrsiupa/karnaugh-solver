@@ -72,7 +72,7 @@ public:
 
 bool Implicant::operator<(const Implicant &other) const
 {
-	static_assert(sizeof(mask_t) == sizeof(std::uint32_t));
+	static_assert(::maxBits == 32);
 	using comp_t = std::uint_fast64_t;
 	const comp_t x = (static_cast<comp_t>(this->mask) << 32) | this->bits;
 	const comp_t y = (static_cast<comp_t>(other.mask) << 32) | other.bits;
