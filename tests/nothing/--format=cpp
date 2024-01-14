@@ -1,19 +1,31 @@
 #include <array>
+#include <cstddef>
+#include <cstdint>
+#include <span>
+
 
 class nothing
 {
 public:
-	using input_t = std::array<bool, 0>;
-	using output_t = std::array<bool, 0>;
+	static constexpr std::uint_fast8_t INPUT_SIZE = 0;
+	static constexpr std::size_t OUTPUT_SIZE = 0;
+	using array_input_t = std::array<bool, INPUT_SIZE>;
+	using array_output_t = std::array<bool, OUTPUT_SIZE>;
+	class input_t : public array_input_t
+	{
+	};
+	class output_t : public array_output_t
+	{
+	};
 	
-	[[nodiscard]] constexpr output_t operator()() const { return (*this)({}); }
-	[[nodiscard]] constexpr output_t operator()(const input_t &i) const { return calc(i); }
+	[[nodiscard]] constexpr output_t operator()() const { return (*this)(array_input_t{}); }
+	[[nodiscard]] constexpr output_t operator()(const std::span<const bool, INPUT_SIZE> i) const { return calc(i); }
 	
-	[[nodiscard]] static constexpr output_t calc() { return calc({}); }
-	[[nodiscard]] static constexpr output_t calc(const input_t &i);
+	[[nodiscard]] static constexpr output_t calc() { return calc(array_input_t{}); }
+	[[nodiscard]] static constexpr output_t calc(const std::span<const bool, INPUT_SIZE> i);
 };
 
-constexpr nothing::output_t nothing::calc(const input_t &)
+constexpr nothing::output_t nothing::calc(const std::span<const bool, INPUT_SIZE> )
 {
 	return {};
 }

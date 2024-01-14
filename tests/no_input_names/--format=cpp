@@ -1,19 +1,31 @@
 #include <array>
+#include <cstddef>
+#include <cstdint>
+#include <span>
+
 
 class no_input_names
 {
 public:
-	using input_t = std::array<bool, 4>;
-	using output_t = std::array<bool, 1>;
+	static constexpr std::uint_fast8_t INPUT_SIZE = 4;
+	static constexpr std::size_t OUTPUT_SIZE = 1;
+	using array_input_t = std::array<bool, INPUT_SIZE>;
+	using array_output_t = std::array<bool, OUTPUT_SIZE>;
+	class input_t : public array_input_t
+	{
+	};
+	class output_t : public array_output_t
+	{
+	};
 	
-	[[nodiscard]] constexpr output_t operator()(const bool i0, const bool i1, const bool i2, const bool i3) const { return (*this)({i0, i1, i2, i3}); }
-	[[nodiscard]] constexpr output_t operator()(const input_t &i) const { return calc(i); }
+	[[nodiscard]] constexpr output_t operator()(const bool i0, const bool i1, const bool i2, const bool i3) const { return (*this)(array_input_t{i0, i1, i2, i3}); }
+	[[nodiscard]] constexpr output_t operator()(const std::span<const bool, INPUT_SIZE> i) const { return calc(i); }
 	
-	[[nodiscard]] static constexpr output_t calc(const bool i0, const bool i1, const bool i2, const bool i3) { return calc({i0, i1, i2, i3}); }
-	[[nodiscard]] static constexpr output_t calc(const input_t &i);
+	[[nodiscard]] static constexpr output_t calc(const bool i0, const bool i1, const bool i2, const bool i3) { return calc(array_input_t{i0, i1, i2, i3}); }
+	[[nodiscard]] static constexpr output_t calc(const std::span<const bool, INPUT_SIZE> i);
 };
 
-constexpr no_input_names::output_t no_input_names::calc(const input_t &i)
+constexpr no_input_names::output_t no_input_names::calc(const std::span<const bool, INPUT_SIZE> i)
 {
 	// Intermediary values
 	bool prods[2] = {};

@@ -1,0 +1,48 @@
+#include <array>
+#include <cstddef>
+#include <cstdint>
+#include <span>
+
+
+class _32_variables_but_very_simple
+{
+public:
+	static constexpr std::uint_fast8_t INPUT_SIZE = 32;
+	static constexpr std::size_t OUTPUT_SIZE = 2;
+	using array_input_t = std::array<bool, INPUT_SIZE>;
+	using array_output_t = std::array<bool, OUTPUT_SIZE>;
+	class input_t : public array_input_t
+	{
+	};
+	class output_t : public array_output_t
+	{
+	};
+	
+	[[nodiscard]] constexpr output_t operator()(const bool i0, const bool i1, const bool i2, const bool i3, const bool i4, const bool i5, const bool i6, const bool i7, const bool i8, const bool i9, const bool i10, const bool i11, const bool i12, const bool i13, const bool i14, const bool i15, const bool i16, const bool i17, const bool i18, const bool i19, const bool i20, const bool i21, const bool i22, const bool i23, const bool i24, const bool i25, const bool i26, const bool i27, const bool i28, const bool i29, const bool i30, const bool i31) const { return (*this)(array_input_t{i0, i1, i2, i3, i4, i5, i6, i7, i8, i9, i10, i11, i12, i13, i14, i15, i16, i17, i18, i19, i20, i21, i22, i23, i24, i25, i26, i27, i28, i29, i30, i31}); }
+	[[nodiscard]] constexpr output_t operator()(const std::span<const bool, INPUT_SIZE> i) const { return calc(i); }
+	
+	[[nodiscard]] static constexpr output_t calc(const bool i0, const bool i1, const bool i2, const bool i3, const bool i4, const bool i5, const bool i6, const bool i7, const bool i8, const bool i9, const bool i10, const bool i11, const bool i12, const bool i13, const bool i14, const bool i15, const bool i16, const bool i17, const bool i18, const bool i19, const bool i20, const bool i21, const bool i22, const bool i23, const bool i24, const bool i25, const bool i26, const bool i27, const bool i28, const bool i29, const bool i30, const bool i31) { return calc(array_input_t{i0, i1, i2, i3, i4, i5, i6, i7, i8, i9, i10, i11, i12, i13, i14, i15, i16, i17, i18, i19, i20, i21, i22, i23, i24, i25, i26, i27, i28, i29, i30, i31}); }
+	[[nodiscard]] static constexpr output_t calc(const std::span<const bool, INPUT_SIZE> i);
+};
+
+constexpr _32_variables_but_very_simple::output_t _32_variables_but_very_simple::calc(const std::span<const bool, INPUT_SIZE> i)
+{
+	// Intermediary values
+	bool prods[4] = {};
+	bool sums[1] = {};
+	
+	// Products
+	prods[0] = !i[8] && !i[9] && !i[10] && !i[11] && !i[12] && !i[13] && !i[14] && !i[15] && !i[16] && !i[17] && !i[18] && !i[19] && !i[20] && !i[21] && !i[22] && !i[23] && !i[24] && !i[25] && !i[27] && !i[29];
+	prods[1] = !i[26] && !i[28] && !i[30] && i[31] && prods[0];
+	prods[2] = !i[0] && prods[1];
+	prods[3] = !i[0] && !i[1] && !i[2] && !i[3] && !i[4] && !i[5] && !i[6] && !i[7] && i[26] && i[28] && i[30] && prods[0];
+	
+	// Sums
+	sums[0] = prods[2] || prods[3];
+	
+	// Results
+	output_t o = {};
+	o[0] = prods[1];
+	o[1] = sums[0];
+	return o;
+}

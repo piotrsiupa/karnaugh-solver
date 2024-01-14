@@ -1,22 +1,40 @@
+#include <array>
+#include <cstddef>
+#include <cstdint>
+#include <span>
+
+
 class no_input
 {
 public:
-	using input_t = struct { };
-	using output_t = struct { bool always_true, always_false, dont_care; };
+	static constexpr std::uint_fast8_t INPUT_SIZE = 0;
+	static constexpr std::size_t OUTPUT_SIZE = 3;
+	using array_input_t = std::array<bool, INPUT_SIZE>;
+	using array_output_t = std::array<bool, OUTPUT_SIZE>;
+	class input_t : public array_input_t
+	{
+	};
+	class output_t : public array_output_t
+	{
+	public:
+		[[nodiscard]] bool& always_true() { return (*this)[0]; }
+		[[nodiscard]] bool& always_false() { return (*this)[1]; }
+		[[nodiscard]] bool& dont_care() { return (*this)[2]; }
+	};
 	
-	[[nodiscard]] constexpr output_t operator()() const { return (*this)({}); }
-	[[nodiscard]] constexpr output_t operator()(const input_t &i) const { return calc(i); }
+	[[nodiscard]] constexpr output_t operator()() const { return (*this)(array_input_t{}); }
+	[[nodiscard]] constexpr output_t operator()(const std::span<const bool, INPUT_SIZE> i) const { return calc(i); }
 	
-	[[nodiscard]] static constexpr output_t calc() { return calc({}); }
-	[[nodiscard]] static constexpr output_t calc(const input_t &i);
+	[[nodiscard]] static constexpr output_t calc() { return calc(array_input_t{}); }
+	[[nodiscard]] static constexpr output_t calc(const std::span<const bool, INPUT_SIZE> i);
 };
 
-constexpr no_input::output_t no_input::calc(const input_t &)
+constexpr no_input::output_t no_input::calc(const std::span<const bool, INPUT_SIZE> )
 {
 	// Results
 	output_t o = {};
-	o.always_true = true;
-	o.always_false = false;
-	o.dont_care = false;
+	o[0] = true;
+	o[1] = false;
+	o[2] = false;
 	return o;
 }

@@ -1,33 +1,57 @@
+#include <array>
+#include <cstddef>
+#include <cstdint>
+#include <span>
+
+
 class very_optimizable
 {
 public:
-	using input_t = struct { bool a, b, c, d; };
-	using output_t = struct { bool first, second, third, fourth; };
+	static constexpr std::uint_fast8_t INPUT_SIZE = 4;
+	static constexpr std::size_t OUTPUT_SIZE = 4;
+	using array_input_t = std::array<bool, INPUT_SIZE>;
+	using array_output_t = std::array<bool, OUTPUT_SIZE>;
+	class input_t : public array_input_t
+	{
+	public:
+		[[nodiscard]] bool& a() { return (*this)[0]; }
+		[[nodiscard]] bool& b() { return (*this)[1]; }
+		[[nodiscard]] bool& c() { return (*this)[2]; }
+		[[nodiscard]] bool& d() { return (*this)[3]; }
+	};
+	class output_t : public array_output_t
+	{
+	public:
+		[[nodiscard]] bool& first() { return (*this)[0]; }
+		[[nodiscard]] bool& second() { return (*this)[1]; }
+		[[nodiscard]] bool& third() { return (*this)[2]; }
+		[[nodiscard]] bool& fourth() { return (*this)[3]; }
+	};
 	
-	[[nodiscard]] constexpr output_t operator()(const bool a, const bool b, const bool c, const bool d) const { return (*this)({a, b, c, d}); }
-	[[nodiscard]] constexpr output_t operator()(const input_t &i) const { return calc(i); }
+	[[nodiscard]] constexpr output_t operator()(const bool a, const bool b, const bool c, const bool d) const { return (*this)(array_input_t{a, b, c, d}); }
+	[[nodiscard]] constexpr output_t operator()(const std::span<const bool, INPUT_SIZE> i) const { return calc(i); }
 	
-	[[nodiscard]] static constexpr output_t calc(const bool a, const bool b, const bool c, const bool d) { return calc({a, b, c, d}); }
-	[[nodiscard]] static constexpr output_t calc(const input_t &i);
+	[[nodiscard]] static constexpr output_t calc(const bool a, const bool b, const bool c, const bool d) { return calc(array_input_t{a, b, c, d}); }
+	[[nodiscard]] static constexpr output_t calc(const std::span<const bool, INPUT_SIZE> i);
 };
 
-constexpr very_optimizable::output_t very_optimizable::calc(const input_t &i)
+constexpr very_optimizable::output_t very_optimizable::calc(const std::span<const bool, INPUT_SIZE> i)
 {
 	// Intermediary values
 	bool prods[10] = {};
 	bool sums[5] = {};
 	
 	// Products
-	prods[0] = i.a && i.b && i.c && i.d;
-	prods[1] = !i.c && i.d;
-	prods[2] = !i.a && i.b;
+	prods[0] = i[0] && i[1] && i[2] && i[3];
+	prods[1] = !i[2] && i[3];
+	prods[2] = !i[0] && i[1];
 	prods[3] = prods[2] && prods[1];
-	prods[4] = i.c && !i.d;
+	prods[4] = i[2] && !i[3];
 	prods[5] = prods[2] && prods[4];
-	prods[6] = i.a && !i.b;
+	prods[6] = i[0] && !i[1];
 	prods[7] = prods[1] && prods[6];
 	prods[8] = prods[4] && prods[6];
-	prods[9] = !i.a && !i.b && !i.c && !i.d;
+	prods[9] = !i[0] && !i[1] && !i[2] && !i[3];
 	
 	// Sums
 	sums[0] = prods[5] || prods[7];
@@ -38,9 +62,9 @@ constexpr very_optimizable::output_t very_optimizable::calc(const input_t &i)
 	
 	// Results
 	output_t o = {};
-	o.first = sums[2];
-	o.second = sums[3];
-	o.third = sums[1];
-	o.fourth = sums[4];
+	o[0] = sums[2];
+	o[1] = sums[3];
+	o[2] = sums[1];
+	o[3] = sums[4];
 	return o;
 }

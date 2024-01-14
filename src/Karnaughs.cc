@@ -336,18 +336,44 @@ void Karnaughs::printVhdl()
 void Karnaughs::printCpp()
 {
 	const Names functionNames = gatherFunctionNames();
-	if (!::inputNames.areNamesUsedInCode() || !functionNames.areNamesUsedInCode())
-		std::cout << "#include <array>\n"
-				"\n";
+	std::cout << "#include <array>\n"
+			"#include <cstddef>\n"
+			"#include <cstdint>\n"
+			"#include <span>\n"
+			"\n\n";
 	std::cout << "class " << getName() << "\n"
 			"{\n"
 			"public:\n";
-	std::cout << "\tusing input_t = ";
-	::inputNames.printCppType(std::cout);
-	std::cout << ";\n";
-	std::cout << "\tusing output_t = ";
-	functionNames.printCppType(std::cout);
-	std::cout << ";\n";
+	std::cout << "\tstatic constexpr std::uint_fast8_t INPUT_SIZE = " << ::inputNames.getSize() << ";\n"
+			<< "\tstatic constexpr std::size_t OUTPUT_SIZE = " << karnaughs.size() << ";\n";
+	std::cout << "\tusing array_input_t = std::array<bool, INPUT_SIZE>;\n"
+			"\tusing array_output_t = std::array<bool, OUTPUT_SIZE>;\n";
+	std::cout << "\tclass input_t : public array_input_t\n"
+			"\t{\n";
+	if (::inputNames.areNamesUsedInCode())
+	{
+		std::cout << "\tpublic:\n";
+		for (std::size_t i = 0; i != ::inputNames.getSize(); ++i)
+		{
+			std::cout << "\t\t[[nodiscard]] bool& ";
+			::inputNames.printCppRawName(std::cout, i);
+			std::cout << "() { return (*this)[" << i << "]; }\n";
+		}
+	}
+	std::cout << "\t};\n";
+	std::cout << "\tclass output_t : public array_output_t\n"
+			"\t{\n";
+	if (functionNames.areNamesUsedInCode())
+	{
+		std::cout << "\tpublic:\n";
+		for (std::size_t i = 0; i != karnaughs.size(); ++i)
+		{
+			std::cout << "\t\t[[nodiscard]] bool& ";
+			functionNames.printCppRawName(std::cout, i);
+			std::cout << "() { return (*this)[" << i << "]; }\n";
+		}
+	}
+	std::cout << "\t};\n";
 	std::cout << "\t\n";
 	std::cout << "\t[[nodiscard]] constexpr output_t operator()(";
 	bool first = true;
@@ -360,7 +386,7 @@ void Karnaughs::printCpp()
 		std::cout << "const bool ";
 		::inputNames.printCppRawName(std::cout, i);
 	}
-	std::cout << ") const { return (*this)({";
+	std::cout << ") const { return (*this)(array_input_t{";
 	first = true;
 	for (std::size_t i = 0; i != ::inputNames.getSize(); ++i)
 	{
@@ -371,7 +397,7 @@ void Karnaughs::printCpp()
 		::inputNames.printCppRawName(std::cout, i);
 	}
 	std::cout << "}); }\n";
-	std::cout << "\t[[nodiscard]] constexpr output_t operator()(const input_t &i) const { return calc(i); }\n";
+	std::cout << "\t[[nodiscard]] constexpr output_t operator()(const std::span<const bool, INPUT_SIZE> i) const { return calc(i); }\n";
 	std::cout << "\t\n";
 	std::cout << "\t[[nodiscard]] static constexpr output_t calc(";
 	first = true;
@@ -384,7 +410,7 @@ void Karnaughs::printCpp()
 		std::cout << "const bool ";
 		::inputNames.printCppRawName(std::cout, i);
 	}
-	std::cout << ") { return calc({";
+	std::cout << ") { return calc(array_input_t{";
 	first = true;
 	for (std::size_t i = 0; i != ::inputNames.getSize(); ++i)
 	{
@@ -395,10 +421,10 @@ void Karnaughs::printCpp()
 		::inputNames.printCppRawName(std::cout, i);
 	}
 	std::cout << "}); }\n";
-	std::cout << "\t[[nodiscard]] static constexpr output_t calc(const input_t &i);\n";
+	std::cout << "\t[[nodiscard]] static constexpr output_t calc(const std::span<const bool, INPUT_SIZE> i);\n";
 	std::cout << "};" << std::endl;
 	std::cout << '\n';
-	std::cout << "constexpr " << getName() << "::output_t " << getName() << "::calc(const input_t &" << (areInputsUsed() ? "i" : "") << ")\n";
+	std::cout << "constexpr " << getName() << "::output_t " << getName() << "::calc(const std::span<const bool, INPUT_SIZE> " << (areInputsUsed() ? "i" : "") << ")\n";
 	std::cout << "{\n";
 	if (options::skipOptimization.isRaised())
 		printCppBestSolutions(functionNames);

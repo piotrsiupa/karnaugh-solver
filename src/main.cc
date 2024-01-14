@@ -107,7 +107,7 @@ static bool parseInputBits(Input &input)
 		if (line == "-")
 		{
 			::bits = 0;
-			::inputNames = Names(true, {}, "i");
+			::inputNames = Names(false, {}, "i");
 			return true;
 		}
 		try

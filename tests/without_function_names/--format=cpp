@@ -1,26 +1,43 @@
 #include <array>
+#include <cstddef>
+#include <cstdint>
+#include <span>
+
 
 class without_function_names
 {
 public:
-	using input_t = struct { bool a, b, c, d; };
-	using output_t = std::array<bool, 2>;
+	static constexpr std::uint_fast8_t INPUT_SIZE = 4;
+	static constexpr std::size_t OUTPUT_SIZE = 2;
+	using array_input_t = std::array<bool, INPUT_SIZE>;
+	using array_output_t = std::array<bool, OUTPUT_SIZE>;
+	class input_t : public array_input_t
+	{
+	public:
+		[[nodiscard]] bool& a() { return (*this)[0]; }
+		[[nodiscard]] bool& b() { return (*this)[1]; }
+		[[nodiscard]] bool& c() { return (*this)[2]; }
+		[[nodiscard]] bool& d() { return (*this)[3]; }
+	};
+	class output_t : public array_output_t
+	{
+	};
 	
-	[[nodiscard]] constexpr output_t operator()(const bool a, const bool b, const bool c, const bool d) const { return (*this)({a, b, c, d}); }
-	[[nodiscard]] constexpr output_t operator()(const input_t &i) const { return calc(i); }
+	[[nodiscard]] constexpr output_t operator()(const bool a, const bool b, const bool c, const bool d) const { return (*this)(array_input_t{a, b, c, d}); }
+	[[nodiscard]] constexpr output_t operator()(const std::span<const bool, INPUT_SIZE> i) const { return calc(i); }
 	
-	[[nodiscard]] static constexpr output_t calc(const bool a, const bool b, const bool c, const bool d) { return calc({a, b, c, d}); }
-	[[nodiscard]] static constexpr output_t calc(const input_t &i);
+	[[nodiscard]] static constexpr output_t calc(const bool a, const bool b, const bool c, const bool d) { return calc(array_input_t{a, b, c, d}); }
+	[[nodiscard]] static constexpr output_t calc(const std::span<const bool, INPUT_SIZE> i);
 };
 
-constexpr without_function_names::output_t without_function_names::calc(const input_t &i)
+constexpr without_function_names::output_t without_function_names::calc(const std::span<const bool, INPUT_SIZE> i)
 {
 	// Intermediary values
 	bool prods[2] = {};
 	
 	// Products
-	prods[0] = !i.a && !i.b;
-	prods[1] = i.c && prods[0];
+	prods[0] = !i[0] && !i[1];
+	prods[1] = i[2] && prods[0];
 	
 	// Results
 	output_t o = {};
