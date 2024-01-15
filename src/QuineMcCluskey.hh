@@ -28,7 +28,7 @@ private:
 	
 	static Implicants findPrimeImplicants(const Minterms &allowedMinterms, const Minterms &targetMinterms, const std::string &functionName);
 	
-	static void validate(const Minterms &allowedMinterms, Minterms targetMinterms, const Implicants &implicants);
+	static void validate(const Minterms &allowedMinterms, const Minterms &targetMinterms, const Implicants &implicants);
 	
 	static solutions_t runPetricksMethod(Implicants &&primeImplicants, const Minterms &targetMinterms, const std::string &functionName);
 	

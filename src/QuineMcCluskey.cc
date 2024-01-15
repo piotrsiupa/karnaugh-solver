@@ -199,14 +199,22 @@ Implicants QuineMcCluskey::findPrimeImplicants(const Minterms &allowedMinterms, 
 }
 
 #ifndef NDEBUG
-void QuineMcCluskey::validate(const Minterms &allowedMinterms, Minterms targetMinterms, const Implicants &implicants)
+void QuineMcCluskey::validate(const Minterms &allowedMinterms, const Minterms &targetMinterms, const Implicants &implicants)
 {
+	{
+		Implicants sortedImplicants = implicants;
+		sortedImplicants.humanSort();
+		assert(implicants == sortedImplicants);
+	}
+	assert(std::adjacent_find(implicants.cbegin(), implicants.cend()) == implicants.cend());
+	Minterms missedTargetMinterms = targetMinterms;
 	for (const Implicant &implicant : implicants)
 	{
+		assert(implicant.isAnyInMinterms(targetMinterms));
 		assert(implicant.areAllInMinterms(allowedMinterms));
-		implicant.removeFromMinterms(targetMinterms);
+		implicant.removeFromMinterms(missedTargetMinterms);
 	}
-	assert(targetMinterms.isEmpty());
+	assert(missedTargetMinterms.isEmpty());
 }
 #endif
 
