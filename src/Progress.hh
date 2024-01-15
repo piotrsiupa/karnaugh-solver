@@ -51,7 +51,7 @@ private:
 	std::vector<const char*> infoTexts;
 	std::uint_fast8_t reportLines = 0;
 	
-	steps_t calcStepsToSkip(const double secondsToSkip, const double secondsPerStep) const;
+	steps_t calcStepsToSkip(const double secondsSinceStepStart, const double secondsToSkip, const double secondsPerStep) const;
 	static double getSecondsSinceStart(const timePoint_t currentTime);
 	static bool checkProgramRunTime(const timePoint_t currentTime);
 	bool checkReportInterval(const bool force);

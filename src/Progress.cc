@@ -17,9 +17,11 @@ std::uint_fast8_t Progress::stageCounters[STAGE_COUNT] = {};
 Progress *Progress::progress = nullptr;
 Progress::timePoint_t Progress::programStartTime;
 
-Progress::steps_t Progress::calcStepsToSkip(const double secondsToSkip, const double secondsPerStep) const
+Progress::steps_t Progress::calcStepsToSkip(const double secondsSinceStepStart, const double secondsToSkip, const double secondsPerStep) const
 {
-	const steps_t newSubstepsToSkip = static_cast<steps_t>(secondsToSkip / secondsPerStep);
+	steps_t newSubstepsToSkip = static_cast<steps_t>(secondsToSkip / secondsPerStep);
+	if (secondsSinceStepStart < 60)
+		newSubstepsToSkip /= secondsSinceStepStart < 10 ? 8 : 2;
 	return std::max<steps_t>(1, newSubstepsToSkip);
 }
 
@@ -52,13 +54,13 @@ bool Progress::checkReportInterval(const bool force)
 	const double secondsPerStep = secondsSinceStepStart / substepsSoFar;
 	if (!checkProgramRunTime(currentTime) || (!force && remainingSeconds > secondsPerStep)) // Not even `force` can show progress before the initial delay has passed. This is by design.
 	{
-		substepsToSkip = calcStepsToSkip(remainingSeconds, secondsPerStep);
+		substepsToSkip = calcStepsToSkip(secondsSinceStepStart, remainingSeconds, secondsPerStep);
 		return false;
 	}
 	else
 	{
 		lastReportTime = currentTime;
-		substepsToSkip = calcStepsToSkip(reportInterval, secondsPerStep);
+		substepsToSkip = calcStepsToSkip(secondsSinceStepStart, reportInterval, secondsPerStep);
 		return true;
 	}
 }
