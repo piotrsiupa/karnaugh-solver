@@ -14,13 +14,15 @@ namespace options
 	
 	class Option
 	{
-		const std::vector<std::string_view> longNames;
+		const std::string_view mainLongName;
+		const std::string_view longNamesRegex;
 		const char shortName;
 		
 	public:
-		Option(std::vector<std::string_view> &&longNames, const char shortName = '\0') : longNames(std::move(longNames)), shortName(shortName) {}
+		Option(const std::string_view mainLongName, const std::string_view longNamesRegex, const char shortName = '\0') : mainLongName(mainLongName), longNamesRegex(longNamesRegex), shortName(shortName) {}
 		
-		[[nodiscard]] const std::vector<std::string_view>& getLongNames() const { return longNames; }
+		[[nodiscard]] const std::string_view& getMainLongName() const { return mainLongName; }
+		[[nodiscard]] const std::string_view& getLongNamesRegex() const { return longNamesRegex; }
 		[[nodiscard]] char getShortName() const { return shortName; }
 		
 		[[nodiscard]] virtual bool needsArgument() const = 0;
@@ -56,19 +58,18 @@ namespace options
 		const getDefault_t getDefault;
 		bool undecided = true, value;
 		
-		const std::vector<std::string> negatedLongNames;
-		static std::vector<std::string> makeNegatedLongNames(const std::vector<std::string_view> &longNames);
-		static std::vector<std::string_view> makeStringViews(const std::vector<std::string> &strings);
+		const std::string negatedMainLongName;
+		const std::string negatedLongNamesRegex;
 		class Negated : public NoArgOption
 		{
 			Trilean &trilean;
 		public:
-			Negated(std::vector<std::string_view> &&longNames, const char shortName, Trilean &trilean) : NoArgOption(std::move(longNames), shortName), trilean(trilean) {}
+			Negated(const std::string_view mainLongName, const std::string_view longNamesRegex, const char shortName, Trilean &trilean) : NoArgOption(mainLongName, longNamesRegex, shortName), trilean(trilean) {}
 			[[nodiscard]] bool parse() final { trilean.undecided = false; trilean.value = false; return true; }
 		} negated;
 		
 	public:
-		Trilean(std::vector<std::string_view> &&longNames, const char shortName, const getDefault_t getDefault);
+		Trilean(const std::string_view mainLongName, const std::string_view longNamesRegex, const char shortName, const getDefault_t getDefault);
 		
 		[[nodiscard]] Option& getNegatedOption() { return negated; }
 		
@@ -96,7 +97,7 @@ namespace options
 		void prepareRegex();
 		
 	public:
-		Mapped(std::vector<std::string_view> &&longNames, const char shortName, Mappings &&mappings) : Option(std::move(longNames), shortName), mappings(std::move(mappings)) {}
+		Mapped(const std::string_view mainLongName, const std::string_view longNamesRegex, const char shortName, Mappings &&mappings) : Option(mainLongName, longNamesRegex, shortName), mappings(std::move(mappings)) {}
 		
 		[[nodiscard]] bool needsArgument() const final { return true; }
 		[[nodiscard]] bool parse(std::string_view argument) final;

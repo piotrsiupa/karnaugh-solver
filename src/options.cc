@@ -15,35 +15,18 @@ namespace options
 		if (!argument.empty())
 		{
 			std::cerr << argument << '\n';
-			std::cerr << "The option \"--" << getLongNames().front() << "\" doesn't take an argument!\n";
+			std::cerr << "The option \"--" << getMainLongName() << "\" doesn't take an argument!\n";
 			return false;
 		}
 		return parse();
 	}
 	
-	std::vector<std::string> Trilean::makeNegatedLongNames(const std::vector<std::string_view> &longNames)
-	{
-		std::vector<std::string> negatedLongNames;
-		negatedLongNames.reserve(longNames.size());
-		for (const std::string_view &longName : longNames)
-			negatedLongNames.emplace_back("no-" + std::string(longName));
-		return negatedLongNames;
-	}
-	
-	std::vector<std::string_view> Trilean::makeStringViews(const std::vector<std::string> &strings)
-	{
-		std::vector<std::string_view> stringViews;
-		stringViews.reserve(strings.size());
-		for (const std::string &string : strings)
-			stringViews.emplace_back(string);
-		return stringViews;
-	}
-	
-	Trilean::Trilean(std::vector<std::string_view> &&longNames, const char shortName, const getDefault_t getDefault) :
-		Option(std::move(longNames), shortName),
+	Trilean::Trilean(const std::string_view mainLongName, const std::string_view longNamesRegex, const char shortName, const getDefault_t getDefault) :
+		Option(mainLongName, longNamesRegex, shortName),
 		getDefault(getDefault),
-		negatedLongNames(makeNegatedLongNames(getLongNames())),
-		negated(makeStringViews(negatedLongNames), static_cast<char>(std::toupper(static_cast<unsigned char>(shortName))), *this)
+		negatedMainLongName("no-" + std::string(mainLongName)),
+		negatedLongNamesRegex("no-(?:" + std::string(longNamesRegex) + ')'),
+		negated(negatedMainLongName, negatedLongNamesRegex, static_cast<char>(std::toupper(static_cast<unsigned char>(shortName))), *this)
 	{
 	}
 	
@@ -69,7 +52,7 @@ namespace options
 		}
 		else
 		{
-			std::cerr << "Invalid value \"" << argument << "\" for the option \"--" << getLongNames().front() << "\"!\n";
+			std::cerr << "Invalid value \"" << argument << "\" for the option \"--" << getMainLongName() << "\"!\n";
 			return false;
 		}
 		return true;
@@ -102,7 +85,7 @@ namespace options
 		std::cmatch match;
 		if (!std::regex_match(&*argument.begin(), &*argument.end(), match, regex))
 		{
-			std::cerr << "Invalid value \"" << argument << "\" for the option \"--" << getLongNames().front() << "\"!\n";
+			std::cerr << "Invalid value \"" << argument << "\" for the option \"--" << getMainLongName() << "\"!\n";
 			return false;
 		}
 		for (std::size_t i = 0; i != mappings.size(); ++i)
@@ -113,20 +96,20 @@ namespace options
 				return true;
 			}
 		}
-		// This should be unreachable in practice.
-		std::cerr << "Internal error while matching a value for the option \"--" << getLongNames().front() << "\"!\n";
+		// This should be unreachable in practice. (At least as long as the subordinate regexes don't have capturing groups.)
+		std::cerr << "Internal error while matching a value for the option \"--" << getMainLongName() << "\"!\n";
 		return false;
 	}
 	
 	
-	Flag help({"help"}, 'h');
-	Flag version({"version"}, 'v');
+	Flag help("help", "h(?:elp)?", 'h');
+	Flag version("version", "version|author", 'v');
 	
-	Trilean prompt({"prompt", "prompts", "hint", "hints"}, 'p', [](){ return ::terminalInput; });
-	Trilean status({"status", "progress", "progress-bar", "progress-bars", "stat", "stats"}, 's', [](){ return ::terminalStderr; });
+	Trilean prompt("prompt", "prompts?|hints?", 'p', [](){ return ::terminalInput; });
+	Trilean status("status", "stat(?:s|us)?|progress(?:-bars?)?", 's', [](){ return ::terminalStderr; });
 	
-	Flag skipOptimization({"no-optimize", "no-cse", "no-optimization", "skip-optimize", "skip-cse", "skip-optimization"}, 'O');
-	Mapped<OutputFormat, OutputFormat::HUMAN_LONG> outputFormat({"format", "output-format", "notation", "output-notation"}, 'f', {
+	Flag skipOptimization("no-optimize", "(?:no|skip)-(?:opti(?:m(?:iz(?:e|ation))?)?|cse)", 'O');
+	Mapped<OutputFormat, OutputFormat::HUMAN_LONG> outputFormat("format", "(?:output-)?(?:format|notation|lang(?:uage)?)", 'f', {
 			{"human(?:[-_]readable)?[-_](?:long|big)|(?:long|big)[-_]human(?:[-_]readable)?|h[-_]?(?:r[-_]?)?l|l[-_]?h(?:[-_]?r)?|full|default", OutputFormat::HUMAN_LONG},
 			{"human(?:[-_]readable)?(?:[-_](?:medium|middle))?|(?:(?:medium|middle)[-_])?human(?:[-_]readable)?|h(?:[-_]?r)?(?:[-_]?m)?|(?:m[-_]?)?h(?:[-_]?r)?|medium|middle|shorter", OutputFormat::HUMAN},
 			{"human(?:[-_]readable)?[-_](?:short|small)|(?:short|small)[-_]human(?:[-_]readable)?|h[-_]?(?:r[-_]?)?s|s[-_]?h(?:[-_]?r)?|short|small|tiny|minimal", OutputFormat::HUMAN_SHORT},
@@ -138,7 +121,7 @@ namespace options
 			{"math(?:ematic(?:s|al)?)?[-_]ascii|ascii[-_]math(?:ematic(?:s|al)?)?|m[-_]?a|a[-_]?m", OutputFormat::MATH_ASCII},
 			{"math(?:ematic(?:s|al)?)?[-_](?:names?|words?|text)|(?:names?|words?|text)[-_]math(?:ematic(?:s|al)?)?|m[-_]?[nwt]|[nwt][-_]?m", OutputFormat::MATH_NAMES},
 		});
-	Text name({"name", "module-name", "class-name"}, 'n');
+	Text name("name", "(?:(?:module|class)-)?name", 'n');
 	
 	std::vector<std::string_view> freeArgs;
 	
@@ -148,13 +131,17 @@ namespace options
 		
 		class Parser
 		{
-			static Option *const allOptions[];
+			static const std::vector<Option*> allOptions;
+			static bool allOptionsRegexReady;
+			static std::regex allOptionsRegex;
 			
 			const int argc;
 			const char *const *const argv;
 			int i;
 			
 			Parser(const int argc, const char *const *const argv) : argc(argc), argv(argv) {}
+			
+			void prepareAllOptionsRegex();
 			
 			[[nodiscard]] bool parseShortOption(const char *&shortName, Option &option);
 			[[nodiscard]] bool parseShortOption(const char *&shortName);
@@ -168,7 +155,28 @@ namespace options
 			[[nodiscard]] static bool parse(const int argc, const char *const *const argv) { return Parser(argc, argv).parse(); }
 		};
 		
-		Option *const Parser::allOptions[] = {&help, &version, &prompt, &prompt.getNegatedOption(), &status, &status.getNegatedOption(), &skipOptimization, &outputFormat, &name};
+		const std::vector<Option*> Parser::allOptions = {&help, &version, &prompt, &prompt.getNegatedOption(), &status, &status.getNegatedOption(), &skipOptimization, &outputFormat, &name};
+		bool Parser::allOptionsRegexReady = false;
+		std::regex Parser::allOptionsRegex;
+		
+		void Parser::prepareAllOptionsRegex()
+		{
+			if (!allOptionsRegexReady) [[unlikely]]
+			{
+				std::string pattern;
+				bool first = true;
+				for (const Option *const option : allOptions)
+				{
+					if (first) [[unlikely]]
+						first = false;
+					else
+						pattern += '|';
+					pattern += '(' + std::string(option->getLongNamesRegex()) + ')';
+				}
+				allOptionsRegex = std::regex(pattern, std::regex_constants::icase);
+				allOptionsRegexReady = true;
+			}
+		}
 		
 		bool Parser::parseShortOption(const char *&shortName, Option &option)
 		{
@@ -188,7 +196,7 @@ namespace options
 				}
 				else
 				{
-					std::cerr << "The option \"" << option.getLongNames().front() << "\" requires an argument!\n";
+					std::cerr << "The option \"" << option.getMainLongName() << "\" requires an argument!\n";
 					return false;
 				}
 			}
@@ -223,7 +231,7 @@ namespace options
 			{
 				if (++i == argc)
 				{
-					std::cerr << "The option \"" << option.getLongNames().front() << "\" requires an argument!\n";
+					std::cerr << "The option \"" << option.getMainLongName() << "\" requires an argument!\n";
 					return false;
 				}
 				argument = argv[i];
@@ -241,10 +249,18 @@ namespace options
 				argument = longName.substr(pos + 1);
 				longName = longName.substr(0, pos);
 			}
-			for (Option *const option : allOptions)
-				if (std::find(option->getLongNames().cbegin(), option->getLongNames().cend(), longName) != option->getLongNames().cend())
-					return parseLongOption(argument, *option);
-			std::cerr << "Unknown option \"--" << longName << "\"!\n";
+			prepareAllOptionsRegex();
+			std::cmatch match;
+			if (!std::regex_match(&*longName.begin(), &*longName.end(), match, allOptionsRegex))
+			{
+				std::cerr << "Unknown option \"--" << longName << "\"!\n";
+				return false;
+			}
+			for (std::size_t i = 0; i != allOptions.size(); ++i)
+				if (match[i + 1].length() != 0)
+					return parseLongOption(argument, *allOptions[i]);
+			// This should be unreachable in practice. (At least as long as the subordinate regexes don't have capturing groups.)
+			std::cerr << "Critical failure of the options parsing code!\n";
 			return false;
 		}
 		
