@@ -67,10 +67,10 @@ bool Progress::checkReportInterval(const bool force)
 
 void Progress::printTime(double time)
 {
-	static constexpr std::uintmax_t tooManySeconds = 10 * 365 * 24 * 60 * 60;  // 10 years
+	static constexpr std::uintmax_t tooManySeconds = std::uintmax_t(100) * 365 * 24 * 60 * 60;  // 10 years
 	if (time >= tooManySeconds) [[unlikely]]
 	{
-		std::clog << "over 10 years";
+		std::clog << "over 100 years";
 		return;
 	}
 	
