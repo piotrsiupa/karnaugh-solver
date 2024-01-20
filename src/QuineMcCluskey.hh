@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <string>
 #include <vector>
 
@@ -20,6 +21,8 @@ private:
 	static void removeDontCareOnlyImplicants(const Minterms &targetMinterms, Implicants &implicants, Progress &progress);
 	static void cleanupImplicants(Implicants &implicants, Progress &progress);
 	
+	static inline std::uint_fast8_t getAdjustmentPasses();
+	static inline void refineHeuristicImplicant(const Minterms &allowedMinterms, const std::vector<Minterm> &bits, const Minterm initialMinterm, Implicant &implicant);
 	static Implicants createImplicantsWithHeuristic(const Minterms &allowedMinterms, const Minterms &targetMinterms, Progress &progress);
 	static Implicants findPrimeImplicantsWithHeuristic(const Minterms &allowedMinterms, const Minterms &targetMinterms, const std::string &functionName);
 	

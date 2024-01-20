@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <functional>
 #include <optional>
 #include <regex>
@@ -106,7 +107,7 @@ namespace options
 		[[nodiscard]] T getValue() const { return value; }
 	};
 	
-	class Text : public Option
+	class OptionalText : public Option
 	{
 		std::optional<std::string> value;
 		
@@ -119,6 +120,23 @@ namespace options
 		void setValue(const std::string &newValue) { value = newValue; }
 		void setValue(std::string &&newValue) { value = std::move(newValue); }
 		[[nodiscard]] const std::optional<std::string>& getValue() const { return value; }
+	};
+	
+	template<typename T>
+	class Number : public Option
+	{
+		const T min, max;
+		T value;
+		
+	public:
+		Number(const std::string_view mainLongName, const std::string_view longNamesRegex, const char shortName, const T min, const T max, const T initialValue) : Option(mainLongName, longNamesRegex, shortName), min(min), max(max), value(initialValue) {}
+		
+		[[nodiscard]] bool needsArgument() const final { return true; }
+		[[nodiscard]] bool parse(const std::string_view argument) final;
+		
+		void setValue(const T &newValue) { value = newValue; }
+		void setValue(T &&newValue) { value = std::move(newValue); }
+		[[nodiscard]] const T& getValue() const { return value; }
 	};
 	
 	
@@ -136,6 +154,13 @@ namespace options
 		MATH_NAMES,
 	};
 	
+	enum class PrimeImplicantsHeuristic
+	{
+		BRUTE_FORCE,
+		AUTO,
+		GREEDY,
+	};
+	
 	extern Flag help;
 	extern Flag version;
 	
@@ -144,9 +169,12 @@ namespace options
 	
 	extern Flag skipOptimization;
 	extern Mapped<OutputFormat, OutputFormat::HUMAN_LONG> outputFormat;
-	extern Text name;
+	extern OptionalText name;
 	
 	extern std::vector<std::string_view> freeArgs;
+	
+	extern Mapped<PrimeImplicantsHeuristic, PrimeImplicantsHeuristic::AUTO> primeImplicantsHeuristic;
+	extern Number<std::int_fast8_t> greedyImplicantAdjustments;
 	
 	
 	[[nodiscard]] bool parse(const int argc, const char *const *const argv);

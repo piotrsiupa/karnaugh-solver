@@ -48,8 +48,47 @@ void QuineMcCluskey::cleanupImplicants(Implicants &implicants, Progress &progres
 	implicants.shrink_to_fit();
 }
 
+std::uint_fast8_t QuineMcCluskey::getAdjustmentPasses()
+{
+	if (::bits < 2)
+		return 0;
+	if (const std::int_fast8_t adjustmentPasses = options::greedyImplicantAdjustments.getValue(); adjustmentPasses >= 0)
+		return adjustmentPasses;
+	if (::bits < 24)
+		return 5;
+	else if (::bits == 24)
+		return 4;
+	else if (::bits == 25)
+		return 1;
+	else
+		return 0;
+}
+
+void QuineMcCluskey::refineHeuristicImplicant(const Minterms &allowedMinterms, const std::vector<Minterm> &bits, const Minterm initialMinterm, Implicant &implicant)
+{
+	for (auto iter = bits.begin(); iter != std::prev(bits.end()); ++iter)
+	{
+		const Minterm removedBit = *iter;
+		if ((removedBit & implicant.getMask()) != 0)
+			continue;
+		Implicant implicantVariant(implicant.getBits() | (initialMinterm & removedBit), implicant.getMask() | removedBit);
+		for (auto jiter = std::next(iter); jiter != bits.end(); ++jiter)
+		{
+			const Minterm bit = *jiter;
+			if ((bit & implicantVariant.getMask()) == 0)
+				continue;
+			if (Implicant(implicantVariant.getBits() ^ bit, implicantVariant.getMask()).areAllInMinterms(allowedMinterms))
+				implicantVariant.applyMask(~bit);
+		}
+		if (implicantVariant.getBitCount() <= implicant.getBitCount())
+			implicant = std::move(implicantVariant);
+	}
+}
+
 Implicants QuineMcCluskey::createImplicantsWithHeuristic(const Minterms &allowedMinterms, const Minterms &targetMinterms, Progress &progress)
 {
+	const std::uint_fast8_t adjustmentPasses = getAdjustmentPasses();
+	
 	const std::vector<Minterm> bits = listBits();
 	
 	const auto infoGuard = progress.addInfo("Creating implicants with a heuristic");
@@ -69,26 +108,8 @@ Implicants QuineMcCluskey::createImplicantsWithHeuristic(const Minterms &allowed
 			if (Implicant(implicant.getBits() ^ bit, implicant.getMask()).areAllInMinterms(allowedMinterms))
 				implicant.applyMask(~bit);
 		}
-		if (bits.size() >= 2)
-		{
-			for (auto iter = bits.begin(); iter != std::prev(bits.end()); ++iter)
-			{
-				const Minterm removedBit = *iter;
-				if ((removedBit & implicant.getMask()) != 0)
-					continue;
-				Implicant implicantVariant(implicant.getBits() | (initialMinterm & removedBit), implicant.getMask() | removedBit);
-				for (auto jiter = std::next(iter); jiter != bits.end(); ++jiter)
-				{
-					const Minterm bit = *jiter;
-					if ((bit & implicantVariant.getMask()) == 0)
-						continue;
-					if (Implicant(implicantVariant.getBits() ^ bit, implicantVariant.getMask()).areAllInMinterms(allowedMinterms))
-						implicantVariant.applyMask(~bit);
-				}
-				if (implicantVariant.getBitCount() <= implicant.getBitCount())
-					implicant = std::move(implicantVariant);
-			}
-		}
+		for (std::uint_fast64_t i = 0; i != adjustmentPasses; ++i)
+			refineHeuristicImplicant(allowedMinterms, bits, initialMinterm, implicant);
 		implicant.addToMinterms(touchedMinterms);
 		implicants.push_back(std::move(implicant));
 	}
@@ -194,8 +215,25 @@ Implicants QuineMcCluskey::findPrimeImplicantsWithoutHeuristic(const Minterms &a
 
 Implicants QuineMcCluskey::findPrimeImplicants(const Minterms &allowedMinterms, const Minterms &targetMinterms, const std::string &functionName)
 {
-	//return findPrimeImplicantsWithHeuristic(allowedMinterms, targetMinterms, functionName);
-	return findPrimeImplicantsWithoutHeuristic(allowedMinterms, targetMinterms, functionName);
+	switch (options::primeImplicantsHeuristic.getValue())
+	{
+	case options::PrimeImplicantsHeuristic::BRUTE_FORCE:
+		brute_force:
+		return findPrimeImplicantsWithoutHeuristic(allowedMinterms, targetMinterms, functionName);
+		
+	case options::PrimeImplicantsHeuristic::AUTO:
+		if (::bits < 20)
+			goto brute_force;
+		else
+			goto greedy;
+		
+	case options::PrimeImplicantsHeuristic::GREEDY:
+		greedy:
+		return findPrimeImplicantsWithHeuristic(allowedMinterms, targetMinterms, functionName);
+	}
+	// unreachable
+	[[unlikely]]
+	return {};
 }
 
 #ifndef NDEBUG
