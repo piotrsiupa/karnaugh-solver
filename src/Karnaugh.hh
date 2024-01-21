@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -25,10 +26,11 @@ private:
 	
 	bool nameIsCustom = false;
 	std::string functionName;
-	Minterms targetMinterms, allowedMinterms;
+	std::shared_ptr<Minterms> targetMinterms, allowedMinterms;
 	
 	static void printDuplicates(const duplicates_t &duplicates, Progress::CerrGuard &cerr);
 	
+	static bool isTableSmallEnoughToPrint() { return ::bits <= 8; }
 	static grayCode_t makeGrayCode(const bits_t bitCount);
 	static void printBits(const Minterm minterm, const bits_t bitCount);
 	static void prettyPrintTable(const Minterms &target, const Minterms &allowed = {});
@@ -47,7 +49,7 @@ private:
 		Progress::completion_t operator()();
 	};
 	static std::size_t estimateRemainingInputSize(Input &input);
-	bool loadMinterms(Minterms &minterms, Input &input, Progress &progress, const bool dontCares) const;
+	std::unique_ptr<Minterms> loadMinterms(Input &input, Progress &progress, const bool dontCares) const;
 #ifndef NDEBUG
 	void validate(const solutions_t &solutions) const;
 #endif

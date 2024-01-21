@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -16,25 +17,32 @@ public:
 	using solutions_t = std::vector<Implicants>;
 	
 private:
-	static std::vector<Minterm> listBits();
+	static std::vector<Minterm> bitMasks;
 	
-	static void removeDontCareOnlyImplicants(const Minterms &targetMinterms, Implicants &implicants, Progress &progress);
+	const std::string &functionName;
+	std::shared_ptr<const Minterms> allowedMinterms, targetMinterms;
+	
+	static void makeBitMasks();
+	
+	void removeDontCareOnlyImplicants(Implicants &implicants, Progress &progress) const;
 	static void cleanupImplicants(Implicants &implicants, Progress &progress);
 	
 	static inline std::uint_fast8_t getAdjustmentPasses();
-	static inline void refineHeuristicImplicant(const Minterms &allowedMinterms, const std::vector<Minterm> &bits, const Minterm initialMinterm, Implicant &implicant);
-	static Implicants createImplicantsWithHeuristic(const Minterms &allowedMinterms, const Minterms &targetMinterms, Progress &progress);
-	static Implicants findPrimeImplicantsWithHeuristic(const Minterms &allowedMinterms, const Minterms &targetMinterms, const std::string &functionName);
+	inline void refineHeuristicImplicant(const Minterm initialMinterm, Implicant &implicant) const;
+	Implicants createImplicantsWithHeuristic(Progress &progress) const;
+	Implicants findPrimeImplicantsWithHeuristic();
 	
-	static Implicants createPrimeImplicantsWithoutHeuristic(const Minterms &allowedMinterms, Progress &progress);
-	static Implicants findPrimeImplicantsWithoutHeuristic(const Minterms &allowedMinterms, const Minterms &targetMinterms, const std::string &functionName);
+	Implicants createPrimeImplicantsWithoutHeuristic(Progress &progress);
+	Implicants findPrimeImplicantsWithoutHeuristic();
 	
-	static Implicants findPrimeImplicants(const Minterms &allowedMinterms, const Minterms &targetMinterms, const std::string &functionName);
+	Implicants findPrimeImplicants();
 	
 	static void validate(const Minterms &allowedMinterms, const Minterms &targetMinterms, const Implicants &implicants);
 	
-	static solutions_t runPetricksMethod(Implicants &&primeImplicants, const Minterms &targetMinterms, const std::string &functionName);
+	solutions_t runPetricksMethod(Implicants &&primeImplicants);
 	
 public:
-	solutions_t solve(const Minterms &allowedMinterms, const Minterms &targetMinterms, const std::string &functionName) const;
+	QuineMcCluskey(const std::string &functionName, std::shared_ptr<const Minterms> allowedMinterms, std::shared_ptr<const Minterms> targetMinterms) : functionName(functionName), allowedMinterms(std::move(allowedMinterms)), targetMinterms(std::move(targetMinterms)) { if (bitMasks.empty()) makeBitMasks(); }
+	
+	solutions_t solve() &&;
 };

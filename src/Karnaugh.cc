@@ -86,7 +86,7 @@ void Karnaugh::prettyPrintTable(const Minterms &target, const Minterms &allowed)
 
 void Karnaugh::prettyPrintTable() const
 {
-	return prettyPrintTable(targetMinterms, allowedMinterms);
+	return prettyPrintTable(*targetMinterms, *allowedMinterms);
 }
 
 void Karnaugh::prettyPrintSolution(const Implicants &solution)
@@ -130,16 +130,18 @@ Progress::completion_t Karnaugh::MintermLoadingCompletionCalculator::operator()(
 	return static_cast<Progress::completion_t>(fractionOfAll / scalingFactor);
 }
 
-bool Karnaugh::loadMinterms(Minterms &minterms, Input &input, Progress &progress, const bool dontCares) const
+std::unique_ptr<Minterms> Karnaugh::loadMinterms(Input &input, Progress &progress, const bool dontCares) const
 {
 	if (input.doesNextStartWithDash())
 	{
 		const std::string word = input.getWord();
 		if (word == "-" && !input.hasNextInLine())
-			return true;
+			return std::make_unique<Minterms>();
 		Progress::cerr() << "\"-\" cannot be followed by anything!\n";
-		return false;
+		return nullptr;
 	}
+	
+	std::unique_ptr<Minterms> minterms(new Minterms);
 	
 	const std::string name = dontCares ? "don't cares" : "minterms";
 	
@@ -148,13 +150,13 @@ bool Karnaugh::loadMinterms(Minterms &minterms, Input &input, Progress &progress
 	progress.step(true);
 	Minterm currentMinterm;
 	const std::size_t estimatedSize = estimateRemainingInputSize(input);
-	const Progress::calcStepCompletion_t calcStepCompletion(MintermLoadingCompletionCalculator(minterms, currentMinterm, dontCares, estimatedSize));
+	const Progress::calcStepCompletion_t calcStepCompletion(MintermLoadingCompletionCalculator(*minterms, currentMinterm, dontCares, estimatedSize));
 	duplicates_t duplicates;
 	do
 	{
 		progress.substep(calcStepCompletion);
 		currentMinterm = input.getMinterm();
-		if (!minterms.add(currentMinterm))
+		if (!minterms->add(currentMinterm))
 			duplicates.push_back(currentMinterm);
 	} while (input.hasNextInLine());
 	if (!duplicates.empty())
@@ -165,7 +167,7 @@ bool Karnaugh::loadMinterms(Minterms &minterms, Input &input, Progress &progress
 		cerr << "! (They will be ignored.)\n";
 	}
 	
-	return true;
+	return minterms;
 }
 
 #ifndef NDEBUG
@@ -179,9 +181,9 @@ void Karnaugh::validate(const solutions_t &solutions) const
 		for (Minterm i = 0;; ++i)
 		{
 			progress.substep([i = std::as_const(i)](){ return static_cast<Progress::completion_t>(i) / (static_cast<Progress::completion_t>(::maxMinterm) + 1.0); });
-			if (targetMinterms.check(i))
+			if (targetMinterms->check(i))
 				assert(solution.covers(i));
-			else if (!allowedMinterms.check(i))
+			else if (!allowedMinterms->check(i))
 				assert(!solution.covers(i));
 			if (i == ::maxMinterm)
 				break;
@@ -206,7 +208,7 @@ bool Karnaugh::loadData(Input &input)
 		Progress::cerr() << "A list of minterms is mandatory!\n";
 		return false;
 	}
-	if (!loadMinterms(targetMinterms, input, progress, false))
+	if (targetMinterms = loadMinterms(input, progress, false); !targetMinterms)
 		return false;
 	
 	if (options::prompt.getValue())
@@ -218,19 +220,19 @@ bool Karnaugh::loadData(Input &input)
 			std::cerr << ":\n";
 	}
 	if (input.hasNext())
-		if (!loadMinterms(allowedMinterms, input, progress, true))
+		if (allowedMinterms = loadMinterms(input, progress, true); !allowedMinterms)
 			return false;
 
 #ifndef NDEBUG
-	targetMinterms.validate();
-	allowedMinterms.validate();
+	targetMinterms->validate();
+	allowedMinterms->validate();
 #endif
 	
 	{
 		const auto infoGuard = progress.addInfo("listing possible minterms");
 		progress.step(true);
 		progress.substep([](){ return -0.0; }, true);
-		const duplicates_t duplicates = allowedMinterms.findDuplicates(targetMinterms);
+		const duplicates_t duplicates = allowedMinterms->findDuplicates(*targetMinterms);
 		if (!duplicates.empty())
 		{
 			Progress::CerrGuard cerr = Progress::cerr();
@@ -239,11 +241,11 @@ bool Karnaugh::loadData(Input &input)
 			cerr << "! (They will be ignored.)\n";
 		}
 		progress.substep([](){ return -0.5; }, true);
-		allowedMinterms.add(targetMinterms, duplicates.size());
+		allowedMinterms->add(*targetMinterms, duplicates.size());
 	}
 
 #ifndef NDEBUG
-	allowedMinterms.validate();
+	allowedMinterms->validate();
 #endif
 	
 	return true;
@@ -251,7 +253,14 @@ bool Karnaugh::loadData(Input &input)
 
 Karnaugh::solutions_t Karnaugh::solve() const
 {
-	const Karnaugh::solutions_t solutions = QuineMcCluskey().solve(allowedMinterms, targetMinterms, functionName);
+#ifdef NDEBUG
+	const bool mintermsWillBeNeededLater = isTableSmallEnoughToPrint();
+#else
+	constexpr bool mintermsWillBeNeededLater = true;
+#endif
+	const Karnaugh::solutions_t solutions = mintermsWillBeNeededLater
+			? QuineMcCluskey(functionName, allowedMinterms, targetMinterms).solve()
+			: QuineMcCluskey(functionName, std::move(allowedMinterms), std::move(targetMinterms)).solve();
 #ifndef NDEBUG
 	validate(solutions);
 #endif
@@ -262,12 +271,12 @@ void Karnaugh::printHumanSolution(const Implicants &solution) const
 {
 	if (options::outputFormat.getValue() == options::OutputFormat::HUMAN_LONG)
 	{
-		if (::bits <= 8)
+		if (isTableSmallEnoughToPrint())
 		{
 			std::cout << "goal:\n";
 			prettyPrintTable();
 			
-			if (targetMinterms != allowedMinterms)
+			if (*targetMinterms != *allowedMinterms)
 			{
 				std::cout << "best fit:\n";
 				prettyPrintSolution(solution);
