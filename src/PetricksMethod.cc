@@ -152,6 +152,8 @@ inline typename PetricksMethod<INDEX_T>::sumOfProducts_t PetricksMethod<INDEX_T>
 template<typename INDEX_T>
 std::string PetricksMethod<INDEX_T>::ld2integerString(const long double value)
 {
+	if (value >= 1'000'000'000'000'000'000'000.0)
+		return "infinity (or close enough)";
 	std::stringstream ss;
 	ss << std::fixed << std::setprecision(0) << value;
 	return ss.str();
