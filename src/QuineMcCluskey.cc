@@ -253,6 +253,10 @@ void QuineMcCluskey::validate(const Minterms &allowedMinterms, const Minterms &t
 		implicant.removeFromMinterms(missedTargetMinterms);
 	}
 	assert(missedTargetMinterms.isEmpty());
+	if (implicants.size() <= 250000)
+		for (Implicants::const_iterator iter = implicants.cbegin(); iter != implicants.cend(); ++iter)
+			for (Implicants::const_iterator jiter = std::next(iter); jiter != implicants.cend(); ++jiter)
+				assert(!iter->contains(*jiter) && !jiter->contains(*iter));
 }
 #endif
 
