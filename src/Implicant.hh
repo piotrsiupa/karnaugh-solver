@@ -52,9 +52,6 @@ public:
 	void unsetBit(const bits_t bit) { const mask_t bitMask = ~(1 << (::bits - bit - 1)); bits &= bitMask; mask &= bitMask; }
 	void applyMask(const mask_t maskToApply) { bits &= maskToApply; mask &= maskToApply; }
 	
-	constexpr Minterm firstMinterm() const { return bits; }
-	inline Minterm nextMinterm(const Minterm minterm) const;
-	Minterm lastMinterm() const { return bits | (~mask & ::maxMinterm); }
 	bool isAnyInMinterms(const Minterms &minterms) const;
 	bool areAllInMinterms(const Minterms &minterms) const;
 	void addToMinterms(Minterms &minterms) const;
@@ -77,14 +74,6 @@ bool Implicant::operator<(const Implicant &other) const
 	const comp_t x = (static_cast<comp_t>(this->mask) << 32) | this->bits;
 	const comp_t y = (static_cast<comp_t>(other.mask) << 32) | other.bits;
 	return x < y;
-}
-
-Minterm Implicant::nextMinterm(const Minterm minterm) const
-{
-	const Minterm inversedMask = ~mask & ::maxMinterm;
-	const Minterm unmaskedMinterm = minterm & inversedMask;
-	const Minterm nextUnmaskedMinterm = (unmaskedMinterm - inversedMask) & inversedMask;
-	return nextUnmaskedMinterm | bits;
 }
 
 Implicant Implicant::findBiggestInUnion(const Implicant &x, const Implicant &y)
