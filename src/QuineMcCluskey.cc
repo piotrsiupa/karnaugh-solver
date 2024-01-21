@@ -91,15 +91,15 @@ Implicants QuineMcCluskey::createImplicantsWithHeuristic(Progress &progress) con
 	
 	const auto infoGuard = progress.addInfo("Creating implicants with a heuristic");
 	progress.step();
-	auto progressStep = progress.makeCountingStepHelper(targetMinterms->getSize());
+	auto progressStep = progress.makeCountingStepHelper(static_cast<std::uint_fast64_t>(::maxMinterm) + 1);
 	
-	Minterms touchedMinterms;
+	Minterms neededMinterms = *targetMinterms;
 	Implicants implicants;
-	for (const Minterm initialMinterm : *targetMinterms)
+	Minterm previousInitialMinterm = Minterm(0) - 1;
+	for (const Minterm initialMinterm : neededMinterms)
 	{
-		progressStep.substep();
-		if (touchedMinterms.check(initialMinterm))
-			continue;
+		progressStep.substep(initialMinterm - previousInitialMinterm);
+		previousInitialMinterm = initialMinterm;
 		Implicant implicant(initialMinterm);
 		for (const Minterm bitMask : bitMasks)
 		{
@@ -108,7 +108,7 @@ Implicants QuineMcCluskey::createImplicantsWithHeuristic(Progress &progress) con
 		}
 		for (std::uint_fast64_t i = 0; i != adjustmentPasses; ++i)
 			refineHeuristicImplicant(initialMinterm, implicant);
-		implicant.addToMinterms(touchedMinterms);
+		implicant.removeFromMinterms(neededMinterms);
 		implicants.push_back(std::move(implicant));
 	}
 	return implicants;

@@ -52,7 +52,7 @@ void printHelp()
 						"(It can be comfortably used up to 20\n\t\t\t  inputs and for 24 it takes over 21 GB and 10 minutes.)\n"
 			"\tauto\t\t- Chooses the best method that is fast enough. "
 						"(default)\n"
-			"\tgreedy\t\t- Use greedy algorithm to make a list of only essential\n\t\t\t  prime implicants. "
+			"\tgreedy\t\t- Use greedy algorithm to list prime implicants, trying\n\t\t\t  to get mostly a set of essential ones.\n\t\t\t  "
 						"(very fast and memory efficient)\n\t\t\t  "
 						"(See the option `--greedy-refine`.)\n"
 			"\n"
