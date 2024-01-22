@@ -4,13 +4,14 @@ import sys
 env = Environment()
 #env = Environment(TOOLS=['clang', 'clang++', 'gnulink'])
 
+env.Replace(CPP_STANDARD='c++20')
 if 'msvc' in env['TOOLS']:
     # Flags for MSVC.
-    env.Append(CCFLAGS=['/O2', '/W4', '/std:c++20', '/FS', '/EHsc', '/utf-8'])
+    env.Append(CCFLAGS=['/O2', '/W4', '/std:$CPP_STANDARD', '/FS', '/EHsc', '/utf-8'])
     env.Append(CPPDEFINES=['_CRT_SECURE_NO_WARNINGS'])
 else:
     # Non-MSVC compilers tends to use these flags.
-    env.Append(CCFLAGS=['-O3', '-Wall', '-Wextra', '-pedantic', '-std=c++20'])
+    env.Append(CCFLAGS=['-O3', '-Wall', '-Wextra', '-pedantic', '-std=$CPP_STANDARD'])
 if 'g++' in env['TOOLS'] or 'clang++' in env['TOOLS']:
     # This option is supported by GCC and Clang but probably not other compilers.
     env.Append(CCFLAGS=['-fdiagnostics-color=always'])
