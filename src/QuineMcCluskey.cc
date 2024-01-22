@@ -177,7 +177,7 @@ Implicants QuineMcCluskey::createPrimeImplicantsWithoutHeuristic(Progress &progr
 				if (maskMakesThemEqual)
 				{
 					Implicant newImplicant = previous->first;
-					newImplicant.applyMask(mask);
+					newImplicant.applyMask(static_cast<Minterm>(mask));
 					newImplicants.push_back(std::move(newImplicant));
 					previous->second = true;
 					iter->second = true;
