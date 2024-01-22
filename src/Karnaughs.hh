@@ -11,6 +11,7 @@
 #include "OptimizedSolutions.hh"
 
 
+// This could be split into 2 classes (`Karnaughs` and `Solutions`) so `&&` functions make more sense but it is coupled enough for me to not bother.
 class Karnaughs
 {
 	using karnaughs_t = std::vector<Karnaugh>;
@@ -34,14 +35,14 @@ class Karnaughs
 	[[nodiscard]] static std::string getName();
 	[[nodiscard]] bool areInputsUsed() const;
 	
-	solutionses_t makeSolutionses() const;
+	solutionses_t makeSolutionses() &&;  // This function is `&&` as a reminder the it removes some data in the process (to save memory) and because of that it cannot be called twice.
 	void findBestNonOptimizedSolutions(const solutionses_t &solutionses);
 	void findBestOptimizedSolutions(const solutionses_t &solutionses);
 	void findBestSolutions(const solutionses_t &solutionses);
 	
 public:
 	[[nodiscard]] bool loadData(Input &input);
-	void solve();
+	void solve() &&;  // This function is `&&` as a reminder the it removes some data in the process (to save memory) and because of that it cannot be called twice.
 	void printHuman();
 	void printVerilog();
 	void printVhdl();

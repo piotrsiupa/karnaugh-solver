@@ -3,78 +3,101 @@
 #include "options.hh"
 
 
-bool Implicant::operator<(const Implicant &other) const
+bool Implicant::humanLess(const Implicant &other) const
 {
-	if (this->bitCount != other.bitCount)
-		return this->bitCount < other.bitCount;
-	const mask_t thisMask = this->trueBits | this->falseBits;
-	const mask_t otherMask = other.trueBits | other.falseBits;
-	if (thisMask != otherMask)
-		return thisMask > otherMask;
-	return this->trueBits > other.trueBits;
+	if (const auto comparison = this->getBitCount() <=> other.getBitCount(); comparison != 0)
+		return comparison < 0;
+	if (const auto comparison = this->mask <=> other.mask; comparison != 0)
+		return comparison > 0;
+	return this->bits > other.bits;
 }
 
 Implicant::splitBits_t Implicant::splitBits() const
 {
 	splitBits_t splitBits;
 	for (bits_t i = 0; i != ::bits; ++i)
-	{
-		const bool trueBit = (trueBits & (1 << (::bits - i - 1))) != 0;
-		const bool falseBit = (falseBits & (1 << (::bits - i - 1))) != 0;
-		if (trueBit || falseBit)
-			splitBits.emplace_back(i, falseBit);
-	}
+		if ((mask & (1 << (::bits - i - 1))) != 0)
+			splitBits.emplace_back(i, (bits & (1 << (::bits - i - 1))) != 0);
 	return splitBits;
 }
 
-Implicant::minterms_t Implicant::findMinterms() const
+bool Implicant::isAnyInMinterms(const Minterms &minterms) const
 {
-	minterms_t minterms;
-	for (Minterm minterm = 0; minterm != ::maxMinterm; ++minterm)
-		if (covers(minterm))
-			minterms.push_back(minterm);
-	if (covers(maxMinterm)) // This is not handled by the loop in case `::maxMinterm` is really the max value of underlying type of `Minterm`.
-		minterms.push_back(maxMinterm);
-	return minterms;
+	if (isEmpty() && !isEmptyTrue()) [[unlikely]]
+		return false;
+	const Minterm inversedMask = ~mask & ::maxMinterm;
+	Minterm unmaskedPart = 0;
+	do
+	{
+		if (minterms.check(bits | unmaskedPart))
+			return true;
+		unmaskedPart = (unmaskedPart - inversedMask) & inversedMask;
+	} while (unmaskedPart != 0);
+	return false;
 }
 
-bool Implicant::areMergeable(const Implicant &x, const Implicant &y)
+bool Implicant::areAllInMinterms(const Minterms &minterms) const
 {
-	if (x.bitCount != y.bitCount)
-		return false;
-	const mask_t trueBitsDiff = x.trueBits ^ y.trueBits;
-	const mask_t falseBitsDiff = x.falseBits ^ y.falseBits;
-	if (trueBitsDiff != falseBitsDiff)
-		return false;
-	return std::bitset<32>(trueBitsDiff).count() == 1;
+	if (isEmpty() && !isEmptyTrue()) [[unlikely]]
+		return true;
+	const Minterm inversedMask = ~mask & ::maxMinterm;
+	Minterm unmaskedPart = 0;
+	do
+	{
+		if (!minterms.check(bits | unmaskedPart))
+			return false;
+		unmaskedPart = (unmaskedPart - inversedMask) & inversedMask;
+	} while (unmaskedPart != 0);
+	return true;
 }
 
-Implicant Implicant::merge(const Implicant &x, const Implicant &y)
+void Implicant::addToMinterms(Minterms &minterms) const
 {
-	return Implicant(x.trueBits & y.trueBits, x.falseBits & y.falseBits, x.bitCount - 1);
+	if (isEmpty() && !isEmptyTrue()) [[unlikely]]
+		return;
+	const Minterm inversedMask = ~mask & ::maxMinterm;
+	Minterm unmaskedPart = 0;
+	do
+	{
+		minterms.add(bits | unmaskedPart);
+		unmaskedPart = (unmaskedPart - inversedMask) & inversedMask;
+	} while (unmaskedPart != 0);
+}
+
+void Implicant::removeFromMinterms(Minterms &minterms) const
+{
+	if (isEmpty() && !isEmptyTrue()) [[unlikely]]
+		return;
+	const Minterm inversedMask = ~mask & ::maxMinterm;
+	Minterm unmaskedPart = 0;
+	do
+	{
+		minterms.remove(bits | unmaskedPart);
+		unmaskedPart = (unmaskedPart - inversedMask) & inversedMask;
+	} while (unmaskedPart != 0);
 }
 
 void Implicant::printHuman(std::ostream &o, const bool parentheses) const
 {
-	if (bitCount == 0)
+	if (isEmpty())
 	{
-		if (isError())
+		if (!isEmptyTrue())
 			o << "<False>";
 		else
 			o << "<True>";
 		return;
 	}
-	const bool needsParentheses = parentheses && bitCount != 1;
+	const bool needsParentheses = parentheses && getBitCount() != 1;
 	if (needsParentheses)
 		o << '(';
 	bool first = true;
-	for (const auto &[bitIndex, negated] : splitBits())
+	for (const auto &[bitIndex, value] : splitBits())
 	{
 		if (first)
 			first = false;
 		else
 			o << " && ";
-		if (negated)
+		if (!value)
 			o << '!';
 		::inputNames.printHumanName(o, bitIndex);
 	}
@@ -84,25 +107,25 @@ void Implicant::printHuman(std::ostream &o, const bool parentheses) const
 
 void Implicant::printVerilog(std::ostream &o, const bool parentheses) const
 {
-	if (bitCount == 0)
+	if (isEmpty())
 	{
-		if (isError())
+		if (!isEmptyTrue())
 			o << '0';
 		else
 			o << '1';
 		return;
 	}
-	const bool needsParentheses = parentheses && bitCount != 1;
+	const bool needsParentheses = parentheses && getBitCount() != 1;
 	if (needsParentheses)
 		o << '(';
 	bool first = true;
-	for (const auto &[bitIndex, negated] : splitBits())
+	for (const auto &[bitIndex, value] : splitBits())
 	{
 		if (first)
 			first = false;
 		else
 			o << " & ";
-		if (negated)
+		if (!value)
 			o << '!';
 		::inputNames.printVerilogName(o, bitIndex);
 	}
@@ -112,25 +135,25 @@ void Implicant::printVerilog(std::ostream &o, const bool parentheses) const
 
 void Implicant::printVhdl(std::ostream &o, const bool parentheses) const
 {
-	if (bitCount == 0)
+	if (isEmpty())
 	{
-		if (isError())
+		if (!isEmptyTrue())
 			o << "'0'";
 		else
 			o << "'1'";
 		return;
 	}
-	const bool needsParentheses = parentheses && bitCount != 1;
+	const bool needsParentheses = parentheses && getBitCount() != 1;
 	if (needsParentheses)
 		o << '(';
 	bool first = true;
-	for (const auto &[bitIndex, negated] : splitBits())
+	for (const auto &[bitIndex, value] : splitBits())
 	{
 		if (first)
 			first = false;
 		else
 			o << " and ";
-		if (negated)
+		if (!value)
 			o << "not ";
 		::inputNames.printVhdlName(o, bitIndex);
 	}
@@ -140,25 +163,25 @@ void Implicant::printVhdl(std::ostream &o, const bool parentheses) const
 
 void Implicant::printCpp(std::ostream &o, const bool parentheses) const
 {
-	if (bitCount == 0)
+	if (isEmpty())
 	{
-		if (isError())
+		if (!isEmptyTrue())
 			o << "false";
 		else
 			o << "true";
 		return;
 	}
-	const bool needsParentheses = parentheses && bitCount != 1;
+	const bool needsParentheses = parentheses && getBitCount() != 1;
 	if (needsParentheses)
 		o << '(';
 	bool first = true;
-	for (const auto &[bitIndex, negated] : splitBits())
+	for (const auto &[bitIndex, value] : splitBits())
 	{
 		if (first)
 			first = false;
 		else
 			o << " && ";
-		if (negated)
+		if (!value)
 			o << "!";
 		::inputNames.printCppName(o, bitIndex);
 	}
@@ -168,9 +191,9 @@ void Implicant::printCpp(std::ostream &o, const bool parentheses) const
 
 void Implicant::printMath(std::ostream &o, const bool parentheses) const
 {
-	if (bitCount == 0)
+	if (isEmpty())
 	{
-		if (isError())
+		if (!isEmptyTrue())
 		{
 			switch (options::outputFormat.getValue())
 			{
@@ -212,11 +235,11 @@ void Implicant::printMath(std::ostream &o, const bool parentheses) const
 		}
 		return;
 	}
-	const bool needsParentheses = parentheses && bitCount != 1;
+	const bool needsParentheses = parentheses && getBitCount() != 1;
 	if (needsParentheses)
 		o << '(';
 	bool first = true;
-	for (const auto &[bitIndex, negated] : splitBits())
+	for (const auto &[bitIndex, value] : splitBits())
 	{
 		if (first)
 		{
@@ -242,7 +265,7 @@ void Implicant::printMath(std::ostream &o, const bool parentheses) const
 				break;
 			}
 		}
-		if (negated)
+		if (!value)
 		{
 			switch (options::outputFormat.getValue())
 			{

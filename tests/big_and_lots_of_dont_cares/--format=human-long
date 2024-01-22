@@ -46,8 +46,8 @@ solution:
 Negated inputs: d, h
 Products:
 	[0] = !d && e
-	[1] = b && c && e
-	[2] = !d && !h
+	[1] = !d && !h
+	[2] = b && c && e
 Sums:
 	"f0" = [0] || [1] || [2]
 Gate scores: NOTs = 2, ANDs = 4, ORs = 2

@@ -14,14 +14,14 @@ SetOptimizerForProducts::SubsetFinder::sets_t SetOptimizerForProducts::convertSe
 		{
 			convertedSet.push_back(std::numeric_limits<valueId_t>::max());
 		}
-		else if (set == Implicant::error())
+		else if (set == Implicant::none())
 		{
 			convertedSet.push_back(std::numeric_limits<valueId_t>::min());
 		}
 		else
 		{
 			for (const auto &bit : set.splitBits())
-				convertedSet.push_back(bit.second ? -bit.first - 1 : bit.first);
+				convertedSet.push_back(bit.second ? bit.first : -bit.first - 1);
 			std::sort(convertedSet.begin(), convertedSet.end());
 		}
 		convertedSets.push_back(std::move(convertedSet));
@@ -43,15 +43,15 @@ void SetOptimizerForProducts::makeGraph(const SubsetFinder::setHierarchy_t &setH
 		}
 		else if (values.size() == 1 && values[0] == std::numeric_limits<valueId_t>::min())
 		{
-			set = Implicant::error();
+			set = Implicant::none();
 		}
 		else
 		{
 			for (const auto &value : values)
 				if (value >= 0)
-					set.setBit(value, false);
+					set.setBit(value, true);
 				else
-					set.setBit(-value - 1, true);
+					set.setBit(-value - 1, false);
 		}
 		graph.emplace_back(set, std::move(setHierarchyEntry.subsets));
 		if (setHierarchyEntry.isOriginalSet)
@@ -70,9 +70,9 @@ SetOptimizerForProducts::gateCount_t SetOptimizerForProducts::countGates(const s
 		gates += subsetSelections[i].size();
 		Implicant reducedProduct = graph[i].first;
 		for (const std::size_t &subset : subsetSelections[i])
-			reducedProduct -= graph[subset].first;
+			reducedProduct.substract(graph[subset].first);
 		gates += reducedProduct.getBitCount();
-		if (subsetSelections[i].size() != 0 || reducedProduct.getBitCount() != 0)
+		if (subsetSelections[i].size() != 0 || !reducedProduct.isEmpty())
 			--gates;
 	}
 	return gates;
@@ -82,5 +82,5 @@ void SetOptimizerForProducts::substractSubsets(sets_t &sets, const subsetSelecti
 {
 	for (std::size_t i = sets.size(); i --> 0;)
 		for (const std::size_t subsetIndex : subsetSelections[i])
-			sets[i] -= sets[subsetIndex];
+			sets[i].substract(sets[subsetIndex]);
 }

@@ -51,7 +51,7 @@ private:
 	std::vector<const char*> infoTexts;
 	std::uint_fast8_t reportLines = 0;
 	
-	steps_t calcStepsToSkip(const double secondsToSkip, const double secondsPerStep) const;
+	steps_t calcStepsToSkip(const double secondsSinceStepStart, const double secondsToSkip, const double secondsPerStep) const;
 	static double getSecondsSinceStart(const timePoint_t currentTime);
 	static bool checkProgramRunTime(const timePoint_t currentTime);
 	bool checkReportInterval(const bool force);
@@ -97,7 +97,8 @@ public:
 		Progress &progress;
 		T i = 0;
 		const calcStepCompletion_t calcCompletion;
-		CountingStepHelper(Progress &progress, const completion_t n) : progress(progress), calcCompletion([&i = std::as_const(i), n](){ return static_cast<completion_t>(i) / n; }) {}
+		template<typename T2>
+		CountingStepHelper(Progress &progress, const T2 n) : progress(progress), calcCompletion([&i = std::as_const(i), n = static_cast<completion_t>(n)](){ return static_cast<completion_t>(i) / n; }) {}
 		friend class Progress;
 	public:
 		CountingStepHelper(const CountingStepHelper&) = delete;
@@ -116,8 +117,8 @@ public:
 	
 	void step(const bool force = false);
 	void substep(const calcStepCompletion_t &calcStepCompletion, const bool force = false) { if (visible) { if (--substepsToSkip == 0 || force) [[unlikely]] handleStep(calcStepCompletion, force); ++substepsSoFar; } }
-	template<typename T = std::size_t>
-	[[nodiscard]] CountingStepHelper<T> makeCountingStepHelper(const completion_t n) { return {*this, n}; }
+	template<typename T = std::size_t, typename T2 = T>
+	[[nodiscard]] CountingStepHelper<T> makeCountingStepHelper(const T2 n) { return {*this, n}; }
 	
 	[[nodiscard]] InfoGuard addInfo(const char infoText[]) { infoTexts.push_back(infoText); return {*this}; }
 	

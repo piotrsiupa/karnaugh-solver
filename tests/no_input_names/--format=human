@@ -5,8 +5,8 @@
 
 Negated inputs: <none>
 Products:
-	[0] = i0 && i2 && i3
-	[1] = i1 && i3
+	[0] = i1 && i3
+	[1] = i0 && i2 && i3
 Sums:
 	"f0" = [0] || [1]
 Gate scores: NOTs = 0, ANDs = 3, ORs = 1

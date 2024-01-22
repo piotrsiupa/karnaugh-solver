@@ -17,9 +17,11 @@ std::uint_fast8_t Progress::stageCounters[STAGE_COUNT] = {};
 Progress *Progress::progress = nullptr;
 Progress::timePoint_t Progress::programStartTime;
 
-Progress::steps_t Progress::calcStepsToSkip(const double secondsToSkip, const double secondsPerStep) const
+Progress::steps_t Progress::calcStepsToSkip(const double secondsSinceStepStart, const double secondsToSkip, const double secondsPerStep) const
 {
-	const steps_t newSubstepsToSkip = static_cast<steps_t>(secondsToSkip / secondsPerStep);
+	steps_t newSubstepsToSkip = static_cast<steps_t>(secondsToSkip / secondsPerStep);
+	if (secondsSinceStepStart < 60)
+		newSubstepsToSkip /= secondsSinceStepStart < 10 ? 8 : 2;
 	return std::max<steps_t>(1, newSubstepsToSkip);
 }
 
@@ -46,29 +48,29 @@ bool Progress::checkReportInterval(const bool force)
 		return force && checkProgramRunTime(std::chrono::steady_clock::now());
 	}
 	const timePoint_t currentTime = std::chrono::steady_clock::now();
-	const double secondsSinceStart = std::chrono::duration<double>(currentTime - startTime).count();
+	const double secondsSinceStepStart = std::chrono::duration<double>(currentTime - stepStartTime).count();
 	const double secondsSinceLastReport = std::chrono::duration<double>(currentTime - lastReportTime).count();
 	const double remainingSeconds = reportInterval - secondsSinceLastReport;
-	const double secondsPerStep = secondsSinceStart / substepsSoFar;
+	const double secondsPerStep = secondsSinceStepStart / substepsSoFar;
 	if (!checkProgramRunTime(currentTime) || (!force && remainingSeconds > secondsPerStep)) // Not even `force` can show progress before the initial delay has passed. This is by design.
 	{
-		substepsToSkip = calcStepsToSkip(remainingSeconds, secondsPerStep);
+		substepsToSkip = calcStepsToSkip(secondsSinceStepStart, remainingSeconds, secondsPerStep);
 		return false;
 	}
 	else
 	{
 		lastReportTime = currentTime;
-		substepsToSkip = calcStepsToSkip(reportInterval, secondsPerStep);
+		substepsToSkip = calcStepsToSkip(secondsSinceStepStart, reportInterval, secondsPerStep);
 		return true;
 	}
 }
 
 void Progress::printTime(double time)
 {
-	static constexpr std::uintmax_t tooManySeconds = 10 * 365 * 24 * 60 * 60;  // 10 years
+	static constexpr std::uintmax_t tooManySeconds = std::uintmax_t(100) * 365 * 24 * 60 * 60;  // 10 years
 	if (time >= tooManySeconds) [[unlikely]]
 	{
-		std::clog << "over 10 years";
+		std::clog << "over 100 years";
 		return;
 	}
 	
@@ -164,10 +166,12 @@ void Progress::reportProgress()
 	const double estimatedTime = std::isnan(estimatedStepTime)
 		? ((finishedStepsSeconds < 0.1 || stepsSoFar == 1) ? NAN : finishedStepsSeconds * (static_cast<double>(allSteps) / static_cast<double>(stepsSoFar - 1) - 1.0))
 		: estimatedStepTime + (finishedStepsSeconds + estimatedStepTime / (1.0 - std::abs(stepCompletion))) * (static_cast<double>(allSteps) / static_cast<double>(stepsSoFar) - 1.0);
+	const bool stepProgressIsUnsure = std::signbit(stepCompletion);
+	const bool mainProgressIsUnsure = stepProgressIsUnsure || (stepsSoFar != allSteps && !relatedSteps);
 	
-	const bool twoBars = allSteps != 1 && !std::isnan(estimatedStepTime);
+	const bool twoBars = allSteps != 1 && (!std::isnan(estimatedStepTime) || stepProgressIsUnsure);
 	
-	std::clog << "    " << processName;
+	std::clog << "\\__ " << processName;
 	if (allSteps == 1)
 		for (const auto &infoText : infoTexts)
 			std::clog << " -> " << infoText;
@@ -175,11 +179,11 @@ void Progress::reportProgress()
 	if (!relatedSteps)
 		std::clog << " (*)";
 	std::clog << '\n';
-	reportSingleLevel(false, relatedSteps ? completion : -completion, finishedStepsSeconds + currentStepSeconds, estimatedTime);
+	reportSingleLevel(false, mainProgressIsUnsure ? -completion : completion, finishedStepsSeconds + currentStepSeconds, estimatedTime);
 	
 	if (allSteps != 1)
 	{
-		std::clog << "        Step " << stepsSoFar << '/' << allSteps;
+		std::clog << "    \\__ Step " << stepsSoFar << '/' << allSteps;
 		for (const auto &infoText : infoTexts)
 			std::clog << " -> " << infoText;
 		std::clog << "...";

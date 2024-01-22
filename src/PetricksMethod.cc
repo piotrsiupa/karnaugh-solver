@@ -36,40 +36,25 @@ Implicants PetricksMethod<INDEX_T>::extractEssentials(const std::string &functio
 	const std::string progressName = "Extracting essentials of \"" + functionName + '"';
 	Progress progress(Progress::Stage::SOLVING, progressName.c_str(), 1);
 	progress.step();
-	auto progressStep = progress.makeCountingStepHelper(static_cast<Progress::completion_t>(minterms.size()));
+	auto progressStep = progress.makeCountingStepHelper(minterms->getSize());
 	
 	Implicants essentials;
-	for (std::size_t i = 0; i != minterms.size();)
+	for (const Minterm minterm : *minterms)
 	{
 		progressStep.substep();
-		const index_t essentialPrimeImplicantIndex = findEssentialPrimeImplicantIndex(minterms[i]);
+		const index_t essentialPrimeImplicantIndex = findEssentialPrimeImplicantIndex(minterm);
 		if (essentialPrimeImplicantIndex == NO_INDEX)
-		{
-			++i;
 			continue;
-		}
 		essentials.emplace_back(std::move(primeImplicants[essentialPrimeImplicantIndex]));
 		primeImplicants.erase(primeImplicants.begin() + essentialPrimeImplicantIndex);
 		const Implicant &primeImplicant = essentials.back();
-		for (std::size_t j = 0; j != i;)
-		{
-			if (primeImplicant.covers(minterms[j]))
-			{
-				minterms.erase(std::next(minterms.begin(), j));
-				--i;
-			}
-			else
-			{
-				++j;
-			}
-		}
-		for (std::size_t j = i + 1; j != minterms.size();)
-			if (primeImplicant.covers(minterms[j]))
-				minterms.erase(std::next(minterms.begin(), j));
-			else
-				++j;
-		minterms.erase(std::next(minterms.begin(), i));
+		for (const Minterm minterm1 : *minterms)
+			if (primeImplicant.covers(minterm1))
+				minterms->remove(minterm1);
 	}
+#ifndef NDEBUG
+	minterms->validate();
+#endif
 	return essentials;
 }
 
@@ -79,9 +64,9 @@ typename PetricksMethod<INDEX_T>::productOfSumsOfProducts_t PetricksMethod<INDEX
 	const std::string progressName = "Creating initial solution space for \"" + functionName + '"';
 	Progress progress(Progress::Stage::SOLVING, progressName.c_str(), 1);
 	progress.step();
-	auto progressStep = progress.makeCountingStepHelper(static_cast<Progress::completion_t>(minterms.size()));
+	auto progressStep = progress.makeCountingStepHelper(minterms->getSize());
 	productOfSumsOfProducts_t productOfSums;
-	for (const Minterm &minterm : minterms)
+	for (const Minterm &minterm : *minterms)
 	{
 		progressStep.substep();
 		sumOfProducts_t &sum = productOfSums.emplace_back();
@@ -98,7 +83,7 @@ void PetricksMethod<INDEX_T>::removeRedundantSums(productOfSumsOfProducts_t &pro
 	const std::string progressName = "Cleaning up solution space for \"" + functionName + '"';
 	Progress progress(Progress::Stage::SOLVING, progressName.c_str(), 1);
 	progress.step();
-	auto progressStep = progress.makeCountingStepHelper(static_cast<Progress::completion_t>(productOfSums.size()));
+	auto progressStep = progress.makeCountingStepHelper(productOfSums.size());
 	for (auto x = productOfSums.begin(); x != productOfSums.end(); ++x)
 	{
 		progressStep.substep();
@@ -125,9 +110,10 @@ void PetricksMethod<INDEX_T>::removeRedundantSums(productOfSumsOfProducts_t &pro
 }
 
 template<typename INDEX_T>
-typename PetricksMethod<INDEX_T>::productOfSumsOfProducts_t PetricksMethod<INDEX_T>::createProductOfSums(const std::string &functionName) const
+typename PetricksMethod<INDEX_T>::productOfSumsOfProducts_t PetricksMethod<INDEX_T>::createProductOfSums(const std::string &functionName)
 {
 	productOfSumsOfProducts_t productOfSums = createPreliminaryProductOfSums(functionName);
+	minterms.reset();
 	removeRedundantSums(productOfSums, functionName);
 	return productOfSums;
 }
@@ -166,13 +152,15 @@ inline typename PetricksMethod<INDEX_T>::sumOfProducts_t PetricksMethod<INDEX_T>
 template<typename INDEX_T>
 std::string PetricksMethod<INDEX_T>::ld2integerString(const long double value)
 {
+	if (value >= 1'000'000'000'000'000'000'000.0)
+		return "infinity (or close enough)";
 	std::stringstream ss;
 	ss << std::fixed << std::setprecision(0) << value;
 	return ss.str();
 }
 
 template<typename INDEX_T>
-typename PetricksMethod<INDEX_T>::sumOfProducts_t PetricksMethod<INDEX_T>::findSumOfProducts(const std::string &functionName) const
+typename PetricksMethod<INDEX_T>::sumOfProducts_t PetricksMethod<INDEX_T>::findSumOfProducts(const std::string &functionName)
 {
 	productOfSumsOfProducts_t productOfSumsOfProducts = createProductOfSums(functionName);
 	if (productOfSumsOfProducts.empty())
@@ -230,7 +218,7 @@ typename PetricksMethod<INDEX_T>::solutions_t PetricksMethod<INDEX_T>::solve(con
 	if (sumOfProducts.empty())
 		return !essentials.empty()
 			? solutions_t{std::move(essentials)}
-			: solutions_t{{Implicant::error()}};
+			: solutions_t{{Implicant::none()}};
 	
 	solutions_t solutions;
 	solutions.reserve(sumOfProducts.size());

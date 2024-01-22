@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -19,16 +20,17 @@ public:
 	
 private:
 	using grayCode_t = std::vector<Minterm>;
+	using duplicates_t = Minterms::duplicates_t;
 	
 	static std::size_t nameCount;
 	
 	bool nameIsCustom = false;
 	std::string functionName;
-	Minterms targetMinterms, allowedMinterms;
+	std::shared_ptr<Minterms> targetMinterms, allowedMinterms;
 	
-	static Minterms extractDuplicates(Minterms &minterms);
-	static void printMinterms(const Minterms &minterms, Progress::CerrGuard &cerr);
+	static void printDuplicates(const duplicates_t &duplicates, Progress::CerrGuard &cerr);
 	
+	static bool isTableSmallEnoughToPrint() { return ::bits <= 8; }
 	static grayCode_t makeGrayCode(const bits_t bitCount);
 	static void printBits(const Minterm minterm, const bits_t bitCount);
 	static void prettyPrintTable(const Minterms &target, const Minterms &allowed = {});
@@ -37,16 +39,17 @@ private:
 	
 	class MintermLoadingCompletionCalculator {
 		const Minterms &minterms;
+		const Minterm &currentMinterm;
 		const bool dontCares;
 		const std::size_t estimatedSize;
 		Minterm lastMinterm = 0;
 		bool inOrderSoFar = true;
 	public:
-		MintermLoadingCompletionCalculator(const Minterms &minterms, const bool dontCares, const std::size_t estimatedSize = 0) : minterms(minterms), dontCares(dontCares), estimatedSize(estimatedSize) {}
+		MintermLoadingCompletionCalculator(const Minterms &minterms, const Minterm &currentMinterm, const bool dontCares, const std::size_t estimatedSize = 0) : minterms(minterms), currentMinterm(currentMinterm), dontCares(dontCares), estimatedSize(estimatedSize) {}
 		Progress::completion_t operator()();
 	};
 	static std::size_t estimateRemainingInputSize(Input &input);
-	bool loadMinterms(Minterms &minterms, Input &input, Progress &progress, const bool dontCares) const;
+	std::unique_ptr<Minterms> loadMinterms(Input &input, Progress &progress, const bool dontCares) const;
 #ifndef NDEBUG
 	void validate(const solutions_t &solutions) const;
 #endif
@@ -60,7 +63,7 @@ public:
 	const std::string& getFunctionName() const { return functionName; }
 	
 	bool loadData(Input &input);
-	solutions_t solve() const;
+	solutions_t solve() &&;  // This function is `&&` as a reminder the it removes some data in the process (to save memory) and because of that it cannot be called twice.
 	
 	void printHumanSolution(const Implicants &solution) const;
 	void printVerilogSolution(const Implicants &solution) const;

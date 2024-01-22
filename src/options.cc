@@ -2,7 +2,9 @@
 
 #include <algorithm>
 #include <cctype>
+#include <charconv>
 #include <iostream>
+#include <limits>
 
 #include "global.hh"
 
@@ -12,38 +14,21 @@ namespace options
 	
 	bool NoArgOption::parse(std::string_view argument)
 	{
-		if (!argument.empty())
+		if (!argument.empty()) [[unlikely]]
 		{
 			std::cerr << argument << '\n';
-			std::cerr << "The option \"--" << getLongNames().front() << "\" doesn't take an argument!\n";
+			std::cerr << "The option \"--" << getMainLongName() << "\" doesn't take an argument!\n";
 			return false;
 		}
 		return parse();
 	}
 	
-	std::vector<std::string> Trilean::makeNegatedLongNames(const std::vector<std::string_view> &longNames)
-	{
-		std::vector<std::string> negatedLongNames;
-		negatedLongNames.reserve(longNames.size());
-		for (const std::string_view &longName : longNames)
-			negatedLongNames.emplace_back("no-" + std::string(longName));
-		return negatedLongNames;
-	}
-	
-	std::vector<std::string_view> Trilean::makeStringViews(const std::vector<std::string> &strings)
-	{
-		std::vector<std::string_view> stringViews;
-		stringViews.reserve(strings.size());
-		for (const std::string &string : strings)
-			stringViews.emplace_back(string);
-		return stringViews;
-	}
-	
-	Trilean::Trilean(std::vector<std::string_view> &&longNames, const char shortName, const getDefault_t getDefault) :
-		Option(std::move(longNames), shortName),
+	Trilean::Trilean(const std::string_view mainLongName, const std::string_view longNamesRegex, const char shortName, const getDefault_t getDefault) :
+		Option(mainLongName, longNamesRegex, shortName),
 		getDefault(getDefault),
-		negatedLongNames(makeNegatedLongNames(getLongNames())),
-		negated(makeStringViews(negatedLongNames), static_cast<char>(std::toupper(static_cast<unsigned char>(shortName))), *this)
+		negatedMainLongName("no-" + std::string(mainLongName)),
+		negatedLongNamesRegex("no-(?:" + std::string(longNamesRegex) + ')'),
+		negated(negatedMainLongName, negatedLongNamesRegex, static_cast<char>(std::toupper(static_cast<unsigned char>(shortName))), *this)
 	{
 	}
 	
@@ -67,9 +52,9 @@ namespace options
 		{
 			undecided = true;
 		}
-		else
+		else [[unlikely]]
 		{
-			std::cerr << "Invalid value \"" << argument << "\" for the option \"--" << getLongNames().front() << "\"!\n";
+			std::cerr << "Invalid value \"" << argument << "\" for the option \"--" << getMainLongName() << "\"!\n";
 			return false;
 		}
 		return true;
@@ -100,9 +85,9 @@ namespace options
 	{
 		prepareRegex();
 		std::cmatch match;
-		if (!std::regex_match(&*argument.begin(), &*argument.end(), match, regex))
+		if (!std::regex_match(&*argument.begin(), &*argument.end(), match, regex)) [[unlikely]]
 		{
-			std::cerr << "Invalid value \"" << argument << "\" for the option \"--" << getLongNames().front() << "\"!\n";
+			std::cerr << "Invalid value \"" << argument << "\" for the option \"--" << getMainLongName() << "\"!\n";
 			return false;
 		}
 		for (std::size_t i = 0; i != mappings.size(); ++i)
@@ -113,32 +98,63 @@ namespace options
 				return true;
 			}
 		}
-		// This should be unreachable in practice.
-		std::cerr << "Internal error while matching a value for the option \"--" << getLongNames().front() << "\"!\n";
+		// This should be unreachable in practice. (At least as long as the subordinate regexes don't have capturing groups.)
+		[[unlikely]]
+		std::cerr << "Internal error while matching a value for the option \"--" << getMainLongName() << "\"!\n";
+		return false;
+	}
+	
+	template<typename T>
+	bool Number<T>::parse(const std::string_view argument)
+	{
+		const char *const rawBegin = argument.data(), *const rawEnd = rawBegin + argument.size();
+		const auto [endOfNumber, errorCode] = std::from_chars(rawBegin, rawEnd, value);
+		if (endOfNumber == rawEnd && errorCode == std::errc() && value >= min && value <= max) [[likely]]
+			return true;
+		if (endOfNumber != rawEnd)
+		{
+			std::cerr << '\"' << argument << "\" is not a number (starting at character " << (endOfNumber - rawBegin + 1) << ")!\n";
+		}
+		else
+		{
+			if constexpr (std::numeric_limits<T>::is_signed)
+				std::cerr << '\"' << argument << "\" is out of range (" << static_cast<std::intmax_t>(min) << ".." << static_cast<std::intmax_t>(max) << ")!\n";
+			else
+				std::cerr << '\"' << argument << "\" is out of range (" << static_cast<std::uintmax_t>(min) << ".." << static_cast<std::uintmax_t>(max) << ")!\n";
+		}
 		return false;
 	}
 	
 	
-	Flag help({"help"}, 'h');
-	Flag version({"version"}, 'v');
+	// Why regex instead of one name for each option? Because it's fun. (And because I won't remember exact spelling so the program needs to figure out what I mean.)
 	
-	Trilean prompt({"prompt", "prompts", "hint", "hints"}, 'p', [](){ return ::terminalInput; });
-	Trilean status({"status", "progress", "progress-bar", "progress-bars", "stat", "stats"}, 's', [](){ return ::terminalStderr; });
+	Flag help("help", "h(?:elp)?", 'h');
+	Flag version("version", "version|author", 'v');
 	
-	Flag skipOptimization({"no-optimize", "no-cse", "no-optimization", "skip-optimize", "skip-cse", "skip-optimization"}, 'O');
-	Mapped<OutputFormat, OutputFormat::HUMAN_LONG> outputFormat({"format", "output-format", "notation", "output-notation"}, 'f', {
-			{"human(?:[-_]readable)?[-_](?:long|big)|(?:long|big)[-_]human(?:[-_]readable)?|h[-_]?(?:r[-_]?)?l|l[-_]?h(?:[-_]?r)?|full|default", OutputFormat::HUMAN_LONG},
-			{"human(?:[-_]readable)?(?:[-_](?:medium|middle))?|(?:(?:medium|middle)[-_])?human(?:[-_]readable)?|h(?:[-_]?r)?(?:[-_]?m)?|(?:m[-_]?)?h(?:[-_]?r)?|medium|middle|shorter", OutputFormat::HUMAN},
-			{"human(?:[-_]readable)?[-_](?:short|small)|(?:short|small)[-_]human(?:[-_]readable)?|h[-_]?(?:r[-_]?)?s|s[-_]?h(?:[-_]?r)?|short|small|tiny|minimal", OutputFormat::HUMAN_SHORT},
+	Trilean prompt("prompt", "prompts?|hints?", 'p', [](){ return ::terminalInput; });
+	Trilean status("status", "stat(?:s|us)?|progress(?:[-_ ]bars?)?", 's', [](){ return ::terminalStderr; });
+	
+	Flag skipOptimization("no-optimize", "(?:no|skip)[-_ ](?:opti(?:m(?:iz(?:e|ation))?)?|cse)", 'O');
+	Mapped<OutputFormat, OutputFormat::HUMAN_LONG> outputFormat("format", "(?:output[-_ ])?(?:format|notation|lang(?:uage)?)", 'f', {
+			{"human(?:[-_ ]readable)?[-_ ](?:long|big)|(?:long|big)[-_ ]human(?:[-_ ]readable)?|h[-_ ]?(?:r[-_ ]?)?l|l[-_ ]?h(?:[-_ ]?r)?|full|default", OutputFormat::HUMAN_LONG},
+			{"human(?:[-_ ]readable)?(?:[-_ ](?:medium|middle))?|(?:(?:medium|middle)[-_ ])?human(?:[-_ ]readable)?|h(?:[-_ ]?r)?(?:[-_ ]?m)?|(?:m[-_ ]?)?h(?:[-_ ]?r)?|medium|middle|shorter", OutputFormat::HUMAN},
+			{"human(?:[-_ ]readable)?[-_ ](?:short|small)|(?:short|small)[-_ ]human(?:[-_ ]readable)?|h[-_ ]?(?:r[-_ ]?)?s|s[-_ ]?h(?:[-_ ]?r)?|short|small|tiny|minimal", OutputFormat::HUMAN_SHORT},
 			{"verilog", OutputFormat::VERILOG},
 			{"vhdl", OutputFormat::VHDL},
 			{"cpp|c\\+\\+|cc|hpp|h\\+\\+|hh", OutputFormat::CPP},
-			{"math(?:ematic(?:s|al)?)?(?:[-_]formal|formal[-_]math(?:ematic(?:s|al)?)?)?|m(?:[-_]?f)?|f[-_]?m", OutputFormat::MATH_FORMAL},
-			{"math(?:ematic(?:s|al)?)?[-_]prog(?:ram(?:ing)?)?|prog(?:ram(?:ming)?)?[-_]math(?:ematic(?:s|al)?)?|m[-_]?p|p[-_]?m", OutputFormat::MATH_PROG},
-			{"math(?:ematic(?:s|al)?)?[-_]ascii|ascii[-_]math(?:ematic(?:s|al)?)?|m[-_]?a|a[-_]?m", OutputFormat::MATH_ASCII},
-			{"math(?:ematic(?:s|al)?)?[-_](?:names?|words?|text)|(?:names?|words?|text)[-_]math(?:ematic(?:s|al)?)?|m[-_]?[nwt]|[nwt][-_]?m", OutputFormat::MATH_NAMES},
+			{"math(?:ematic(?:s|al)?)?(?:[-_ ]formal|formal[-_ ]math(?:ematic(?:s|al)?)?)?|m(?:[-_ ]?f)?|f[-_ ]?m", OutputFormat::MATH_FORMAL},
+			{"math(?:ematic(?:s|al)?)?[-_ ]prog(?:ram(?:ing)?)?|prog(?:ram(?:ming)?)?[-_ ]math(?:ematic(?:s|al)?)?|m[-_ ]?p|p[-_ ]?m", OutputFormat::MATH_PROG},
+			{"math(?:ematic(?:s|al)?)?[-_ ]ascii|ascii[-_ ]math(?:ematic(?:s|al)?)?|m[-_ ]?a|a[-_ ]?m", OutputFormat::MATH_ASCII},
+			{"math(?:ematic(?:s|al)?)?[-_ ](?:names?|words?|text)|(?:names?|words?|text)[-_ ]math(?:ematic(?:s|al)?)?|m[-_ ]?[nwt]|[nwt][-_ ]?m", OutputFormat::MATH_NAMES},
 		});
-	Text name({"name", "module-name", "class-name"}, 'n');
+	OptionalText name("name", "(?:(?:module|class)[-_ ])?name", 'n');
+	
+	Mapped<PrimeImplicantsHeuristic, PrimeImplicantsHeuristic::AUTO> primeImplicantsHeuristic("i-heuristic", "(?:p(?:rime)?[-_ ])?i(?:mpl(?:ic(?:ant)?)?)?[-_ ]h(?:eur(?:is(?:tic)?)?)?|p?ih", 'i', {
+			{"brute(?:[-_ ]force)?|bf|slow", PrimeImplicantsHeuristic::BRUTE_FORCE},
+			{"auto|default", PrimeImplicantsHeuristic::AUTO},
+			{"greedy?|fast", PrimeImplicantsHeuristic::GREEDY},
+		});
+	Number<std::int_fast8_t> greedyImplicantAdjustments("greedy-i-retries", "(?:g(?:reedy?)?(?:(?:[-_ ]p(?:rime)?)?[-_ ]i(?:mpl(?:ic(?:ant)?)?)?)?|(?:(?:p(?:rime)?[-_ ])?i(?:mpl(?:ic(?:ant)?)?)?|g(?:reedy?)?)[-_ ]h(?:eur(?:is(?:t(?:ics?)?)?)?)?)[-_ ](?:(?:(?:re)?tr(?:y(?:[-_ ]count)?|ies)|(?:refine|redo|attempt|adjustment|repeat)(?:s|[-_ ]count)?|(?:pass|fix)(?:es|[-_ ]count)?)|(?:strengths?|counts?|[prtafsc]))|(?:gp?i|(?:g|p?i)?h)[prtafsc]", 'g', -1, 32, -1);
 	
 	std::vector<std::string_view> freeArgs;
 	
@@ -148,13 +164,17 @@ namespace options
 		
 		class Parser
 		{
-			static Option *const allOptions[];
+			static const std::vector<Option*> allOptions;
+			static bool allOptionsRegexReady;
+			static std::regex allOptionsRegex;
 			
 			const int argc;
 			const char *const *const argv;
-			int i;
+			int currentIndex;
 			
 			Parser(const int argc, const char *const *const argv) : argc(argc), argv(argv) {}
+			
+			void prepareAllOptionsRegex();
 			
 			[[nodiscard]] bool parseShortOption(const char *&shortName, Option &option);
 			[[nodiscard]] bool parseShortOption(const char *&shortName);
@@ -168,7 +188,28 @@ namespace options
 			[[nodiscard]] static bool parse(const int argc, const char *const *const argv) { return Parser(argc, argv).parse(); }
 		};
 		
-		Option *const Parser::allOptions[] = {&help, &version, &prompt, &prompt.getNegatedOption(), &status, &status.getNegatedOption(), &skipOptimization, &outputFormat, &name};
+		const std::vector<Option*> Parser::allOptions = {&help, &version, &prompt, &prompt.getNegatedOption(), &status, &status.getNegatedOption(), &skipOptimization, &outputFormat, &name, &primeImplicantsHeuristic, &greedyImplicantAdjustments};
+		bool Parser::allOptionsRegexReady = false;
+		std::regex Parser::allOptionsRegex;
+		
+		void Parser::prepareAllOptionsRegex()
+		{
+			if (!allOptionsRegexReady) [[unlikely]]
+			{
+				std::string pattern;
+				bool first = true;
+				for (const Option *const option : allOptions)
+				{
+					if (first) [[unlikely]]
+						first = false;
+					else
+						pattern += '|';
+					pattern += '(' + std::string(option->getLongNamesRegex()) + ')';
+				}
+				allOptionsRegex = std::regex(pattern, std::regex_constants::icase);
+				allOptionsRegexReady = true;
+			}
+		}
 		
 		bool Parser::parseShortOption(const char *&shortName, Option &option)
 		{
@@ -176,25 +217,25 @@ namespace options
 			{
 				if (*(shortName + 1) != '\0')
 				{
-					if (!option.parse(++shortName))
+					if (!option.parse(++shortName)) [[unlikely]]
 						return false;
 					for (++shortName; *shortName != '\0'; ++shortName) {}
 					--shortName;
 				}
-				else if (++i != argc)
+				else if (++currentIndex != argc)
 				{
-					if (!option.parse(argv[i]))
+					if (!option.parse(argv[currentIndex])) [[unlikely]]
 						return false;
 				}
-				else
+				else [[unlikely]]
 				{
-					std::cerr << "The option \"" << option.getLongNames().front() << "\" requires an argument!\n";
+					std::cerr << "The option \"" << option.getMainLongName() << "\" requires an argument!\n";
 					return false;
 				}
 			}
 			else
 			{
-				if (!option.parse(""))
+				if (!option.parse("")) [[unlikely]]
 					return false;
 			}
 			return true;
@@ -205,14 +246,15 @@ namespace options
 			for (Option *const option : allOptions)
 				if (option->getShortName() == *shortName)
 					return parseShortOption(shortName, *option);
+			[[unlikely]]
 			std::cerr << "Unknown option \"-" << *shortName << "\"!\n";
 			return false;
 		}
 		
 		bool Parser::parseShortOptions()
 		{
-			for (const char *shortName = argv[i] + 1; *shortName != '\0'; ++shortName)
-				if (!parseShortOption(shortName))
+			for (const char *shortName = argv[currentIndex] + 1; *shortName != '\0'; ++shortName)
+				if (!parseShortOption(shortName)) [[unlikely]]
 					return false;
 			return true;
 		}
@@ -221,68 +263,77 @@ namespace options
 		{
 			if (option.needsArgument() && argument.empty())
 			{
-				if (++i == argc)
+				if (++currentIndex == argc) [[unlikely]]
 				{
-					std::cerr << "The option \"" << option.getLongNames().front() << "\" requires an argument!\n";
+					std::cerr << "The option \"" << option.getMainLongName() << "\" requires an argument!\n";
 					return false;
 				}
-				argument = argv[i];
+				argument = argv[currentIndex];
 			}
-			if (!option.parse(argument))
+			if (!option.parse(argument)) [[unlikely]]
 				return false;
 			return true;
 		}
 		
 		bool Parser::parseLongOption()
 		{
-			std::string_view longName = argv[i] + 2, argument = "";
+			std::string_view longName = argv[currentIndex] + 2, argument = "";
 			if (const std::string_view::size_type pos = longName.find('='); pos != std::string_view::npos)
 			{
 				argument = longName.substr(pos + 1);
 				longName = longName.substr(0, pos);
 			}
-			for (Option *const option : allOptions)
-				if (std::find(option->getLongNames().cbegin(), option->getLongNames().cend(), longName) != option->getLongNames().cend())
-					return parseLongOption(argument, *option);
-			std::cerr << "Unknown option \"--" << longName << "\"!\n";
+			prepareAllOptionsRegex();
+			std::cmatch match;
+			if (!std::regex_match(&*longName.begin(), &*longName.end(), match, allOptionsRegex)) [[unlikely]]
+			{
+				std::cerr << "Unknown option \"--" << longName << "\"!\n";
+				return false;
+			}
+			for (std::size_t i = 0; i != allOptions.size(); ++i)
+				if (match[i + 1].length() != 0)
+					return parseLongOption(argument, *allOptions[i]);
+			// This should be unreachable in practice. (At least as long as the subordinate regexes don't have capturing groups.)
+			[[unlikely]]
+			std::cerr << "Critical failure of the options parsing code!\n";
 			return false;
 		}
 		
 		void Parser::putRemainingtoFreeOptions()
 		{
-			for (; i != argc; ++i)
-				freeArgs.emplace_back(argv[i]);
+			for (; currentIndex != argc; ++currentIndex)
+				freeArgs.emplace_back(argv[currentIndex]);
 		}
 		
 		bool Parser::parse()
 		{
-			for (i = 1; i != argc; ++i)
+			for (currentIndex = 1; currentIndex != argc; ++currentIndex)
 			{
-				if (argv[i][0] != '-')
+				if (argv[currentIndex][0] != '-')
 				{
-					freeArgs.emplace_back(argv[i]);
+					freeArgs.emplace_back(argv[currentIndex]);
 				}
 				else
 				{
-					if (argv[i][1] == '\0')
+					if (argv[currentIndex][1] == '\0')
 					{
-						freeArgs.emplace_back(argv[i]);
+						freeArgs.emplace_back(argv[currentIndex]);
 					}
-					else if (argv[i][1] != '-')
+					else if (argv[currentIndex][1] != '-')
 					{
-						if (!parseShortOptions())
+						if (!parseShortOptions()) [[unlikely]]
 							return false;
 					}
 					else
 					{
-						if (argv[i][2] == '\0')
+						if (argv[currentIndex][2] == '\0')
 						{
-							++i;
+							++currentIndex;
 							break;
 						}
 						else
 						{
-							if (!parseLongOption())
+							if (!parseLongOption()) [[unlikely]]
 								return false;
 						}
 					}

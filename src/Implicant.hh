@@ -9,6 +9,7 @@
 
 #include "global.hh"
 #include "Minterm.hh"
+#include "Minterms.hh"
 
 
 class Implicant
@@ -16,48 +17,48 @@ class Implicant
 public:
 	using mask_t = std::uint32_t;
 	static_assert(sizeof(mask_t) * CHAR_BIT >= ::maxBits);
-	using minterms_t = std::vector<Minterm>;
 	using splitBits_t = std::vector<std::pair<bits_t, bool>>;
 	
-	static constexpr Implicant all() { return {0, 0, 0}; }
-	static constexpr Implicant error() { return {~mask_t(0), ~mask_t(0), 0}; }
+	static constexpr Implicant all() { return {0, 0}; }
+	static constexpr Implicant none() { return {~mask_t(0), 0}; }
 	
 private:
-	mask_t trueBits, falseBits;
-	bits_t bitCount;
-	
-	explicit Implicant(const mask_t trueBits, const mask_t falseBits) : trueBits(trueBits), falseBits(falseBits) { recalculateBits(); }
-	constexpr Implicant(const mask_t trueBits, const mask_t falseBits, const bits_t bitCount) : trueBits(trueBits), falseBits(falseBits), bitCount(bitCount) {}
-	
-	void recalculateBits() { bitCount = static_cast<bits_t>(std::bitset<32>(trueBits | falseBits).count()); }
+	mask_t bits, mask;
 	
 public:
-	explicit Implicant(const Minterm minterm) : trueBits(minterm), falseBits(minterm ^ maxMinterm), bitCount(::bits) {}
-	Implicant(const Implicant &) = default;
-	Implicant& operator=(const Implicant &) = default;
+	constexpr Implicant(const mask_t bits, const mask_t mask) : bits(bits), mask(mask) {}
+	explicit Implicant(const Minterm minterm) : bits(minterm), mask(maxMinterm) {}
+	constexpr Implicant(const Implicant &) = default;
+	constexpr Implicant& operator=(const Implicant &) = default;
 	
-	constexpr bool operator==(const Implicant &other) const { return this->trueBits == other.trueBits && this->falseBits == other.falseBits && this->bitCount == other.bitCount; }
-	constexpr bool operator!=(const Implicant &other) const { return !operator==(other); }
-	bool operator<(const Implicant &other) const;
-	constexpr bool covers(const Minterm minterm) const { return (trueBits & minterm) == trueBits && (falseBits & ~minterm) == falseBits; }
+	constexpr bool operator==(const Implicant &other) const = default;
+	constexpr bool operator!=(const Implicant &other) const = default;
+	inline bool operator<(const Implicant &other) const;
+	bool humanLess(const Implicant &other) const;
+	constexpr bool covers(const Minterm minterm) const { return (minterm & mask) == bits; }
 	
-	Implicant& operator&=(const Implicant &other) { this->trueBits &= other.trueBits; this->falseBits &= other.falseBits; recalculateBits(); if (bitCount == 0) *this = error(); return *this; }
-	Implicant operator&(const Implicant &other) const { Implicant copy = *this; copy &= other; return copy; }
-	Implicant& operator|=(const Implicant &other) { this->trueBits |= other.trueBits; this->falseBits |= other.falseBits; recalculateBits(); return *this; }
-	Implicant operator|(const Implicant &other) const { Implicant copy = *this; copy |= other; return copy; }
-	Implicant& operator-=(const Implicant &other) { this->trueBits &= ~other.trueBits; this->falseBits &= ~other.falseBits; recalculateBits(); return *this; }
-	Implicant operator-(const Implicant &other) const { Implicant copy = *this; copy -= other; return copy; }
-	Implicant& setBit(const bits_t bit, const bool negated) { const mask_t mask = 1 << (::bits - bit - 1); if (negated) falseBits |= mask; else trueBits |= mask; ++bitCount; return *this; }
-	
-	constexpr bool isError() const { return falseBits != 0 && bitCount == 0; }
-	constexpr mask_t getTrueBits() const { return isError() ? 0 : trueBits; }
-	constexpr mask_t getFalseBits() const { return isError() ? 0 : falseBits; }
-	constexpr bits_t getBitCount() const { return bitCount; }
+	constexpr bool isEmpty() const { return mask == 0; }
+	constexpr bool isEmptyTrue() const { return bits == 0; }
+	constexpr mask_t getBits() const { return bits; }
+	constexpr mask_t getMask() const { return mask; }
+	constexpr mask_t getTrueBits() const { return bits & mask; }
+	constexpr mask_t getFalseBits() const { return ~bits & mask; }
+	bits_t getBitCount() const { return static_cast<bits_t>(std::bitset<::maxBits>(mask).count()); } // constexpr since C++23
 	splitBits_t splitBits() const;
-	minterms_t findMinterms() const;
 	
-	static bool areMergeable(const Implicant &x, const Implicant &y);
-	static Implicant merge(const Implicant &x, const Implicant &y);
+	void add(const Implicant &other) { this->bits |= other.bits; this->mask |= other.mask; }
+	void substract(const Implicant &other) { this->bits &= ~other.bits; this->mask &= ~other.mask; }
+	void setBit(const bits_t bit, const bool value) { const mask_t bitMask = 1 << (::bits - bit - 1); if (value) bits |= bitMask; mask |= bitMask; }
+	void unsetBit(const bits_t bit) { const mask_t bitMask = ~(1 << (::bits - bit - 1)); bits &= bitMask; mask &= bitMask; }
+	void applyMask(const mask_t maskToApply) { bits &= maskToApply; mask &= maskToApply; }
+	
+	bool isAnyInMinterms(const Minterms &minterms) const;
+	bool areAllInMinterms(const Minterms &minterms) const;
+	void addToMinterms(Minterms &minterms) const;
+	void removeFromMinterms(Minterms &minterms) const;
+	
+	static inline Implicant findBiggestInUnion(const Implicant &x, const Implicant &y);
+	bool contains(const Implicant &other) const { return (this->mask & other.mask) == this->mask && (this->mask & other.bits) == this->bits; }
 	
 	void printHuman(std::ostream &o, const bool parentheses) const;
 	void printVerilog(std::ostream &o, const bool parentheses) const;
@@ -65,3 +66,21 @@ public:
 	void printCpp(std::ostream &o, const bool parentheses) const;
 	void printMath(std::ostream &o, const bool parentheses) const;
 };
+
+bool Implicant::operator<(const Implicant &other) const
+{
+	static_assert(::maxBits == 32);
+	using comp_t = std::uint_fast64_t;
+	const comp_t x = (static_cast<comp_t>(this->mask) << 32) | this->bits;
+	const comp_t y = (static_cast<comp_t>(other.mask) << 32) | other.bits;
+	return x < y;
+}
+
+Implicant Implicant::findBiggestInUnion(const Implicant &x, const Implicant &y)
+{
+	const mask_t conflicts = (x.bits ^ y.bits) & (x.mask & y.mask);
+	const bits_t conflictCount = static_cast<bits_t>(std::bitset<::maxBits>(conflicts).count());
+	return conflictCount == 1  // Implicants are "touching". ("1" means touching; "0" means intersecting.)
+		? Implicant((x.bits | y.bits) & ~conflicts, (x.mask | y.mask) & ~conflicts)
+		: none();
+}

@@ -627,7 +627,7 @@ OptimizedSolutions::normalizedSolution_t OptimizedSolutions::normalizeSolution(c
 	if (rootProductIds.size() == 1)
 	{
 		const product_t &product = getProduct(rootProductIds.front());
-		if (product.first.getBitCount() == 0 && product.second.empty())
+		if (product.first.isEmpty() && product.second.empty())
 		{
 			normalizedSolution.insert(product.first);
 			return normalizedSolution;
@@ -640,9 +640,9 @@ OptimizedSolutions::normalizedSolution_t OptimizedSolutions::normalizeSolution(c
 		while (!idsToProcess.empty())
 		{
 			const product_t &product = getProduct(idsToProcess.back());
-			assert(product.first.getBitCount() != 0 || (product.first == Implicant::all() && !product.second.empty()));
+			assert(!product.first.isEmpty() || (product.first == Implicant::all() && !product.second.empty()));
 			idsToProcess.pop_back();
-			resultingProduct |= product.first;
+			resultingProduct.add(product.first);
 			idsToProcess.insert(idsToProcess.end(), product.second.cbegin(), product.second.cend());
 		}
 		normalizedSolution.insert(std::move(resultingProduct));
@@ -654,12 +654,12 @@ void OptimizedSolutions::validate(const solutions_t &solutions, Progress &progre
 {
 	assert(solutions.size() == finalSums.size());
 	
-	const auto subtaskGuard = progress.enterSubtask("validating");
+	const auto infoGuard = progress.addInfo("validating");
 	progress.step();
-	auto substeps = progress.makeCountingSubsteps(solutions.size());
+	auto progressStep = progress.makeCountingStepHelper(solutions.size());
 	for (std::size_t i = 0; i != solutions.size(); ++i)
 	{
-		substeps.substep();
+		progressStep.substep();
 		const normalizedSolution_t expectedSolution(solutions[i]->cbegin(), solutions[i]->cend());
 		const normalizedSolution_t actualSolution = normalizeSolution(finalSums[i]);
 		assert(actualSolution == expectedSolution);
