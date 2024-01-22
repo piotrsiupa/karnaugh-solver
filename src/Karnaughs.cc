@@ -148,12 +148,12 @@ bool Karnaughs::loadData(Input &input)
 	return true;
 }
 
-Karnaughs::solutionses_t Karnaughs::makeSolutionses() const
+Karnaughs::solutionses_t Karnaughs::makeSolutionses() &&
 {
 	solutionses_t solutionses;
 	solutionses.reserve(karnaughs.size());
-	for (const Karnaugh &karnaugh : karnaughs)
-		solutionses.emplace_back(karnaugh.solve());
+	for (Karnaugh &karnaugh : karnaughs)
+		solutionses.emplace_back(std::move(karnaugh).solve());
 	return solutionses;
 }
 
@@ -246,9 +246,9 @@ void Karnaughs::findBestSolutions(const solutionses_t &solutionses)
 		findBestOptimizedSolutions(solutionses);
 }	
 
-void Karnaughs::solve()
+void Karnaughs::solve() &&
 {
-	const std::vector<solutions_t> solutionses = makeSolutionses();
+	const std::vector<solutions_t> solutionses = std::move(*this).makeSolutionses();
 	findBestSolutions(solutionses);
 }
 

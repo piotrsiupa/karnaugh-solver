@@ -251,7 +251,7 @@ bool Karnaugh::loadData(Input &input)
 	return true;
 }
 
-Karnaugh::solutions_t Karnaugh::solve() const
+Karnaugh::solutions_t Karnaugh::solve() &&
 {
 #ifdef NDEBUG
 	const bool mintermsWillBeNeededLater = isTableSmallEnoughToPrint();

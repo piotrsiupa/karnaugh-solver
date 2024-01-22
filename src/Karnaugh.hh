@@ -63,7 +63,7 @@ public:
 	const std::string& getFunctionName() const { return functionName; }
 	
 	bool loadData(Input &input);
-	solutions_t solve() const;
+	solutions_t solve() &&;  // This function is `&&` as a reminder the it removes some data in the process (to save memory) and because of that it cannot be called twice.
 	
 	void printHumanSolution(const Implicants &solution) const;
 	void printVerilogSolution(const Implicants &solution) const;

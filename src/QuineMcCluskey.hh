@@ -44,5 +44,5 @@ private:
 public:
 	QuineMcCluskey(const std::string &functionName, std::shared_ptr<const Minterms> allowedMinterms, std::shared_ptr<const Minterms> targetMinterms) : functionName(functionName), allowedMinterms(std::move(allowedMinterms)), targetMinterms(std::move(targetMinterms)) { if (bitMasks.empty()) makeBitMasks(); }
 	
-	solutions_t solve() &&;
+	solutions_t solve() &&;  // This function is `&&` as a reminder the it removes some data in the process (to save memory) and because of that it cannot be called twice.
 };
