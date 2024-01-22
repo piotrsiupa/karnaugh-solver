@@ -164,8 +164,8 @@ Implicants QuineMcCluskey::createPrimeImplicantsWithoutHeuristic(Progress &progr
 		for (const Minterm &bitMask : bitMasks)
 		{
 			step.substep();
-			const Minterm mask = ~bitMask;
 			static_assert(::maxBits == 32);
+			const std::uint_fast64_t mask = ~static_cast<std::uint64_t>(bitMask);
 			const auto makeComparisonValue = [mask](const Implicant &implicant){ return ((static_cast<std::uint_fast64_t>(implicant.getMask()) << 32) | static_cast<std::uint_fast64_t>(implicant.getBits())) & static_cast<std::uint_fast64_t>(mask); };
 			std::sort(implicants.begin(), implicants.end(), [makeComparisonValue](const std::pair<Implicant, bool> &x, const std::pair<Implicant, bool> &y){
 					return makeComparisonValue(x.first) < makeComparisonValue(y.first);
