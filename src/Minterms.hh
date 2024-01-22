@@ -26,8 +26,8 @@ public:
 		ConstIterator(const Minterms &minterms, const std::uint_fast64_t i) : minterms(minterms), i(i) {}
 		friend class Minterms;
 	public:
-		[[nodiscard]] bool operator==(const ConstIterator &other) { return this->i == other.i; }
-		[[nodiscard]] bool operator!=(const ConstIterator &other) { return this->i != other.i; }
+		[[nodiscard]] bool operator==(const ConstIterator &other) const { return this->i == other.i; }
+		[[nodiscard]] bool operator!=(const ConstIterator &other) const { return this->i != other.i; }
 		ConstIterator& operator++() { for (++i; i != minterms.bitset.size() && !minterms.bitset[i]; ++i) {} return *this; }
 		ConstIterator& operator--() { for (--i; i != 0 && !minterms.bitset[i]; --i) {} return *this; }
 		[[nodiscard]] Minterm operator*() const { return i; }
