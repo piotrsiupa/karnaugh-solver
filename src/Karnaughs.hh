@@ -11,6 +11,7 @@
 #include "OptimizedSolutions.hh"
 
 
+// This could be split into 2 classes (`Karnaughs` and `Solutions`) so `&&` functions make more sense but it is coupled enough for me to not bother.
 class Karnaughs
 {
 	using karnaughs_t = std::vector<Karnaugh>;
