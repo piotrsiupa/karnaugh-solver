@@ -107,12 +107,13 @@ namespace options
 	template<typename T>
 	bool Number<T>::parse(const std::string_view argument)
 	{
-		const auto [endOfNumber, errorCode] = std::from_chars(argument.cbegin(), argument.cend(), value);
-		if (endOfNumber == argument.cend() && errorCode == std::errc() && value >= min && value <= max) [[likely]]
+		const char *const rawBegin = argument.data(), *const rawEnd = rawBegin + argument.size();
+		const auto [endOfNumber, errorCode] = std::from_chars(rawBegin, rawEnd, value);
+		if (endOfNumber == rawEnd && errorCode == std::errc() && value >= min && value <= max) [[likely]]
 			return true;
-		if (endOfNumber != argument.cend())
+		if (endOfNumber != rawEnd)
 		{
-			std::cerr << '\"' << argument << "\" is not a number (starting at character " << (endOfNumber - argument.cbegin() + 1) << ")!\n";
+			std::cerr << '\"' << argument << "\" is not a number (starting at character " << (endOfNumber - rawBegin + 1) << ")!\n";
 		}
 		else
 		{
@@ -169,7 +170,7 @@ namespace options
 			
 			const int argc;
 			const char *const *const argv;
-			int i;
+			int currentIndex;
 			
 			Parser(const int argc, const char *const *const argv) : argc(argc), argv(argv) {}
 			
@@ -221,9 +222,9 @@ namespace options
 					for (++shortName; *shortName != '\0'; ++shortName) {}
 					--shortName;
 				}
-				else if (++i != argc)
+				else if (++currentIndex != argc)
 				{
-					if (!option.parse(argv[i])) [[unlikely]]
+					if (!option.parse(argv[currentIndex])) [[unlikely]]
 						return false;
 				}
 				else [[unlikely]]
@@ -252,7 +253,7 @@ namespace options
 		
 		bool Parser::parseShortOptions()
 		{
-			for (const char *shortName = argv[i] + 1; *shortName != '\0'; ++shortName)
+			for (const char *shortName = argv[currentIndex] + 1; *shortName != '\0'; ++shortName)
 				if (!parseShortOption(shortName)) [[unlikely]]
 					return false;
 			return true;
@@ -262,12 +263,12 @@ namespace options
 		{
 			if (option.needsArgument() && argument.empty())
 			{
-				if (++i == argc) [[unlikely]]
+				if (++currentIndex == argc) [[unlikely]]
 				{
 					std::cerr << "The option \"" << option.getMainLongName() << "\" requires an argument!\n";
 					return false;
 				}
-				argument = argv[i];
+				argument = argv[currentIndex];
 			}
 			if (!option.parse(argument)) [[unlikely]]
 				return false;
@@ -276,7 +277,7 @@ namespace options
 		
 		bool Parser::parseLongOption()
 		{
-			std::string_view longName = argv[i] + 2, argument = "";
+			std::string_view longName = argv[currentIndex] + 2, argument = "";
 			if (const std::string_view::size_type pos = longName.find('='); pos != std::string_view::npos)
 			{
 				argument = longName.substr(pos + 1);
@@ -300,34 +301,34 @@ namespace options
 		
 		void Parser::putRemainingtoFreeOptions()
 		{
-			for (; i != argc; ++i)
-				freeArgs.emplace_back(argv[i]);
+			for (; currentIndex != argc; ++currentIndex)
+				freeArgs.emplace_back(argv[currentIndex]);
 		}
 		
 		bool Parser::parse()
 		{
-			for (i = 1; i != argc; ++i)
+			for (currentIndex = 1; currentIndex != argc; ++currentIndex)
 			{
-				if (argv[i][0] != '-')
+				if (argv[currentIndex][0] != '-')
 				{
-					freeArgs.emplace_back(argv[i]);
+					freeArgs.emplace_back(argv[currentIndex]);
 				}
 				else
 				{
-					if (argv[i][1] == '\0')
+					if (argv[currentIndex][1] == '\0')
 					{
-						freeArgs.emplace_back(argv[i]);
+						freeArgs.emplace_back(argv[currentIndex]);
 					}
-					else if (argv[i][1] != '-')
+					else if (argv[currentIndex][1] != '-')
 					{
 						if (!parseShortOptions()) [[unlikely]]
 							return false;
 					}
 					else
 					{
-						if (argv[i][2] == '\0')
+						if (argv[currentIndex][2] == '\0')
 						{
-							++i;
+							++currentIndex;
 							break;
 						}
 						else

@@ -91,7 +91,7 @@ Implicants QuineMcCluskey::createImplicantsWithHeuristic(Progress &progress) con
 	
 	const auto infoGuard = progress.addInfo("Creating implicants with a heuristic");
 	progress.step();
-	auto progressStep = progress.makeCountingStepHelper(static_cast<std::uint_fast64_t>(::maxMinterm) + 1);
+	auto progressStep = progress.makeCountingStepHelper<Minterm>(::maxMinterm + 1);
 	
 	Minterms neededMinterms = *targetMinterms;
 	Implicants implicants;

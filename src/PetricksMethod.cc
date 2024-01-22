@@ -36,7 +36,7 @@ Implicants PetricksMethod<INDEX_T>::extractEssentials(const std::string &functio
 	const std::string progressName = "Extracting essentials of \"" + functionName + '"';
 	Progress progress(Progress::Stage::SOLVING, progressName.c_str(), 1);
 	progress.step();
-	auto progressStep = progress.makeCountingStepHelper(static_cast<Progress::completion_t>(minterms->getSize()));
+	auto progressStep = progress.makeCountingStepHelper(minterms->getSize());
 	
 	Implicants essentials;
 	for (const Minterm minterm : *minterms)
@@ -64,7 +64,7 @@ typename PetricksMethod<INDEX_T>::productOfSumsOfProducts_t PetricksMethod<INDEX
 	const std::string progressName = "Creating initial solution space for \"" + functionName + '"';
 	Progress progress(Progress::Stage::SOLVING, progressName.c_str(), 1);
 	progress.step();
-	auto progressStep = progress.makeCountingStepHelper(static_cast<Progress::completion_t>(minterms->getSize()));
+	auto progressStep = progress.makeCountingStepHelper(minterms->getSize());
 	productOfSumsOfProducts_t productOfSums;
 	for (const Minterm &minterm : *minterms)
 	{
@@ -83,7 +83,7 @@ void PetricksMethod<INDEX_T>::removeRedundantSums(productOfSumsOfProducts_t &pro
 	const std::string progressName = "Cleaning up solution space for \"" + functionName + '"';
 	Progress progress(Progress::Stage::SOLVING, progressName.c_str(), 1);
 	progress.step();
-	auto progressStep = progress.makeCountingStepHelper(static_cast<Progress::completion_t>(productOfSums.size()));
+	auto progressStep = progress.makeCountingStepHelper(productOfSums.size());
 	for (auto x = productOfSums.begin(); x != productOfSums.end(); ++x)
 	{
 		progressStep.substep();

@@ -20,7 +20,7 @@ bool Input::refillBuffer()
 	{
 		istream.read(buffer, 1);
 		if (istream) [[likely]]
-			bufferSize = istream.readsome(buffer + 1, bufferCapacity - 1) + 1;
+			bufferSize = static_cast<std::uint16_t>(istream.readsome(buffer + 1, bufferCapacity - 1)) + 1;
 		else if (istream.eof()) [[likely]]
 			return false;
 		if (!istream) [[unlikely]]

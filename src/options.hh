@@ -132,7 +132,7 @@ namespace options
 		Number(const std::string_view mainLongName, const std::string_view longNamesRegex, const char shortName, const T min, const T max, const T initialValue) : Option(mainLongName, longNamesRegex, shortName), min(min), max(max), value(initialValue) {}
 		
 		[[nodiscard]] bool needsArgument() const final { return true; }
-		[[nodiscard]] bool parse(const std::string_view argument) final;
+		[[nodiscard]] bool parse(std::string_view argument) final;
 		
 		void setValue(const T &newValue) { value = newValue; }
 		void setValue(T &&newValue) { value = std::move(newValue); }

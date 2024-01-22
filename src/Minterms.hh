@@ -30,7 +30,7 @@ public:
 		[[nodiscard]] bool operator!=(const ConstIterator &other) const { return this->i != other.i; }
 		ConstIterator& operator++() { for (++i; i != minterms.bitset.size() && !minterms.bitset[i]; ++i) {} return *this; }
 		ConstIterator& operator--() { for (--i; i != 0 && !minterms.bitset[i]; --i) {} return *this; }
-		[[nodiscard]] Minterm operator*() const { return i; }
+		[[nodiscard]] Minterm operator*() const { return static_cast<Minterm>(i); }
 	};
 	
 	Minterms() : bitset(static_cast<std::uint_fast64_t>(::maxMinterm) + 1, false) {}
