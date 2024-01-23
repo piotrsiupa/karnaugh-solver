@@ -17,7 +17,7 @@ class Minterms
 	std::size_t size = 0;
 	
 public:
-	using duplicates_t = std::vector<Minterm>;
+	using overlapping_t = std::vector<Minterm>;
 	
 	class ConstIterator
 	{
@@ -28,8 +28,8 @@ public:
 	public:
 		[[nodiscard]] bool operator==(const ConstIterator &other) const { return this->i == other.i; }
 		[[nodiscard]] bool operator!=(const ConstIterator &other) const { return this->i != other.i; }
-		ConstIterator& operator++() { for (++i; i != minterms.bitset.size() && !minterms.bitset[i]; ++i) {} return *this; }
-		ConstIterator& operator--() { for (--i; i != 0 && !minterms.bitset[i]; --i) {} return *this; }
+		inline ConstIterator& operator++();
+		inline ConstIterator& operator--();
 		[[nodiscard]] Minterm operator*() const { return static_cast<Minterm>(i); }
 	};
 	
@@ -41,13 +41,14 @@ public:
 	[[nodiscard]] bool isEmpty() const { return size == 0; }
 	[[nodiscard]] bool isFull() const { return size - 1 == ::maxMinterm; }
 	[[nodiscard]] std::size_t getSize() const { return size; }
+	[[nodiscard]] std::size_t getCapacity() const { return bitset.size(); }
 	[[nodiscard]] bool check(const Minterm minterm) const { return bitset[minterm]; }
-	duplicates_t findDuplicates(const Minterms &other) const { duplicates_t duplicates; std::set_intersection(this->cbegin(), this->cend(), other.cbegin(), other.cend(), std::back_inserter(duplicates)); return duplicates; }
-	bool add(const Minterm minterm) { const bool previous = check(minterm); if (!previous) { bitset[minterm] = true; ++size; } return !previous; }
-	void add(const Minterms &other, const std::size_t duplicateCount) { std::transform(other.bitset.begin(), other.bitset.end(), this->bitset.begin(), this->bitset.begin(), std::logical_or<bool>()); this->size += other.size - duplicateCount; }
-	bool remove(const Minterm minterm) { const bool previous = check(minterm); if (previous) { bitset[minterm] = false; --size; } return previous; }
+	[[nodiscard]] inline overlapping_t findOverlapping(const Minterms &other) const;  // Optimized for when there is little to none of them.
+	inline bool add(const Minterm minterm);
+	inline void add(const Minterms &other, const std::size_t overlappingCount);
+	inline bool remove(const Minterm minterm);
 	
-	[[nodiscard]] ConstIterator begin() const { ConstIterator iter{*this, 0}; if (!bitset.empty() && !bitset[0]) ++iter; return iter; }
+	[[nodiscard]] inline ConstIterator begin() const;
 	[[nodiscard]] ConstIterator end() const { return {*this, bitset.size()}; }
 	[[nodiscard]] ConstIterator cbegin() const { return begin(); }
 	[[nodiscard]] ConstIterator cend() const { return end(); }
@@ -56,3 +57,65 @@ public:
 	void validate() const;
 #endif
 };
+
+
+Minterms::ConstIterator& Minterms::ConstIterator::operator++()
+{
+	for (++i; i != minterms.bitset.size() && !minterms.bitset[i]; ++i) { }
+	return *this;
+}
+
+Minterms::ConstIterator& Minterms::ConstIterator::operator--()
+{
+	for (--i; i != 0 && !minterms.bitset[i]; --i) { }
+	return *this;
+}
+
+Minterms::overlapping_t Minterms::findOverlapping(const Minterms &other) const
+{
+	overlapping_t overlapping;
+	std::set_intersection(
+			this->cbegin(), this->cend(),
+			other.cbegin(), other.cend(),
+			std::back_inserter(overlapping));
+	return overlapping;
+}
+
+bool Minterms::add(const Minterm minterm)
+{
+	const bool previous = check(minterm);
+	if (!previous)
+	{
+		bitset[minterm] = true;
+		++size;
+	}
+	return !previous;
+}
+
+void Minterms::add(const Minterms &other, const std::size_t overlappingCount)
+{
+	std::transform(
+			other.bitset.begin(), other.bitset.end(),
+			this->bitset.begin(), this->bitset.begin(),
+			std::logical_or<bool>());
+	this->size += other.size - overlappingCount;
+}
+
+bool Minterms::remove(const Minterm minterm)
+{
+	const bool previous = check(minterm);
+	if (previous)
+	{
+		bitset[minterm] = false;
+		--size;
+	}
+	return previous;
+}
+
+Minterms::ConstIterator Minterms::begin() const
+{
+	ConstIterator iter{*this, 0};
+	if (!bitset.empty() && !bitset[0])
+		++iter;
+	return iter;
+}

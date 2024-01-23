@@ -232,7 +232,7 @@ bool Karnaugh::loadData(Input &input)
 		const auto infoGuard = progress.addInfo("listing possible minterms");
 		progress.step(true);
 		progress.substep([](){ return -0.0; }, true);
-		const duplicates_t duplicates = allowedMinterms->findDuplicates(*targetMinterms);
+		const duplicates_t duplicates = allowedMinterms->findOverlapping(*targetMinterms);
 		if (!duplicates.empty())
 		{
 			Progress::CerrGuard cerr = Progress::cerr();
