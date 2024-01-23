@@ -210,7 +210,7 @@ typename PetricksMethod<INDEX_T>::sumOfProducts_t PetricksMethod<INDEX_T>::findS
 }
 
 template<typename INDEX_T>
-typename PetricksMethod<INDEX_T>::solutions_t PetricksMethod<INDEX_T>::solve(const std::string &functionName)
+typename PetricksMethod<INDEX_T>::solutions_t PetricksMethod<INDEX_T>::solve(const std::string &functionName) &&
 {
 	Implicants essentials = extractEssentials(functionName);
 	sumOfProducts_t sumOfProducts = findSumOfProducts(functionName);
