@@ -8,7 +8,6 @@
 
 #include "global.hh"
 #include "Minterm.hh"
-#include "options.hh"
 
 
 class Minterms
