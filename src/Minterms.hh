@@ -16,6 +16,8 @@ class Minterms
 	std::vector<bool> bitset;
 	std::size_t size = 0;
 	
+	Minterms(std::vector<bool> &&bitset, const std::size_t size) : bitset(std::move(bitset)), size(size) {}
+	
 public:
 	using duplicates_t = std::vector<Minterm>;
 	
@@ -51,6 +53,8 @@ public:
 	[[nodiscard]] ConstIterator end() const { return {*this, bitset.size()}; }
 	[[nodiscard]] ConstIterator cbegin() const { return begin(); }
 	[[nodiscard]] ConstIterator cend() const { return end(); }
+	
+	[[nodiscard]] Minterms operator~() const;
 	
 #ifndef NDEBUG
 	void validate() const;

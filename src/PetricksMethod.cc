@@ -13,45 +13,53 @@
 
 
 template<typename INDEX_T>
-typename PetricksMethod<INDEX_T>::index_t PetricksMethod<INDEX_T>::findEssentialPrimeImplicantIndex(const Minterm minterm)
-{
-	std::uint_fast8_t count = 0;
-	assert(!primeImplicants.empty());
-	index_t index = 0;  // Initialized only to avoid a compiler warning.
-	for (index_t i = 0; i != primeImplicants.size(); ++i)
-	{
-		if (primeImplicants[i].covers(minterm))
-		{
-			if (++count == 2)
-				return NO_INDEX;
-			index = i;
-		}
-	}
-	return count != 0 ? index : NO_INDEX;
-}
-
-template<typename INDEX_T>
 Implicants PetricksMethod<INDEX_T>::extractEssentials(const std::string &functionName)
 {
 	const std::string progressName = "Extracting essentials of \"" + functionName + '"';
 	Progress progress(Progress::Stage::SOLVING, progressName.c_str(), 1);
 	progress.step();
-	auto progressStep = progress.makeCountingStepHelper(minterms->getSize());
+	auto progressStep = progress.makeCountingStepHelper(primeImplicants.size() * 2);
+	
+	Minterms multiple;
+	{
+		Minterms single = ~*minterms;
+		for (const Implicant &implicant : primeImplicants)
+		{
+			progressStep.substep();
+			for (const Minterm minterm : implicant)
+				if (single.check(minterm))
+					multiple.add(minterm);
+				else
+					single.add(minterm);
+		}
+	}
 	
 	Implicants essentials;
-	for (const Minterm minterm : *minterms)
 	{
-		progressStep.substep();
-		const index_t essentialPrimeImplicantIndex = findEssentialPrimeImplicantIndex(minterm);
-		if (essentialPrimeImplicantIndex == NO_INDEX)
-			continue;
-		essentials.emplace_back(std::move(primeImplicants[essentialPrimeImplicantIndex]));
-		primeImplicants.erase(primeImplicants.begin() + essentialPrimeImplicantIndex);
-		const Implicant &primeImplicant = essentials.back();
-		for (const Minterm minterm1 : *minterms)
-			if (primeImplicant.covers(minterm1))
-				minterms->remove(minterm1);
+		auto iter = primeImplicants.begin();
+		for (; iter != primeImplicants.cend(); ++iter)
+		{
+			progressStep.substep();
+			if (!iter->areAllInMinterms(multiple))
+				break;
+		}
+		auto jiter = iter;
+		for (; iter != primeImplicants.cend(); ++iter)
+		{
+			progressStep.substep();
+			if (!iter->areAllInMinterms(multiple))
+			{
+				iter->removeFromMinterms(*minterms);
+				essentials.emplace_back(std::move(*iter));
+				continue;
+			}
+			*(jiter++) = std::move(*iter);
+		}
+		primeImplicants.erase(jiter, primeImplicants.end());
+		primeImplicants.shrink_to_fit();
+		essentials.shrink_to_fit();
 	}
+	
 #ifndef NDEBUG
 	minterms->validate();
 #endif

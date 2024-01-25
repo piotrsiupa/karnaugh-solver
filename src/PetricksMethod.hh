@@ -30,7 +30,6 @@ private:
 	std::optional<Minterms> minterms;
 	Implicants primeImplicants;
 	
-	index_t findEssentialPrimeImplicantIndex(const Minterm minterm);
 	Implicants extractEssentials(const std::string &functionName);
 	productOfSumsOfProducts_t createPreliminaryProductOfSums(const std::string &functionName) const;
 	static void removeRedundantSums(productOfSumsOfProducts_t &productOfSums, const std::string &functionName);

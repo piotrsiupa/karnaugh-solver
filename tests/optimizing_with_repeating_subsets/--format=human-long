@@ -26,13 +26,13 @@ solution:
 
 Negated inputs: <none>
 Products:
-	[0] = g && h
+	[0] = a && b
 	[1] = f && [0]
-	[2] = a && b
+	[2] = g && h
 	[3] = f && [2]
 	[4] = e && [0] && [2]
-	[5] = d && [4]
-	[6] = c && [4]
+	[5] = c && [4]
+	[6] = d && [4]
 Sums:
 	"f0" = [1] || [3] || [5] || [6]
 Gate scores: NOTs = 0, ANDs = 8, ORs = 3
