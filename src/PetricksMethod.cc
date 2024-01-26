@@ -73,7 +73,7 @@ typename PetricksMethod<INDEX_T>::productOfSumsOfProducts_t PetricksMethod<INDEX
 	Progress progress(Progress::Stage::SOLVING, progressName.c_str(), 2, false);
 	
 	progress.step();
-	progress.substep([](){ return -0.0; }, true);
+	progress.substep(-0.0, true);
 	
 	std::vector<Minterm> mintermMap;
 	mintermMap.reserve(minterms->getSize());

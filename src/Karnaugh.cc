@@ -231,7 +231,7 @@ bool Karnaugh::loadData(Input &input)
 	{
 		const auto infoGuard = progress.addInfo("listing possible minterms");
 		progress.step(true);
-		progress.substep([](){ return -0.0; }, true);
+		progress.substep(-0.0, true);
 		const duplicates_t duplicates = allowedMinterms->findDuplicates(*targetMinterms);
 		if (!duplicates.empty())
 		{
@@ -240,7 +240,7 @@ bool Karnaugh::loadData(Input &input)
 			printDuplicates(duplicates, cerr);
 			cerr << "! (They will be ignored.)\n";
 		}
-		progress.substep([](){ return -0.5; }, true);
+		progress.substep(-0.5, true);
 		allowedMinterms->add(*targetMinterms, duplicates.size());
 	}
 

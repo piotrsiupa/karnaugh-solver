@@ -33,7 +33,7 @@ void QuineMcCluskey::removeDontCareOnlyImplicants(Implicants &implicants, Progre
 {
 	const auto infoGuard = progress.addInfo("removing useless prime implicants");
 	progress.step();
-	progress.substep([](){ return -0.0; }, true);
+	progress.substep(-0.0, true);
 	
 	implicants.erase(std::remove_if(implicants.begin(), implicants.end(), [&targetMinterms = *targetMinterms](const Implicant &implicant){ return !implicant.isAnyInMinterms(targetMinterms); }), implicants.end());
 }
@@ -42,7 +42,7 @@ void QuineMcCluskey::cleanupImplicants(Implicants &implicants, Progress &progres
 {
 	const auto infoGuard = progress.addInfo("sorting prime implicants");
 	progress.step();
-	progress.substep([](){ return -0.0; }, true);
+	progress.substep(-0.0, true);
 	
 	implicants.humanSort();
 	implicants.shrink_to_fit();
@@ -138,7 +138,7 @@ Implicants QuineMcCluskey::createPrimeImplicantsWithoutHeuristic(Progress &progr
 	std::vector<std::pair<Implicant, bool>> implicants;
 	{
 		const auto infoGuard = progress.addInfo("preparing initial list of implicants");
-		progress.substep([](){ return -0.0; }, true);
+		progress.substep(-0.0, true);
 		implicants.reserve(allowedMinterms->getSize());
 		for (const Minterm &minterm : *allowedMinterms)
 			implicants.emplace_back(Implicant{minterm}, false);
