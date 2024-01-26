@@ -86,7 +86,8 @@ void printVersion()
 			"karnaugh (Karnaugh Map Solver) version 0.2.1\n"
 			"Author: Piotr Siupa\n"
 #ifndef NDEBUG
-			"This is a development build which contains additional assertions. This may slow down the execution.\n"
+			"This is a development build which contains additional assertions!\n"
+			"(This may slow down the execution and increase the memory usage.)\n"
 #endif
 			;
 }
