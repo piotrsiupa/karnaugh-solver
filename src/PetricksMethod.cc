@@ -23,10 +23,10 @@ Implicants PetricksMethod<INDEX_T>::extractEssentials(const std::string &functio
 	Minterms multiple;
 	{
 		Minterms single = ~*minterms;
-		for (const Implicant &implicant : primeImplicants)
+		for (const Implicant &primeImplicant : primeImplicants)
 		{
 			progressStep.substep();
-			for (const Minterm minterm : implicant)
+			for (const Minterm minterm : primeImplicant)
 				if (single.check(minterm))
 					multiple.add(minterm);
 				else
@@ -70,18 +70,35 @@ template<typename INDEX_T>
 typename PetricksMethod<INDEX_T>::productOfSumsOfProducts_t PetricksMethod<INDEX_T>::createPreliminaryProductOfSums(const std::string &functionName) const
 {
 	const std::string progressName = "Creating initial solution space for \"" + functionName + '"';
-	Progress progress(Progress::Stage::SOLVING, progressName.c_str(), 1);
+	Progress progress(Progress::Stage::SOLVING, progressName.c_str(), 2, false);
+	
 	progress.step();
-	auto progressStep = progress.makeCountingStepHelper(minterms->getSize());
-	productOfSumsOfProducts_t productOfSums;
-	for (const Minterm &minterm : *minterms)
+	progress.substep([](){ return -0.0; }, true);
+	
+	std::vector<Minterm> mintermMap;
+	mintermMap.reserve(minterms->getSize());
+	for (const Minterm minterm : *minterms)
+		mintermMap.push_back(minterm);
+	
+	progress.step();
+	auto progressStep = progress.makeCountingStepHelper(primeImplicants.size());
+	
+	productOfSumsOfProducts_t productOfSums(mintermMap.size());
+	for (std::size_t i = 0; i != primeImplicants.size(); ++i)
 	{
 		progressStep.substep();
-		sumOfProducts_t &sum = productOfSums.emplace_back();
-		for (index_t i = 0; i != primeImplicants.size(); ++i)
-			if (primeImplicants[i].covers(minterm))
-				sum.emplace_back().push_back(i);
+		const Implicant &primeImplicant = primeImplicants[i];
+		for (const Minterm minterm : primeImplicant)
+		{
+			if (minterms->check(minterm))
+			{
+				const auto foundMinterm = std::lower_bound(mintermMap.cbegin(), mintermMap.cend(), minterm);
+				const std::size_t index = std::distance(mintermMap.cbegin(), foundMinterm);
+				productOfSums[index].emplace_back().push_back(i);
+			}
+		}
 	}
+	
 	return productOfSums;
 }
 
