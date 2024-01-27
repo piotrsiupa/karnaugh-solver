@@ -106,31 +106,33 @@ template<typename INDEX_T>
 void PetricksMethod<INDEX_T>::removeRedundantSums(productOfSums_t &productOfSums, const std::string &functionName)
 {
 	const std::string progressName = "Cleaning up solution space for \"" + functionName + '"';
-	Progress progress(Progress::Stage::SOLVING, progressName.c_str(), 1);
-	progress.step();
+	Progress progress(Progress::Stage::SOLVING, progressName.c_str(), 2, false);
 	
+	{
+		const auto infoGuard = progress.addInfo("sorting and deduplicating solutions");
+		progress.step();
+		progress.substep(-0.0, true);
+		std::sort(productOfSums.begin(), productOfSums.end(), [](const sum_t &x, const sum_t &y){ return x.size() != y.size() ? x.size() < y.size() : x < y; });
+		progress.substep(-0.5, true);
+		productOfSums.erase(std::unique(productOfSums.begin(), productOfSums.end()), productOfSums.end());
+	}
+	
+	progress.step();
 	auto progressStep = progress.makeCountingStepHelper(productOfSums.size());
 	
-	for (auto x = productOfSums.begin(); x != productOfSums.end(); ++x)
+	for (auto partitionBegin = productOfSums.begin(), partitionEnd = partitionBegin; partitionBegin != productOfSums.end(); partitionBegin = partitionEnd)
 	{
-		progressStep.substep();
-		if (!x->empty())
+		partitionEnd = std::partition_point(partitionBegin, productOfSums.end(), [size = partitionBegin->size()](const sum_t &sum){ return sum.size() == size; });
+		if (partitionEnd == productOfSums.end())
+			break;
+		for (auto x = partitionBegin; x != partitionEnd; ++x)
 		{
-			for (auto y = std::next(x); y != productOfSums.end(); ++y)
-			{
-				if (!y->empty())
-				{
-					if (std::includes(x->cbegin(), x->cend(), y->cbegin(), y->cend()))
-					{
-						x->clear();
-						break;
-					}
-					else if (std::includes(y->cbegin(), y->cend(), x->cbegin(), x->cend()))
-					{
-						y->clear();
-					}
-				}
-			}
+			progressStep.substep();
+			if (!x->empty())
+				for (auto y = partitionEnd; y != productOfSums.end(); ++y)
+					if (!y->empty())
+						if (std::includes(y->cbegin(), y->cend(), x->cbegin(), x->cend()))
+							y->clear();
 		}
 	}
 	productOfSums.erase(std::remove_if(productOfSums.begin(), productOfSums.end(), [](const auto &x){ return x.empty(); }), productOfSums.end());
