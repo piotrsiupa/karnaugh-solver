@@ -69,7 +69,7 @@ static void printHelp()
 static void printVersion()
 {
 	std::cout <<
-			"karnaugh (Karnaugh Map Solver) version 0.2.1\n"
+			"karnaugh (Karnaugh Map Solver) version 0.2.2\n"
 			"Author: Piotr Siupa\n"
 #ifndef NDEBUG
 			"This is a development build which contains additional assertions. This may slow down the execution.\n"

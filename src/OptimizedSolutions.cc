@@ -654,12 +654,12 @@ void OptimizedSolutions::validate(const solutions_t &solutions, Progress &progre
 {
 	assert(solutions.size() == finalSums.size());
 	
-	const auto subtaskGuard = progress.enterSubtask("validating");
+	const auto infoGuard = progress.addInfo("validating");
 	progress.step();
-	auto substeps = progress.makeCountingSubsteps(solutions.size());
+	auto progressStep = progress.makeCountingStepHelper(static_cast<Progress::completion_t>(solutions.size()));
 	for (std::size_t i = 0; i != solutions.size(); ++i)
 	{
-		substeps.substep();
+		progressStep.substep();
 		const normalizedSolution_t expectedSolution(solutions[i]->cbegin(), solutions[i]->cend());
 		const normalizedSolution_t actualSolution = normalizeSolution(finalSums[i]);
 		assert(actualSolution == expectedSolution);
