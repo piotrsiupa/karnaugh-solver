@@ -1,0 +1,34 @@
+class tricky_one
+{
+public:
+	using input_t = struct { bool a, b, c, d; };
+	using output_t = struct { bool tricky_0, tricky_1; };
+	
+	[[nodiscard]] constexpr output_t operator()(const bool a, const bool b, const bool c, const bool d) const { return (*this)({a, b, c, d}); }
+	[[nodiscard]] constexpr output_t operator()(const input_t &i) const { return calc(i); }
+	
+	[[nodiscard]] static constexpr output_t calc(const bool a, const bool b, const bool c, const bool d) { return calc({a, b, c, d}); }
+	[[nodiscard]] static constexpr output_t calc(const input_t &i);
+};
+
+constexpr tricky_one::output_t tricky_one::calc(const input_t &i)
+{
+	// Intermediary values
+	bool prods[3] = {};
+	bool sums[2] = {};
+	
+	// Products
+	prods[0] = i.a && i.b;
+	prods[1] = i.d && prods[0];
+	prods[2] = !i.a && !i.c;
+	
+	// Sums
+	sums[0] = prods[1] || prods[2];
+	sums[1] = prods[0] || prods[2];
+	
+	// Results
+	output_t o = {};
+	o.tricky_0 = sums[0];
+	o.tricky_1 = sums[1];
+	return o;
+}
