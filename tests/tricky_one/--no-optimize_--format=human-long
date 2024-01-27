@@ -28,22 +28,11 @@ goal:
 
 best fit:
    00 01 11 10 
-00 T  T  F  F
-01 T  T  F  F
+00 F  F  F  F
+01 F  T  T  F
 11 T  T  T  T
 10 F  F  F  F
 
 solution:
-(a && b) || (!a && !c)
+(a && b) || (b && d)
 
-=== optimized solution ===
-
-Negated inputs: a, c
-Products:
-	[0] = a && b
-	[1] = d && [0]
-	[2] = !a && !c
-Sums:
-	"tricky_0" = [1] || [2]
-	"tricky_1" = [0] || [2]
-Gate scores: NOTs = 2, ANDs = 3, ORs = 2
