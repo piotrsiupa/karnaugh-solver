@@ -656,7 +656,7 @@ void OptimizedSolutions::validate(const solutions_t &solutions, Progress &progre
 	
 	const auto infoGuard = progress.addInfo("validating");
 	progress.step();
-	auto progressStep = progress.makeCountingStepHelper(solutions.size());
+	auto progressStep = progress.makeCountingStepHelper(static_cast<Progress::completion_t>(solutions.size()));
 	for (std::size_t i = 0; i != solutions.size(); ++i)
 	{
 		progressStep.substep();
