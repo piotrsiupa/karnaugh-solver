@@ -6,9 +6,7 @@
 #ifndef NDEBUG
 void Minterms::validate() const
 {
-	std::size_t actualCount = 0;
-	for ([[maybe_unused]] const Minterm minterm : *this)
-		++actualCount;
+	const std::size_t actualCount = std::count(bitset.cbegin(), bitset.cend(), true);
 	assert(size == actualCount);
 }
 #endif
