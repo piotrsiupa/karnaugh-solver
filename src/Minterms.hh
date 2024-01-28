@@ -66,7 +66,7 @@ Minterms::ConstIterator& Minterms::ConstIterator::operator++()
 
 Minterms::ConstIterator& Minterms::ConstIterator::operator--()
 {
-	for (--i; i != 0 && !minterms.bitset[i]; --i) { }
+	for (--i; !minterms.bitset[i]; --i) { }
 	return *this;
 }
 
