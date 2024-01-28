@@ -99,6 +99,11 @@ typename PetricksMethod<INDEX_T>::productOfSums_t PetricksMethod<INDEX_T>::creat
 		}
 	}
 	
+#ifndef NDEBUG
+	for (const sum_t &sum : productOfSums)
+		assert(sum.size() >= 2);
+#endif
+	
 	return productOfSums;
 }
 
@@ -112,7 +117,7 @@ void PetricksMethod<INDEX_T>::removeRedundantSums(productOfSums_t &productOfSums
 		const auto infoGuard = progress.addInfo("sorting and deduplicating solutions");
 		progress.step();
 		progress.substep(-0.0, true);
-		std::sort(productOfSums.begin(), productOfSums.end(), [](const sum_t &x, const sum_t &y){ return x.size() != y.size() ? x.size() < y.size() : x < y; });
+		std::sort(productOfSums.begin(), productOfSums.end());
 		progress.substep(-0.5, true);
 		productOfSums.erase(std::unique(productOfSums.begin(), productOfSums.end()), productOfSums.end());
 	}
@@ -120,22 +125,27 @@ void PetricksMethod<INDEX_T>::removeRedundantSums(productOfSums_t &productOfSums
 	progress.step();
 	auto progressStep = progress.makeCountingStepHelper(productOfSums.size());
 	
-	for (auto partitionBegin = productOfSums.begin(), partitionEnd = partitionBegin; partitionBegin != productOfSums.end(); partitionBegin = partitionEnd)
+	for (auto x = productOfSums.begin(); x != productOfSums.end(); ++x)
 	{
-		partitionEnd = std::partition_point(partitionBegin, productOfSums.end(), [size = partitionBegin->size()](const sum_t &sum){ return sum.size() == size; });
-		if (partitionEnd == productOfSums.end())
-			break;
-		for (auto x = partitionBegin; x != partitionEnd; ++x)
+		progressStep.substep();
+		for (auto subX = x->cbegin(); subX != std::prev(x->cend()); ++subX)
 		{
-			progressStep.substep();
-			if (!x->empty())
-				for (auto y = partitionEnd; y != productOfSums.end(); ++y)
-					if (!y->empty())
-						if (std::includes(y->cbegin(), y->cend(), x->cbegin(), x->cend()))
-							y->clear();
+			const auto rangeBegin = std::lower_bound(productOfSums.cbegin(), productOfSums.cend(), *subX, [](const sum_t &sum, const INDEX_T value){ return sum.front() < value; });
+			const auto rangeEnd = std::upper_bound(rangeBegin, productOfSums.cend(), *subX, [](const INDEX_T value, const sum_t &sum){ return sum.front() != value; });
+			for (auto y = rangeBegin; y != rangeEnd; ++y)
+			{
+				if (x == y || y->size() == 1)
+					continue;
+				if (std::includes(x->cbegin(), x->cend(), y->cbegin(), y->cend()))
+				{
+					x->resize(1);
+					goto next_x;
+				}
+			}
 		}
+		next_x:;
 	}
-	productOfSums.erase(std::remove_if(productOfSums.begin(), productOfSums.end(), [](const auto &x){ return x.empty(); }), productOfSums.end());
+	productOfSums.erase(std::remove_if(productOfSums.begin(), productOfSums.end(), [](const auto &x){ return x.size() == 1; }), productOfSums.end());
 }
 
 template<typename INDEX_T>
