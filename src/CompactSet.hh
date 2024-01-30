@@ -20,8 +20,6 @@ class CompactSet
 	std::size_t size = 0;
 	
 public:
-	using overlapping_t = std::vector<T>;
-	
 	class ConstIterator
 	{
 		const CompactSet<T> &compactSet;
@@ -46,7 +44,6 @@ public:
 	[[nodiscard]] std::size_t getSize() const { return size; }
 	[[nodiscard]] std::size_t getCapacity() const { return bitset.size(); }
 	[[nodiscard]] bool check(const T value) const { return bitset[value]; }
-	[[nodiscard]] inline overlapping_t findOverlapping(const CompactSet &other) const;  // Optimized for when there is little to none of them.
 	inline bool add(const T value);
 	inline void add(const CompactSet &other, const std::size_t overlappingCount);
 	inline bool remove(const T value);
@@ -82,17 +79,6 @@ CompactSet<T>::CompactSet(const std::size_t capacity) :
 {
 	assert(capacity == 0 || capacity - 1 <= std::numeric_limits<T>::max());
 	assert(capacity < std::numeric_limits<T>::max());  // Otherwise, iterators won't work.
-}
-
-template<typename T>
-CompactSet<T>::overlapping_t CompactSet<T>::findOverlapping(const CompactSet &other) const
-{
-	overlapping_t overlapping;
-	std::set_intersection(
-			this->cbegin(), this->cend(),
-			other.cbegin(), other.cend(),
-			std::back_inserter(overlapping));
-	return overlapping;
 }
 
 template<typename T>
