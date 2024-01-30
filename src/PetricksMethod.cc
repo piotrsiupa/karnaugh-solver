@@ -89,16 +89,16 @@ void PetricksMethod<INDEX_T>::removeRedundantSums(productOfSumsOfProducts_t &pro
 		progressStep.substep();
 		if (!x->empty())
 		{
-			for (auto y = std::next(x); y != productOfSums.end(); ++y)
+			for (auto y = std::ranges::next(x); y != productOfSums.end(); ++y)
 			{
 				if (!y->empty())
 				{
-					if (std::includes(x->cbegin(), x->cend(), y->cbegin(), y->cend()))
+					if (std::ranges::includes(x->cbegin(), x->cend(), y->cbegin(), y->cend()))
 					{
 						x->clear();
 						break;
 					}
-					else if (std::includes(y->cbegin(), y->cend(), x->cbegin(), x->cend()))
+					else if (std::ranges::includes(y->cbegin(), y->cend(), x->cbegin(), x->cend()))
 					{
 						y->clear();
 					}
@@ -106,7 +106,8 @@ void PetricksMethod<INDEX_T>::removeRedundantSums(productOfSumsOfProducts_t &pro
 			}
 		}
 	}
-	productOfSums.erase(std::remove_if(productOfSums.begin(), productOfSums.end(), [](const auto &x){ return x.empty(); }), productOfSums.end());
+	const auto [eraseBegin, eraseEnd] = std::ranges::remove_if(productOfSums.begin(), productOfSums.end(), [](const auto &x){ return x.empty(); });
+	productOfSums.erase(eraseBegin, eraseEnd);
 }
 
 template<typename INDEX_T>
@@ -135,7 +136,7 @@ inline typename PetricksMethod<INDEX_T>::sumOfProducts_t PetricksMethod<INDEX_T>
 				progress.substep(estimateCompletion, operationsThisTime == 0);
 				++operationsThisTime;
 				newProduct.clear();
-				std::set_union(x.cbegin(), x.cend(), y.cbegin(), y.cend(), std::back_inserter(newProduct));
+				std::ranges::set_union(x.cbegin(), x.cend(), y.cbegin(), y.cend(), std::back_inserter(newProduct));
 				hasseDiagram.insertRemovingSupersets(std::move(newProduct));
 			}
 		}
@@ -180,7 +181,7 @@ typename PetricksMethod<INDEX_T>::sumOfProducts_t PetricksMethod<INDEX_T>::findS
 			expectedSolutions = 0.0;
 			expectedSolutions = 0.0;
 			expectedSolutions = static_cast<long double>(productOfSumsOfProducts.back().size());
-			for (auto iter = std::next(productOfSumsOfProducts.crbegin()); iter != productOfSumsOfProducts.crend(); ++iter)
+			for (auto iter = std::ranges::next(productOfSumsOfProducts.crbegin()); iter != productOfSumsOfProducts.crend(); ++iter)
 			{
 				expectedSolutions *= iter->size();
 				expectedOperations += expectedSolutions;

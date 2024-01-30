@@ -25,6 +25,8 @@ public:
 private:
 	mask_t bits, mask;
 	
+	constexpr std::uint_fast64_t makeComparisonValue() const;
+	
 public:
 	constexpr Implicant(const mask_t bits, const mask_t mask) : bits(bits), mask(mask) {}
 	explicit Implicant(const Minterm minterm) : bits(minterm), mask(maxMinterm) {}
@@ -33,7 +35,11 @@ public:
 	
 	constexpr bool operator==(const Implicant &other) const = default;
 	constexpr bool operator!=(const Implicant &other) const = default;
-	inline bool operator<(const Implicant &other) const;
+	constexpr bool operator<(const Implicant &other) const { return this->makeComparisonValue() < other.makeComparisonValue(); }
+	constexpr bool operator>(const Implicant &other) const { return other < *this; }
+	constexpr bool operator<=(const Implicant &other) const { return !(*this > other); }
+	constexpr bool operator>=(const Implicant &other) const { return !(*this < other); }
+	constexpr auto operator<=>(const Implicant &other) const { return this->makeComparisonValue() <=> other.makeComparisonValue(); }
 	bool humanLess(const Implicant &other) const;
 	constexpr bool covers(const Minterm minterm) const { return (minterm & mask) == bits; }
 	
@@ -67,13 +73,10 @@ public:
 	void printMath(std::ostream &o, const bool parentheses) const;
 };
 
-bool Implicant::operator<(const Implicant &other) const
+constexpr std::uint_fast64_t Implicant::makeComparisonValue() const
 {
 	static_assert(::maxBits == 32);
-	using comp_t = std::uint_fast64_t;
-	const comp_t x = (static_cast<comp_t>(this->mask) << 32) | this->bits;
-	const comp_t y = (static_cast<comp_t>(other.mask) << 32) | other.bits;
-	return x < y;
+	return (static_cast<std::uint_fast64_t>(this->mask) << 32) | this->bits;
 }
 
 Implicant Implicant::findBiggestInUnion(const Implicant &x, const Implicant &y)

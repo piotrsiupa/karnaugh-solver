@@ -34,7 +34,8 @@ void QuineMcCluskey::removeDontCareOnlyImplicants(Implicants &implicants, Progre
 	progress.step();
 	progress.substep([](){ return -0.0; }, true);
 	
-	implicants.erase(std::remove_if(implicants.begin(), implicants.end(), [&targetMinterms = *targetMinterms](const Implicant &implicant){ return !implicant.isAnyInMinterms(targetMinterms); }), implicants.end());
+	const auto [eraseBegin, eraseEnd] = std::ranges::remove_if(implicants.begin(), implicants.end(), [&targetMinterms = *targetMinterms](const Implicant &implicant){ return !implicant.isAnyInMinterms(targetMinterms); });
+	implicants.erase(eraseBegin, eraseEnd);
 }
 
 void QuineMcCluskey::cleanupImplicants(Implicants &implicants, Progress &progress)
@@ -65,13 +66,13 @@ std::uint_fast8_t QuineMcCluskey::getAdjustmentPasses()
 
 void QuineMcCluskey::refineHeuristicImplicant(const Minterm initialMinterm, Implicant &implicant) const
 {
-	for (auto iter = bitMasks.cbegin(); iter != std::prev(bitMasks.cend()); ++iter)
+	for (auto iter = bitMasks.cbegin(); iter != std::ranges::prev(bitMasks.cend()); ++iter)
 	{
 		const Minterm removedBit = *iter;
 		if ((removedBit & implicant.getMask()) != 0)
 			continue;
 		Implicant implicantVariant(implicant.getBits() | (initialMinterm & removedBit), implicant.getMask() | removedBit);
-		for (auto jiter = std::next(iter); jiter != bitMasks.cend(); ++jiter)
+		for (auto jiter = std::ranges::next(iter); jiter != bitMasks.cend(); ++jiter)
 		{
 			const Minterm bit = *jiter;
 			if ((bit & implicantVariant.getMask()) == 0)
@@ -166,7 +167,7 @@ Implicants QuineMcCluskey::createPrimeImplicantsWithoutHeuristic(Progress &progr
 			static_assert(::maxBits == 32);
 			const std::uint_fast64_t mask = ~static_cast<std::uint64_t>(bitMask);
 			const auto makeComparisonValue = [mask](const Implicant &implicant){ return ((static_cast<std::uint_fast64_t>(implicant.getMask()) << 32) | static_cast<std::uint_fast64_t>(implicant.getBits())) & static_cast<std::uint_fast64_t>(mask); };
-			std::sort(implicants.begin(), implicants.end(), [makeComparisonValue](const std::pair<Implicant, bool> &x, const std::pair<Implicant, bool> &y){
+			std::ranges::sort(implicants.begin(), implicants.end(), [makeComparisonValue](const std::pair<Implicant, bool> &x, const std::pair<Implicant, bool> &y){
 					return makeComparisonValue(x.first) < makeComparisonValue(y.first);
 				});
 			std::pair<Implicant, bool> *previous = &implicants.front();
@@ -192,8 +193,9 @@ Implicants QuineMcCluskey::createPrimeImplicantsWithoutHeuristic(Progress &progr
 				primeImplicants.push_back(implicant);
 		implicants.clear();
 		
-		std::sort(newImplicants.begin(), newImplicants.end());
-		newImplicants.erase(std::unique(newImplicants.begin(), newImplicants.end()), newImplicants.end());
+		std::ranges::sort(newImplicants.begin(), newImplicants.end());
+		const auto [eraseBegin, eraseEnd] = std::ranges::unique(newImplicants.begin(), newImplicants.end());
+		newImplicants.erase(eraseBegin, eraseEnd);
 		implicants.reserve(newImplicants.size());
 		for (const auto &newImplicant : newImplicants)
 			implicants.emplace_back(newImplicant, false);
@@ -243,7 +245,7 @@ void QuineMcCluskey::validate(const Minterms &allowedMinterms, const Minterms &t
 		sortedImplicants.humanSort();
 		assert(implicants == sortedImplicants);
 	}
-	assert(std::adjacent_find(implicants.cbegin(), implicants.cend()) == implicants.cend());
+	assert(std::ranges::adjacent_find(implicants.cbegin(), implicants.cend()) == implicants.cend());
 	Minterms missedTargetMinterms = targetMinterms;
 	for (const Implicant &implicant : implicants)
 	{
@@ -254,7 +256,7 @@ void QuineMcCluskey::validate(const Minterms &allowedMinterms, const Minterms &t
 	assert(missedTargetMinterms.isEmpty());
 	if (implicants.size() <= 250000)
 		for (Implicants::const_iterator iter = implicants.cbegin(); iter != implicants.cend(); ++iter)
-			for (Implicants::const_iterator jiter = std::next(iter); jiter != implicants.cend(); ++jiter)
+			for (Implicants::const_iterator jiter = std::ranges::next(iter); jiter != implicants.cend(); ++jiter)
 				assert(!iter->contains(*jiter) && !jiter->contains(*iter));
 }
 #endif
