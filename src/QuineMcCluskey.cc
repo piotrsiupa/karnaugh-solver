@@ -9,7 +9,6 @@
 
 #include "options.hh"
 #include "PetricksMethod.hh"
-#include "utils.hh"
 
 
 std::vector<Minterm> QuineMcCluskey::bitMasks;
