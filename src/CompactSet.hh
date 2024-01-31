@@ -45,6 +45,7 @@ public:
 	[[nodiscard]] std::size_t capacity() const { return bitset.size(); }
 	[[nodiscard]] bool check(const T value) const { return bitset[value]; }
 	inline bool add(const T value);
+	inline void add(const CompactSet &other);
 	inline void add(const CompactSet &other, const std::size_t overlappingCount);
 	inline bool remove(const T value);
 	
@@ -94,10 +95,17 @@ bool CompactSet<T>::add(const T value)
 }
 
 template<typename T>
+void CompactSet<T>::add(const CompactSet &other)
+{
+	for (const T value : other)
+		add(value);
+}
+
+template<typename T>
 void CompactSet<T>::add(const CompactSet &other, const std::size_t overlappingCount)
 {
 	std::transform(
-			other.bitset.begin(), other.bitset.end(),
+			other.bitset.cbegin(), other.bitset.cend(),
 			this->bitset.begin(), this->bitset.begin(),
 			std::logical_or<bool>());
 	this->count += other.count - overlappingCount;
