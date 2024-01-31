@@ -106,8 +106,7 @@ void PetricksMethod<INDEX_T>::removeRedundantSums(productOfSumsOfProducts_t &pro
 			}
 		}
 	}
-	const auto [eraseBegin, eraseEnd] = std::ranges::remove_if(productOfSums.begin(), productOfSums.end(), [](const auto &x){ return x.empty(); });
-	productOfSums.erase(eraseBegin, eraseEnd);
+	productOfSums.erase(std::remove_if(productOfSums.begin(), productOfSums.end(), [](const auto &x){ return x.empty(); }), productOfSums.end());
 }
 
 template<typename INDEX_T>

@@ -61,14 +61,14 @@ public:
 
 
 template<typename T>
-CompactSet<T>::const_iterator& CompactSet<T>::const_iterator::operator++()
+typename CompactSet<T>::const_iterator& CompactSet<T>::const_iterator::operator++()
 {
 	for (++i; i != compactSet.bitset.size() && !compactSet.bitset[i]; ++i) { }
 	return *this;
 }
 
 template<typename T>
-CompactSet<T>::const_iterator& CompactSet<T>::const_iterator::operator--()
+typename CompactSet<T>::const_iterator& CompactSet<T>::const_iterator::operator--()
 {
 	for (--i; !compactSet.bitset[i]; --i) { }
 	return *this;
@@ -124,7 +124,7 @@ bool CompactSet<T>::remove(const T value)
 }
 
 template<typename T>
-CompactSet<T>::const_iterator CompactSet<T>::begin() const
+typename CompactSet<T>::const_iterator CompactSet<T>::begin() const
 {
 	const_iterator iter{*this, 0};
 	if (!bitset.empty() && !bitset[0])

@@ -34,8 +34,7 @@ void QuineMcCluskey::removeDontCareOnlyImplicants(Implicants &implicants, Progre
 	progress.step();
 	progress.substep([](){ return -0.0; }, true);
 	
-	const auto [eraseBegin, eraseEnd] = std::ranges::remove_if(implicants.begin(), implicants.end(), [&targetMinterms = *targetMinterms](const Implicant &implicant){ return !implicant.isAnyInMinterms(targetMinterms); });
-	implicants.erase(eraseBegin, eraseEnd);
+	implicants.erase(std::remove_if(implicants.begin(), implicants.end(), [&targetMinterms = *targetMinterms](const Implicant &implicant){ return !implicant.isAnyInMinterms(targetMinterms); }), implicants.end());
 }
 
 void QuineMcCluskey::cleanupImplicants(Implicants &implicants, Progress &progress)
@@ -194,8 +193,7 @@ Implicants QuineMcCluskey::createPrimeImplicantsWithoutHeuristic(Progress &progr
 		implicants.clear();
 		
 		std::ranges::sort(newImplicants.begin(), newImplicants.end());
-		const auto [eraseBegin, eraseEnd] = std::ranges::unique(newImplicants.begin(), newImplicants.end());
-		newImplicants.erase(eraseBegin, eraseEnd);
+		newImplicants.erase(std::unique(newImplicants.begin(), newImplicants.end()), newImplicants.end());
 		implicants.reserve(newImplicants.size());
 		for (const auto &newImplicant : newImplicants)
 			implicants.emplace_back(newImplicant, false);

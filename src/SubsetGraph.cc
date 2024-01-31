@@ -28,16 +28,14 @@ typename SubsetGraph<VALUE_T, CONTAINER>::groupsMap_t SubsetGraph<VALUE_T, CONTA
 				if (!groupRejects.empty())
 				{
 					typename group_t::const_iterator currentRejectIt = groupRejects.cbegin(), endRejectIt = groupRejects.cend();
-					const auto [eraseBegin, eraseEnd] = std::ranges::remove_if(groups[foundGroupIndex].begin(), groups[foundGroupIndex].end(), [&currentRejectIt, endRejectIt](const VALUE_T x){ if (currentRejectIt == endRejectIt || x != *currentRejectIt) return false; ++currentRejectIt; return true; });
-					groups[foundGroupIndex].erase(eraseBegin, eraseEnd);
+					groups[foundGroupIndex].erase(std::remove_if(groups[foundGroupIndex].begin(), groups[foundGroupIndex].end(), [&currentRejectIt, endRejectIt](const VALUE_T x){ if (currentRejectIt == endRejectIt || x != *currentRejectIt) return false; ++currentRejectIt; return true; }), groups[foundGroupIndex].end());
 					groups.emplace_back(std::move(groupRejects));
 					const std::size_t newGroupIndex = groups.size() - 1;
 					for (const VALUE_T &value : groups.back())
 						groupsMap.at(value) = newGroupIndex;
 				}
 				typename group_t::const_iterator currentValueIt = groups[foundGroupIndex].cbegin(), endValueIt = groups[foundGroupIndex].cend();
-				const auto [eraseBegin, eraseEnd] = std::ranges::remove_if(setCopy.begin(), setCopy.end(), [&currentValueIt, endValueIt](const VALUE_T x){ if (currentValueIt == endValueIt || x != *currentValueIt) return false; ++currentValueIt; return true; });
-				setCopy.erase(eraseBegin, eraseEnd);
+				setCopy.erase(std::remove_if(setCopy.begin(), setCopy.end(), [&currentValueIt, endValueIt](const VALUE_T x){ if (currentValueIt == endValueIt || x != *currentValueIt) return false; ++currentValueIt; return true; }), setCopy.end());
 			}
 		}
 		if (!setCopy.empty())
@@ -132,8 +130,7 @@ void SubsetGraph<VALUE_T, CONTAINER>::trimSetHierarchy()
 			}
 		}
 	}
-	const auto [eraseBegin, eraseEnd] = std::ranges::remove_if(groupedSetHierarchy.begin(), groupedSetHierarchy.end(), [](const GroupedSetHierarchyEntry &entry){ return entry.setIds.empty(); });
-	groupedSetHierarchy.erase(eraseBegin, eraseEnd);
+	groupedSetHierarchy.erase(std::remove_if(groupedSetHierarchy.begin(), groupedSetHierarchy.end(), [](const GroupedSetHierarchyEntry &entry){ return entry.setIds.empty(); }), groupedSetHierarchy.end());
 	groupedSetHierarchy.shrink_to_fit();
 	
 	std::size_t previousOffset = 0;
@@ -176,8 +173,7 @@ void SubsetGraph<VALUE_T, CONTAINER>::removeRedundantEdgesFromSetHierarchy()
 			std::vector<std::size_t> subsetsOfSubsets;
 			for (const std::size_t &subset : iter->subsets)
 				subsetsOfSubsets.insert(subsetsOfSubsets.end(), groupedSetHierarchy[subset].subsets.cbegin(), groupedSetHierarchy[subset].subsets.cend());
-			const auto [eraseBegin, eraseEnd] = std::ranges::remove_if(iter->subsets.begin(), iter->subsets.end(), [&subsetsOfSubsets = std::as_const(subsetsOfSubsets)](const std::size_t x) { return std::ranges::find(subsetsOfSubsets.cbegin(), subsetsOfSubsets.cend(), x) != subsetsOfSubsets.cend(); });
-			iter->subsets.erase(eraseBegin, eraseEnd);
+			iter->subsets.erase(std::remove_if(iter->subsets.begin(), iter->subsets.end(), [&subsetsOfSubsets = std::as_const(subsetsOfSubsets)](const std::size_t x) { return std::ranges::find(subsetsOfSubsets.cbegin(), subsetsOfSubsets.cend(), x) != subsetsOfSubsets.cend(); }), iter->subsets.end());
 			iter->subsets.shrink_to_fit();
 		}
 	}
