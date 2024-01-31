@@ -120,7 +120,7 @@ Progress::completion_t Karnaugh::MintermLoadingCompletionCalculator::operator()(
 		}
 		inOrderSoFar = false;
 	}
-	const Progress::completion_t currentSize = static_cast<Progress::completion_t>(minterms.getSize());
+	const Progress::completion_t currentSize = static_cast<Progress::completion_t>(minterms.size());
 	const Progress::completion_t maxSize = estimatedSize == 0
 			? static_cast<Progress::completion_t>(::maxMinterm) + Progress::completion_t(1.0)
 			: static_cast<Progress::completion_t>(estimatedSize);

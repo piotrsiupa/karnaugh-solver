@@ -62,7 +62,7 @@ private:
 	};
 	Node root{{}, 0, nullptr};
 	
-	std::size_t size = 0;
+	std::size_t count = 0;
 	
 	mutable std::vector<value_t> workingVector;
 	
@@ -78,7 +78,7 @@ private:
 	void getSets(sets_t &sets, const Node &currentNode) const;
 	
 public:
-	std::size_t getSize() const { return size; }
+	std::size_t size() const { return count; }
 	sets_t getSets() const;
 	
 	bool insertRemovingSupersets(const set_t &set);

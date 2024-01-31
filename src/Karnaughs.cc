@@ -128,7 +128,7 @@ bool Karnaughs::areInputsUsed() const
 {
 	for (const Implicants &bestSolution : bestSolutions)
 		for (const Implicant &implicant : bestSolution)
-			if (!implicant.isEmpty())
+			if (!implicant.empty())
 				return true;
 	return false;
 }
@@ -269,7 +269,7 @@ void Karnaughs::printHuman()
 void Karnaughs::printVerilog()
 {
 	std::cout << "module " << getName() << " (\n";
-	if (!::inputNames.isEmpty())
+	if (!::inputNames.empty())
 	{
 		std::cout << "\tinput wire";
 		::inputNames.printVerilogNames(std::cout);
@@ -298,10 +298,10 @@ void Karnaughs::printVhdl()
 	std::cout << '\n';
 	std::cout << "entity " << getName() << " is\n";
 	const Names functionNames = gatherFunctionNames();
-	if (!::inputNames.isEmpty() || !karnaughs.empty())
+	if (!::inputNames.empty() || !karnaughs.empty())
 	{
 		std::cout << "\tport(\n";
-		if (!::inputNames.isEmpty())
+		if (!::inputNames.empty())
 		{
 			std::cout << "\t\t";
 			::inputNames.printVhdlNames(std::cout);
@@ -349,7 +349,7 @@ void Karnaughs::printCpp()
 	std::cout << "\t\n";
 	std::cout << "\t[[nodiscard]] constexpr output_t operator()(";
 	bool first = true;
-	for (std::size_t i = 0; i != ::inputNames.getSize(); ++i)
+	for (std::size_t i = 0; i != ::inputNames.size(); ++i)
 	{
 		if (first)
 			first = false;
@@ -360,7 +360,7 @@ void Karnaughs::printCpp()
 	}
 	std::cout << ") const { return (*this)({";
 	first = true;
-	for (std::size_t i = 0; i != ::inputNames.getSize(); ++i)
+	for (std::size_t i = 0; i != ::inputNames.size(); ++i)
 	{
 		if (first)
 			first = false;
@@ -373,7 +373,7 @@ void Karnaughs::printCpp()
 	std::cout << "\t\n";
 	std::cout << "\t[[nodiscard]] static constexpr output_t calc(";
 	first = true;
-	for (std::size_t i = 0; i != ::inputNames.getSize(); ++i)
+	for (std::size_t i = 0; i != ::inputNames.size(); ++i)
 	{
 		if (first)
 			first = false;
@@ -384,7 +384,7 @@ void Karnaughs::printCpp()
 	}
 	std::cout << ") { return calc({";
 	first = true;
-	for (std::size_t i = 0; i != ::inputNames.getSize(); ++i)
+	for (std::size_t i = 0; i != ::inputNames.size(); ++i)
 	{
 		if (first)
 			first = false;

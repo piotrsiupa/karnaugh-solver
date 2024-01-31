@@ -16,7 +16,7 @@ bool HasseDiagram<VALUE_T>::containsSubset(typename set_t::const_iterator curren
 template<typename VALUE_T>
 typename HasseDiagram<VALUE_T>::Node& HasseDiagram<VALUE_T>::insert(typename set_t::const_iterator currentInSet, const typename set_t::const_iterator &endOfSet, Node &currentNode)
 {
-	++size;
+	++count;
 	Node *nextNode;
 	if (const auto foundChild = currentNode.children.find(*currentInSet); foundChild != currentNode.children.end())
 		nextNode = &foundChild->getNode();
@@ -96,7 +96,7 @@ void HasseDiagram<VALUE_T>::removeChildren(Node &node)
 template<typename VALUE_T>
 void HasseDiagram<VALUE_T>::removeTopNode(Node &topNode)
 {
-	--size;
+	--count;
 	topNode.children.erase(TOP_NODE);
 	std::vector<value_t> &valuesBackwards = workingVector;
 	valuesBackwards.clear();
@@ -163,7 +163,7 @@ typename HasseDiagram<VALUE_T>::sets_t HasseDiagram<VALUE_T>::getSets() const
 {
 	workingVector.clear();
 	sets_t sets;
-	sets.reserve(size);
+	sets.reserve(count);
 	getSets(sets, root);
 	sets.shrink_to_fit();
 	return sets;

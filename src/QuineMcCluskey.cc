@@ -116,9 +116,9 @@ Implicants QuineMcCluskey::createImplicantsWithHeuristic(Progress &progress) con
 
 Implicants QuineMcCluskey::findPrimeImplicantsWithHeuristic()
 {
-	if (allowedMinterms->isEmpty())
+	if (allowedMinterms->empty())
 		return {Implicant::none()};
-	else if (allowedMinterms->isFull())
+	else if (allowedMinterms->full())
 		return {Implicant::all()};
 	
 	const std::string progressName = "Finding prime impl. of \"" + functionName + '"';
@@ -139,7 +139,7 @@ Implicants QuineMcCluskey::createPrimeImplicantsWithoutHeuristic(Progress &progr
 	{
 		const auto infoGuard = progress.addInfo("preparing initial list of implicants");
 		progress.substep([](){ return -0.0; }, true);
-		implicants.reserve(allowedMinterms->getSize());
+		implicants.reserve(allowedMinterms->size());
 		for (const Minterm &minterm : *allowedMinterms)
 			implicants.emplace_back(Implicant{minterm}, false);
 		allowedMinterms.reset();
@@ -253,7 +253,7 @@ void QuineMcCluskey::validate(const Minterms &allowedMinterms, const Minterms &t
 		assert(implicant.areAllInMinterms(allowedMinterms));
 		implicant.removeFromMinterms(missedTargetMinterms);
 	}
-	assert(missedTargetMinterms.isEmpty());
+	assert(missedTargetMinterms.empty());
 	if (implicants.size() <= 250000)
 		for (Implicants::const_iterator iter = implicants.cbegin(); iter != implicants.cend(); ++iter)
 			for (Implicants::const_iterator jiter = std::ranges::next(iter); jiter != implicants.cend(); ++jiter)

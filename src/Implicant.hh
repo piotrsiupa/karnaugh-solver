@@ -43,8 +43,7 @@ public:
 	bool humanLess(const Implicant &other) const;
 	constexpr bool covers(const Minterm minterm) const { return (minterm & mask) == bits; }
 	
-	constexpr bool isEmpty() const { return mask == 0; }
-	constexpr bool isEmptyTrue() const { return bits == 0; }
+	constexpr bool empty() const { return mask == 0; }
 	constexpr mask_t getBits() const { return bits; }
 	constexpr mask_t getMask() const { return mask; }
 	constexpr mask_t getTrueBits() const { return bits & mask; }
