@@ -56,8 +56,8 @@ public:
 	
 	explicit inline CompactSet(const std::size_t capacity);
 	
-	[[nodiscard]] bool operator==(const CompactSet &other) const { return this->bits == other.bits; }
-	[[nodiscard]] bool operator!=(const CompactSet &other) const { return this->bits != other.bits; }
+	[[nodiscard]] bool operator==(const CompactSet &other) const { return this->count == other.count && this->bits == other.bits; }
+	[[nodiscard]] bool operator!=(const CompactSet &other) const { return !(*this == other); }
 	
 	[[nodiscard]] bool empty() const { return count == 0; }
 	[[nodiscard]] bool full() const { return count == bits.size(); }
