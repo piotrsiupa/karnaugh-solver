@@ -1,10 +1,11 @@
 #pragma once
 
+#include <concepts>
 #include <cstddef>
 #include <vector>
 
 
-template<typename VALUE_T>
+template<std::unsigned_integral VALUE_T>
 class HasseDiagram
 {
 public:

@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <concepts>
 #include <cstddef>
 #include <cstdint>
 #include <functional>
@@ -12,11 +13,9 @@
 
 // This container can store unique numbers in range 0..capacity-1 using only about capacity/CHAR_BIT bytes of memory.
 // (The memory usage is the same regardles of how many numbers are stored.)
-template<typename T>
+template<std::unsigned_integral T>
 class CompactSet
 {
-	static_assert(!std::numeric_limits<T>::is_signed);
-	
 	std::vector<bool> bitset;
 	std::size_t count = 0;
 	
