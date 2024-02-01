@@ -80,7 +80,7 @@ CompactSet<T>::CompactSet(const std::size_t capacity) :
 	bitset(capacity, false)
 {
 	assert(capacity == 0 || capacity - 1 <= std::numeric_limits<T>::max());
-	assert(capacity < std::numeric_limits<T>::max());  // Otherwise, iterators won't work.
+	assert(capacity <= std::numeric_limits<std::uint_fast64_t>::max());  // Otherwise, iterators won't work.
 }
 
 template<typename T>
