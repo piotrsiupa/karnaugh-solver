@@ -22,17 +22,37 @@ class CompactSet
 public:
 	class const_iterator
 	{
-		const CompactSet<T> &compactSet;
+		const CompactSet<T> *compactSet = nullptr;
 		std::uint_fast64_t i;
-		const_iterator(const CompactSet &compactSet, const std::uint_fast64_t i) : compactSet(compactSet), i(i) { }
+		
+		const_iterator(const CompactSet &compactSet, const std::uint_fast64_t i) : compactSet(&compactSet), i(i) { }
 		friend class CompactSet<T>;
+		
 	public:
+		using value_type = T;
+		using pointer = T*;
+		using reference = T&;
+		using difference_type = std::ptrdiff_t;
+		using iterator_category = std::bidirectional_iterator_tag;
+		
+		const_iterator() = default;
+		
 		[[nodiscard]] bool operator==(const const_iterator &other) const { return this->i == other.i; }
 		[[nodiscard]] bool operator!=(const const_iterator &other) const { return this->i != other.i; }
+		[[nodiscard]] bool operator<(const const_iterator &other) const { return this->i < other.i; }
+		[[nodiscard]] bool operator<=(const const_iterator &other) const { return this->i <= other.i; }
+		[[nodiscard]] bool operator>(const const_iterator &other) const { return this->i > other.i; }
+		[[nodiscard]] bool operator>=(const const_iterator &other) const { return this->i >= other.i; }
+		[[nodiscard]] auto operator<=>(const const_iterator &other) const { return this->i <=> other.i; }
+		
 		inline const_iterator& operator++();
+		[[nodiscard]] const_iterator operator++(int) const { const_iterator copy = *this; ++copy; return copy; }
 		inline const_iterator& operator--();
+		[[nodiscard]] const_iterator operator--(int) const { const_iterator copy = *this; --copy; return copy; }
+		
 		[[nodiscard]] T operator*() const { return static_cast<T>(i); }
 	};
+	static_assert(std::bidirectional_iterator<const_iterator>);
 	
 	explicit inline CompactSet(const std::size_t capacity);
 	
@@ -63,14 +83,14 @@ public:
 template<typename T>
 typename CompactSet<T>::const_iterator& CompactSet<T>::const_iterator::operator++()
 {
-	for (++i; i != compactSet.bits.size() && !compactSet.bits[i]; ++i) { }
+	for (++i; i != compactSet->bits.size() && !compactSet->bits[i]; ++i) { }
 	return *this;
 }
 
 template<typename T>
 typename CompactSet<T>::const_iterator& CompactSet<T>::const_iterator::operator--()
 {
-	for (--i; !compactSet.bits[i]; --i) { }
+	for (--i; !compactSet->bits[i]; --i) { }
 	return *this;
 }
 
