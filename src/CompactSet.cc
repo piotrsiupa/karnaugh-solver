@@ -6,7 +6,7 @@ template<typename T>
 void CompactSet<T>::validate() const
 {
 	const std::size_t actualCount = std::ranges::count(bits.cbegin(), bits.cend(), true);
-	assert(count == actualCount);
+	assert(size_ == actualCount);
 }
 #endif
 

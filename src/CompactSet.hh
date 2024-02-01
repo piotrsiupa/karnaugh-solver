@@ -3,8 +3,6 @@
 #include <algorithm>
 #include <cassert>
 #include <concepts>
-#include <cstddef>
-#include <cstdint>
 #include <functional>
 #include <iterator>
 #include <limits>
@@ -16,16 +14,20 @@
 template<std::unsigned_integral T>
 class CompactSet
 {
+public:
+	using size_type = std::vector<bool>::size_type;
+	
+private:
 	std::vector<bool> bits;
-	std::size_t count = 0;
+	size_type size_ = 0;
 	
 public:
 	class const_iterator
 	{
 		const CompactSet<T> *compactSet = nullptr;
-		std::uint_fast64_t i;
+		size_type i;
 		
-		const_iterator(const CompactSet &compactSet, const std::uint_fast64_t i) : compactSet(&compactSet), i(i) { }
+		const_iterator(const CompactSet &compactSet, const size_type i) : compactSet(&compactSet), i(i) { }
 		friend class CompactSet<T>;
 		
 	public:
@@ -54,19 +56,20 @@ public:
 	};
 	static_assert(std::bidirectional_iterator<const_iterator>);
 	
-	explicit inline CompactSet(const std::size_t capacity);
+	explicit inline CompactSet(const size_type capacity);
 	
-	[[nodiscard]] bool operator==(const CompactSet &other) const { return this->count == other.count && this->bits == other.bits; }
+	[[nodiscard]] bool operator==(const CompactSet &other) const { return this->size_ == other.size_ && this->bits == other.bits; }
 	[[nodiscard]] bool operator!=(const CompactSet &other) const { return !(*this == other); }
 	
-	[[nodiscard]] bool empty() const { return count == 0; }
-	[[nodiscard]] bool full() const { return count == bits.size(); }
-	[[nodiscard]] std::size_t size() const { return count; }
-	[[nodiscard]] std::size_t capacity() const { return bits.size(); }
-	[[nodiscard]] bool check(const T value) const { return bits[value]; }
+	[[nodiscard]] bool empty() const { return size_ == 0; }
+	[[nodiscard]] bool full() const { return size_ == bits.size(); }
+	[[nodiscard]] size_type size() const { return size_; }
+	[[nodiscard]] size_type max_size() const { return bits.size(); }
+	[[nodiscard]] size_type count(const T value) const { return bits[value] ? 1 : 0; }
+	
 	inline bool add(const T value);
 	inline void add(const CompactSet &other);
-	inline void add(const CompactSet &other, const std::size_t overlappingCount);
+	inline void add(const CompactSet &other, const size_type overlappingCount);
 	inline bool remove(const T value);
 	
 	[[nodiscard]] inline const_iterator begin() const;
@@ -95,21 +98,21 @@ typename CompactSet<T>::const_iterator& CompactSet<T>::const_iterator::operator-
 }
 
 template<typename T>
-CompactSet<T>::CompactSet(const std::size_t capacity) :
+CompactSet<T>::CompactSet(const size_type capacity) :
 	bits(capacity, false)
 {
 	assert(capacity == 0 || capacity - 1 <= std::numeric_limits<T>::max());
-	assert(capacity <= std::numeric_limits<std::uint_fast64_t>::max());  // Otherwise, iterators won't work.
+	assert(capacity <= std::numeric_limits<size_type>::max());  // Otherwise, iterators won't work.
 }
 
 template<typename T>
 bool CompactSet<T>::add(const T value)
 {
-	const bool previous = check(value);
+	const bool previous = bits[value];
 	if (!previous)
 	{
 		bits[value] = true;
-		++count;
+		++size_;
 	}
 	return !previous;
 }
@@ -122,23 +125,23 @@ void CompactSet<T>::add(const CompactSet &other)
 }
 
 template<typename T>
-void CompactSet<T>::add(const CompactSet &other, const std::size_t overlappingCount)
+void CompactSet<T>::add(const CompactSet &other, const size_type overlappingCount)
 {
 	std::transform(
 			other.bits.cbegin(), other.bits.cend(),
 			this->bits.begin(), this->bits.begin(),
 			std::logical_or<bool>());
-	this->count += other.count - overlappingCount;
+	this->size_ += other.size_ - overlappingCount;
 }
 
 template<typename T>
 bool CompactSet<T>::remove(const T value)
 {
-	const bool previous = check(value);
+	const bool previous = bits[value];
 	if (previous)
 	{
 		bits[value] = false;
-		--count;
+		--size_;
 	}
 	return previous;
 }

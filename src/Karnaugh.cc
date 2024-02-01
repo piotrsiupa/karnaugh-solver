@@ -77,7 +77,7 @@ void Karnaugh::prettyPrintTable(const Minterms &target, const Minterms &allowed)
 				for (int i = 0; i != hBits; ++i)
 					std::cout << ' ';
 			const Minterm minterm = (x << hBits) | y;
-			std::cout << (target.check(minterm) ? 'T' : (allowed.check(minterm) ? '-' : 'F'));
+			std::cout << (target.count(minterm) != 0 ? 'T' : (allowed.count(minterm) != 0 ? '-' : 'F'));
 		}
 		std::cout << '\n';
 	}
@@ -181,9 +181,9 @@ void Karnaugh::validate(const solutions_t &solutions) const
 		for (Minterm i = 0;; ++i)
 		{
 			progress.substep([i = std::as_const(i)](){ return static_cast<Progress::completion_t>(i) / (static_cast<Progress::completion_t>(::maxMinterm) + 1.0); });
-			if (targetMinterms->check(i))
+			if (targetMinterms->count(i) != 0)
 				assert(solution.covers(i));
-			else if (!allowedMinterms->check(i))
+			else if (allowedMinterms->count(i) == 0)
 				assert(!solution.covers(i));
 			if (i == ::maxMinterm)
 				break;
