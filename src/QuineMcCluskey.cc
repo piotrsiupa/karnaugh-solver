@@ -34,7 +34,8 @@ void QuineMcCluskey::removeDontCareOnlyImplicants(Implicants &implicants, Progre
 	progress.step();
 	progress.substep([](){ return -0.0; }, true);
 	
-	implicants.erase(std::remove_if(implicants.begin(), implicants.end(), [&targetMinterms = *targetMinterms](const Implicant &implicant){ return !implicant.isAnyInMinterms(targetMinterms); }), implicants.end());
+	const auto eraseBegin = std::remove_if(implicants.begin(), implicants.end(), [&targetMinterms = *targetMinterms](const Implicant &implicant){ return !implicant.isAnyInMinterms(targetMinterms); });
+	implicants.erase(eraseBegin, implicants.end());
 }
 
 void QuineMcCluskey::cleanupImplicants(Implicants &implicants, Progress &progress)
@@ -166,7 +167,7 @@ Implicants QuineMcCluskey::createPrimeImplicantsWithoutHeuristic(Progress &progr
 			static_assert(::maxBits == 32);
 			const std::uint_fast64_t mask = ~static_cast<std::uint64_t>(bitMask);
 			const auto makeComparisonValue = [mask](const Implicant &implicant){ return ((static_cast<std::uint_fast64_t>(implicant.getMask()) << 32) | static_cast<std::uint_fast64_t>(implicant.getBits())) & static_cast<std::uint_fast64_t>(mask); };
-			std::ranges::sort(implicants.begin(), implicants.end(), [makeComparisonValue](const std::pair<Implicant, bool> &x, const std::pair<Implicant, bool> &y){
+			std::ranges::sort(implicants, [makeComparisonValue](const std::pair<Implicant, bool> &x, const std::pair<Implicant, bool> &y){
 					return makeComparisonValue(x.first) < makeComparisonValue(y.first);
 				});
 			std::pair<Implicant, bool> *previous = &implicants.front();
@@ -192,8 +193,9 @@ Implicants QuineMcCluskey::createPrimeImplicantsWithoutHeuristic(Progress &progr
 				primeImplicants.push_back(implicant);
 		implicants.clear();
 		
-		std::ranges::sort(newImplicants.begin(), newImplicants.end());
-		newImplicants.erase(std::unique(newImplicants.begin(), newImplicants.end()), newImplicants.end());
+		std::ranges::sort(newImplicants);
+		const auto eraseBegin = std::unique(newImplicants.begin(), newImplicants.end());
+		newImplicants.erase(eraseBegin, newImplicants.end());
 		implicants.reserve(newImplicants.size());
 		for (const auto &newImplicant : newImplicants)
 			implicants.emplace_back(newImplicant, false);
@@ -243,7 +245,7 @@ void QuineMcCluskey::validate(const Minterms &allowedMinterms, const Minterms &t
 		sortedImplicants.humanSort();
 		assert(implicants == sortedImplicants);
 	}
-	assert(std::ranges::adjacent_find(implicants.cbegin(), implicants.cend()) == implicants.cend());
+	assert(std::ranges::adjacent_find(implicants) == implicants.cend());
 	Minterms missedTargetMinterms = targetMinterms;
 	for (const Implicant &implicant : implicants)
 	{

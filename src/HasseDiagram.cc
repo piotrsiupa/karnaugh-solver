@@ -128,7 +128,7 @@ void HasseDiagram<VALUE_T>::removeSideBranch(typename std::vector<value_t>::cons
 	else
 	{
 		std::vector<Node*> &references = currentNode.children.find(REFERENCES)->getReferences();
-		references.erase(std::ranges::find(references.begin(), references.end(), endNode));
+		references.erase(std::ranges::find(references, endNode));
 		if (references.empty())
 			currentNode.children.erase(REFERENCES);
 	}

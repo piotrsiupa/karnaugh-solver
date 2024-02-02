@@ -93,12 +93,12 @@ void PetricksMethod<INDEX_T>::removeRedundantSums(productOfSumsOfProducts_t &pro
 			{
 				if (!y->empty())
 				{
-					if (std::ranges::includes(x->cbegin(), x->cend(), y->cbegin(), y->cend()))
+					if (std::ranges::includes(*x, *y))
 					{
 						x->clear();
 						break;
 					}
-					else if (std::ranges::includes(y->cbegin(), y->cend(), x->cbegin(), x->cend()))
+					else if (std::ranges::includes(*y, *x))
 					{
 						y->clear();
 					}
@@ -106,7 +106,8 @@ void PetricksMethod<INDEX_T>::removeRedundantSums(productOfSumsOfProducts_t &pro
 			}
 		}
 	}
-	productOfSums.erase(std::remove_if(productOfSums.begin(), productOfSums.end(), [](const auto &x){ return x.empty(); }), productOfSums.end());
+	const auto eraseBegin = std::remove_if(productOfSums.begin(), productOfSums.end(), [](const auto &x){ return x.empty(); });
+	productOfSums.erase(eraseBegin, productOfSums.end());
 }
 
 template<typename INDEX_T>
@@ -135,7 +136,7 @@ inline typename PetricksMethod<INDEX_T>::sumOfProducts_t PetricksMethod<INDEX_T>
 				progress.substep(estimateCompletion, operationsThisTime == 0);
 				++operationsThisTime;
 				newProduct.clear();
-				std::ranges::set_union(x.cbegin(), x.cend(), y.cbegin(), y.cend(), std::back_inserter(newProduct));
+				std::ranges::set_union(x, y, std::back_inserter(newProduct));
 				hasseDiagram.insertRemovingSupersets(std::move(newProduct));
 			}
 		}

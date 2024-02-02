@@ -7,7 +7,7 @@
 
 Implicants& Implicants::humanSort()
 {
-	std::ranges::sort(begin(), end(), [](const Implicant &x, const Implicant &y){ return x.humanLess(y); });
+	std::ranges::sort(*this, [](const Implicant &x, const Implicant &y){ return x.humanLess(y); });
 	return *this;
 }
 

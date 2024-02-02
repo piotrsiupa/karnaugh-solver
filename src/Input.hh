@@ -118,7 +118,7 @@ std::string Input::getLine()
 			break;
 		line += currentChar;
 	}
-    line.erase(std::ranges::find_if(line.rbegin(), line.rend(), [](unsigned char ch) { return !std::isspace(ch); }).base(), line.end());
+	line.erase(std::ranges::find_if(line.rbegin(), line.rend(), [](unsigned char ch) { return !std::isspace(ch); }).base(), line.end());
 	return line;
 }
 

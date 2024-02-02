@@ -22,7 +22,7 @@ SetOptimizerForProducts::SubsetFinder::sets_t SetOptimizerForProducts::convertSe
 		{
 			for (const auto &bit : set.splitBits())
 				convertedSet.push_back(bit.second ? bit.first : -bit.first - 1);
-			std::ranges::sort(convertedSet.begin(), convertedSet.end());
+			std::ranges::sort(convertedSet);
 		}
 		convertedSets.push_back(std::move(convertedSet));
 	}
