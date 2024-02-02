@@ -2,7 +2,7 @@
 
 
 #ifndef NDEBUG
-template<typename T>
+template<std::unsigned_integral T>
 void CompactSet<T>::validate() const
 {
 	const std::size_t actualCount = std::ranges::count(bits, true);

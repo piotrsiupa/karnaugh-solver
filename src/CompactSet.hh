@@ -83,21 +83,21 @@ public:
 };
 
 
-template<typename T>
+template<std::unsigned_integral T>
 typename CompactSet<T>::const_iterator& CompactSet<T>::const_iterator::operator++()
 {
 	for (++i; i != compactSet->bits.size() && !compactSet->bits[i]; ++i) { }
 	return *this;
 }
 
-template<typename T>
+template<std::unsigned_integral T>
 typename CompactSet<T>::const_iterator& CompactSet<T>::const_iterator::operator--()
 {
 	for (--i; !compactSet->bits[i]; --i) { }
 	return *this;
 }
 
-template<typename T>
+template<std::unsigned_integral T>
 CompactSet<T>::CompactSet(const size_type capacity) :
 	bits(capacity, false)
 {
@@ -105,7 +105,7 @@ CompactSet<T>::CompactSet(const size_type capacity) :
 	assert(capacity <= std::numeric_limits<size_type>::max());  // Otherwise, iterators won't work.
 }
 
-template<typename T>
+template<std::unsigned_integral T>
 bool CompactSet<T>::add(const T value)
 {
 	const bool previous = bits[value];
@@ -117,14 +117,14 @@ bool CompactSet<T>::add(const T value)
 	return !previous;
 }
 
-template<typename T>
+template<std::unsigned_integral T>
 void CompactSet<T>::add(const CompactSet &other)
 {
 	for (const T value : other)
 		add(value);
 }
 
-template<typename T>
+template<std::unsigned_integral T>
 void CompactSet<T>::add(const CompactSet &other, const size_type overlappingCount)
 {
 	std::transform(
@@ -134,7 +134,7 @@ void CompactSet<T>::add(const CompactSet &other, const size_type overlappingCoun
 	this->size_ += other.size_ - overlappingCount;
 }
 
-template<typename T>
+template<std::unsigned_integral T>
 bool CompactSet<T>::remove(const T value)
 {
 	const bool previous = bits[value];
@@ -146,7 +146,7 @@ bool CompactSet<T>::remove(const T value)
 	return previous;
 }
 
-template<typename T>
+template<std::unsigned_integral T>
 typename CompactSet<T>::const_iterator CompactSet<T>::begin() const
 {
 	const_iterator iter{*this, 0};

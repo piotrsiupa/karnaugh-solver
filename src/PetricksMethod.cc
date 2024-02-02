@@ -12,7 +12,7 @@
 #include "options.hh"
 
 
-template<typename INDEX_T>
+template<std::unsigned_integral INDEX_T>
 typename PetricksMethod<INDEX_T>::index_t PetricksMethod<INDEX_T>::findEssentialPrimeImplicantIndex(const Minterm minterm)
 {
 	std::uint_fast8_t count = 0;
@@ -30,7 +30,7 @@ typename PetricksMethod<INDEX_T>::index_t PetricksMethod<INDEX_T>::findEssential
 	return count != 0 ? index : NO_INDEX;
 }
 
-template<typename INDEX_T>
+template<std::unsigned_integral INDEX_T>
 Implicants PetricksMethod<INDEX_T>::extractEssentials(const std::string &functionName)
 {
 	const std::string progressName = "Extracting essentials of \"" + functionName + '"';
@@ -58,7 +58,7 @@ Implicants PetricksMethod<INDEX_T>::extractEssentials(const std::string &functio
 	return essentials;
 }
 
-template<typename INDEX_T>
+template<std::unsigned_integral INDEX_T>
 typename PetricksMethod<INDEX_T>::productOfSumsOfProducts_t PetricksMethod<INDEX_T>::createPreliminaryProductOfSums(const std::string &functionName) const
 {
 	const std::string progressName = "Creating initial solution space for \"" + functionName + '"';
@@ -77,7 +77,7 @@ typename PetricksMethod<INDEX_T>::productOfSumsOfProducts_t PetricksMethod<INDEX
 	return productOfSums;
 }
 
-template<typename INDEX_T>
+template<std::unsigned_integral INDEX_T>
 void PetricksMethod<INDEX_T>::removeRedundantSums(productOfSumsOfProducts_t &productOfSums, const std::string &functionName)
 {
 	const std::string progressName = "Cleaning up solution space for \"" + functionName + '"';
@@ -110,7 +110,7 @@ void PetricksMethod<INDEX_T>::removeRedundantSums(productOfSumsOfProducts_t &pro
 	productOfSums.erase(eraseBegin, productOfSums.end());
 }
 
-template<typename INDEX_T>
+template<std::unsigned_integral INDEX_T>
 typename PetricksMethod<INDEX_T>::productOfSumsOfProducts_t PetricksMethod<INDEX_T>::createProductOfSums(const std::string &functionName)
 {
 	productOfSumsOfProducts_t productOfSums = createPreliminaryProductOfSums(functionName);
@@ -119,7 +119,7 @@ typename PetricksMethod<INDEX_T>::productOfSumsOfProducts_t PetricksMethod<INDEX
 	return productOfSums;
 }
 
-template<typename INDEX_T>
+template<std::unsigned_integral INDEX_T>
 inline typename PetricksMethod<INDEX_T>::sumOfProducts_t PetricksMethod<INDEX_T>::multiplySumsOfProducts(const sumOfProducts_t &multiplier0, const sumOfProducts_t &multiplier1, long double &actualOperations, const long double expectedOperations, Progress &progress)
 {
 	product_t newProduct;
@@ -150,7 +150,7 @@ inline typename PetricksMethod<INDEX_T>::sumOfProducts_t PetricksMethod<INDEX_T>
 	}
 }
 
-template<typename INDEX_T>
+template<std::unsigned_integral INDEX_T>
 std::string PetricksMethod<INDEX_T>::ld2integerString(const long double value)
 {
 	if (value >= 1'000'000'000'000'000'000'000.0)
@@ -160,7 +160,7 @@ std::string PetricksMethod<INDEX_T>::ld2integerString(const long double value)
 	return ss.str();
 }
 
-template<typename INDEX_T>
+template<std::unsigned_integral INDEX_T>
 typename PetricksMethod<INDEX_T>::sumOfProducts_t PetricksMethod<INDEX_T>::findSumOfProducts(const std::string &functionName)
 {
 	productOfSumsOfProducts_t productOfSumsOfProducts = createProductOfSums(functionName);
@@ -210,7 +210,7 @@ typename PetricksMethod<INDEX_T>::sumOfProducts_t PetricksMethod<INDEX_T>::findS
 	return std::move(productOfSumsOfProducts.front());
 }
 
-template<typename INDEX_T>
+template<std::unsigned_integral INDEX_T>
 typename PetricksMethod<INDEX_T>::solutions_t PetricksMethod<INDEX_T>::solve(const std::string &functionName)
 {
 	Implicants essentials = extractEssentials(functionName);

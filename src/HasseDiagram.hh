@@ -86,7 +86,7 @@ public:
 };
 
 
-template<typename VALUE_T>
+template<std::unsigned_integral VALUE_T>
 void HasseDiagram<VALUE_T>::NodeChild::moveValue(NodeChild &&other)
 {
 	switch (other.key)
@@ -102,7 +102,7 @@ void HasseDiagram<VALUE_T>::NodeChild::moveValue(NodeChild &&other)
 	}
 }
 
-template<typename VALUE_T>
+template<std::unsigned_integral VALUE_T>
 void HasseDiagram<VALUE_T>::NodeChild::deconstructValue()
 {
 	switch (this->key)
@@ -117,7 +117,7 @@ void HasseDiagram<VALUE_T>::NodeChild::deconstructValue()
 	}
 }
 
-template<typename VALUE_T>
+template<std::unsigned_integral VALUE_T>
 HasseDiagram<VALUE_T>::NodeChild::NodeChild(NodeChild &&other) :
 	key(other.key)
 {
@@ -125,7 +125,7 @@ HasseDiagram<VALUE_T>::NodeChild::NodeChild(NodeChild &&other) :
 	other.key = TOP_NODE;
 }
 
-template<typename VALUE_T>
+template<std::unsigned_integral VALUE_T>
 typename HasseDiagram<VALUE_T>::NodeChild& HasseDiagram<VALUE_T>::NodeChild::operator=(NodeChild &&other)
 {
 	deconstructValue();
