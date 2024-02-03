@@ -165,7 +165,7 @@ void CompactSet<T>::unsafe_insert(const CompactSet &other, const size_type overl
 template<std::unsigned_integral T>
 typename CompactSet<T>::iterator CompactSet<T>::erase(const_iterator pos)
 {
-	bits[*pos];
+	bits[*pos] = false;
 	--size_;
 	++pos;
 	return pos;
@@ -176,7 +176,7 @@ typename CompactSet<T>::iterator CompactSet<T>::erase(const const_iterator first
 {
 	for (const_iterator current = first; current != last; ++current)
 	{
-		bits[*current];
+		bits[*current] = false;
 		--size_;
 	}
 	return last;
