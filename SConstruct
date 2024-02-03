@@ -1,8 +1,10 @@
 import sys
 
-# Use the second one to force usage of Clang.
-env = Environment()
-#env = Environment(TOOLS=['clang', 'clang++', 'gnulink'])
+AddOption('--clang', action='store_true', help='Force using Clang.')
+if GetOption('clang'):
+    env = Environment(TOOLS=['clang', 'clang++', 'gnulink'])
+else:
+    env = Environment()  # default toolchain
 
 if 'msvc' in env['TOOLS']:
     # Flags for MSVC.
