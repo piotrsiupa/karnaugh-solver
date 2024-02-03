@@ -1,8 +1,11 @@
+import multiprocessing
 import sys
 
-# Use the second one to force usage of Clang.
-env = Environment()
-#env = Environment(TOOLS=['clang', 'clang++', 'gnulink'])
+AddOption('--clang', action='store_true', help='Force using Clang.')
+if GetOption('clang'):
+    env = Environment(TOOLS=['clang', 'clang++', 'gnulink'])
+else:
+    env = Environment()  # default toolchain
 
 if 'msvc' in env['TOOLS']:
     # Flags for MSVC.
@@ -17,8 +20,19 @@ if 'g++' in env['TOOLS'] or 'clang++' in env['TOOLS']:
 if 'clang++' in env['TOOLS']:
     # Clang doesn't conform to the standard by default. This fixes it.
     env.Append(CCFLAGS=['-frelaxed-template-template-args'])
-# Commment this line to turn on assertions.
-env.Append(CPPDEFINES=['NDEBUG'])
+
+AddOption('--dev', action='store_true', help='Development build. (assertions and warnings as errors)')
+if GetOption('dev'):
+    if 'msvc' in env['TOOLS']:
+        env.Append(CCFLAGS=['/WX'])
+    else:
+        env.Append(CCFLAGS=['-Werror'])
+else:
+    # Turm off assertions.
+    env.Append(CPPDEFINES=['NDEBUG'])
+    # Set multithreaded build as default.
+    SetOption('num_jobs', multiprocessing.cpu_count())
+
 program = env.Program('karnaugh', env.Glob('./src/*.cc'))
 env.Alias('build', program)
 
