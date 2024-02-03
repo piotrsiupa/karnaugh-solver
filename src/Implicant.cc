@@ -29,7 +29,7 @@ bool Implicant::isAnyInMinterms(const Minterms &minterms) const
 	Minterm unmaskedPart = 0;
 	do
 	{
-		if (minterms.count(bits | unmaskedPart) != 0)
+		if (minterms.contains(bits | unmaskedPart))
 			return true;
 		unmaskedPart = (unmaskedPart - inversedMask) & inversedMask;
 	} while (unmaskedPart != 0);
@@ -44,7 +44,7 @@ bool Implicant::areAllInMinterms(const Minterms &minterms) const
 	Minterm unmaskedPart = 0;
 	do
 	{
-		if (minterms.count(bits | unmaskedPart) == 0)
+		if (!minterms.contains(bits | unmaskedPart))
 			return false;
 		unmaskedPart = (unmaskedPart - inversedMask) & inversedMask;
 	} while (unmaskedPart != 0);

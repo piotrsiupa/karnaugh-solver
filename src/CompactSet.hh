@@ -68,7 +68,6 @@ public:
 	[[nodiscard]] bool full() const { return size_ == bits.size(); }
 	[[nodiscard]] size_type size() const { return size_; }
 	[[nodiscard]] size_type max_size() const { return bits.size(); }
-	[[nodiscard]] size_type count(const value_type value) const { return bits[value] ? 1 : 0; }
 	
 	void clear() { std::fill(bits.begin(), bits.end(), false); size_ = 0; }
 	inline std::pair<iterator, bool> insert(const value_type value);
@@ -80,10 +79,19 @@ public:
 	inline void unsafe_insert(const CompactSet &other, const size_type overlappingCount);  // This is needed to cut off a few seconds at max input size.
 	template<class... Args>
 	std::pair<iterator, bool> emplace(Args&&... args) { return insert(value_type(std::forward<Args>(args)...)); }
+	template<class... Args>
+	iterator emplace_hint(const const_iterator, Args&&... args) { return insert(value_type(std::forward<Args>(args)...)).first; }
 	inline iterator erase(const_iterator pos);
 	inline iterator erase(const const_iterator first, const const_iterator last);
 	inline size_type erase(const value_type value);
 	void swap(CompactSet &other) { std::ranges::swap(this->bits, other.bits); std::ranges::swap(this->size_, other.size_); }
+	
+	[[nodiscard]] size_type count(const value_type value) const { return bits[value] ? 1 : 0; }
+	[[nodiscard]] const_iterator find(const value_type value) const { return bits[value] ? iterator(bits, value) : end(); }
+	[[nodiscard]] bool contains(const value_type value) const { return bits[value]; }
+	[[nodiscard]] inline std::pair<const_iterator, const_iterator> equal_range(const value_type value) const;
+	[[nodiscard]] inline const_iterator lower_bound(const value_type value) const;
+	[[nodiscard]] const_iterator upper_bound(const value_type value) const;
 	
 	[[nodiscard]] inline iterator begin() const;
 	[[nodiscard]] iterator end() const { return {this->bits, bits.size()}; }
@@ -178,6 +186,32 @@ typename CompactSet<T>::size_type CompactSet<T>::erase(const value_type value)
 		--size_;
 	}
 	return previous ? 1 : 0;
+}
+
+template<std::unsigned_integral T>
+std::pair<typename CompactSet<T>::iterator, typename CompactSet<T>::iterator> CompactSet<T>::equal_range(const value_type value) const
+{
+	iterator iter(bits, value);
+	if (bits[value])
+		return {iter, std::ranges::next(iter)};
+	++iter;
+	return {iter, iter};
+}
+
+template<std::unsigned_integral T>
+typename CompactSet<T>::iterator CompactSet<T>::lower_bound(const value_type value) const
+{
+	iterator iter(bits, value);
+	if (!bits[value])
+		++iter;
+	return iter;
+}
+
+template<std::unsigned_integral T>
+typename CompactSet<T>::iterator CompactSet<T>::upper_bound(const value_type value) const
+{
+	iterator iter(bits, value);
+	return ++iter;
 }
 
 template<std::unsigned_integral T>
