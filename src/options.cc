@@ -150,9 +150,9 @@ namespace options
 	OptionalText name("name", "(?:(?:module|class)[-_ ])?name", 'n');
 	
 	Mapped<PrimeImplicantsHeuristic, PrimeImplicantsHeuristic::AUTO> primeImplicantsHeuristic("i-heuristic", "(?:p(?:rime)?[-_ ])?i(?:mpl(?:ic(?:ant)?)?)?[-_ ]h(?:eur(?:is(?:tic)?)?)?|p?ih", 'i', {
-			{"brute(?:[-_ ]force)?|bf|slow", PrimeImplicantsHeuristic::BRUTE_FORCE},
-			{"auto|default", PrimeImplicantsHeuristic::AUTO},
-			{"greedy?|fast", PrimeImplicantsHeuristic::GREEDY},
+			{"brute(?:[-_ ]force)?|bf|s(?:low)?", PrimeImplicantsHeuristic::BRUTE_FORCE},
+			{"a(?:uto)?|d(?:efault)?", PrimeImplicantsHeuristic::AUTO},
+			{"g(?:reedy?)?|f(?:ast)?", PrimeImplicantsHeuristic::GREEDY},
 		});
 	Number<std::int_fast8_t> greedyImplicantAdjustments("greedy-i-retries", "(?:g(?:reedy?)?(?:(?:[-_ ]p(?:rime)?)?[-_ ]i(?:mpl(?:ic(?:ant)?)?)?)?|(?:(?:p(?:rime)?[-_ ])?i(?:mpl(?:ic(?:ant)?)?)?|g(?:reedy?)?)[-_ ]h(?:eur(?:is(?:t(?:ics?)?)?)?)?)[-_ ](?:(?:(?:re)?tr(?:y(?:[-_ ]count)?|ies)|(?:refine|redo|attempt|adjustment|repeat)(?:s|[-_ ]count)?|(?:pass|fix)(?:es|[-_ ]count)?)|(?:strengths?|counts?|[prtafsc]))|(?:gp?i|(?:g|p?i)?h)[prtafsc]", 'g', -1, 32, -1);
 	
