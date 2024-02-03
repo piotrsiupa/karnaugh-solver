@@ -58,6 +58,8 @@ public:
 	};
 	static_assert(std::bidirectional_iterator<iterator>);
 	using const_iterator = iterator;
+	using reverse_iterator = std::reverse_iterator<iterator>;
+	using const_reverse_iterator = reverse_iterator;
 	
 	explicit inline CompactSet(const size_type capacity);
 	
@@ -93,10 +95,14 @@ public:
 	[[nodiscard]] inline const_iterator lower_bound(const value_type value) const;
 	[[nodiscard]] const_iterator upper_bound(const value_type value) const;
 	
-	[[nodiscard]] inline iterator begin() const;
-	[[nodiscard]] iterator end() const { return {this->bits, bits.size()}; }
+	[[nodiscard]] inline const_iterator begin() const;
+	[[nodiscard]] const_iterator end() const { return {this->bits, bits.size()}; }
 	[[nodiscard]] const_iterator cbegin() const { return begin(); }
 	[[nodiscard]] const_iterator cend() const { return end(); }
+	[[nodiscard]] reverse_iterator rbegin() const { return std::make_reverse_iterator(end()); }
+	[[nodiscard]] reverse_iterator rend() const { return std::make_reverse_iterator(begin()); }
+	[[nodiscard]] const_reverse_iterator crbegin() const { return rbegin(); }
+	[[nodiscard]] const_reverse_iterator crend() const { return rend(); }
 	
 #ifndef NDEBUG
 	void validate() const;
