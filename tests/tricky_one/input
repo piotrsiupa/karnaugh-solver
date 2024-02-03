@@ -1,5 +1,17 @@
-# I would need to dive deep into the implementation to try to explain why,
-# but this example seems to be particularly hard for solvers to get right.
-4
-5;11;15
-4;7;10;13
+# This tests is used as the example in `README.md`.
+# Notice various ways of separating the values.
+a, b, c, d
+
+# Solvers tend to get a solution for this one along the lines of a'b'd' + bc'd,
+# instead of the optimal one: a'c' + abd. (1 less AND and 2 less NOTs)
+ tricky_0    
+  0; 5; 13   
+  1; 2; 4; 15
+
+# Solvers tend to not be biased against using NOT gates which often results in
+# solution a'c' + ac, instead of bd + ab. (2 less NOTs)
+# Beside that, this solution can reuse parts of the previous one reducing the
+# amount of gates even further. (2 less ANDs)
+tricky_1
+5 14
+0 1 3 4 7 10 11 12 13 15

@@ -20,7 +20,7 @@ public:
 	
 private:
 	using grayCode_t = std::vector<Minterm>;
-	using duplicates_t = Minterms::duplicates_t;
+	using duplicates_t = Minterms::overlapping_t;
 	
 	static std::size_t nameCount;
 	

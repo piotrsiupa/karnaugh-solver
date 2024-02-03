@@ -1,0 +1,8 @@
+Negated inputs: a, c
+Products:
+	[0] = !a && !c
+	[1] = a && b
+	[2] = d && [1]
+Sums:
+	"tricky_0" = [0] || [2]
+	"tricky_1" = [0] || [1]
