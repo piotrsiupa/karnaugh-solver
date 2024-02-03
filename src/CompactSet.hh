@@ -6,6 +6,7 @@
 #include <functional>
 #include <iterator>
 #include <limits>
+#include <utility>
 #include <vector>
 
 
@@ -15,6 +16,7 @@ template<std::unsigned_integral T>
 class CompactSet
 {
 public:
+	using value_type = T;
 	using size_type = std::vector<bool>::size_type;
 	
 private:
@@ -22,12 +24,12 @@ private:
 	size_type size_ = 0;
 	
 public:
-	class const_iterator
+	class iterator
 	{
-		const CompactSet<T> *compactSet = nullptr;
+		const std::vector<bool> *bits = nullptr;
 		size_type i;
 		
-		const_iterator(const CompactSet &compactSet, const size_type i) : compactSet(&compactSet), i(i) { }
+		iterator(const std::vector<bool> &bits, const size_type i) : bits(&bits), i(i) { }
 		friend class CompactSet<T>;
 		
 	public:
@@ -37,24 +39,25 @@ public:
 		using difference_type = std::ptrdiff_t;
 		using iterator_category = std::bidirectional_iterator_tag;
 		
-		const_iterator() = default;
+		iterator() = default;
 		
-		[[nodiscard]] bool operator==(const const_iterator &other) const { return this->i == other.i; }
-		[[nodiscard]] bool operator!=(const const_iterator &other) const { return this->i != other.i; }
-		[[nodiscard]] bool operator<(const const_iterator &other) const { return this->i < other.i; }
-		[[nodiscard]] bool operator<=(const const_iterator &other) const { return this->i <= other.i; }
-		[[nodiscard]] bool operator>(const const_iterator &other) const { return this->i > other.i; }
-		[[nodiscard]] bool operator>=(const const_iterator &other) const { return this->i >= other.i; }
-		[[nodiscard]] auto operator<=>(const const_iterator &other) const { return this->i <=> other.i; }
+		[[nodiscard]] bool operator==(const iterator &other) const { return this->i == other.i; }
+		[[nodiscard]] bool operator!=(const iterator &other) const { return this->i != other.i; }
+		[[nodiscard]] bool operator<(const iterator &other) const { return this->i < other.i; }
+		[[nodiscard]] bool operator<=(const iterator &other) const { return this->i <= other.i; }
+		[[nodiscard]] bool operator>(const iterator &other) const { return this->i > other.i; }
+		[[nodiscard]] bool operator>=(const iterator &other) const { return this->i >= other.i; }
+		[[nodiscard]] auto operator<=>(const iterator &other) const { return this->i <=> other.i; }
 		
-		inline const_iterator& operator++();
-		[[nodiscard]] const_iterator operator++(int) const { const_iterator copy = *this; ++copy; return copy; }
-		inline const_iterator& operator--();
-		[[nodiscard]] const_iterator operator--(int) const { const_iterator copy = *this; --copy; return copy; }
+		inline iterator& operator++();
+		[[nodiscard]] iterator operator++(int) const { iterator copy = *this; ++copy; return copy; }
+		inline iterator& operator--();
+		[[nodiscard]] iterator operator--(int) const { iterator copy = *this; --copy; return copy; }
 		
-		[[nodiscard]] T operator*() const { return static_cast<T>(i); }
+		[[nodiscard]] value_type operator*() const { return static_cast<value_type>(i); }
 	};
-	static_assert(std::bidirectional_iterator<const_iterator>);
+	static_assert(std::bidirectional_iterator<iterator>);
+	using const_iterator = iterator;
 	
 	explicit inline CompactSet(const size_type capacity);
 	
@@ -65,15 +68,25 @@ public:
 	[[nodiscard]] bool full() const { return size_ == bits.size(); }
 	[[nodiscard]] size_type size() const { return size_; }
 	[[nodiscard]] size_type max_size() const { return bits.size(); }
-	[[nodiscard]] size_type count(const T value) const { return bits[value] ? 1 : 0; }
+	[[nodiscard]] size_type count(const value_type value) const { return bits[value] ? 1 : 0; }
 	
-	inline bool add(const T value);
-	inline void add(const CompactSet &other);
-	inline void add(const CompactSet &other, const size_type overlappingCount);
-	inline bool remove(const T value);
+	void clear() { std::fill(bits.begin(), bits.end(), false); size_ = 0; }
+	inline std::pair<iterator, bool> insert(const value_type value);
+	iterator insert(const const_iterator, const value_type value) { return insert(value).first; }
+	template<class InputIt>
+	inline void insert(const InputIt first, const InputIt last);
+	void insert(std::initializer_list<value_type> ilist) { return insert(ilist.begin(), ilist.end()); }
+	inline void insert(const CompactSet &other);
+	inline void unsafe_insert(const CompactSet &other, const size_type overlappingCount);  // This is needed to cut off a few seconds at max input size.
+	template<class... Args>
+	std::pair<iterator, bool> emplace(Args&&... args) { return insert(value_type(std::forward<Args>(args)...)); }
+	inline iterator erase(const_iterator pos);
+	inline iterator erase(const const_iterator first, const const_iterator last);
+	inline size_type erase(const value_type value);
+	void swap(CompactSet &other) { std::ranges::swap(this->bits, other.bits); std::ranges::swap(this->size_, other.size_); }
 	
-	[[nodiscard]] inline const_iterator begin() const;
-	[[nodiscard]] const_iterator end() const { return {*this, bits.size()}; }
+	[[nodiscard]] inline iterator begin() const;
+	[[nodiscard]] iterator end() const { return {this->bits, bits.size()}; }
 	[[nodiscard]] const_iterator cbegin() const { return begin(); }
 	[[nodiscard]] const_iterator cend() const { return end(); }
 	
@@ -84,16 +97,16 @@ public:
 
 
 template<std::unsigned_integral T>
-typename CompactSet<T>::const_iterator& CompactSet<T>::const_iterator::operator++()
+typename CompactSet<T>::iterator& CompactSet<T>::iterator::operator++()
 {
-	for (++i; i != compactSet->bits.size() && !compactSet->bits[i]; ++i) { }
+	for (++i; i != bits->size() && !(*bits)[i]; ++i) { }
 	return *this;
 }
 
 template<std::unsigned_integral T>
-typename CompactSet<T>::const_iterator& CompactSet<T>::const_iterator::operator--()
+typename CompactSet<T>::iterator& CompactSet<T>::iterator::operator--()
 {
-	for (--i; !compactSet->bits[i]; --i) { }
+	for (--i; !(*bits)[i]; --i) { }
 	return *this;
 }
 
@@ -106,7 +119,7 @@ CompactSet<T>::CompactSet(const size_type capacity) :
 }
 
 template<std::unsigned_integral T>
-bool CompactSet<T>::add(const T value)
+std::pair<typename CompactSet<T>::iterator, bool> CompactSet<T>::insert(const value_type value)
 {
 	const bool previous = bits[value];
 	if (!previous)
@@ -114,18 +127,19 @@ bool CompactSet<T>::add(const T value)
 		bits[value] = true;
 		++size_;
 	}
-	return !previous;
+	return {{this->bits, value}, !previous};
 }
 
 template<std::unsigned_integral T>
-void CompactSet<T>::add(const CompactSet &other)
+template<class InputIt>
+void CompactSet<T>::insert(const InputIt first, const InputIt last)
 {
-	for (const T value : other)
-		add(value);
+	for (InputIt current = first; current != last; ++current)
+		insert(*current);
 }
 
 template<std::unsigned_integral T>
-void CompactSet<T>::add(const CompactSet &other, const size_type overlappingCount)
+void CompactSet<T>::unsafe_insert(const CompactSet &other, const size_type overlappingCount)
 {
 	std::transform(
 			other.bits.cbegin(), other.bits.cend(),
@@ -135,7 +149,27 @@ void CompactSet<T>::add(const CompactSet &other, const size_type overlappingCoun
 }
 
 template<std::unsigned_integral T>
-bool CompactSet<T>::remove(const T value)
+typename CompactSet<T>::iterator CompactSet<T>::erase(const_iterator pos)
+{
+	bits[*pos];
+	--size_;
+	++pos;
+	return pos;
+}
+
+template<std::unsigned_integral T>
+typename CompactSet<T>::iterator CompactSet<T>::erase(const const_iterator first, const const_iterator last)
+{
+	for (const_iterator current = first; current != last; ++current)
+	{
+		bits[*current];
+		--size_;
+	}
+	return last;
+}
+
+template<std::unsigned_integral T>
+typename CompactSet<T>::size_type CompactSet<T>::erase(const value_type value)
 {
 	const bool previous = bits[value];
 	if (previous)
@@ -143,13 +177,13 @@ bool CompactSet<T>::remove(const T value)
 		bits[value] = false;
 		--size_;
 	}
-	return previous;
+	return previous ? 1 : 0;
 }
 
 template<std::unsigned_integral T>
-typename CompactSet<T>::const_iterator CompactSet<T>::begin() const
+typename CompactSet<T>::iterator CompactSet<T>::begin() const
 {
-	const_iterator iter{*this, 0};
+	iterator iter{this->bits, 0};
 	if (!bits.empty() && !bits[0])
 		++iter;
 	return iter;

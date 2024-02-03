@@ -59,7 +59,7 @@ void Implicant::addToMinterms(Minterms &minterms) const
 	Minterm unmaskedPart = 0;
 	do
 	{
-		minterms.add(bits | unmaskedPart);
+		minterms.insert(bits | unmaskedPart);
 		unmaskedPart = (unmaskedPart - inversedMask) & inversedMask;
 	} while (unmaskedPart != 0);
 }
@@ -72,7 +72,7 @@ void Implicant::removeFromMinterms(Minterms &minterms) const
 	Minterm unmaskedPart = 0;
 	do
 	{
-		minterms.remove(bits | unmaskedPart);
+		minterms.erase(bits | unmaskedPart);
 		unmaskedPart = (unmaskedPart - inversedMask) & inversedMask;
 	} while (unmaskedPart != 0);
 }

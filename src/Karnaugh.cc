@@ -156,7 +156,7 @@ std::unique_ptr<Minterms> Karnaugh::loadMinterms(Input &input, Progress &progres
 	{
 		progress.substep(calcStepCompletion);
 		currentMinterm = input.getMinterm();
-		if (!minterms->add(currentMinterm))
+		if (!minterms->insert(currentMinterm).second)
 			duplicates.push_back(currentMinterm);
 	} while (input.hasNextInLine());
 	if (!duplicates.empty())
@@ -245,7 +245,7 @@ bool Karnaugh::loadData(Input &input)
 			cerr << "! (They will be ignored.)\n";
 		}
 		progress.substep([](){ return -0.5; }, true);
-		allowedMinterms->add(*targetMinterms, duplicates.size());
+		allowedMinterms->unsafe_insert(*targetMinterms, duplicates.size());
 	}
 
 #ifndef NDEBUG
