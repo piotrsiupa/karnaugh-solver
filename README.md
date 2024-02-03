@@ -64,7 +64,12 @@ scons
 
 To build it and run the tests, execute the command:
 ```bash
-scons test
+scons --dev test
+```
+
+You can see other options by running:
+```bash
+scons --help
 ```
 
 ### Manual build
