@@ -83,6 +83,14 @@ void QuineMcCluskey::refineHeuristicImplicant(const Minterm initialMinterm, Impl
 		if (implicantVariant.getBitCount() <= implicant.getBitCount())
 			implicant = std::move(implicantVariant);
 	}
+	for (auto iter = bitMasks.cbegin(); iter != std::prev(bitMasks.cend()); ++iter)
+	{
+		const Minterm bit = *iter;
+		if ((bit & implicant.getMask()) == 0)
+			continue;
+		if (Implicant(implicant.getBits() ^ bit, implicant.getMask()).areAllInMinterms(*allowedMinterms))
+			implicant.applyMask(~bit);
+	}
 }
 
 Implicants QuineMcCluskey::createImplicantsWithHeuristic(Progress &progress) const
@@ -256,7 +264,7 @@ void QuineMcCluskey::validate(const Minterms &allowedMinterms, const Minterms &t
 	if (implicants.size() <= 250000)
 		for (Implicants::const_iterator iter = implicants.cbegin(); iter != implicants.cend(); ++iter)
 			for (Implicants::const_iterator jiter = std::next(iter); jiter != implicants.cend(); ++jiter)
-				assert(!iter->contains(*jiter) && !jiter->contains(*iter));
+				assert(!(iter->contains(*jiter) || jiter->contains(*iter)));
 }
 #endif
 
