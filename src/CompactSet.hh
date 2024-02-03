@@ -16,8 +16,14 @@ template<std::unsigned_integral T>
 class CompactSet
 {
 public:
+	using key_type = T;
 	using value_type = T;
 	using size_type = std::vector<bool>::size_type;
+	using difference_type = std::vector<bool>::difference_type;
+	using key_compare = std::less<key_type>;
+	using value_compare = std::less<value_type>;
+	using pointer = T*;
+	using reference = T&;
 	
 private:
 	std::vector<bool> bits;
