@@ -83,7 +83,6 @@ public:
 	template<class InputIt>
 	inline void insert(const InputIt first, const InputIt last);
 	void insert(std::initializer_list<value_type> ilist) { return insert(ilist.begin(), ilist.end()); }
-	inline void insert(const CompactSet &other);
 	inline void unsafe_insert(const CompactSet &other, const size_type overlappingCount);  // This is needed to cut off a few seconds at max input size.
 	template<class... Args>
 	std::pair<iterator, bool> emplace(Args&&... args) { return insert(value_type(std::forward<Args>(args)...)); }
