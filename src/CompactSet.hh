@@ -146,7 +146,7 @@ std::pair<typename CompactSet<T>::iterator, bool> CompactSet<T>::insert(const va
 		bits[value] = true;
 		++size_;
 	}
-	return {{this->bits, value}, !previous};
+	return {{bits, value}, !previous};
 }
 
 template<std::unsigned_integral T>
@@ -222,13 +222,14 @@ template<std::unsigned_integral T>
 typename CompactSet<T>::iterator CompactSet<T>::upper_bound(const value_type value) const
 {
 	iterator iter(bits, value);
-	return ++iter;
+	++iter;
+	return iter;
 }
 
 template<std::unsigned_integral T>
 typename CompactSet<T>::iterator CompactSet<T>::begin() const
 {
-	iterator iter{this->bits, 0};
+	iterator iter(bits, 0);
 	if (!bits.empty() && !bits[0])
 		++iter;
 	return iter;
