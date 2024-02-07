@@ -33,7 +33,7 @@ public:
 	class iterator
 	{
 		const std::vector<bool> *bits = nullptr;
-		size_type i;
+		size_type i = 0;
 		
 		iterator(const std::vector<bool> &bits, const size_type i) : bits(&bits), i(i) { }
 		friend class CompactSet<T>;
