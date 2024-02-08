@@ -64,8 +64,8 @@ public:
 	
 	explicit inline CompactSet(const size_type capacity);
 	
-	[[nodiscard]] bool operator==(const CompactSet &other) const { return this->size_ == other.size_ && this->bits == other.bits; }
-	[[nodiscard]] auto operator<=>(const CompactSet &other) const { return std::lexicographical_compare_three_way(this->cbegin(), this->cend(), other.cbegin(), other.cend()); }
+	[[nodiscard]] inline bool operator==(const CompactSet &other) const;
+	[[nodiscard]] inline auto operator<=>(const CompactSet &other) const;
 	
 	[[nodiscard]] bool empty() const { return size_ == 0; }
 	[[nodiscard]] bool full() const { return size_ == bits.size(); }
@@ -130,6 +130,26 @@ CompactSet<T>::CompactSet(const size_type capacity) :
 {
 	assert(capacity == 0 || capacity - 1 <= std::numeric_limits<T>::max());
 	assert(capacity <= std::numeric_limits<size_type>::max());  // Otherwise, iterators won't work.
+}
+
+template<std::unsigned_integral T>
+bool CompactSet<T>::operator==(const CompactSet &other) const
+{
+	if (this->size_ != other.size_)
+		return false;
+	if (this->bits.size() == other.bits.size())
+		return this->bits == other.bits;
+	else
+		return std::lexicographical_compare_three_way(this->cbegin(), this->cend(), other.cbegin(), other.cend()) == 0;
+}
+
+template<std::unsigned_integral T>
+auto CompactSet<T>::operator<=>(const CompactSet &other) const
+{
+	if (this->bits.size() == other.bits.size())
+		return this->bits <=> other.bits;
+	else
+		return std::lexicographical_compare_three_way(this->cbegin(), this->cend(), other.cbegin(), other.cend());
 }
 
 template<std::unsigned_integral T>
