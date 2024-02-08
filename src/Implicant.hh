@@ -34,11 +34,6 @@ public:
 	constexpr Implicant& operator=(const Implicant &) = default;
 	
 	constexpr bool operator==(const Implicant &other) const = default;
-	constexpr bool operator!=(const Implicant &other) const = default;
-	constexpr bool operator<(const Implicant &other) const { return this->makeComparisonValue() < other.makeComparisonValue(); }
-	constexpr bool operator>(const Implicant &other) const { return other < *this; }
-	constexpr bool operator<=(const Implicant &other) const { return !(*this > other); }
-	constexpr bool operator>=(const Implicant &other) const { return !(*this < other); }
 	constexpr auto operator<=>(const Implicant &other) const { return this->makeComparisonValue() <=> other.makeComparisonValue(); }
 	bool humanLess(const Implicant &other) const;
 	constexpr bool covers(const Minterm minterm) const { return (minterm & mask) == bits; }
