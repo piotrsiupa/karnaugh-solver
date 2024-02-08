@@ -3,7 +3,7 @@
 
 #ifndef NDEBUG
 template<std::unsigned_integral T>
-void CompactSet<T>::validate() const
+void CompactSet<T>::validate() const noexcept
 {
 	const std::size_t actualCount = std::ranges::count(bits, true);
 	assert(size_ == actualCount);

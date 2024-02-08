@@ -35,7 +35,7 @@ public:
 		const std::vector<bool> *bits = nullptr;
 		size_type i = 0;
 		
-		iterator(const std::vector<bool> &bits, const size_type i) : bits(&bits), i(i) { }
+		iterator(const std::vector<bool> &bits, const size_type i) noexcept : bits(&bits), i(i) { }
 		friend class CompactSet<T>;
 		
 	public:
@@ -45,17 +45,17 @@ public:
 		using difference_type = std::ptrdiff_t;
 		using iterator_category = std::bidirectional_iterator_tag;
 		
-		iterator() = default;
+		iterator() noexcept = default;
 		
-		[[nodiscard]] bool operator==(const iterator &other) const { return this->i == other.i; }
-		[[nodiscard]] auto operator<=>(const iterator &other) const { return this->i <=> other.i; }
+		[[nodiscard]] bool operator==(const iterator &other) const noexcept { return this->i == other.i; }
+		[[nodiscard]] auto operator<=>(const iterator &other) const noexcept { return this->i <=> other.i; }
 		
-		inline iterator& operator++();
-		[[nodiscard]] iterator operator++(int) const { iterator copy = *this; ++copy; return copy; }
-		inline iterator& operator--();
-		[[nodiscard]] iterator operator--(int) const { iterator copy = *this; --copy; return copy; }
+		inline iterator& operator++() noexcept;
+		[[nodiscard]] iterator operator++(int) const noexcept { iterator copy = *this; ++copy; return copy; }
+		inline iterator& operator--() noexcept;
+		[[nodiscard]] iterator operator--(int) const noexcept { iterator copy = *this; --copy; return copy; }
 		
-		[[nodiscard]] value_type operator*() const { return static_cast<value_type>(i); }
+		[[nodiscard]] value_type operator*() const noexcept { return static_cast<value_type>(i); }
 	};
 	static_assert(std::bidirectional_iterator<iterator>);
 	using const_iterator = iterator;
@@ -64,54 +64,54 @@ public:
 	
 	explicit inline CompactSet(const size_type capacity);
 	
-	[[nodiscard]] inline bool operator==(const CompactSet &other) const;
-	[[nodiscard]] inline auto operator<=>(const CompactSet &other) const;
+	[[nodiscard]] inline bool operator==(const CompactSet &other) const noexcept;
+	[[nodiscard]] inline auto operator<=>(const CompactSet &other) const noexcept;
 	
-	[[nodiscard]] bool empty() const { return size_ == 0; }
-	[[nodiscard]] bool full() const { return size_ == bits.size(); }
-	[[nodiscard]] size_type size() const { return size_; }
-	[[nodiscard]] size_type max_size() const { return bits.size(); }
+	[[nodiscard]] bool empty() const noexcept { return size_ == 0; }
+	[[nodiscard]] bool full() const noexcept { return size_ == bits.size(); }
+	[[nodiscard]] size_type size() const noexcept { return size_; }
+	[[nodiscard]] size_type max_size() const noexcept { return bits.size(); }
 	
-	void clear() { std::fill(bits.begin(), bits.end(), false); size_ = 0; }
-	inline std::pair<iterator, bool> insert(const value_type value);
-	iterator insert(const const_iterator, const value_type value) { return insert(value).first; }
+	void clear() noexcept { std::fill(bits.begin(), bits.end(), false); size_ = 0; }
+	inline std::pair<iterator, bool> insert(const value_type value) noexcept;
+	iterator insert(const const_iterator, const value_type value) noexcept { return insert(value).first; }
 	template<class InputIt>
-	inline void insert(const InputIt first, const InputIt last);
-	void insert(std::initializer_list<value_type> ilist) { return insert(ilist.begin(), ilist.end()); }
-	inline void unsafe_insert(const CompactSet &other, const size_type overlappingCount);  // This is needed to cut off a few seconds at max input size.
+	inline void insert(const InputIt first, const InputIt last) noexcept;
+	void insert(std::initializer_list<value_type> ilist) noexcept { return insert(ilist.begin(), ilist.end()); }
+	inline void unsafe_insert(const CompactSet &other, const size_type overlappingCount) noexcept;  // This is needed to cut off a few seconds at max input size.
 	template<class... Args>
-	std::pair<iterator, bool> emplace(Args&&... args) { return insert(value_type(std::forward<Args>(args)...)); }
+	std::pair<iterator, bool> emplace(Args&&... args) noexcept { return insert(value_type(std::forward<Args>(args)...)); }
 	template<class... Args>
-	iterator emplace_hint(const const_iterator, Args&&... args) { return insert(value_type(std::forward<Args>(args)...)).first; }
-	inline iterator erase(const_iterator pos);
-	inline iterator erase(const const_iterator first, const const_iterator last);
-	inline size_type erase(const value_type value);
-	void swap(CompactSet &other) { std::ranges::swap(this->bits, other.bits); std::ranges::swap(this->size_, other.size_); }
+	iterator emplace_hint(const const_iterator, Args&&... args) noexcept { return insert(value_type(std::forward<Args>(args)...)).first; }
+	inline iterator erase(const_iterator pos) noexcept;
+	inline iterator erase(const const_iterator first, const const_iterator last) noexcept;
+	inline size_type erase(const value_type value) noexcept;
+	void swap(CompactSet &other) noexcept { std::ranges::swap(this->bits, other.bits); std::ranges::swap(this->size_, other.size_); }
 	
-	[[nodiscard]] size_type count(const value_type value) const { assert(value < bits.size()); return bits[value] ? 1 : 0; }
-	[[nodiscard]] const_iterator find(const value_type value) const { assert(value < bits.size()); return bits[value] ? iterator(bits, value) : end(); }
-	[[nodiscard]] bool contains(const value_type value) const { assert(value < bits.size()); return bits[value]; }
-	[[nodiscard]] inline std::pair<const_iterator, const_iterator> equal_range(const value_type value) const;
-	[[nodiscard]] inline const_iterator lower_bound(const value_type value) const;
-	[[nodiscard]] const_iterator upper_bound(const value_type value) const;
+	[[nodiscard]] size_type count(const value_type value) const noexcept { assert(value < bits.size()); return bits[value] ? 1 : 0; }
+	[[nodiscard]] const_iterator find(const value_type value) const noexcept { assert(value < bits.size()); return bits[value] ? iterator(bits, value) : end(); }
+	[[nodiscard]] bool contains(const value_type value) const noexcept { assert(value < bits.size()); return bits[value]; }
+	[[nodiscard]] inline std::pair<const_iterator, const_iterator> equal_range(const value_type value) const noexcept;
+	[[nodiscard]] inline const_iterator lower_bound(const value_type value) const noexcept;
+	[[nodiscard]] const_iterator upper_bound(const value_type value) const noexcept;
 	
-	[[nodiscard]] inline const_iterator begin() const;
-	[[nodiscard]] const_iterator end() const { return {this->bits, bits.size()}; }
-	[[nodiscard]] const_iterator cbegin() const { return begin(); }
-	[[nodiscard]] const_iterator cend() const { return end(); }
-	[[nodiscard]] reverse_iterator rbegin() const { return std::make_reverse_iterator(end()); }
-	[[nodiscard]] reverse_iterator rend() const { return std::make_reverse_iterator(begin()); }
-	[[nodiscard]] const_reverse_iterator crbegin() const { return rbegin(); }
-	[[nodiscard]] const_reverse_iterator crend() const { return rend(); }
+	[[nodiscard]] inline const_iterator begin() const noexcept;
+	[[nodiscard]] const_iterator end() const noexcept { return {this->bits, bits.size()}; }
+	[[nodiscard]] const_iterator cbegin() const noexcept { return begin(); }
+	[[nodiscard]] const_iterator cend() const noexcept { return end(); }
+	[[nodiscard]] reverse_iterator rbegin() const noexcept { return std::make_reverse_iterator(end()); }
+	[[nodiscard]] reverse_iterator rend() const noexcept { return std::make_reverse_iterator(begin()); }
+	[[nodiscard]] const_reverse_iterator crbegin() const noexcept { return rbegin(); }
+	[[nodiscard]] const_reverse_iterator crend() const noexcept { return rend(); }
 	
 #ifndef NDEBUG
-	void validate() const;
+	void validate() const noexcept;
 #endif
 };
 
 
 template<std::unsigned_integral T>
-typename CompactSet<T>::iterator& CompactSet<T>::iterator::operator++()
+typename CompactSet<T>::iterator& CompactSet<T>::iterator::operator++() noexcept
 {
 	assert(i < bits->size());
 	for (++i; i != bits->size() && !(*bits)[i]; ++i) { }
@@ -119,7 +119,7 @@ typename CompactSet<T>::iterator& CompactSet<T>::iterator::operator++()
 }
 
 template<std::unsigned_integral T>
-typename CompactSet<T>::iterator& CompactSet<T>::iterator::operator--()
+typename CompactSet<T>::iterator& CompactSet<T>::iterator::operator--() noexcept
 {
 	assert(i != 0);
 	for (--i; !(*bits)[i]; --i)
@@ -136,7 +136,7 @@ CompactSet<T>::CompactSet(const size_type capacity) :
 }
 
 template<std::unsigned_integral T>
-bool CompactSet<T>::operator==(const CompactSet &other) const
+bool CompactSet<T>::operator==(const CompactSet &other) const noexcept
 {
 	if (this->size_ != other.size_)
 		return false;
@@ -147,7 +147,7 @@ bool CompactSet<T>::operator==(const CompactSet &other) const
 }
 
 template<std::unsigned_integral T>
-auto CompactSet<T>::operator<=>(const CompactSet &other) const
+auto CompactSet<T>::operator<=>(const CompactSet &other) const noexcept
 {
 	if (this->bits.size() == other.bits.size())
 		return this->bits <=> other.bits;
@@ -156,7 +156,7 @@ auto CompactSet<T>::operator<=>(const CompactSet &other) const
 }
 
 template<std::unsigned_integral T>
-std::pair<typename CompactSet<T>::iterator, bool> CompactSet<T>::insert(const value_type value)
+std::pair<typename CompactSet<T>::iterator, bool> CompactSet<T>::insert(const value_type value) noexcept
 {
 	assert(value < bits.size());
 	const bool previous = bits[value];
@@ -170,14 +170,14 @@ std::pair<typename CompactSet<T>::iterator, bool> CompactSet<T>::insert(const va
 
 template<std::unsigned_integral T>
 template<class InputIt>
-void CompactSet<T>::insert(const InputIt first, const InputIt last)
+void CompactSet<T>::insert(const InputIt first, const InputIt last) noexcept
 {
 	for (InputIt current = first; current != last; ++current)
 		insert(*current);
 }
 
 template<std::unsigned_integral T>
-void CompactSet<T>::unsafe_insert(const CompactSet &other, const size_type overlappingCount)
+void CompactSet<T>::unsafe_insert(const CompactSet &other, const size_type overlappingCount) noexcept
 {
 	assert(other.bits.size() <= this->bits.size());
 	assert(overlappingCount <= this->size_);
@@ -190,7 +190,7 @@ void CompactSet<T>::unsafe_insert(const CompactSet &other, const size_type overl
 }
 
 template<std::unsigned_integral T>
-typename CompactSet<T>::iterator CompactSet<T>::erase(const_iterator pos)
+typename CompactSet<T>::iterator CompactSet<T>::erase(const_iterator pos) noexcept
 {
 	bits[*pos] = false;
 	--size_;
@@ -199,7 +199,7 @@ typename CompactSet<T>::iterator CompactSet<T>::erase(const_iterator pos)
 }
 
 template<std::unsigned_integral T>
-typename CompactSet<T>::iterator CompactSet<T>::erase(const const_iterator first, const const_iterator last)
+typename CompactSet<T>::iterator CompactSet<T>::erase(const const_iterator first, const const_iterator last) noexcept
 {
 	for (const_iterator current = first; current != last; ++current)
 	{
@@ -210,7 +210,7 @@ typename CompactSet<T>::iterator CompactSet<T>::erase(const const_iterator first
 }
 
 template<std::unsigned_integral T>
-typename CompactSet<T>::size_type CompactSet<T>::erase(const value_type value)
+typename CompactSet<T>::size_type CompactSet<T>::erase(const value_type value) noexcept
 {
 	assert(value < bits.size());
 	const bool previous = bits[value];
@@ -223,7 +223,7 @@ typename CompactSet<T>::size_type CompactSet<T>::erase(const value_type value)
 }
 
 template<std::unsigned_integral T>
-std::pair<typename CompactSet<T>::iterator, typename CompactSet<T>::iterator> CompactSet<T>::equal_range(const value_type value) const
+std::pair<typename CompactSet<T>::iterator, typename CompactSet<T>::iterator> CompactSet<T>::equal_range(const value_type value) const noexcept
 {
 	assert(value < bits.size());
 	iterator iter(bits, value);
@@ -234,7 +234,7 @@ std::pair<typename CompactSet<T>::iterator, typename CompactSet<T>::iterator> Co
 }
 
 template<std::unsigned_integral T>
-typename CompactSet<T>::iterator CompactSet<T>::lower_bound(const value_type value) const
+typename CompactSet<T>::iterator CompactSet<T>::lower_bound(const value_type value) const noexcept
 {
 	assert(value < bits.size());
 	iterator iter(bits, value);
@@ -244,7 +244,7 @@ typename CompactSet<T>::iterator CompactSet<T>::lower_bound(const value_type val
 }
 
 template<std::unsigned_integral T>
-typename CompactSet<T>::iterator CompactSet<T>::upper_bound(const value_type value) const
+typename CompactSet<T>::iterator CompactSet<T>::upper_bound(const value_type value) const noexcept
 {
 	assert(value < bits.size());
 	iterator iter(bits, value);
@@ -253,7 +253,7 @@ typename CompactSet<T>::iterator CompactSet<T>::upper_bound(const value_type val
 }
 
 template<std::unsigned_integral T>
-typename CompactSet<T>::iterator CompactSet<T>::begin() const
+typename CompactSet<T>::iterator CompactSet<T>::begin() const noexcept
 {
 	iterator iter(bits, 0);
 	if (!bits.empty() && !bits[0])
