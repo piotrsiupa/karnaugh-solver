@@ -1,10 +1,11 @@
 #pragma once
 
+#include <concepts>
 #include <cstddef>
 #include <vector>
 
 
-template<typename VALUE_T>
+template<std::unsigned_integral VALUE_T>
 class HasseDiagram
 {
 public:
@@ -62,7 +63,7 @@ private:
 	};
 	Node root{{}, 0, nullptr};
 	
-	std::size_t size = 0;
+	std::size_t count = 0;
 	
 	mutable std::vector<value_t> workingVector;
 	
@@ -78,14 +79,14 @@ private:
 	void getSets(sets_t &sets, const Node &currentNode) const;
 	
 public:
-	std::size_t getSize() const { return size; }
+	std::size_t size() const { return count; }
 	sets_t getSets() const;
 	
 	bool insertRemovingSupersets(const set_t &set);
 };
 
 
-template<typename VALUE_T>
+template<std::unsigned_integral VALUE_T>
 void HasseDiagram<VALUE_T>::NodeChild::moveValue(NodeChild &&other)
 {
 	switch (other.key)
@@ -101,7 +102,7 @@ void HasseDiagram<VALUE_T>::NodeChild::moveValue(NodeChild &&other)
 	}
 }
 
-template<typename VALUE_T>
+template<std::unsigned_integral VALUE_T>
 void HasseDiagram<VALUE_T>::NodeChild::deconstructValue()
 {
 	switch (this->key)
@@ -116,7 +117,7 @@ void HasseDiagram<VALUE_T>::NodeChild::deconstructValue()
 	}
 }
 
-template<typename VALUE_T>
+template<std::unsigned_integral VALUE_T>
 HasseDiagram<VALUE_T>::NodeChild::NodeChild(NodeChild &&other) :
 	key(other.key)
 {
@@ -124,7 +125,7 @@ HasseDiagram<VALUE_T>::NodeChild::NodeChild(NodeChild &&other) :
 	other.key = TOP_NODE;
 }
 
-template<typename VALUE_T>
+template<std::unsigned_integral VALUE_T>
 typename HasseDiagram<VALUE_T>::NodeChild& HasseDiagram<VALUE_T>::NodeChild::operator=(NodeChild &&other)
 {
 	deconstructValue();

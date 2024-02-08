@@ -38,7 +38,7 @@ SetOptimizerForSums::gateCount_t SetOptimizerForSums::countGates(const subsetSel
 		for (const std::size_t &subset : subsetSelections[i])
 		{
 			std::set<std::size_t> setDifference;
-			std::set_difference(reducedSet.cbegin(), reducedSet.cend(), graph[subset].first.cbegin(), graph[subset].first.cend(), std::inserter(setDifference, setDifference.end()));
+			std::ranges::set_difference(reducedSet, graph[subset].first, std::inserter(setDifference, setDifference.end()));
 			reducedSet = std::move(setDifference);
 		}
 		gates += reducedSet.size();
@@ -57,7 +57,7 @@ void SetOptimizerForSums::substractSubsets(sets_t &sets, const subsetSelections_
 		{
 			const set_t &subset = sets[subsetIndex];
 			std::set<std::size_t> setDifference;
-			std::set_difference(set.cbegin(), set.cend(), subset.cbegin(), subset.cend(), std::inserter(setDifference, setDifference.end()));
+			std::ranges::set_difference(set, subset, std::inserter(setDifference, setDifference.end()));
 			set = std::move(setDifference);
 		}
 	}

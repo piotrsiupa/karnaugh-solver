@@ -1,5 +1,6 @@
 #pragma once
 
+#include <concepts>
 #include <cstddef>
 #include <optional>
 #include <set>
@@ -14,7 +15,7 @@
 #include "Progress.hh"
 
 
-template<typename INDEX_T>
+template<std::unsigned_integral INDEX_T>
 class PetricksMethod
 {
 public:

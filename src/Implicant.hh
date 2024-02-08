@@ -25,22 +25,24 @@ public:
 private:
 	mask_t bits, mask;
 	
+	constexpr std::uint_fast64_t makeComparisonValue() const;
+	
 public:
-	class ConstIterator
+	class const_iterator
 	{
 		const Minterm bits;
 		const Minterm inversedMask;
 		Minterm unmaskedPart = 0;
 		bool end;
 	protected:
-		ConstIterator(const Minterm bits, const Minterm mask) : bits(bits), inversedMask(~mask & ::maxMinterm), end(false) {}
-		constexpr ConstIterator() : bits(0), inversedMask(0), end(true) {}
+		const_iterator(const Minterm bits, const Minterm mask) : bits(bits), inversedMask(~mask & ::maxMinterm), end(false) {}
+		constexpr const_iterator() : bits(0), inversedMask(0), end(true) {}
 		friend class Implicant;
 	public:
-		[[nodiscard]] constexpr bool operator==(const ConstIterator &other) const { return this->end == other.end && this->unmaskedPart == other.unmaskedPart; }
-		[[nodiscard]] constexpr bool operator!=(const ConstIterator &other) const { return !(*this == other); }
+		[[nodiscard]] constexpr bool operator==(const const_iterator &other) const { return this->end == other.end && this->unmaskedPart == other.unmaskedPart; }
+		[[nodiscard]] constexpr std::strong_ordering operator<=>(const const_iterator &other) const;
 		[[nodiscard]] constexpr Minterm operator*() const { return bits | unmaskedPart; }
-		ConstIterator& operator++() { unmaskedPart = (unmaskedPart - inversedMask) & inversedMask; if (unmaskedPart == 0) [[unlikely]] end = true; return *this; }
+		const_iterator& operator++() { unmaskedPart = (unmaskedPart - inversedMask) & inversedMask; if (unmaskedPart == 0) [[unlikely]] end = true; return *this; }
 	};
 	
 	constexpr Implicant(const mask_t bits, const mask_t mask) : bits(bits), mask(mask) {}
@@ -49,13 +51,11 @@ public:
 	constexpr Implicant& operator=(const Implicant &) = default;
 	
 	[[nodiscard]] constexpr bool operator==(const Implicant &other) const = default;
-	[[nodiscard]] constexpr bool operator!=(const Implicant &other) const = default;
-	[[nodiscard]] inline bool operator<(const Implicant &other) const;
+	[[nodiscard]] constexpr auto operator<=>(const Implicant &other) const { return this->makeComparisonValue() <=> other.makeComparisonValue(); }
 	[[nodiscard]] bool humanLess(const Implicant &other) const;
 	[[nodiscard]] constexpr bool covers(const Minterm minterm) const { return (minterm & mask) == bits; }
 	
-	[[nodiscard]] constexpr bool isEmpty() const { return mask == 0; }
-	[[nodiscard]] constexpr bool isEmptyTrue() const { return bits == 0; }
+	[[nodiscard]] constexpr bool empty() const { return mask == 0; }
 	[[nodiscard]] constexpr mask_t getBits() const { return bits; }
 	[[nodiscard]] constexpr mask_t getMask() const { return mask; }
 	[[nodiscard]] constexpr mask_t getTrueBits() const { return bits & mask; }
@@ -77,10 +77,10 @@ public:
 	static inline Implicant findBiggestInUnion(const Implicant &x, const Implicant &y);
 	[[nodiscard]] bool contains(const Implicant &other) const { return (this->mask & other.mask) == this->mask && (this->mask & other.bits) == this->bits; }
 	
-	[[nodiscard]] ConstIterator begin() const { if (isEmpty() && !isEmptyTrue()) [[unlikely]] return {}; else return {bits, mask}; }
-	[[nodiscard]] constexpr ConstIterator end() const { return {}; }
-	[[nodiscard]] ConstIterator cbegin() const { return begin(); }
-	[[nodiscard]] constexpr ConstIterator cend() const { return end(); }
+	[[nodiscard]] const_iterator begin() const { if (empty() && bits != 0) [[unlikely]] return {}; else return {bits, mask}; }
+	[[nodiscard]] constexpr const_iterator end() const { return {}; }
+	[[nodiscard]] const_iterator cbegin() const { return begin(); }
+	[[nodiscard]] constexpr const_iterator cend() const { return end(); }
 	
 	void printHuman(std::ostream &o, const bool parentheses) const;
 	void printVerilog(std::ostream &o, const bool parentheses) const;
@@ -89,13 +89,20 @@ public:
 	void printMath(std::ostream &o, const bool parentheses) const;
 };
 
-bool Implicant::operator<(const Implicant &other) const
+constexpr std::uint_fast64_t Implicant::makeComparisonValue() const
 {
 	static_assert(::maxBits == 32);
-	using comp_t = std::uint_fast64_t;
-	const comp_t x = (static_cast<comp_t>(this->mask) << 32) | this->bits;
-	const comp_t y = (static_cast<comp_t>(other.mask) << 32) | other.bits;
-	return x < y;
+	return (static_cast<std::uint_fast64_t>(this->mask) << 32) | this->bits;
+}
+
+constexpr std::strong_ordering Implicant::const_iterator::operator<=>(const const_iterator &other) const
+{
+	if (this->end != other.end)
+		return this->end ? std::strong_ordering::greater : std::strong_ordering::less;
+	else if (this->end)
+		return std::strong_ordering::equivalent;
+	else
+		return this->unmaskedPart <=> other.unmaskedPart;
 }
 
 Implicant Implicant::findBiggestInUnion(const Implicant &x, const Implicant &y)

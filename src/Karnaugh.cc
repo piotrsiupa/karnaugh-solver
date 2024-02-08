@@ -77,7 +77,7 @@ void Karnaugh::prettyPrintTable(const Minterms &target, const Minterms &allowed)
 				for (int i = 0; i != hBits; ++i)
 					std::cout << ' ';
 			const Minterm minterm = (x << hBits) | y;
-			std::cout << (target.check(minterm) ? 'T' : (allowed.check(minterm) ? '-' : 'F'));
+			std::cout << (target.contains(minterm) ? 'T' : (allowed.contains(minterm) ? '-' : 'F'));
 		}
 		std::cout << '\n';
 	}
@@ -120,7 +120,7 @@ Progress::completion_t Karnaugh::MintermLoadingCompletionCalculator::operator()(
 		}
 		inOrderSoFar = false;
 	}
-	const Progress::completion_t currentSize = static_cast<Progress::completion_t>(minterms.getSize());
+	const Progress::completion_t currentSize = static_cast<Progress::completion_t>(minterms.size());
 	const Progress::completion_t maxSize = estimatedSize == 0
 			? static_cast<Progress::completion_t>(::maxMinterm) + Progress::completion_t(1.0)
 			: static_cast<Progress::completion_t>(estimatedSize);
@@ -156,7 +156,7 @@ std::unique_ptr<Minterms> Karnaugh::loadMinterms(Input &input, Progress &progres
 	{
 		progress.substep(calcStepCompletion);
 		currentMinterm = input.getMinterm();
-		if (!minterms->add(currentMinterm))
+		if (!minterms->insert(currentMinterm).second)
 			duplicates.push_back(currentMinterm);
 	} while (input.hasNextInLine());
 	if (!duplicates.empty())
@@ -181,9 +181,9 @@ void Karnaugh::validate(const solutions_t &solutions) const
 		for (Minterm i = 0;; ++i)
 		{
 			progress.substep([i = std::as_const(i)](){ return static_cast<Progress::completion_t>(i) / (static_cast<Progress::completion_t>(::maxMinterm) + 1.0); });
-			if (targetMinterms->check(i))
+			if (targetMinterms->contains(i))
 				assert(solution.covers(i));
-			else if (!allowedMinterms->check(i))
+			else if (!allowedMinterms->contains(i))
 				assert(!solution.covers(i));
 			if (i == ::maxMinterm)
 				break;
@@ -232,7 +232,11 @@ bool Karnaugh::loadData(Input &input)
 		const auto infoGuard = progress.addInfo("listing possible minterms");
 		progress.step(true);
 		progress.substep(-0.0, true);
-		const duplicates_t duplicates = allowedMinterms->findOverlapping(*targetMinterms);
+		duplicates_t duplicates;
+		std::set_intersection(
+				allowedMinterms->cbegin(), targetMinterms->cend(),
+				targetMinterms->cbegin(), targetMinterms->cend(),
+				std::back_inserter(duplicates));
 		if (!duplicates.empty())
 		{
 			Progress::CerrGuard cerr = Progress::cerr();
@@ -241,7 +245,7 @@ bool Karnaugh::loadData(Input &input)
 			cerr << "! (They will be ignored.)\n";
 		}
 		progress.substep(-0.5, true);
-		allowedMinterms->add(*targetMinterms, duplicates.size());
+		allowedMinterms->unsafe_insert(*targetMinterms, duplicates.size());
 	}
 
 #ifndef NDEBUG

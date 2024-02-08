@@ -24,7 +24,7 @@ Implicant::splitBits_t Implicant::splitBits() const
 bool Implicant::isAnyInMinterms(const Minterms &minterms) const
 {
 	for (const Minterm minterm : *this)
-		if (minterms.check(minterm))
+		if (minterms.contains(minterm))
 			return true;
 	return false;
 }
@@ -32,7 +32,7 @@ bool Implicant::isAnyInMinterms(const Minterms &minterms) const
 bool Implicant::areAllInMinterms(const Minterms &minterms) const
 {
 	for (const Minterm minterm : *this)
-		if (!minterms.check(minterm))
+		if (!minterms.contains(minterm))
 			return false;
 	return true;
 }
@@ -40,20 +40,20 @@ bool Implicant::areAllInMinterms(const Minterms &minterms) const
 void Implicant::addToMinterms(Minterms &minterms) const
 {
 	for (const Minterm minterm : *this)
-		minterms.add(minterm);
+		minterms.insert(minterm);
 }
 
 void Implicant::removeFromMinterms(Minterms &minterms) const
 {
 	for (const Minterm minterm : *this)
-		minterms.remove(minterm);
+		minterms.erase(minterm);
 }
 
 void Implicant::printHuman(std::ostream &o, const bool parentheses) const
 {
-	if (isEmpty())
+	if (empty())
 	{
-		if (!isEmptyTrue())
+		if (bits != 0)
 			o << "<False>";
 		else
 			o << "<True>";
@@ -79,9 +79,9 @@ void Implicant::printHuman(std::ostream &o, const bool parentheses) const
 
 void Implicant::printVerilog(std::ostream &o, const bool parentheses) const
 {
-	if (isEmpty())
+	if (empty())
 	{
-		if (!isEmptyTrue())
+		if (bits != 0)
 			o << '0';
 		else
 			o << '1';
@@ -107,9 +107,9 @@ void Implicant::printVerilog(std::ostream &o, const bool parentheses) const
 
 void Implicant::printVhdl(std::ostream &o, const bool parentheses) const
 {
-	if (isEmpty())
+	if (empty())
 	{
-		if (!isEmptyTrue())
+		if (bits != 0)
 			o << "'0'";
 		else
 			o << "'1'";
@@ -135,9 +135,9 @@ void Implicant::printVhdl(std::ostream &o, const bool parentheses) const
 
 void Implicant::printCpp(std::ostream &o, const bool parentheses) const
 {
-	if (isEmpty())
+	if (empty())
 	{
-		if (!isEmptyTrue())
+		if (bits != 0)
 			o << "false";
 		else
 			o << "true";
@@ -163,9 +163,9 @@ void Implicant::printCpp(std::ostream &o, const bool parentheses) const
 
 void Implicant::printMath(std::ostream &o, const bool parentheses) const
 {
-	if (isEmpty())
+	if (empty())
 	{
-		if (!isEmptyTrue())
+		if (bits != 0)
 		{
 			switch (options::outputFormat.getValue())
 			{

@@ -1,4 +1,4 @@
-import multiprocessing
+import os
 import sys
 
 AddOption('--clang', action='store_true', help='Force using Clang.')
@@ -32,7 +32,7 @@ else:
     # Turm off assertions.
     env.Append(CPPDEFINES=['NDEBUG'])
     # Set multithreaded build as default.
-    SetOption('num_jobs', multiprocessing.cpu_count())
+    SetOption('num_jobs', os.cpu_count() or 1)
 
 program = env.Program('karnaugh', env.Glob('./src/*.cc'))
 env.Alias('build', program)

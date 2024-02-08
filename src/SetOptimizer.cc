@@ -211,11 +211,11 @@ typename SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::finalSets_t SetOptimizer
 	for (const std::size_t endNode : endNodes)
 	{
 		const auto &newSet = newSets[endNode];
-		auto foundOldSet = std::find(oldSets.cbegin(), oldSets.cend(), newSet);
+		auto foundOldSet = std::ranges::find(oldSets, newSet);
 		do
 		{
 			finalSets[foundOldSet - oldSets.cbegin()] = endNode;
-			foundOldSet = std::find(foundOldSet + 1, oldSets.cend(), newSet);
+			foundOldSet = std::ranges::find(foundOldSet + 1, oldSets.cend(), newSet);
 		} while (foundOldSet != oldSets.cend());
 	}
 	return finalSets;

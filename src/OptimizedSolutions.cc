@@ -627,7 +627,7 @@ OptimizedSolutions::normalizedSolution_t OptimizedSolutions::normalizeSolution(c
 	if (rootProductIds.size() == 1)
 	{
 		const product_t &product = getProduct(rootProductIds.front());
-		if (product.first.isEmpty() && product.second.empty())
+		if (product.first.empty() && product.second.empty())
 		{
 			normalizedSolution.insert(product.first);
 			return normalizedSolution;
@@ -640,7 +640,7 @@ OptimizedSolutions::normalizedSolution_t OptimizedSolutions::normalizeSolution(c
 		while (!idsToProcess.empty())
 		{
 			const product_t &product = getProduct(idsToProcess.back());
-			assert(!product.first.isEmpty() || (product.first == Implicant::all() && !product.second.empty()));
+			assert(!product.first.empty() || (product.first == Implicant::all() && !product.second.empty()));
 			idsToProcess.pop_back();
 			resultingProduct.add(product.first);
 			idsToProcess.insert(idsToProcess.end(), product.second.cbegin(), product.second.cend());
