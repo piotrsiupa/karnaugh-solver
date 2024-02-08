@@ -48,11 +48,6 @@ public:
 		iterator() = default;
 		
 		[[nodiscard]] bool operator==(const iterator &other) const { return this->i == other.i; }
-		[[nodiscard]] bool operator!=(const iterator &other) const { return this->i != other.i; }
-		[[nodiscard]] bool operator<(const iterator &other) const { return this->i < other.i; }
-		[[nodiscard]] bool operator<=(const iterator &other) const { return this->i <= other.i; }
-		[[nodiscard]] bool operator>(const iterator &other) const { return this->i > other.i; }
-		[[nodiscard]] bool operator>=(const iterator &other) const { return this->i >= other.i; }
 		[[nodiscard]] auto operator<=>(const iterator &other) const { return this->i <=> other.i; }
 		
 		inline iterator& operator++();
@@ -70,7 +65,7 @@ public:
 	explicit inline CompactSet(const size_type capacity);
 	
 	[[nodiscard]] bool operator==(const CompactSet &other) const { return this->size_ == other.size_ && this->bits == other.bits; }
-	[[nodiscard]] bool operator!=(const CompactSet &other) const { return !(*this == other); }
+	[[nodiscard]] auto operator<=>(const CompactSet &other) const { return std::lexicographical_compare_three_way(this->cbegin(), this->cend(), other.cbegin(), other.cend()); }
 	
 	[[nodiscard]] bool empty() const { return size_ == 0; }
 	[[nodiscard]] bool full() const { return size_ == bits.size(); }
