@@ -36,7 +36,7 @@ public:
 	void printMathName(std::ostream &o, const std::size_t i) const { o << names[i]; }
 	void printMathNames(std::ostream &o) const;
 	
-	[[nodiscard]] bool isEmpty() const { return names.empty(); }
-	[[nodiscard]] std::size_t getSize() const { return names.size(); }
+	[[nodiscard]] bool empty() const { return names.empty(); }
+	[[nodiscard]] std::size_t size() const { return names.size(); }
 	[[nodiscard]] bool areNamesUsedInCode() const { return useInCode; }
 };

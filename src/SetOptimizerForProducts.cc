@@ -22,7 +22,7 @@ SetOptimizerForProducts::SubsetFinder::sets_t SetOptimizerForProducts::convertSe
 		{
 			for (const auto &bit : set.splitBits())
 				convertedSet.push_back(bit.second ? bit.first : -bit.first - 1);
-			std::sort(convertedSet.begin(), convertedSet.end());
+			std::ranges::sort(convertedSet);
 		}
 		convertedSets.push_back(std::move(convertedSet));
 	}
@@ -72,7 +72,7 @@ SetOptimizerForProducts::gateCount_t SetOptimizerForProducts::countGates(const s
 		for (const std::size_t &subset : subsetSelections[i])
 			reducedProduct.substract(graph[subset].first);
 		gates += reducedProduct.getBitCount();
-		if (subsetSelections[i].size() != 0 || !reducedProduct.isEmpty())
+		if (subsetSelections[i].size() != 0 || !reducedProduct.empty())
 			--gates;
 	}
 	return gates;

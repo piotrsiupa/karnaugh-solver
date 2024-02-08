@@ -96,7 +96,7 @@ public:
 	OptimizedSolutions() = default;
 	OptimizedSolutions(const solutions_t &solutions, Progress &progress);
 	
-	std::size_t getSize() const { return finalSums.size(); }
+	std::size_t size() const { return finalSums.size(); }
 	
 	std::size_t getNotCount() const { return std::bitset<32>(negatedInputs).count(); }
 	std::size_t getAndCount() const { std::size_t andCount = 0; for (const auto &[primeImplicant, ids] : products) andCount += std::max(std::size_t(1), primeImplicant.getBitCount() + ids.size()) - 1; return andCount; }

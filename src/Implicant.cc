@@ -23,13 +23,13 @@ Implicant::splitBits_t Implicant::splitBits() const
 
 bool Implicant::isAnyInMinterms(const Minterms &minterms) const
 {
-	if (isEmpty() && !isEmptyTrue()) [[unlikely]]
+	if (*this == none()) [[unlikely]]
 		return false;
 	const Minterm inversedMask = ~mask & ::maxMinterm;
 	Minterm unmaskedPart = 0;
 	do
 	{
-		if (minterms.check(bits | unmaskedPart))
+		if (minterms.contains(bits | unmaskedPart))
 			return true;
 		unmaskedPart = (unmaskedPart - inversedMask) & inversedMask;
 	} while (unmaskedPart != 0);
@@ -38,13 +38,13 @@ bool Implicant::isAnyInMinterms(const Minterms &minterms) const
 
 bool Implicant::areAllInMinterms(const Minterms &minterms) const
 {
-	if (isEmpty() && !isEmptyTrue()) [[unlikely]]
+	if (*this == none()) [[unlikely]]
 		return true;
 	const Minterm inversedMask = ~mask & ::maxMinterm;
 	Minterm unmaskedPart = 0;
 	do
 	{
-		if (!minterms.check(bits | unmaskedPart))
+		if (!minterms.contains(bits | unmaskedPart))
 			return false;
 		unmaskedPart = (unmaskedPart - inversedMask) & inversedMask;
 	} while (unmaskedPart != 0);
@@ -53,35 +53,35 @@ bool Implicant::areAllInMinterms(const Minterms &minterms) const
 
 void Implicant::addToMinterms(Minterms &minterms) const
 {
-	if (isEmpty() && !isEmptyTrue()) [[unlikely]]
+	if (*this == none()) [[unlikely]]
 		return;
 	const Minterm inversedMask = ~mask & ::maxMinterm;
 	Minterm unmaskedPart = 0;
 	do
 	{
-		minterms.add(bits | unmaskedPart);
+		minterms.insert(bits | unmaskedPart);
 		unmaskedPart = (unmaskedPart - inversedMask) & inversedMask;
 	} while (unmaskedPart != 0);
 }
 
 void Implicant::removeFromMinterms(Minterms &minterms) const
 {
-	if (isEmpty() && !isEmptyTrue()) [[unlikely]]
+	if (*this == none()) [[unlikely]]
 		return;
 	const Minterm inversedMask = ~mask & ::maxMinterm;
 	Minterm unmaskedPart = 0;
 	do
 	{
-		minterms.remove(bits | unmaskedPart);
+		minterms.erase(bits | unmaskedPart);
 		unmaskedPart = (unmaskedPart - inversedMask) & inversedMask;
 	} while (unmaskedPart != 0);
 }
 
 void Implicant::printHuman(std::ostream &o, const bool parentheses) const
 {
-	if (isEmpty())
+	if (empty())
 	{
-		if (!isEmptyTrue())
+		if (bits != 0)
 			o << "<False>";
 		else
 			o << "<True>";
@@ -107,9 +107,9 @@ void Implicant::printHuman(std::ostream &o, const bool parentheses) const
 
 void Implicant::printVerilog(std::ostream &o, const bool parentheses) const
 {
-	if (isEmpty())
+	if (empty())
 	{
-		if (!isEmptyTrue())
+		if (bits != 0)
 			o << '0';
 		else
 			o << '1';
@@ -135,9 +135,9 @@ void Implicant::printVerilog(std::ostream &o, const bool parentheses) const
 
 void Implicant::printVhdl(std::ostream &o, const bool parentheses) const
 {
-	if (isEmpty())
+	if (empty())
 	{
-		if (!isEmptyTrue())
+		if (bits != 0)
 			o << "'0'";
 		else
 			o << "'1'";
@@ -163,9 +163,9 @@ void Implicant::printVhdl(std::ostream &o, const bool parentheses) const
 
 void Implicant::printCpp(std::ostream &o, const bool parentheses) const
 {
-	if (isEmpty())
+	if (empty())
 	{
-		if (!isEmptyTrue())
+		if (bits != 0)
 			o << "false";
 		else
 			o << "true";
@@ -191,9 +191,9 @@ void Implicant::printCpp(std::ostream &o, const bool parentheses) const
 
 void Implicant::printMath(std::ostream &o, const bool parentheses) const
 {
-	if (isEmpty())
+	if (empty())
 	{
-		if (!isEmptyTrue())
+		if (bits != 0)
 		{
 			switch (options::outputFormat.getValue())
 			{

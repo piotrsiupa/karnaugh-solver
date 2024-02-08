@@ -9,7 +9,6 @@
 
 #include "options.hh"
 #include "PetricksMethod.hh"
-#include "utils.hh"
 
 
 std::vector<Minterm> QuineMcCluskey::bitMasks;
@@ -35,7 +34,8 @@ void QuineMcCluskey::removeDontCareOnlyImplicants(Implicants &implicants, Progre
 	progress.step();
 	progress.substep([](){ return -0.0; }, true);
 	
-	implicants.erase(std::remove_if(implicants.begin(), implicants.end(), [&targetMinterms = *targetMinterms](const Implicant &implicant){ return !implicant.isAnyInMinterms(targetMinterms); }), implicants.end());
+	const auto eraseBegin = std::remove_if(implicants.begin(), implicants.end(), [&targetMinterms = *targetMinterms](const Implicant &implicant){ return !implicant.isAnyInMinterms(targetMinterms); });
+	implicants.erase(eraseBegin, implicants.end());
 }
 
 void QuineMcCluskey::cleanupImplicants(Implicants &implicants, Progress &progress)
@@ -66,13 +66,13 @@ std::uint_fast8_t QuineMcCluskey::getAdjustmentPasses()
 
 void QuineMcCluskey::refineHeuristicImplicant(const Minterm initialMinterm, Implicant &implicant) const
 {
-	for (auto iter = bitMasks.cbegin(); iter != std::prev(bitMasks.cend()); ++iter)
+	for (auto iter = bitMasks.cbegin(); iter != std::ranges::prev(bitMasks.cend()); ++iter)
 	{
 		const Minterm removedBit = *iter;
 		if ((removedBit & implicant.getMask()) != 0)
 			continue;
 		Implicant implicantVariant(implicant.getBits() | (initialMinterm & removedBit), implicant.getMask() | removedBit);
-		for (auto jiter = std::next(iter); jiter != bitMasks.cend(); ++jiter)
+		for (auto jiter = std::ranges::next(iter); jiter != bitMasks.cend(); ++jiter)
 		{
 			const Minterm bit = *jiter;
 			if ((bit & implicantVariant.getMask()) == 0)
@@ -124,9 +124,9 @@ Implicants QuineMcCluskey::createImplicantsWithHeuristic(Progress &progress) con
 
 Implicants QuineMcCluskey::findPrimeImplicantsWithHeuristic()
 {
-	if (allowedMinterms->isEmpty())
+	if (allowedMinterms->empty())
 		return {Implicant::none()};
-	else if (allowedMinterms->isFull())
+	else if (allowedMinterms->full())
 		return {Implicant::all()};
 	
 	const std::string progressName = "Finding prime impl. of \"" + functionName + '"';
@@ -147,7 +147,7 @@ Implicants QuineMcCluskey::createPrimeImplicantsWithoutHeuristic(Progress &progr
 	{
 		const auto infoGuard = progress.addInfo("preparing initial list of implicants");
 		progress.substep([](){ return -0.0; }, true);
-		implicants.reserve(allowedMinterms->getSize());
+		implicants.reserve(allowedMinterms->size());
 		for (const Minterm &minterm : *allowedMinterms)
 			implicants.emplace_back(Implicant{minterm}, false);
 		allowedMinterms.reset();
@@ -175,7 +175,7 @@ Implicants QuineMcCluskey::createPrimeImplicantsWithoutHeuristic(Progress &progr
 			static_assert(::maxBits == 32);
 			const std::uint_fast64_t mask = ~static_cast<std::uint64_t>(bitMask);
 			const auto makeComparisonValue = [mask](const Implicant &implicant){ return ((static_cast<std::uint_fast64_t>(implicant.getMask()) << 32) | static_cast<std::uint_fast64_t>(implicant.getBits())) & static_cast<std::uint_fast64_t>(mask); };
-			std::sort(implicants.begin(), implicants.end(), [makeComparisonValue](const std::pair<Implicant, bool> &x, const std::pair<Implicant, bool> &y){
+			std::ranges::sort(implicants, [makeComparisonValue](const std::pair<Implicant, bool> &x, const std::pair<Implicant, bool> &y){
 					return makeComparisonValue(x.first) < makeComparisonValue(y.first);
 				});
 			std::pair<Implicant, bool> *previous = &implicants.front();
@@ -201,8 +201,9 @@ Implicants QuineMcCluskey::createPrimeImplicantsWithoutHeuristic(Progress &progr
 				primeImplicants.push_back(implicant);
 		implicants.clear();
 		
-		std::sort(newImplicants.begin(), newImplicants.end());
-		newImplicants.erase(std::unique(newImplicants.begin(), newImplicants.end()), newImplicants.end());
+		std::ranges::sort(newImplicants);
+		const auto eraseBegin = std::unique(newImplicants.begin(), newImplicants.end());
+		newImplicants.erase(eraseBegin, newImplicants.end());
 		implicants.reserve(newImplicants.size());
 		for (const auto &newImplicant : newImplicants)
 			implicants.emplace_back(newImplicant, false);
@@ -252,7 +253,7 @@ void QuineMcCluskey::validate(const Minterms &allowedMinterms, const Minterms &t
 		sortedImplicants.humanSort();
 		assert(implicants == sortedImplicants);
 	}
-	assert(std::adjacent_find(implicants.cbegin(), implicants.cend()) == implicants.cend());
+	assert(std::ranges::adjacent_find(implicants) == implicants.cend());
 	Minterms missedTargetMinterms = targetMinterms;
 	for (const Implicant &implicant : implicants)
 	{
@@ -260,10 +261,10 @@ void QuineMcCluskey::validate(const Minterms &allowedMinterms, const Minterms &t
 		assert(implicant.areAllInMinterms(allowedMinterms));
 		implicant.removeFromMinterms(missedTargetMinterms);
 	}
-	assert(missedTargetMinterms.isEmpty());
+	assert(missedTargetMinterms.empty());
 	if (implicants.size() <= 250000)
 		for (Implicants::const_iterator iter = implicants.cbegin(); iter != implicants.cend(); ++iter)
-			for (Implicants::const_iterator jiter = std::next(iter); jiter != implicants.cend(); ++jiter)
+			for (Implicants::const_iterator jiter = std::ranges::next(iter); jiter != implicants.cend(); ++jiter)
 				assert(!(iter->contains(*jiter) || jiter->contains(*iter)));
 }
 #endif
