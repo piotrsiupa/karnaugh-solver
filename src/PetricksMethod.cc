@@ -173,33 +173,58 @@ typename PetricksMethod<INDEX_T>::productOfSumsOfProducts_t PetricksMethod<INDEX
 template<std::unsigned_integral INDEX_T>
 inline typename PetricksMethod<INDEX_T>::sumOfProducts_t PetricksMethod<INDEX_T>::multiplySumsOfProducts(const sumOfProducts_t &multiplier0, const sumOfProducts_t &multiplier1, Progress &progress)
 {
-	product_t newProduct;
-	HasseDiagram<index_t> hasseDiagram;
+	sumOfProducts_t sumOfProducts;
+	sumOfProducts.reserve(multiplier0.size() * multiplier1.size());
 	{
 		const auto infoGuard = progress.addInfo("expanding");
 		progress.step();
-		const std::size_t expectedOperations = multiplier0.size() * multiplier1.size();
-		std::size_t operations = 0;
-		const auto estimateCompletion = [expectedOperations, &operations = std::as_const(operations)](){ return static_cast<Progress::completion_t>(operations) / static_cast<Progress::completion_t>(expectedOperations); };
-		newProduct.reserve(multiplier0.front().size() + multiplier1.front().size());
+		auto progressStep = progress.makeCountingStepHelper(static_cast<std::uintmax_t>(multiplier0.size()) * static_cast<std::uintmax_t>(multiplier1.size())); // If this overflows, there is no hope on finishing the calculations in reasonable time anyway.
 		for (const product_t &x : multiplier0)
 		{
 			for (const product_t &y : multiplier1)
 			{
-				progress.substep(estimateCompletion);
-				++operations;
-				newProduct.clear();
+				progressStep.substep();
+				product_t &newProduct = sumOfProducts.emplace_back();
+				newProduct.reserve(x.size() * y.size());
 				std::ranges::set_union(x, y, std::back_inserter(newProduct));
-				hasseDiagram.insertRemovingSupersets(std::move(newProduct));
 			}
 		}
 	}
-	{	
-		const auto infoGuard = progress.addInfo("refining");
+	{
+		const auto infoGuard = progress.addInfo("sorting");
 		progress.step();
 		progress.substep(-0.0, true);
-		return hasseDiagram.getSets();
+		std::ranges::sort(sumOfProducts);
+		const auto [eraseBegin, eraseEnd] = std::ranges::unique(sumOfProducts);
+		sumOfProducts.erase(eraseBegin, eraseEnd);
 	}
+	{
+		const auto infoGuard = progress.addInfo("reducing");
+		progress.step();
+		auto progressStep = progress.makeCountingStepHelper(sumOfProducts.size());
+		for (auto x = sumOfProducts.begin(); x != sumOfProducts.end(); ++x)
+		{
+			progressStep.substep();
+			for (auto subX = x->cbegin(); subX != std::prev(x->cend()); ++subX)
+			{
+				const auto rangeBegin = std::lower_bound(sumOfProducts.cbegin(), sumOfProducts.cend(), *subX, [](const sum_t &sum, const INDEX_T value){ return sum.front() < value; });
+				const auto rangeEnd = std::upper_bound(rangeBegin, sumOfProducts.cend(), *subX, [](const INDEX_T value, const sum_t &sum){ return sum.front() != value; });
+				for (auto y = rangeBegin; y != rangeEnd; ++y)
+				{
+					if (x == y || y->size() == 1)
+						continue;
+					if (std::ranges::includes(*x, *y))
+					{
+						x->resize(1);
+						goto next_x;
+					}
+				}
+			}
+			next_x:;
+		}
+		sumOfProducts.erase(std::remove_if(sumOfProducts.begin(), sumOfProducts.end(), [](const auto &x){ return x.size() == 1; }), sumOfProducts.end());
+	}
+	return sumOfProducts;
 }
 
 template<std::unsigned_integral INDEX_T>
@@ -222,7 +247,7 @@ typename PetricksMethod<INDEX_T>::sumOfProducts_t PetricksMethod<INDEX_T>::findS
 	const std::string progressName = "Solving \"" + functionName + '"';
 	char progressInfo[128] = ""; // 128 should be enough even if the number is huge.
 	std::strcpy(progressInfo, progressName.c_str());
-	Progress progress(Progress::Stage::SOLVING, progressInfo, (productOfSumsOfProducts.size() - 1) * 2, false);
+	Progress progress(Progress::Stage::SOLVING, progressInfo, (productOfSumsOfProducts.size() - 1) * 3, false);
 	long double expectedSolutions = 0.0;
 	
 	if (progress.isVisible())

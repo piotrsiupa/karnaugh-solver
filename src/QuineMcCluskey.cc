@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <cstring>
 #include <iostream>
+#include <limits>
 #include <map>
 
 #include "options.hh"
@@ -271,13 +272,13 @@ void QuineMcCluskey::validate(const Minterms &allowedMinterms, const Minterms &t
 
 QuineMcCluskey::solutions_t QuineMcCluskey::runPetricksMethod(Implicants &&primeImplicants)
 {
-	if (primeImplicants.size() <= PetricksMethod<std::uint8_t>::MAX_PRIME_IMPL_COUNT)
+	if (primeImplicants.size() <= std::numeric_limits<std::uint8_t>::max())
 		return PetricksMethod<std::uint8_t>(*targetMinterms, std::move(primeImplicants)).solve(functionName);
-	else if (primeImplicants.size() <= PetricksMethod<std::uint16_t>::MAX_PRIME_IMPL_COUNT)
+	else if (primeImplicants.size() <= std::numeric_limits<std::uint16_t>::max())
 		return PetricksMethod<std::uint16_t>(*targetMinterms, std::move(primeImplicants)).solve(functionName);
-	else if (primeImplicants.size() <= PetricksMethod<std::uint32_t>::MAX_PRIME_IMPL_COUNT)
+	else if (primeImplicants.size() <= std::numeric_limits<std::uint32_t>::max())
 		return PetricksMethod<std::uint32_t>(*targetMinterms, std::move(primeImplicants)).solve(functionName);
-	else if (primeImplicants.size() <= PetricksMethod<std::uint64_t>::MAX_PRIME_IMPL_COUNT)
+	else if (primeImplicants.size() <= std::numeric_limits<std::uint64_t>::max())
 		return PetricksMethod<std::uint64_t>(*targetMinterms, std::move(primeImplicants)).solve(functionName);
 	else
 		std::cerr << "The number of prime implicants is ridiculous and this has no right to work! I won't even try.\n";

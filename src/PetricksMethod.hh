@@ -11,7 +11,6 @@
 #include "Implicants.hh"
 #include "Minterm.hh"
 #include "Minterms.hh"
-#include "HasseDiagram.hh"
 #include "Progress.hh"
 
 
@@ -42,8 +41,6 @@ private:
 	sumOfProducts_t findSumOfProducts(const std::string &functionName);
 	
 public:
-	static constexpr std::size_t MAX_PRIME_IMPL_COUNT = HasseDiagram<index_t>::MAX_VALUE;
-	
 	PetricksMethod(Minterms minterms, Implicants primeImplicants) : minterms(std::in_place, std::move(minterms)), primeImplicants(std::move(primeImplicants)) {}
 	
 	solutions_t solve(const std::string &functionName) &&;  // This function is `&&` as a reminder the it removes some data in the process (to save memory) and because of that it cannot be called twice.
