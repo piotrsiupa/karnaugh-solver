@@ -193,7 +193,7 @@ inline typename PetricksMethod<INDEX_T>::sumOfProducts_t PetricksMethod<INDEX_T>
 	{
 		const auto infoGuard = progress.addInfo("sorting");
 		progress.step();
-		progress.substep(-0.0, true);
+		progress.substep(-0.0); // Probably won't be ever visible because it takes too little time and because `substep` is called here only once.
 		std::ranges::sort(sumOfProducts);
 		const auto [eraseBegin, eraseEnd] = std::ranges::unique(sumOfProducts);
 		sumOfProducts.erase(eraseBegin, eraseEnd);
@@ -205,18 +205,25 @@ inline typename PetricksMethod<INDEX_T>::sumOfProducts_t PetricksMethod<INDEX_T>
 		for (auto x = sumOfProducts.begin(); x != sumOfProducts.end(); ++x)
 		{
 			progressStep.substep();
-			for (auto subX = x->cbegin(); subX != std::prev(x->cend()); ++subX)
+			if (x->size() == 2)
+				continue;
+			for (auto value0 = x->cbegin(); value0 != std::ranges::prev(x->cend()); ++value0)
 			{
-				const auto rangeBegin = std::lower_bound(sumOfProducts.cbegin(), sumOfProducts.cend(), *subX, [](const sum_t &sum, const INDEX_T value){ return sum.front() < value; });
-				const auto rangeEnd = std::upper_bound(rangeBegin, sumOfProducts.cend(), *subX, [](const INDEX_T value, const sum_t &sum){ return sum.front() != value; });
-				for (auto y = rangeBegin; y != rangeEnd; ++y)
+				const auto rangeBegin0 = std::lower_bound(sumOfProducts.cbegin(), sumOfProducts.cend(), *value0, [](const product_t &product, const INDEX_T value){ return product.front() < value; });
+				const auto rangeEnd0 = std::upper_bound(rangeBegin0, sumOfProducts.cend(), *value0, [](const INDEX_T value, const product_t &product){ return product.front() != value; });
+				for (auto value1 = std::ranges::next(value0); value1 != x->cend(); ++value1)
 				{
-					if (x == y || y->size() == 1)
-						continue;
-					if (std::ranges::includes(*x, *y))
+					const auto rangeBegin1 = std::lower_bound(rangeBegin0, rangeEnd0, *value1, [](const product_t &product, const INDEX_T value){ return product[1] < value; });
+					const auto rangeEnd1 = std::upper_bound(rangeBegin1, rangeEnd0, *value1, [](const INDEX_T value, const product_t &product){ return product[1] != value; });
+					for (auto y = rangeBegin1; y != rangeEnd1; ++y)
 					{
-						x->resize(1);
-						goto next_x;
+						if (x == y || y->size() == 1)
+							continue;
+						if (std::ranges::includes(*x, *y))
+						{
+							x->resize(1);
+							goto next_x;
+						}
 					}
 				}
 			}
