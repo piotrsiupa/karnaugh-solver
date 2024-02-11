@@ -205,15 +205,17 @@ inline typename PetricksMethod<INDEX_T>::sumOfProducts_t PetricksMethod<INDEX_T>
 		for (auto x = sumOfProducts.begin(); x != sumOfProducts.end(); ++x)
 		{
 			progressStep.substep();
-			for (auto subX = x->cbegin(); subX != std::prev(x->cend()); ++subX)
+			if (x->size() == 2)
+				continue;
+			for (auto value = x->cbegin(); value != std::ranges::prev(x->cend()); ++value)
 			{
-				const auto rangeBegin = std::lower_bound(sumOfProducts.cbegin(), sumOfProducts.cend(), *subX, [](const sum_t &sum, const INDEX_T value){ return sum.front() < value; });
-				const auto rangeEnd = std::upper_bound(rangeBegin, sumOfProducts.cend(), *subX, [](const INDEX_T value, const sum_t &sum){ return sum.front() != value; });
+				const auto rangeBegin = std::lower_bound(sumOfProducts.cbegin(), sumOfProducts.cend(), *value, [](const sum_t &sum, const INDEX_T value){ return sum.front() < value; });
+				const auto rangeEnd = std::upper_bound(rangeBegin, sumOfProducts.cend(), *value, [](const INDEX_T value, const sum_t &sum){ return sum.front() != value; });
 				for (auto y = rangeBegin; y != rangeEnd; ++y)
 				{
-					if (x == y || y->size() == 1)
+					if (y->size() == 1)
 						continue;
-					if (std::ranges::includes(*x, *y))
+					if (x->size() > y->size() && std::ranges::includes(*x, *y))
 					{
 						x->resize(1);
 						goto next_x;
