@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cctype>
 #include <charconv>
+#include <cstddef>
 #include <iostream>
 #include <limits>
 
@@ -155,6 +156,7 @@ namespace options
 			{"g(?:reedy?)?|f(?:ast)?", PrimeImplicantsHeuristic::GREEDY},
 		});
 	Number<std::int_fast8_t> greedyImplicantAdjustments("greedy-i-retries", "(?:g(?:reedy?)?(?:(?:[-_ ]p(?:rime)?)?[-_ ]i(?:mpl(?:ic(?:ant)?)?)?)?|(?:(?:p(?:rime)?[-_ ])?i(?:mpl(?:ic(?:ant)?)?)?|g(?:reedy?)?)[-_ ]h(?:eur(?:is(?:t(?:ics?)?)?)?)?)[-_ ](?:(?:(?:re)?tr(?:y(?:[-_ ]count)?|ies)|(?:refine|redo|attempt|adjustment|repeat)(?:s|[-_ ]count)?|(?:pass|fix)(?:es|[-_ ]count)?)|(?:strengths?|counts?|[prtafsc]))|(?:gp?i|(?:g|p?i)?h)[prtafsc]", 'g', -1, 32, -1);
+	Number<std::intmax_t> solutionsLimit("solutions-limit", "(?:m(?:ax)?(?:[-_ ]s(?:ol(?:ut(?:ions?)?)?)?)?|ms?)|(?:(?:s(?:ol(?:ut(?:ions?)?)?)?[-_ ])?l(?:im(?:its?)?)?|s?l)", 'm', -1, std::max(static_cast<std::intmax_t>(std::numeric_limits<std::size_t>::max()), std::numeric_limits<std::intmax_t>::max()), -1);
 	
 	std::vector<std::string_view> freeArgs;
 	
@@ -188,7 +190,7 @@ namespace options
 			[[nodiscard]] static bool parse(const int argc, const char *const *const argv) { return Parser(argc, argv).parse(); }
 		};
 		
-		const std::vector<Option*> Parser::allOptions = {&help, &version, &prompt, &prompt.getNegatedOption(), &status, &status.getNegatedOption(), &skipOptimization, &outputFormat, &name, &primeImplicantsHeuristic, &greedyImplicantAdjustments};
+		const std::vector<Option*> Parser::allOptions = {&help, &version, &prompt, &prompt.getNegatedOption(), &status, &status.getNegatedOption(), &skipOptimization, &outputFormat, &name, &primeImplicantsHeuristic, &greedyImplicantAdjustments, &solutionsLimit};
 		bool Parser::allOptionsRegexReady = false;
 		std::regex Parser::allOptionsRegex;
 		

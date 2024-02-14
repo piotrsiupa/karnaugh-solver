@@ -175,6 +175,7 @@ namespace options
 	
 	extern Mapped<PrimeImplicantsHeuristic, PrimeImplicantsHeuristic::AUTO> primeImplicantsHeuristic;
 	extern Number<std::int_fast8_t> greedyImplicantAdjustments;
+	extern Number<std::intmax_t> solutionsLimit;
 	
 	
 	[[nodiscard]] bool parse(const int argc, const char *const *const argv);

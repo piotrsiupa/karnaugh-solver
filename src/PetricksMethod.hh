@@ -36,8 +36,7 @@ private:
 	productOfSums_t createPreliminaryProductOfSums(const std::string &functionName) const;
 	static void removeRedundantSums(productOfSums_t &productOfSums, const std::string &functionName);
 	productOfSumsOfProducts_t createProductOfSums(const std::string &functionName);
-	static sumOfProducts_t multiplySumsOfProducts(const sumOfProducts_t &multiplier0, const sumOfProducts_t &multiplier1, Progress &progress);
-	static std::string solutionCountEstimation(const long double value);
+	static sumOfProducts_t multiplySumsOfProducts(const sumOfProducts_t &multiplier0, const sumOfProducts_t &multiplier1, const std::size_t maxSums, Progress &progress);
 	sumOfProducts_t findSumOfProducts(const std::string &functionName);
 	
 public:

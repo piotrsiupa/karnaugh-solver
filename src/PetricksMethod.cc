@@ -171,7 +171,7 @@ typename PetricksMethod<INDEX_T>::productOfSumsOfProducts_t PetricksMethod<INDEX
 }
 
 template<std::unsigned_integral INDEX_T>
-inline typename PetricksMethod<INDEX_T>::sumOfProducts_t PetricksMethod<INDEX_T>::multiplySumsOfProducts(const sumOfProducts_t &multiplier0, const sumOfProducts_t &multiplier1, Progress &progress)
+inline typename PetricksMethod<INDEX_T>::sumOfProducts_t PetricksMethod<INDEX_T>::multiplySumsOfProducts(const sumOfProducts_t &multiplier0, const sumOfProducts_t &multiplier1, const std::size_t maxSums, Progress &progress)
 {
 	sumOfProducts_t sumOfProducts;
 	sumOfProducts.reserve(multiplier0.size() * multiplier1.size());
@@ -198,6 +198,15 @@ inline typename PetricksMethod<INDEX_T>::sumOfProducts_t PetricksMethod<INDEX_T>
 		const auto [eraseBegin, eraseEnd] = std::ranges::unique(sumOfProducts);
 		sumOfProducts.erase(eraseBegin, eraseEnd);
 	}
+	if (maxSums != 0)
+	{
+		const auto infoGuard = progress.addInfo("limiting");
+		progress.step();
+		progress.substep(-0.0, true);
+		if (sumOfProducts.size() > maxSums)
+			sumOfProducts.resize(maxSums);
+	}
+	if (maxSums != 1)
 	{
 		const auto infoGuard = progress.addInfo("reducing");
 		progress.step();
@@ -205,9 +214,9 @@ inline typename PetricksMethod<INDEX_T>::sumOfProducts_t PetricksMethod<INDEX_T>
 		for (auto x = sumOfProducts.begin(); x != sumOfProducts.end(); ++x)
 		{
 			progressStep.substep();
-			if (x->size() == 2)
+			if (x->size() <= 2)
 				continue;
-			for (auto value = x->cbegin(); value != std::ranges::prev(x->cend()); ++value)
+			for (auto value = x->cbegin(); value != x->cend(); ++value)
 			{
 				const auto rangeBegin = std::lower_bound(sumOfProducts.cbegin(), sumOfProducts.cend(), *value, [](const sum_t &sum, const INDEX_T value){ return sum.front() < value; });
 				const auto rangeEnd = std::upper_bound(rangeBegin, sumOfProducts.cend(), *value, [](const INDEX_T value, const sum_t &sum){ return sum.front() != value; });
@@ -230,61 +239,22 @@ inline typename PetricksMethod<INDEX_T>::sumOfProducts_t PetricksMethod<INDEX_T>
 }
 
 template<std::unsigned_integral INDEX_T>
-std::string PetricksMethod<INDEX_T>::solutionCountEstimation(const long double value)
-{
-	if (value >= 1'000'000'000'000'000'000'000.0)
-		return "infinity (or close enough)";
-	std::stringstream ss;
-	ss << "up to " << std::fixed << std::setprecision(0) << value;
-	return ss.str();
-}
-
-template<std::unsigned_integral INDEX_T>
 typename PetricksMethod<INDEX_T>::sumOfProducts_t PetricksMethod<INDEX_T>::findSumOfProducts(const std::string &functionName)
 {
 	productOfSumsOfProducts_t productOfSumsOfProducts = createProductOfSums(functionName);
 	if (productOfSumsOfProducts.empty())
 		return sumOfProducts_t{};
 	
-	const std::string progressName = "Solving \"" + functionName + '"';
-	char progressInfo[128] = ""; // 128 should be enough even if the number is huge.
-	std::strcpy(progressInfo, progressName.c_str());
-	Progress progress(Progress::Stage::SOLVING, progressInfo, (productOfSumsOfProducts.size() - 1) * 3, false);
-	long double expectedSolutions = 0.0;
+	Progress progress(Progress::Stage::SOLVING, "Merging solutions", (productOfSumsOfProducts.size() - 1) * 4, false);
 	
-	if (progress.isVisible())
-	{
-		expectedSolutions = 0.0;
-		expectedSolutions = 0.0;
-		expectedSolutions = static_cast<long double>(productOfSumsOfProducts.back().size());
-		for (auto iter = std::ranges::next(productOfSumsOfProducts.crbegin()); iter != productOfSumsOfProducts.crend(); ++iter)
-			expectedSolutions *= iter->size();
-	}
-	
+	const std::size_t maxSums = options::solutionsLimit.getValue() == -1 ? 256 : static_cast<std::size_t>(options::solutionsLimit.getValue());
 	while (productOfSumsOfProducts.size() != 1)
 	{
-		if (progress.isVisible())
-		{
-			std::strcpy(progressInfo, progressName.c_str());
-			std::strcat(progressInfo, " - ");
-			std::strcat(progressInfo, solutionCountEstimation(expectedSolutions).c_str());
-			std::strcat(progressInfo, " solutions");
-		}
 		sumOfProducts_t multiplier0 = std::move(productOfSumsOfProducts.back());
 		productOfSumsOfProducts.pop_back();
 		sumOfProducts_t multiplier1 = std::move(productOfSumsOfProducts.back());
 		productOfSumsOfProducts.pop_back();
-		if (progress.isVisible())
-		{
-			const std::uintmax_t expectedResultSize = static_cast<std::uintmax_t>(multiplier0.size()) * static_cast<std::uintmax_t>(multiplier1.size());
-			productOfSumsOfProducts.emplace_back(multiplySumsOfProducts(std::move(multiplier0), std::move(multiplier1), progress));
-			const std::size_t actualResultSize = productOfSumsOfProducts.back().size();
-			expectedSolutions = expectedSolutions / expectedResultSize * actualResultSize;
-		}
-		else
-		{
-			productOfSumsOfProducts.emplace_back(multiplySumsOfProducts(std::move(multiplier0), std::move(multiplier1), progress));
-		}
+		productOfSumsOfProducts.emplace_back(multiplySumsOfProducts(std::move(multiplier0), std::move(multiplier1), maxSums, progress));
 	}
 	
 	return std::move(productOfSumsOfProducts.front());
