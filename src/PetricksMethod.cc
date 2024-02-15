@@ -245,9 +245,10 @@ typename PetricksMethod<INDEX_T>::sumOfProducts_t PetricksMethod<INDEX_T>::findS
 	if (productOfSumsOfProducts.empty())
 		return sumOfProducts_t{};
 	
-	Progress progress(Progress::Stage::SOLVING, "Merging solutions", (productOfSumsOfProducts.size() - 1) * 4, false);
-	
 	const std::size_t maxSums = options::solutionsLimit.getValue() == -1 ? 256 : static_cast<std::size_t>(options::solutionsLimit.getValue());
+	
+	Progress progress(Progress::Stage::SOLVING, "Merging solutions", (productOfSumsOfProducts.size() - 1) * (maxSums == 0 || maxSums == 1 ? 3 : 4), false);
+	
 	while (productOfSumsOfProducts.size() != 1)
 	{
 		sumOfProducts_t multiplier0 = std::move(productOfSumsOfProducts.back());
