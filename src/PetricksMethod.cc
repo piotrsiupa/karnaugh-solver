@@ -193,7 +193,7 @@ inline typename PetricksMethod<INDEX_T>::sumOfProducts_t PetricksMethod<INDEX_T>
 	{
 		const auto infoGuard = progress.addInfo("sorting");
 		progress.step();
-		progress.substep(-0.0, true);
+		progress.substep(-0.0);
 		std::ranges::sort(sumOfProducts);
 		const auto [eraseBegin, eraseEnd] = std::ranges::unique(sumOfProducts);
 		sumOfProducts.erase(eraseBegin, eraseEnd);
@@ -202,7 +202,7 @@ inline typename PetricksMethod<INDEX_T>::sumOfProducts_t PetricksMethod<INDEX_T>
 	{
 		const auto infoGuard = progress.addInfo("limiting");
 		progress.step();
-		progress.substep(-0.0, true);
+		progress.substep(-0.0);
 		if (sumOfProducts.size() > maxSums)
 			sumOfProducts.resize(maxSums);
 	}
