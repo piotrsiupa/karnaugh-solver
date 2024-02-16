@@ -547,11 +547,6 @@ void OptimizedSolutions::printCppFinalSums(std::ostream &o, const Names &functio
 	}
 }
 
-void OptimizedSolutions::printGateScores(std::ostream &o) const
-{
-	o << "Gate scores: NOTs = " << getNotCount() << ", ANDs = " << getAndCount() << ", ORs = " << getOrCount() << '\n';
-}
-
 void OptimizedSolutions::createNegatedInputs(const solutions_t &solutions)
 {
 	for (const Implicants *const solution : solutions)

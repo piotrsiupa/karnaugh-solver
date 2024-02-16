@@ -8,13 +8,14 @@
 #include <utility>
 #include <vector>
 
+#include "GateScore.hh"
 #include "Implicant.hh"
 #include "Implicants.hh"
 #include "Names.hh"
 #include "Progress.hh"
 
 
-class OptimizedSolutions
+class OptimizedSolutions : public GateScore
 {
 public:
 	using solutions_t = std::vector<const Implicants*>;
@@ -74,7 +75,6 @@ private:
 	void printVerilogFinalSums(std::ostream &o, const Names &functionNames) const;
 	void printVhdlFinalSums(std::ostream &o, const Names &functionNames) const;
 	void printCppFinalSums(std::ostream &o, const Names &functionNames) const;
-	void printGateScores(std::ostream &o) const;
 	
 	void createNegatedInputs(const solutions_t &solutions);
 	finalPrimeImplicants_t extractCommonProductParts(const solutions_t &solutions, Progress &progress);
@@ -98,10 +98,9 @@ public:
 	
 	std::size_t getSize() const { return finalSums.size(); }
 	
-	std::size_t getNotCount() const { return std::bitset<32>(negatedInputs).count(); }
-	std::size_t getAndCount() const { std::size_t andCount = 0; for (const auto &[primeImplicant, ids] : products) andCount += std::max(std::size_t(1), primeImplicant.getBitCount() + ids.size()) - 1; return andCount; }
-	std::size_t getOrCount() const { std::size_t orCount = 0; for (const auto &sum : sums) orCount += sum.size() - 1; return orCount; }
-	std::size_t getGateScore() const { return getNotCount() + 2 * getAndCount() + 2 * getOrCount(); }
+	std::size_t getNotCount() const final { return std::bitset<32>(negatedInputs).count(); }
+	std::size_t getAndCount() const final { std::size_t andCount = 0; for (const auto &[primeImplicant, ids] : products) andCount += std::max(std::size_t(1), primeImplicant.getBitCount() + ids.size()) - 1; return andCount; }
+	std::size_t getOrCount() const final { std::size_t orCount = 0; for (const auto &sum : sums) orCount += sum.size() - 1; return orCount; }
 	
 	void printHuman(std::ostream &o, const Names &functionNames) const;
 	void printVerilog(std::ostream &o, const Names &functionNames) const;
