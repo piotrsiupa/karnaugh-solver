@@ -36,4 +36,5 @@ Products:
 Sums:
 	"sum" = [0] || [1] || [2] || [6]
 	"carry_out" = [3] || [4] || [5]
+
 Gate scores: NOTs = 3, ANDs = 10, ORs = 5

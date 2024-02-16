@@ -14,4 +14,5 @@ Negated inputs: <none>
 Products:
 Sums:
 	"f0" = <False>
+
 Gate scores: NOTs = 0, ANDs = 0, ORs = 0

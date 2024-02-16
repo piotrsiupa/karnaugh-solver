@@ -13,4 +13,5 @@ Products:
 Sums:
 	"f0" = [0]
 	"f1" = [1]
+
 Gate scores: NOTs = 2, ANDs = 2, ORs = 0

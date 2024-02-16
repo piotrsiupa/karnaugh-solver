@@ -47,4 +47,5 @@ Sums:
 	"pass_though" = the_only_input
 	"negate" = !the_only_input
 	"false" = <False>
+
 Gate scores: NOTs = 1, ANDs = 0, ORs = 0

@@ -17,4 +17,5 @@ Products:
 	[0] = !a && !b && d
 Sums:
 	"short 0" = [0]
+
 Gate scores: NOTs = 2, ANDs = 2, ORs = 0

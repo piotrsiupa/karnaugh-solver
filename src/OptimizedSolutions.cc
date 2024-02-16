@@ -685,7 +685,10 @@ void OptimizedSolutions::printHuman(std::ostream &o, const Names &functionNames)
 	printHumanSums(o);
 	printHumanFinalSums(o, functionNames);
 	if (options::outputFormat.getValue() != options::OutputFormat::HUMAN_SHORT)
+	{
+		o << '\n';
 		printGateScores(o);
+	}
 }
 
 void OptimizedSolutions::printVerilog(std::ostream &o, const Names &functionNames) const

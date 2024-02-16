@@ -45,4 +45,5 @@ Products:
 Sums:
 	"short with don't cares 0" = [0]
 	"short with don't cares 1" = [1]
+
 Gate scores: NOTs = 2, ANDs = 2, ORs = 0

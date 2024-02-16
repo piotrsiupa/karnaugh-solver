@@ -83,4 +83,5 @@ Sums:
 	"1 must be F" = <False>
 	"0 must be T" = <True>
 	"1 must be T" = <True>
+
 Gate scores: NOTs = 0, ANDs = 0, ORs = 0

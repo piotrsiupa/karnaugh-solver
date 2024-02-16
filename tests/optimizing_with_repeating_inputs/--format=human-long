@@ -34,4 +34,5 @@ Products:
 	[5] = b && [1]
 Sums:
 	"f0" = [2] || [3] || [4] || [5]
+
 Gate scores: NOTs = 0, ANDs = 8, ORs = 3

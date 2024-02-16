@@ -18,4 +18,5 @@ Products:
 	[1] = !w && !y && z
 Sums:
 	"my-function" = [0] || [1]
+
 Gate scores: NOTs = 3, ANDs = 4, ORs = 1

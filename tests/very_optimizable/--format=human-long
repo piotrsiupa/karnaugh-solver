@@ -67,4 +67,5 @@ Sums:
 	"second" = [0] || [11]
 	"third" = [11]
 	"fourth" = [9] || [10]
+
 Gate scores: NOTs = 4, ANDs = 14, ORs = 5
