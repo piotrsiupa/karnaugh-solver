@@ -10,15 +10,15 @@
 
 #include "GateScore.hh"
 #include "Implicant.hh"
-#include "Implicants.hh"
 #include "Names.hh"
 #include "Progress.hh"
+#include "Solution.hh"
 
 
 class OptimizedSolutions : public GateScore
 {
 public:
-	using solutions_t = std::vector<const Implicants*>;
+	using solutions_t = std::vector<const Solution*>;
 	
 private:
 	using id_t = std::size_t;

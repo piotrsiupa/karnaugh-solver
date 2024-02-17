@@ -6,7 +6,7 @@
 #include <vector>
 
 #include "GateScore.hh"
-#include "Implicants.hh"
+#include "Solution.hh"
 #include "Input.hh"
 #include "Names.hh"
 #include "Karnaugh.hh"
@@ -16,7 +16,7 @@
 class Karnaughs : public GateScore
 {
 	using karnaughs_t = std::vector<Karnaugh>;
-	using solutions_t = std::vector<Implicants>;
+	using solutions_t = std::vector<Solution>;
 	using solutionses_t = std::vector<solutions_t>;
 	
 	karnaughs_t karnaughs;
@@ -44,9 +44,9 @@ class Karnaughs : public GateScore
 public:
 	[[nodiscard]] bool loadData(Input &input);
 	
-	std::size_t getNotCount() const final { return std::accumulate(bestSolutions.cbegin(), bestSolutions.cend(), 0, [](const std::size_t acc, const Implicants &implicants){ return implicants.getNotCount() + acc; }); }
-	std::size_t getAndCount() const final { return std::accumulate(bestSolutions.cbegin(), bestSolutions.cend(), 0, [](const std::size_t acc, const Implicants &implicants){ return implicants.getAndCount() + acc; }); }
-	std::size_t getOrCount() const final { return std::accumulate(bestSolutions.cbegin(), bestSolutions.cend(), 0, [](const std::size_t acc, const Implicants &implicants){ return implicants.getOrCount() + acc; }); }
+	std::size_t getNotCount() const final { return std::accumulate(bestSolutions.cbegin(), bestSolutions.cend(), 0, [](const std::size_t acc, const Solution &solution){ return solution.getNotCount() + acc; }); }
+	std::size_t getAndCount() const final { return std::accumulate(bestSolutions.cbegin(), bestSolutions.cend(), 0, [](const std::size_t acc, const Solution &solution){ return solution.getAndCount() + acc; }); }
+	std::size_t getOrCount() const final { return std::accumulate(bestSolutions.cbegin(), bestSolutions.cend(), 0, [](const std::size_t acc, const Solution &solution){ return solution.getOrCount() + acc; }); }
 	
 	void solve();
 	void printHuman();

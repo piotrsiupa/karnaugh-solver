@@ -1,17 +1,17 @@
-#include "./Implicants.hh"
+#include "./Solution.hh"
 
 #include <algorithm>
 
 #include "options.hh"
 
 
-Implicants& Implicants::sort()
+Solution& Solution::sort()
 {
 	std::sort(begin(), end());
 	return *this;
 }
 
-void Implicants::printHuman(std::ostream &o) const
+void Solution::printHuman(std::ostream &o) const
 {
 	if (size() == 1)
 	{
@@ -28,7 +28,7 @@ void Implicants::printHuman(std::ostream &o) const
 	}
 }
 
-void Implicants::printVerilog(std::ostream &o) const
+void Solution::printVerilog(std::ostream &o) const
 {
 	if (size() == 1)
 	{
@@ -45,7 +45,7 @@ void Implicants::printVerilog(std::ostream &o) const
 	}
 }
 
-void Implicants::printVhdl(std::ostream &o) const
+void Solution::printVhdl(std::ostream &o) const
 {
 	if (size() == 1)
 	{
@@ -62,7 +62,7 @@ void Implicants::printVhdl(std::ostream &o) const
 	}
 }
 
-void Implicants::printCpp(std::ostream &o) const
+void Solution::printCpp(std::ostream &o) const
 {
 	if (size() == 1)
 	{
@@ -79,7 +79,7 @@ void Implicants::printCpp(std::ostream &o) const
 	}
 }
 
-void Implicants::printMath(std::ostream &o) const
+void Solution::printMath(std::ostream &o) const
 {
 	if (size() == 1)
 	{
@@ -115,7 +115,7 @@ void Implicants::printMath(std::ostream &o) const
 }
 
 #ifndef NDEBUG
-bool Implicants::covers(const Minterm minterm) const
+bool Solution::covers(const Minterm minterm) const
 {
 	for (const Implicant &implicant : *this)
 		if (implicant.covers(minterm))

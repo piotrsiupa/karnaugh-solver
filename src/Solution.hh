@@ -9,12 +9,13 @@
 #include "Implicant.hh"
 
 
-class Implicants : public GateScore, public std::vector<Implicant>
+class Solution : public GateScore, public std::vector<Implicant>
 {
 public:
 	using std::vector<Implicant>::vector;
+	Solution(std::vector<Implicant> &&implicants) : std::vector<Implicant>(std::move(implicants)) {}
 	
-	Implicants& sort();
+	Solution& sort();
 	
 	std::size_t getNotCount() const final { return std::accumulate(cbegin(), cend(), 0, [](const std::size_t acc, const Implicant &implicant){ return implicant.getFalseBitCount() + acc; }); }
 	std::size_t getAndCount() const final { return std::accumulate(cbegin(), cend(), 0, [](const std::size_t acc, const Implicant &implicant){ return implicant.getBitCount() == 0 ? acc : implicant.getBitCount() - 1 + acc; }); }

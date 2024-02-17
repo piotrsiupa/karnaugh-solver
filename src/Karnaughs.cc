@@ -126,7 +126,7 @@ std::string Karnaughs::getName()
 
 bool Karnaughs::areInputsUsed() const
 {
-	for (const Implicants &bestSolution : bestSolutions)
+	for (const Solution &bestSolution : bestSolutions)
 		for (const Implicant &implicant : bestSolution)
 			if (implicant.getBitCount() != 0)
 				return true;
@@ -168,9 +168,9 @@ void Karnaughs::findBestNonOptimizedSolutions(const solutionses_t &solutionses)
 		progress.step();
 		auto progressStep = progress.makeCountingStepHelper(static_cast<Progress::completion_t>(solutions.size()));
 		using score_t = std::size_t;
-		const Implicants *bestSolution = nullptr;
+		const Solution *bestSolution = nullptr;
 		score_t bestScore = std::numeric_limits<score_t>::max();
-		for (const Implicants &solution : solutions)
+		for (const Solution &solution : solutions)
 		{
 			progressStep.substep();
 			if (solution.empty())
@@ -215,7 +215,7 @@ void Karnaughs::findBestOptimizedSolutions(const solutionses_t &solutionses)
 	for (std::vector<std::size_t> indexes(solutionses.size(), 0);;)
 	{
 		progress.step();
-		std::vector<const Implicants*> solutions;
+		std::vector<const Solution*> solutions;
 		solutions.reserve(indexes.size());
 		for (std::size_t i = 0; i != indexes.size(); ++i)
 			solutions.push_back(&solutionses[i][indexes[i]]);
