@@ -32,4 +32,4 @@ Sums:
 	"third" = [11]
 	"fourth" = [9] || [10]
 
-Gate scores: NOTs = 4, ANDs = 14, ORs = 5
+Gate cost: NOTs = 4, ANDs = 14, ORs = 5

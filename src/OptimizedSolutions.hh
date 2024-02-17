@@ -8,14 +8,14 @@
 #include <utility>
 #include <vector>
 
-#include "GateScore.hh"
+#include "GateCost.hh"
 #include "Implicant.hh"
 #include "Names.hh"
 #include "Progress.hh"
 #include "Solution.hh"
 
 
-class OptimizedSolutions : public GateScore
+class OptimizedSolutions : public GateCost
 {
 public:
 	using solutions_t = std::vector<const Solution*>;

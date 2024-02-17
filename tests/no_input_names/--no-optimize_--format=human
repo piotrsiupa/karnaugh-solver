@@ -1,4 +1,4 @@
 --- f0 ---
 (i1 && i3) || (i0 && i2 && i3)
 
-Gate scores: NOTs = 0, ANDs = 3, ORs = 1
+Gate cost: NOTs = 0, ANDs = 3, ORs = 1

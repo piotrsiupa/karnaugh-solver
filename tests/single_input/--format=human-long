@@ -48,4 +48,4 @@ Sums:
 	"negate" = !the_only_input
 	"false" = <False>
 
-Gate scores: NOTs = 1, ANDs = 0, ORs = 0
+Gate cost: NOTs = 1, ANDs = 0, ORs = 0

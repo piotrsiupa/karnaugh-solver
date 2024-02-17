@@ -46,4 +46,4 @@ goal:
 solution:
 (a && !b && !c && d) || (!a && b && c && !d) || (!a && !b && !c && !d)
 
-Gate scores: NOTs = 28, ANDs = 42, ORs = 10
+Gate cost: NOTs = 28, ANDs = 42, ORs = 10

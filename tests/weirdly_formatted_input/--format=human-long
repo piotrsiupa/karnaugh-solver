@@ -19,4 +19,4 @@ Products:
 Sums:
 	"my-function" = [0] || [1]
 
-Gate scores: NOTs = 3, ANDs = 4, ORs = 1
+Gate cost: NOTs = 3, ANDs = 4, ORs = 1

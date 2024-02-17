@@ -48,5 +48,6 @@ public:
 	void printVhdl();
 	void printCpp();
 	void printMath();
+	void printGateCost();
 	void print();
 };

@@ -261,7 +261,7 @@ void Karnaughs::printHuman()
 	{
 		printHumanBestSolutions();
 		if (options::skipOptimization.isRaised() && options::outputFormat.getValue() != options::OutputFormat::HUMAN_SHORT)
-			bestSolutions.printGateScores(std::cout);
+			bestSolutions.printGateCost(std::cout, false);
 	}
 	if (!options::skipOptimization.isRaised())
 	{
@@ -425,6 +425,14 @@ void Karnaughs::printMath()
 	}
 }
 
+void Karnaughs::printGateCost()
+{
+	if (options::skipOptimization.isRaised())
+		bestSolutions.printGateCost(std::cout, true);
+	else
+		optimizedSolutions.printGateCost(std::cout, true);
+}
+
 void Karnaughs::print()
 {
 	switch (options::outputFormat.getValue())
@@ -448,6 +456,9 @@ void Karnaughs::print()
 	case options::OutputFormat::MATH_PROG:
 	case options::OutputFormat::MATH_NAMES:
 		printMath();
+		break;
+	case options::OutputFormat::GATE_COST:
+		printGateCost();
 		break;
 	}
 }

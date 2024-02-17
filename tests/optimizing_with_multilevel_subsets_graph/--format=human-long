@@ -23,4 +23,4 @@ Products:
 Sums:
 	"f0" = [5] || [6] || [7] || [8] || [9] || [10]
 
-Gate scores: NOTs = 0, ANDs = 15, ORs = 5
+Gate cost: NOTs = 0, ANDs = 15, ORs = 5

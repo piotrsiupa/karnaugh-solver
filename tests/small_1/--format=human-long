@@ -18,4 +18,4 @@ Products:
 Sums:
 	"short 1" = [0]
 
-Gate scores: NOTs = 3, ANDs = 3, ORs = 0
+Gate cost: NOTs = 3, ANDs = 3, ORs = 0

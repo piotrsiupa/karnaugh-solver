@@ -3,11 +3,11 @@
 #include <numeric>
 #include <vector>
 
-#include "GateScore.hh"
+#include "GateCost.hh"
 #include "Solution.hh"
 
 
-class Solutions : public GateScore, public std::vector<Solution>
+class Solutions : public GateCost, public std::vector<Solution>
 {
 public:
 	using std::vector<Solution>::vector;

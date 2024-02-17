@@ -15,4 +15,4 @@ Products:
 Sums:
 	"f0" = <True>
 
-Gate scores: NOTs = 0, ANDs = 0, ORs = 0
+Gate cost: NOTs = 0, ANDs = 0, ORs = 0

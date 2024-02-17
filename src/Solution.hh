@@ -4,12 +4,12 @@
 #include <ostream>
 #include <vector>
 
-#include "GateScore.hh"
+#include "GateCost.hh"
 #include "Minterm.hh"
 #include "Implicant.hh"
 
 
-class Solution : public GateScore, public std::vector<Implicant>
+class Solution : public GateCost, public std::vector<Implicant>
 {
 public:
 	using std::vector<Implicant>::vector;

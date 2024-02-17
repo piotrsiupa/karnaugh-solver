@@ -51,4 +51,4 @@ Products:
 Sums:
 	"f0" = [0] || [1] || [2]
 
-Gate scores: NOTs = 2, ANDs = 4, ORs = 2
+Gate cost: NOTs = 2, ANDs = 4, ORs = 2

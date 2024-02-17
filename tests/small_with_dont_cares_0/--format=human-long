@@ -25,4 +25,4 @@ Products:
 Sums:
 	"short with don't cares 0" = [0]
 
-Gate scores: NOTs = 1, ANDs = 1, ORs = 0
+Gate cost: NOTs = 1, ANDs = 1, ORs = 0

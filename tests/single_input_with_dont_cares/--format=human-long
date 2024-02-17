@@ -84,4 +84,4 @@ Sums:
 	"0 must be T" = <True>
 	"1 must be T" = <True>
 
-Gate scores: NOTs = 0, ANDs = 0, ORs = 0
+Gate cost: NOTs = 0, ANDs = 0, ORs = 0
