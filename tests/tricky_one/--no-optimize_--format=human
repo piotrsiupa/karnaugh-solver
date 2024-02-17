@@ -4,3 +4,4 @@
 --- tricky_1 ---
 (a && b) || (b && d)
 
+Gate scores: NOTs = 2, ANDs = 5, ORs = 2

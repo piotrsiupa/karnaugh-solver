@@ -29,7 +29,7 @@ private:
 	explicit Implicant(const mask_t trueBits, const mask_t falseBits) : trueBits(trueBits), falseBits(falseBits) { recalculateBits(); }
 	constexpr Implicant(const mask_t trueBits, const mask_t falseBits, const bits_t bitCount) : trueBits(trueBits), falseBits(falseBits), bitCount(bitCount) {}
 	
-	void recalculateBits() { bitCount = static_cast<bits_t>(std::bitset<32>(trueBits | falseBits).count()); }
+	void recalculateBits() { bitCount = static_cast<bits_t>(std::bitset<::maxBits>(trueBits | falseBits).count()); }
 	
 public:
 	explicit Implicant(const Minterm minterm) : trueBits(minterm), falseBits(minterm ^ maxMinterm), bitCount(::bits) {}
@@ -53,6 +53,8 @@ public:
 	constexpr mask_t getTrueBits() const { return isError() ? 0 : trueBits; }
 	constexpr mask_t getFalseBits() const { return isError() ? 0 : falseBits; }
 	constexpr bits_t getBitCount() const { return bitCount; }
+	bits_t getTrueBitCount() const { return std::bitset<::maxBits>(getTrueBits()).count(); }
+	bits_t getFalseBitCount() const { return std::bitset<::maxBits>(getFalseBits()).count(); }
 	splitBits_t splitBits() const;
 	minterms_t findMinterms() const;
 	

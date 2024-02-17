@@ -258,7 +258,11 @@ void Karnaughs::printHuman()
 {
 	const bool bestSolutionsVisible = options::skipOptimization.isRaised() || options::outputFormat.getValue() != options::OutputFormat::HUMAN_SHORT;
 	if (bestSolutionsVisible)
+	{
 		printHumanBestSolutions();
+		if (options::skipOptimization.isRaised() && options::outputFormat.getValue() != options::OutputFormat::HUMAN_SHORT)
+			printGateScores(std::cout);
+	}
 	if (!options::skipOptimization.isRaised())
 	{
 		if (options::outputFormat.getValue() != options::OutputFormat::HUMAN_SHORT)

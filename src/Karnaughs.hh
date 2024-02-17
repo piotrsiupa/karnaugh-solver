@@ -1,9 +1,11 @@
 #pragma once
 
+#include <numeric>
 #include <string>
 #include <string_view>
 #include <vector>
 
+#include "GateScore.hh"
 #include "Implicants.hh"
 #include "Input.hh"
 #include "Names.hh"
@@ -11,7 +13,7 @@
 #include "OptimizedSolutions.hh"
 
 
-class Karnaughs
+class Karnaughs : public GateScore
 {
 	using karnaughs_t = std::vector<Karnaugh>;
 	using solutions_t = std::vector<Implicants>;
@@ -41,6 +43,11 @@ class Karnaughs
 	
 public:
 	[[nodiscard]] bool loadData(Input &input);
+	
+	std::size_t getNotCount() const final { return std::accumulate(bestSolutions.cbegin(), bestSolutions.cend(), 0, [](const std::size_t acc, const Implicants &implicants){ return implicants.getNotCount() + acc; }); }
+	std::size_t getAndCount() const final { return std::accumulate(bestSolutions.cbegin(), bestSolutions.cend(), 0, [](const std::size_t acc, const Implicants &implicants){ return implicants.getAndCount() + acc; }); }
+	std::size_t getOrCount() const final { return std::accumulate(bestSolutions.cbegin(), bestSolutions.cend(), 0, [](const std::size_t acc, const Implicants &implicants){ return implicants.getOrCount() + acc; }); }
+	
 	void solve();
 	void printHuman();
 	void printVerilog();

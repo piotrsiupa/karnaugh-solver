@@ -36,3 +36,4 @@ best fit:
 solution:
 !a && !b && c
 
+Gate scores: NOTs = 3, ANDs = 3, ORs = 0
