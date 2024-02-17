@@ -11,6 +11,7 @@
 #include "Implicant.hh"
 #include "Progress.hh"
 #include "Solution.hh"
+#include "Solutions.hh"
 
 
 template<typename INDEX_T>
@@ -19,7 +20,6 @@ class PetricksMethod
 public:
 	using minterms_t = std::set<Minterm>;
 	using primeImplicants_t = std::vector<Implicant>;
-	using solutions_t = std::vector<Solution>;
 	
 private:
 	using index_t = INDEX_T;
@@ -41,10 +41,10 @@ private:
 	static sumOfProducts_t multiplySumsOfProducts(const sumOfProducts_t &multiplier0, const sumOfProducts_t &multiplier1, long double &actualOperations, const long double expectedOperations, Progress &progress);
 	static std::string ld2integerString(const long double value);
 	sumOfProducts_t findSumOfProducts(const std::string &functionName) const;
-	solutions_t solve(const std::string &functionName);
+	Solutions solve(const std::string &functionName);
 	
 public:
 	static constexpr std::size_t MAX_PRIME_IMPL_COUNT = HasseDiagram<index_t>::MAX_VALUE;
 	
-	static solutions_t solve(minterms_t minterms, primeImplicants_t primeImplicants, const std::string &functionName) { return PetricksMethod(std::move(minterms), std::move(primeImplicants)).solve(functionName); }
+	static Solutions solve(minterms_t minterms, primeImplicants_t primeImplicants, const std::string &functionName) { return PetricksMethod(std::move(minterms), std::move(primeImplicants)).solve(functionName); }
 };

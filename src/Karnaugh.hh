@@ -9,14 +9,11 @@
 #include "Minterms.hh"
 #include "Progress.hh"
 #include "Solution.hh"
+#include "Solutions.hh"
 
 
 class Karnaugh
 {
-public:
-	using solutions_t = std::vector<Solution>;
-	
-private:
 	using grayCode_t = std::vector<Minterm>;
 	
 	static std::size_t nameCount;
@@ -33,7 +30,7 @@ private:
 	
 	bool loadMinterms(Minterms &minterms, Input &input, Progress &progress) const;
 #ifndef NDEBUG
-	void validate(const solutions_t &solutions) const;
+	void validate(const Solutions &solutions) const;
 #endif
 	
 public:
@@ -45,7 +42,7 @@ public:
 	const std::string& getFunctionName() const { return functionName; }
 	
 	bool loadData(Input &input);
-	solutions_t solve() const;
+	Solutions solve() const;
 	
 	void printHumanSolution(const Solution &solution) const;
 	void printVerilogSolution(const Solution &solution) const;

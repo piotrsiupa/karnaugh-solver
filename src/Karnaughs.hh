@@ -1,26 +1,24 @@
 #pragma once
 
-#include <numeric>
 #include <string>
 #include <string_view>
 #include <vector>
 
-#include "GateScore.hh"
 #include "Solution.hh"
 #include "Input.hh"
 #include "Names.hh"
 #include "Karnaugh.hh"
 #include "OptimizedSolutions.hh"
+#include "Solutions.hh"
 
 
-class Karnaughs : public GateScore
+class Karnaughs
 {
 	using karnaughs_t = std::vector<Karnaugh>;
-	using solutions_t = std::vector<Solution>;
-	using solutionses_t = std::vector<solutions_t>;
+	using solutionses_t = std::vector<Solutions>;
 	
 	karnaughs_t karnaughs;
-	solutions_t bestSolutions;
+	Solutions bestSolutions;
 	OptimizedSolutions optimizedSolutions;
 	
 	[[nodiscard]] bool shouldFunctionNamesBeUsed() const;
@@ -43,10 +41,6 @@ class Karnaughs : public GateScore
 	
 public:
 	[[nodiscard]] bool loadData(Input &input);
-	
-	std::size_t getNotCount() const final { return std::accumulate(bestSolutions.cbegin(), bestSolutions.cend(), 0, [](const std::size_t acc, const Solution &solution){ return solution.getNotCount() + acc; }); }
-	std::size_t getAndCount() const final { return std::accumulate(bestSolutions.cbegin(), bestSolutions.cend(), 0, [](const std::size_t acc, const Solution &solution){ return solution.getAndCount() + acc; }); }
-	std::size_t getOrCount() const final { return std::accumulate(bestSolutions.cbegin(), bestSolutions.cend(), 0, [](const std::size_t acc, const Solution &solution){ return solution.getOrCount() + acc; }); }
 	
 	void solve();
 	void printHuman();

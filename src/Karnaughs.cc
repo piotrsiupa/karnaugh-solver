@@ -163,7 +163,7 @@ void Karnaughs::findBestNonOptimizedSolutions(const solutionses_t &solutionses)
 {
 	Progress progress(Progress::Stage::OPTIMIZING, "Electing the best solutions", solutionses.size(), true);
 	bestSolutions.reserve(solutionses.size());
-	for (const solutions_t &solutions : solutionses)
+	for (const Solutions &solutions : solutionses)
 	{
 		progress.step();
 		auto progressStep = progress.makeCountingStepHelper(static_cast<Progress::completion_t>(solutions.size()));
@@ -185,7 +185,7 @@ void Karnaughs::findBestNonOptimizedSolutions(const solutionses_t &solutionses)
 				score += (implicant.getBitCount() - 1) * 2;
 				falseBits |= implicant.getFalseBits();
 			}
-			score += std::bitset<32>(falseBits).count();
+			score += std::bitset<::maxBits>(falseBits).count();
 			if (score < bestScore)
 			{
 				bestScore = score;
@@ -205,7 +205,7 @@ void Karnaughs::findBestOptimizedSolutions(const solutionses_t &solutionses)
 	std::size_t bestGateScore = SIZE_MAX;
 	Progress::steps_t steps = 1;
 	if (options::status.getValue())
-		for (const solutions_t &solutions : solutionses)
+		for (const Solutions &solutions : solutionses)
 			steps *= solutions.size();
 #ifdef NDEBUG
 	Progress progress(Progress::Stage::OPTIMIZING, "Eliminating common subexpressions", steps, true);
@@ -250,7 +250,7 @@ void Karnaughs::findBestSolutions(const solutionses_t &solutionses)
 
 void Karnaughs::solve()
 {
-	const std::vector<solutions_t> solutionses = makeSolutionses();
+	const std::vector<Solutions> solutionses = makeSolutionses();
 	findBestSolutions(solutionses);
 }
 
@@ -261,7 +261,7 @@ void Karnaughs::printHuman()
 	{
 		printHumanBestSolutions();
 		if (options::skipOptimization.isRaised() && options::outputFormat.getValue() != options::OutputFormat::HUMAN_SHORT)
-			printGateScores(std::cout);
+			bestSolutions.printGateScores(std::cout);
 	}
 	if (!options::skipOptimization.isRaised())
 	{

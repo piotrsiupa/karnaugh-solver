@@ -68,7 +68,7 @@ QuineMcCluskey::primeImplicants_t QuineMcCluskey::findPrimeImplicants(const Mint
 	return primeImplicants;
 }
 
-QuineMcCluskey::solutions_t QuineMcCluskey::solve(const Minterms &allowedMinterms, const Minterms &targetMinterms, const std::string &functionName) const
+Solutions QuineMcCluskey::solve(const Minterms &allowedMinterms, const Minterms &targetMinterms, const std::string &functionName) const
 {
 	primeImplicants_t primeImplicants = findPrimeImplicants(allowedMinterms, functionName);
 	if (primeImplicants.size() <= PetricksMethod<std::uint8_t>::MAX_PRIME_IMPL_COUNT)

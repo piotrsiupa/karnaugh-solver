@@ -215,17 +215,17 @@ typename PetricksMethod<INDEX_T>::sumOfProducts_t PetricksMethod<INDEX_T>::findS
 }
 
 template<typename INDEX_T>
-typename PetricksMethod<INDEX_T>::solutions_t PetricksMethod<INDEX_T>::solve(const std::string &functionName)
+Solutions PetricksMethod<INDEX_T>::solve(const std::string &functionName)
 {
 	primeImplicants_t essentials = extractEssentials(functionName);
 	sumOfProducts_t sumOfProducts = findSumOfProducts(functionName);
 	
 	if (sumOfProducts.empty())
 		return !essentials.empty()
-			? solutions_t{std::move(essentials)}
-			: solutions_t{{Implicant::error()}};
+			? Solutions{std::move(essentials)}
+			: Solutions{{Implicant::error()}};
 	
-	solutions_t solutions;
+	Solutions solutions;
 	solutions.reserve(sumOfProducts.size());
 	for (const auto &x : sumOfProducts)
 	{

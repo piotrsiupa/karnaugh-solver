@@ -127,7 +127,7 @@ bool Karnaugh::loadMinterms(Minterms &minterms, Input &input, Progress &progress
 }
 
 #ifndef NDEBUG
-void Karnaugh::validate(const solutions_t &solutions) const
+void Karnaugh::validate(const Solutions &solutions) const
 {
 	const std::string progressName = "Validating solutions for \"" + functionName + "\" (development build)";
 	Progress progress(Progress::Stage::SOLVING, progressName.c_str(), solutions.size());
@@ -200,9 +200,9 @@ bool Karnaugh::loadData(Input &input)
 	return true;
 }
 
-Karnaugh::solutions_t Karnaugh::solve() const
+Solutions Karnaugh::solve() const
 {
-	const Karnaugh::solutions_t solutions = QuineMcCluskey().solve(allowedMinterms, targetMinterms, functionName);
+	const Solutions solutions = QuineMcCluskey().solve(allowedMinterms, targetMinterms, functionName);
 #ifndef NDEBUG
 	validate(solutions);
 #endif
