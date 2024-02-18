@@ -11,13 +11,22 @@
 
 void Karnaughs::printHumanBestSolutions() const
 {
+	bool first = true;
 	for (std::size_t i = 0; i != karnaughs.size(); ++i)
 	{
+		if (first == true)
+		{
+			first = false;
+		}
+		else
+		{
+			if (options::outputFormat.getValue() != options::OutputFormat::HUMAN_SHORT)
+				std::cout << '\n' << '\n';
+		}
 		std::cout << "--- " << karnaughs[i].getFunctionName() << " ---\n";
-		if (options::outputFormat.getValue() == options::OutputFormat::HUMAN_LONG)
+		if (options::outputFormat.getValue() != options::OutputFormat::HUMAN_SHORT)
 			std::cout << '\n';
 		karnaughs[i].printHumanSolution(bestSolutions[i]);
-		std::cout << '\n';
 	}
 }
 
@@ -260,17 +269,24 @@ void Karnaughs::printHuman()
 	if (bestSolutionsVisible)
 	{
 		printHumanBestSolutions();
-		if (options::skipOptimization.isRaised() && options::outputFormat.getValue() != options::OutputFormat::HUMAN_SHORT)
+		if (options::outputFormat.getValue() != options::OutputFormat::HUMAN_SHORT)
 		{
-			std::cout << "=== Summary ===\n";
-			std::cout << '\n';
-			bestSolutions.printGateCost(std::cout, false);
+			if (bestSolutions.size() != 1 && options::skipOptimization.isRaised())
+			{
+				if (!bestSolutions.empty())
+					std::cout << "\n\n=== Summary ===\n\n";
+				bestSolutions.printGateCost(std::cout, false);
+			}
 		}
 	}
 	if (!options::skipOptimization.isRaised())
 	{
 		if (options::outputFormat.getValue() != options::OutputFormat::HUMAN_SHORT)
+		{
+			if (!bestSolutions.empty())
+				std::cout << "\n\n";
 			std::cout << "=== optimized solution ===\n\n";
+		}
 		printHumanOptimizedSolution();
 		std::cout << std::flush;
 	}

@@ -231,8 +231,6 @@ void Karnaugh::printHumanSolution(const Solution &solution) const
 		std::cout << "solution:\n";
 	}
 	Solution(solution).sort().printHuman(std::cout);
-	if (options::outputFormat.getValue() != options::OutputFormat::HUMAN_SHORT)
-		std::cout << '\n';
 }
 
 void Karnaugh::printVerilogSolution(const Solution &solution) const

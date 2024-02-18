@@ -26,9 +26,10 @@ void Solution::printHuman(std::ostream &o) const
 			implicant.printHuman(o, true);
 		}
 	}
+	o << '\n';
 	if (options::outputFormat.getValue() != options::OutputFormat::HUMAN_SHORT)
 	{
-		o << '\n' << '\n';
+		o << '\n';
 		printGateCost(o, false);
 	}
 }

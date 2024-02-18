@@ -1,10 +1,12 @@
 --- tricky_0 ---
+
 (!a && !c) || (a && b && d)
 
 Gate cost: NOTs = 2, ANDs = 3, ORs = 1
 
 
 --- tricky_1 ---
+
 (a && b) || (b && d)
 
 Gate cost: NOTs = 0, ANDs = 2, ORs = 1
