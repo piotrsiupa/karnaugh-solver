@@ -17,6 +17,9 @@ best fit:
 solution:
 (i1 && i3) || (i0 && i2 && i3)
 
+Gate cost: NOTs = 0, ANDs = 3, ORs = 1
+
+
 === optimized solution ===
 
 Negated inputs: <none>
@@ -25,4 +28,5 @@ Products:
 	[1] = i0 && i2 && i3
 Sums:
 	"f0" = [0] || [1]
-Gate scores: NOTs = 0, ANDs = 3, ORs = 1
+
+Gate cost: NOTs = 0, ANDs = 3, ORs = 1

@@ -206,7 +206,7 @@ Products:
 Sums:
 	"tricky_0" = [1] || [2]
 	"tricky_1" = [0] || [2]
-Gate scores: NOTs = 2, ANDs = 3, ORs = 2
+Gate cost: NOTs = 2, ANDs = 3, ORs = 2
 ```
 
 ### Human readable output (medium variant)

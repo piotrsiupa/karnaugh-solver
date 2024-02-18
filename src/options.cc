@@ -147,6 +147,7 @@ namespace options
 			{"math(?:ematic(?:s|al)?)?[-_ ]prog(?:ram(?:ing)?)?|prog(?:ram(?:ming)?)?[-_ ]math(?:ematic(?:s|al)?)?|m[-_ ]?p|p[-_ ]?m", OutputFormat::MATH_PROG},
 			{"math(?:ematic(?:s|al)?)?[-_ ]ascii|ascii[-_ ]math(?:ematic(?:s|al)?)?|m[-_ ]?a|a[-_ ]?m", OutputFormat::MATH_ASCII},
 			{"math(?:ematic(?:s|al)?)?[-_ ](?:names?|words?|text)|(?:names?|words?|text)[-_ ]math(?:ematic(?:s|al)?)?|m[-_ ]?[nwt]|[nwt][-_ ]?m", OutputFormat::MATH_NAMES},
+			{"(?:gates?[-_ ])?(?:costs?|scores?|stat(?:s|istics?)?|infos?)|g[-_ ]?[csi]", OutputFormat::GATE_COSTS},
 		});
 	OptionalText name("name", "(?:(?:module|class)[-_ ])?name", 'n');
 	

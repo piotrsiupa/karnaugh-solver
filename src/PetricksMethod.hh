@@ -12,15 +12,13 @@
 #include "Minterm.hh"
 #include "Minterms.hh"
 #include "Progress.hh"
+#include "Solution.hh"
+#include "Solutions.hh"
 
 
 template<std::unsigned_integral INDEX_T>
 class PetricksMethod
 {
-public:
-	using solutions_t = std::vector<Implicants>;
-	
-private:
 	using index_t = INDEX_T;
 	static constexpr index_t NO_INDEX = static_cast<index_t>(~index_t(0));
 	using product_t = std::vector<index_t>;
@@ -42,5 +40,5 @@ private:
 public:
 	PetricksMethod(Minterms minterms, Implicants primeImplicants) : minterms(std::in_place, std::move(minterms)), primeImplicants(std::move(primeImplicants)) {}
 	
-	solutions_t solve(const std::string &functionName) &&;  // This function is `&&` as a reminder the it removes some data in the process (to save memory) and because of that it cannot be called twice.
+	Solutions solve(const std::string &functionName) &&;  // This function is `&&` as a reminder the it removes some data in the process (to save memory) and because of that it cannot be called twice.
 };

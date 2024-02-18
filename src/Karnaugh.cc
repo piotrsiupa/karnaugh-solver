@@ -89,7 +89,7 @@ void Karnaugh::prettyPrintTable() const
 	return prettyPrintTable(*targetMinterms, *allowedMinterms);
 }
 
-void Karnaugh::prettyPrintSolution(const Implicants &solution)
+void Karnaugh::prettyPrintSolution(const Solution &solution)
 {
 	Minterms minterms;
 	for (const auto &implicant : solution)
@@ -171,11 +171,11 @@ std::unique_ptr<Minterms> Karnaugh::loadMinterms(Input &input, Progress &progres
 }
 
 #ifndef NDEBUG
-void Karnaugh::validate(const solutions_t &solutions) const
+void Karnaugh::validate(const Solutions &solutions) const
 {
 	const std::string progressName = "Validating solutions for \"" + functionName + "\" (development build)";
 	Progress progress(Progress::Stage::SOLVING, progressName.c_str(), solutions.size(), true);
-	for (const Implicants &solution : solutions)
+	for (const Solution &solution : solutions)
 	{
 		progress.step();
 		for (Minterm i = 0;; ++i)
@@ -255,14 +255,14 @@ bool Karnaugh::loadData(Input &input)
 	return true;
 }
 
-Karnaugh::solutions_t Karnaugh::solve() &&
+Solutions Karnaugh::solve() &&
 {
 #ifdef NDEBUG
 	const bool mintermsWillBeNeededLater = isTableSmallEnoughToPrint();
 #else
 	constexpr bool mintermsWillBeNeededLater = true;
 #endif
-	const Karnaugh::solutions_t solutions = mintermsWillBeNeededLater
+	const Solutions solutions = mintermsWillBeNeededLater
 			? QuineMcCluskey(functionName, allowedMinterms, targetMinterms).solve()
 			: QuineMcCluskey(functionName, std::move(allowedMinterms), std::move(targetMinterms)).solve();
 #ifndef NDEBUG
@@ -271,7 +271,7 @@ Karnaugh::solutions_t Karnaugh::solve() &&
 	return solutions;
 }
 
-void Karnaugh::printHumanSolution(const Implicants &solution) const
+void Karnaugh::printHumanSolution(const Solution &solution) const
 {
 	if (options::outputFormat.getValue() == options::OutputFormat::HUMAN_LONG)
 	{
@@ -292,27 +292,25 @@ void Karnaugh::printHumanSolution(const Implicants &solution) const
 		}
 		std::cout << "solution:\n";
 	}
-	Implicants(solution).humanSort().printHuman(std::cout);
-	if (options::outputFormat.getValue() != options::OutputFormat::HUMAN_SHORT)
-		std::cout << '\n';
+	Solution(solution).humanSort().printHuman(std::cout);
 }
 
-void Karnaugh::printVerilogSolution(const Implicants &solution) const
+void Karnaugh::printVerilogSolution(const Solution &solution) const
 {
-	Implicants(solution).humanSort().printVerilog(std::cout);
+	Solution(solution).humanSort().printVerilog(std::cout);
 }
 
-void Karnaugh::printVhdlSolution(const Implicants &solution) const
+void Karnaugh::printVhdlSolution(const Solution &solution) const
 {
-	Implicants(solution).humanSort().printVhdl(std::cout);
+	Solution(solution).humanSort().printVhdl(std::cout);
 }
 
-void Karnaugh::printCppSolution(const Implicants &solution) const
+void Karnaugh::printCppSolution(const Solution &solution) const
 {
-	Implicants(solution).humanSort().printCpp(std::cout);
+	Solution(solution).humanSort().printCpp(std::cout);
 }
 
-void Karnaugh::printMathSolution(const Implicants &solution) const
+void Karnaugh::printMathSolution(const Solution &solution) const
 {
-	Implicants(solution).humanSort().printMath(std::cout);
+	Solution(solution).humanSort().printMath(std::cout);
 }

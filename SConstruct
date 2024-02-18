@@ -29,7 +29,7 @@ if GetOption('dev'):
     else:
         env.Append(CCFLAGS=['-Werror'])
 else:
-    # Turm off assertions.
+    # Turn off assertions.
     env.Append(CPPDEFINES=['NDEBUG'])
     # Set multithreaded build as default.
     SetOption('num_jobs', os.cpu_count() or 1)

@@ -1,14 +1,30 @@
 --- first ---
+
 (a && !b && c && !d) || (a && !b && !c && d) || (!a && b && c && !d) || (!a && b && !c && d)
 
+Gate cost: NOTs = 8, ANDs = 12, ORs = 3
+
+
 --- second ---
+
 (a && b && c && d) || (a && !b && !c && d) || (!a && b && c && !d) || (!a && b && !c && d)
 
+Gate cost: NOTs = 6, ANDs = 12, ORs = 3
+
+
 --- third ---
+
 (a && !b && !c && d) || (!a && b && c && !d) || (!a && b && !c && d)
 
+Gate cost: NOTs = 6, ANDs = 9, ORs = 2
+
+
 --- fourth ---
+
 (a && !b && !c && d) || (!a && b && c && !d) || (!a && !b && !c && !d)
+
+Gate cost: NOTs = 8, ANDs = 9, ORs = 2
+
 
 === optimized solution ===
 
@@ -31,4 +47,5 @@ Sums:
 	"second" = [0] || [11]
 	"third" = [11]
 	"fourth" = [9] || [10]
-Gate scores: NOTs = 4, ANDs = 14, ORs = 5
+
+Gate cost: NOTs = 4, ANDs = 14, ORs = 5

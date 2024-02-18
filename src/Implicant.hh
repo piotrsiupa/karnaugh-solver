@@ -61,6 +61,8 @@ public:
 	[[nodiscard]] constexpr mask_t getTrueBits() const { return bits & mask; }
 	[[nodiscard]] constexpr mask_t getFalseBits() const { return ~bits & mask; }
 	[[nodiscard]] bits_t getBitCount() const { return static_cast<bits_t>(std::bitset<::maxBits>(mask).count()); } // constexpr since C++23
+	[[nodiscard]] bits_t getTrueBitCount() const { return static_cast<bits_t>(std::bitset<::maxBits>(getTrueBits()).count()); } // constexpr since C++23
+	[[nodiscard]] bits_t getFalseBitCount() const { return static_cast<bits_t>(std::bitset<::maxBits>(getFalseBits()).count()); } // constexpr since C++23
 	[[nodiscard]] splitBits_t splitBits() const;
 	
 	void add(const Implicant &other) { this->bits |= other.bits; this->mask |= other.mask; }

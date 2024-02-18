@@ -9,6 +9,7 @@
 #include <string>
 #include <sstream>
 
+#include "Implicant.hh"
 #include "options.hh"
 
 
@@ -262,17 +263,17 @@ typename PetricksMethod<INDEX_T>::sumOfProducts_t PetricksMethod<INDEX_T>::findS
 }
 
 template<std::unsigned_integral INDEX_T>
-typename PetricksMethod<INDEX_T>::solutions_t PetricksMethod<INDEX_T>::solve(const std::string &functionName) &&
+Solutions PetricksMethod<INDEX_T>::solve(const std::string &functionName) &&
 {
 	Implicants essentials = extractEssentials(functionName);
 	sumOfProducts_t sumOfProducts = findSumOfProducts(functionName);
 	
 	if (sumOfProducts.empty())
 		return !essentials.empty()
-			? solutions_t{std::move(essentials)}
-			: solutions_t{{Implicant::none()}};
+			? Solutions{std::move(essentials)}
+			: Solutions{{Implicant::none()}};
 	
-	solutions_t solutions;
+	Solutions solutions;
 	solutions.reserve(sumOfProducts.size());
 	for (const auto &x : sumOfProducts)
 	{

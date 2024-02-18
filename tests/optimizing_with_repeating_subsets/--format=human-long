@@ -22,6 +22,9 @@ goal:
 solution:
 (a && b && f) || (f && g && h) || (a && b && c && e && g && h) || (a && b && d && e && g && h)
 
+Gate cost: NOTs = 0, ANDs = 14, ORs = 3
+
+
 === optimized solution ===
 
 Negated inputs: <none>
@@ -35,4 +38,5 @@ Products:
 	[6] = d && [4]
 Sums:
 	"f0" = [1] || [3] || [5] || [6]
-Gate scores: NOTs = 0, ANDs = 8, ORs = 3
+
+Gate cost: NOTs = 0, ANDs = 8, ORs = 3

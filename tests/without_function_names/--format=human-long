@@ -17,6 +17,9 @@ best fit:
 solution:
 !a && !b
 
+Gate cost: NOTs = 2, ANDs = 1, ORs = 0
+
+
 --- f1 ---
 
 goal:
@@ -36,6 +39,9 @@ best fit:
 solution:
 !a && !b && c
 
+Gate cost: NOTs = 2, ANDs = 2, ORs = 0
+
+
 === optimized solution ===
 
 Negated inputs: a, b
@@ -45,4 +51,5 @@ Products:
 Sums:
 	"f0" = [0]
 	"f1" = [1]
-Gate scores: NOTs = 2, ANDs = 2, ORs = 0
+
+Gate cost: NOTs = 2, ANDs = 2, ORs = 0

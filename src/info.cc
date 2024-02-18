@@ -49,6 +49,7 @@ void printHelp()
 			"\tmath-ascii\t- A notation like \"math-formal\" but it uses only ASCII.\n"
 			"\tmath-prog\t- A mathematical notation with programming operators.\n"
 			"\tmath-names\t- A mathematical notation that uses names of operators.\n"
+			"\tgate-costs\t- Only gate costs. (Useful mostly for development.)\n"
 			"\n"
 			"Prime implicants heuristics:\n"
 			"\tbrute-force\t- No heuristic; find all prime implicants. It's very\n\t\t\t  slow but it gives the best results if you won't run\n\t\t\t  out of RAM. "
@@ -86,7 +87,7 @@ void printHelp()
 void printVersion()
 {
 	std::cout <<
-			"karnaugh (Karnaugh Map Solver) version 0.2.2\n"
+			"karnaugh (Karnaugh Map Solver) version 0.2.3\n"
 			"Author: Piotr Siupa\n"
 #ifndef NDEBUG
 			"This is a development build which contains additional assertions!\n"

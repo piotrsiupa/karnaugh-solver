@@ -1,12 +1,31 @@
 --- first ---
+
 (a && !b && c && !d) || (a && !b && !c && d) || (!a && b && c && !d) || (!a && b && !c && d)
 
+Gate cost: NOTs = 8, ANDs = 12, ORs = 3
+
+
 --- second ---
+
 (a && b && c && d) || (a && !b && !c && d) || (!a && b && c && !d) || (!a && b && !c && d)
 
+Gate cost: NOTs = 6, ANDs = 12, ORs = 3
+
+
 --- third ---
+
 (a && !b && !c && d) || (!a && b && c && !d) || (!a && b && !c && d)
 
+Gate cost: NOTs = 6, ANDs = 9, ORs = 2
+
+
 --- fourth ---
+
 (a && !b && !c && d) || (!a && b && c && !d) || (!a && !b && !c && !d)
 
+Gate cost: NOTs = 8, ANDs = 9, ORs = 2
+
+
+=== summary ===
+
+Gate cost: NOTs = 28, ANDs = 42, ORs = 10
