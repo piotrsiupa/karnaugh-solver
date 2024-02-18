@@ -58,6 +58,6 @@ solution:
 Gate cost: NOTs = 8, ANDs = 9, ORs = 2
 
 
-=== Summary ===
+=== summary ===
 
 Gate cost: NOTs = 28, ANDs = 42, ORs = 10

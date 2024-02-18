@@ -12,6 +12,6 @@ Gate cost: NOTs = 1, ANDs = 1, ORs = 0
 Gate cost: NOTs = 2, ANDs = 2, ORs = 0
 
 
-=== Summary ===
+=== summary ===
 
 Gate cost: NOTs = 3, ANDs = 3, ORs = 0

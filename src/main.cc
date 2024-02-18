@@ -41,7 +41,7 @@ static void printHelp()
 			"\tmath-ascii\t- A notation like \"math-formal\" but it uses only ASCII.\n"
 			"\tmath-prog\t- A mathematical notation with programming operators.\n"
 			"\tmath-names\t- A mathematical notation that uses names of operators.\n"
-			"\tgate-cost\t- Only gate cost. (Useful mostly for development.)\n"
+			"\tgate-costs\t- Only gate costs. (Useful mostly for development.)\n"
 			"\n"
 			"Input:\n"
 			"The input is read from the stdin and has the following format:\nINPUTS_DESCRIPTION <line-break> LIST_OF_FUNCTIONS\n"

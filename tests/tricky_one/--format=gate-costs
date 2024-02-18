@@ -1,0 +1,6 @@
+Gate cost: NOTs = 2, ANDs = 3, ORs = 1, overall cost = 10
+Gate cost: NOTs = 2, ANDs = 2, ORs = 1, overall cost = 8
+=== summary ===
+Gate cost: NOTs = 4, ANDs = 5, ORs = 2, overall cost = 18
+=== optimized solution ===
+Gate cost: NOTs = 2, ANDs = 3, ORs = 2, overall cost = 12

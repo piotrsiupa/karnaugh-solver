@@ -42,6 +42,6 @@ solution:
 Gate cost: NOTs = 2, ANDs = 2, ORs = 0
 
 
-=== Summary ===
+=== summary ===
 
 Gate cost: NOTs = 3, ANDs = 3, ORs = 0

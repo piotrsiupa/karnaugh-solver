@@ -274,7 +274,7 @@ void Karnaughs::printHuman()
 			if (bestSolutions.size() != 1 && options::skipOptimization.isRaised())
 			{
 				if (!bestSolutions.empty())
-					std::cout << "\n\n=== Summary ===\n\n";
+					std::cout << "\n\n=== summary ===\n" << '\n';
 				bestSolutions.printGateCost(std::cout, false);
 			}
 		}
@@ -285,7 +285,7 @@ void Karnaughs::printHuman()
 		{
 			if (!bestSolutions.empty())
 				std::cout << "\n\n";
-			std::cout << "=== optimized solution ===\n\n";
+			std::cout << "=== optimized solution ===\n" << '\n';
 		}
 		printHumanOptimizedSolution();
 		std::cout << std::flush;
@@ -447,10 +447,15 @@ void Karnaughs::printMath()
 
 void Karnaughs::printGateCost()
 {
-	if (options::skipOptimization.isRaised())
-		bestSolutions.printGateCost(std::cout, true);
-	else
+	for (const Solution &bestSolution : bestSolutions)
+		bestSolution.printGateCost(std::cout, true);
+	std::cout << "=== summary ===\n";
+	bestSolutions.printGateCost(std::cout, true);
+	if (!options::skipOptimization.isRaised())
+	{
+		std::cout << "=== optimized solution ===\n";
 		optimizedSolutions.printGateCost(std::cout, true);
+	}
 }
 
 void Karnaughs::print()
@@ -477,7 +482,7 @@ void Karnaughs::print()
 	case options::OutputFormat::MATH_NAMES:
 		printMath();
 		break;
-	case options::OutputFormat::GATE_COST:
+	case options::OutputFormat::GATE_COSTS:
 		printGateCost();
 		break;
 	}

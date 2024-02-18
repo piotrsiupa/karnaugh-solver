@@ -1,0 +1,6 @@
+Gate cost: NOTs = 8, ANDs = 12, ORs = 3, overall cost = 38
+Gate cost: NOTs = 6, ANDs = 12, ORs = 3, overall cost = 36
+Gate cost: NOTs = 6, ANDs = 9, ORs = 2, overall cost = 28
+Gate cost: NOTs = 8, ANDs = 9, ORs = 2, overall cost = 30
+=== summary ===
+Gate cost: NOTs = 28, ANDs = 42, ORs = 10, overall cost = 132

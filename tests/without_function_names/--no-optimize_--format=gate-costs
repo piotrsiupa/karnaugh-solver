@@ -1,0 +1,4 @@
+Gate cost: NOTs = 1, ANDs = 1, ORs = 0, overall cost = 3
+Gate cost: NOTs = 2, ANDs = 2, ORs = 0, overall cost = 6
+=== summary ===
+Gate cost: NOTs = 3, ANDs = 3, ORs = 0, overall cost = 9

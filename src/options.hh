@@ -133,7 +133,7 @@ namespace options
 		MATH_PROG,
 		MATH_ASCII,
 		MATH_NAMES,
-		GATE_COST,
+		GATE_COSTS,
 	};
 	
 	extern Flag help;
