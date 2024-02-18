@@ -7,6 +7,8 @@
 class GateCost
 {
 public:
+	virtual ~GateCost() = default;
+	
 	[[nodiscard]] virtual std::size_t getNotCount() const = 0;
 	[[nodiscard]] virtual std::size_t getAndCount() const = 0;
 	[[nodiscard]] virtual std::size_t getOrCount() const = 0;

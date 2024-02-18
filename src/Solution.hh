@@ -9,7 +9,7 @@
 #include "Implicant.hh"
 
 
-class Solution : public GateCost, public std::vector<Implicant>
+class Solution final : public GateCost, public std::vector<Implicant>
 {
 public:
 	using std::vector<Implicant>::vector;

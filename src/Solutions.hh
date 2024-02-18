@@ -7,7 +7,7 @@
 #include "Solution.hh"
 
 
-class Solutions : public GateCost, public std::vector<Solution>
+class Solutions final : public GateCost, public std::vector<Solution>
 {
 public:
 	using std::vector<Solution>::vector;

@@ -15,7 +15,7 @@
 #include "Solution.hh"
 
 
-class OptimizedSolutions : public GateCost
+class OptimizedSolutions final : public GateCost
 {
 public:
 	using solutions_t = std::vector<const Solution*>;
