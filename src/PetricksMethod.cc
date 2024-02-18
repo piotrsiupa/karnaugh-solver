@@ -7,7 +7,6 @@
 #include <iomanip>
 #include <iostream>
 #include <string>
-#include <sstream>
 
 #include "Implicant.hh"
 #include "options.hh"
