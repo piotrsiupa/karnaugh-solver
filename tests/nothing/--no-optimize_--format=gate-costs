@@ -1,2 +1,2 @@
 === summary ===
-Gate cost: NOTs = 0, ANDs = 0, ORs = 0, overall cost = 0
+Gate cost: NOTs = 0, ANDs = 0, ORs = 0, overall cost = 0, cost without input NOTs = 0

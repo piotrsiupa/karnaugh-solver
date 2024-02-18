@@ -1,8 +1,8 @@
-Gate cost: NOTs = 8, ANDs = 12, ORs = 3, overall cost = 38
-Gate cost: NOTs = 6, ANDs = 12, ORs = 3, overall cost = 36
-Gate cost: NOTs = 6, ANDs = 9, ORs = 2, overall cost = 28
-Gate cost: NOTs = 8, ANDs = 9, ORs = 2, overall cost = 30
+Gate cost: NOTs = 8, ANDs = 12, ORs = 3, overall cost = 38, cost without input NOTs = 30
+Gate cost: NOTs = 6, ANDs = 12, ORs = 3, overall cost = 36, cost without input NOTs = 30
+Gate cost: NOTs = 6, ANDs = 9, ORs = 2, overall cost = 28, cost without input NOTs = 22
+Gate cost: NOTs = 8, ANDs = 9, ORs = 2, overall cost = 30, cost without input NOTs = 22
 === summary ===
-Gate cost: NOTs = 28, ANDs = 42, ORs = 10, overall cost = 132
+Gate cost: NOTs = 28, ANDs = 42, ORs = 10, overall cost = 132, cost without input NOTs = 104
 === optimized solution ===
-Gate cost: NOTs = 4, ANDs = 14, ORs = 5, overall cost = 42
+Gate cost: NOTs = 4, ANDs = 14, ORs = 5, overall cost = 42, cost without input NOTs = 38
