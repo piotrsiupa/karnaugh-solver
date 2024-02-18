@@ -195,19 +195,14 @@ inline typename PetricksMethod<INDEX_T>::sumOfProducts_t PetricksMethod<INDEX_T>
 		const auto infoGuard = progress.addInfo("sorting");
 		progress.step();
 		progress.substep(-0.0);
-		std::ranges::sort(sumOfProducts);
+		if (maxSums == 0)
+			std::ranges::sort(sumOfProducts);
+		else
+			std::ranges::sort(sumOfProducts, [](const product_t &x, const product_t &y){ return x.size() < y.size() || (x.size() == y.size() && x < y); });
 		const auto eraseBegin = std::unique(sumOfProducts.begin(), sumOfProducts.end());
 		sumOfProducts.erase(eraseBegin, sumOfProducts.end());
 	}
-	if (maxSums != 0)
-	{
-		const auto infoGuard = progress.addInfo("limiting");
-		progress.step();
-		progress.substep(-0.0);
-		if (sumOfProducts.size() > maxSums)
-			sumOfProducts.resize(maxSums);
-	}
-	if (maxSums != 1)
+	if (maxSums == 0)
 	{
 		const auto infoGuard = progress.addInfo("reducing");
 		progress.step();
@@ -236,6 +231,14 @@ inline typename PetricksMethod<INDEX_T>::sumOfProducts_t PetricksMethod<INDEX_T>
 		}
 		sumOfProducts.erase(std::remove_if(sumOfProducts.begin(), sumOfProducts.end(), [](const auto &x){ return x.size() == 1; }), sumOfProducts.end());
 	}
+	else
+	{
+		const auto infoGuard = progress.addInfo("limiting");
+		progress.step();
+		progress.substep(-0.0);
+		if (sumOfProducts.size() > maxSums)
+			sumOfProducts.resize(maxSums);
+	}
 	return sumOfProducts;
 }
 
@@ -248,7 +251,7 @@ typename PetricksMethod<INDEX_T>::sumOfProducts_t PetricksMethod<INDEX_T>::findS
 	
 	const std::size_t maxSums = options::solutionsLimit.getValue() == -1 ? 256 : static_cast<std::size_t>(options::solutionsLimit.getValue());
 	
-	Progress progress(Progress::Stage::SOLVING, "Merging solutions", (productOfSumsOfProducts.size() - 1) * (maxSums == 0 || maxSums == 1 ? 3 : 4), false);
+	Progress progress(Progress::Stage::SOLVING, "Merging solutions", (productOfSumsOfProducts.size() - 1) * 3, false);
 	
 	while (productOfSumsOfProducts.size() != 1)
 	{
