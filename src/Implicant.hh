@@ -53,8 +53,8 @@ public:
 	constexpr mask_t getTrueBits() const { return isError() ? 0 : trueBits; }
 	constexpr mask_t getFalseBits() const { return isError() ? 0 : falseBits; }
 	constexpr bits_t getBitCount() const { return bitCount; }
-	bits_t getTrueBitCount() const { return std::bitset<::maxBits>(getTrueBits()).count(); }
-	bits_t getFalseBitCount() const { return std::bitset<::maxBits>(getFalseBits()).count(); }
+	bits_t getTrueBitCount() const { return static_cast<bits_t>(std::bitset<::maxBits>(getTrueBits()).count()); }
+	bits_t getFalseBitCount() const { return static_cast<bits_t>(std::bitset<::maxBits>(getFalseBits()).count()); }
 	splitBits_t splitBits() const;
 	minterms_t findMinterms() const;
 	
