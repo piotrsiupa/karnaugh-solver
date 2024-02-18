@@ -5,18 +5,16 @@
 #include <string>
 #include <vector>
 
-#include "Implicants.hh"
 #include "Minterm.hh"
+#include "Implicant.hh"
 #include "Minterms.hh"
+#include "PetricksMethod.hh"
 #include "Progress.hh"
+#include "Solutions.hh"
 
 
 class QuineMcCluskey
 {
-public:
-	using solutions_t = std::vector<Implicants>;
-	
-private:
 	static std::vector<Minterm> bitMasks;
 	
 	const std::string &functionName;
@@ -39,10 +37,10 @@ private:
 	
 	static void validate(const Minterms &allowedMinterms, const Minterms &targetMinterms, const Implicants &implicants);
 	
-	solutions_t runPetricksMethod(Implicants &&primeImplicants);
+	Solutions runPetricksMethod(Implicants &&primeImplicants);
 	
 public:
 	QuineMcCluskey(const std::string &functionName, std::shared_ptr<const Minterms> allowedMinterms, std::shared_ptr<const Minterms> targetMinterms) : functionName(functionName), allowedMinterms(std::move(allowedMinterms)), targetMinterms(std::move(targetMinterms)) { if (bitMasks.empty()) makeBitMasks(); }
 	
-	solutions_t solve() &&;  // This function is `&&` as a reminder the it removes some data in the process (to save memory) and because of that it cannot be called twice.
+	Solutions solve() &&;  // This function is `&&` as a reminder the it removes some data in the process (to save memory) and because of that it cannot be called twice.
 };

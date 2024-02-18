@@ -547,14 +547,9 @@ void OptimizedSolutions::printCppFinalSums(std::ostream &o, const Names &functio
 	}
 }
 
-void OptimizedSolutions::printGateScores(std::ostream &o) const
-{
-	o << "Gate scores: NOTs = " << getNotCount() << ", ANDs = " << getAndCount() << ", ORs = " << getOrCount() << '\n';
-}
-
 void OptimizedSolutions::createNegatedInputs(const solutions_t &solutions)
 {
-	for (const Implicants *const solution : solutions)
+	for (const Solution *const solution : solutions)
 		for (const auto &x : *solution)
 			negatedInputs |= x.getFalseBits();
 }
@@ -562,7 +557,7 @@ void OptimizedSolutions::createNegatedInputs(const solutions_t &solutions)
 OptimizedSolutions::finalPrimeImplicants_t OptimizedSolutions::extractCommonProductParts(const solutions_t &solutions, Progress &progress)
 {
 	std::vector<Implicant> oldPrimeImplicants;
-	for (const Implicants *const solution : solutions)
+	for (const Solution *const solution : solutions)
 		for (const auto &product: *solution)
 			oldPrimeImplicants.push_back(product);
 	const auto [newPrimeImplicants, finalPrimeImplicants, subsetSelections] = SetOptimizerForProducts::optimizeSet(oldPrimeImplicants, progress);
@@ -579,7 +574,7 @@ void OptimizedSolutions::extractCommonSumParts(const solutions_t &solutions, con
 	std::vector<std::set<std::size_t>> oldIdSets;
 	{
 		std::size_t i = 0;
-		for (const Implicants *const solution : solutions)
+		for (const Solution *const solution : solutions)
 		{
 			oldIdSets.emplace_back();
 			auto &oldIdSet = oldIdSets.back();
@@ -685,7 +680,10 @@ void OptimizedSolutions::printHuman(std::ostream &o, const Names &functionNames)
 	printHumanSums(o);
 	printHumanFinalSums(o, functionNames);
 	if (options::outputFormat.getValue() != options::OutputFormat::HUMAN_SHORT)
-		printGateScores(o);
+	{
+		o << '\n';
+		printGateCost(o, false);
+	}
 }
 
 void OptimizedSolutions::printVerilog(std::ostream &o, const Names &functionNames) const

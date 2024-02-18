@@ -41,6 +41,9 @@ best fit:
 solution:
 (!d && e) || (!d && !h) || (b && c && e)
 
+Gate cost: NOTs = 3, ANDs = 4, ORs = 2
+
+
 === optimized solution ===
 
 Negated inputs: d, h
@@ -50,4 +53,5 @@ Products:
 	[2] = b && c && e
 Sums:
 	"f0" = [0] || [1] || [2]
-Gate scores: NOTs = 2, ANDs = 4, ORs = 2
+
+Gate cost: NOTs = 2, ANDs = 4, ORs = 2

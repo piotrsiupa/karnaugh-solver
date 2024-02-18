@@ -152,6 +152,7 @@ namespace options
 		MATH_PROG,
 		MATH_ASCII,
 		MATH_NAMES,
+		GATE_COSTS,
 	};
 	
 	enum class PrimeImplicantsHeuristic

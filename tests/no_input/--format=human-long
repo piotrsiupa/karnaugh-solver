@@ -7,6 +7,9 @@ goal:
 solution:
 <True>
 
+Gate cost: NOTs = 0, ANDs = 0, ORs = 0
+
+
 --- always_false ---
 
 goal:
@@ -15,6 +18,9 @@ goal:
 
 solution:
 <False>
+
+Gate cost: NOTs = 0, ANDs = 0, ORs = 0
+
 
 --- dont_care ---
 
@@ -29,6 +35,9 @@ best fit:
 solution:
 <False>
 
+Gate cost: NOTs = 0, ANDs = 0, ORs = 0
+
+
 === optimized solution ===
 
 Negated inputs: <none>
@@ -37,4 +46,5 @@ Sums:
 	"always_true" = <True>
 	"always_false" = <False>
 	"dont_care" = <False>
-Gate scores: NOTs = 0, ANDs = 0, ORs = 0
+
+Gate cost: NOTs = 0, ANDs = 0, ORs = 0

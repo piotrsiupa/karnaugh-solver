@@ -17,6 +17,9 @@ best fit:
 solution:
 !a && !b && c
 
+Gate cost: NOTs = 2, ANDs = 2, ORs = 0
+
+
 === optimized solution ===
 
 Negated inputs: a, b
@@ -24,4 +27,5 @@ Products:
 	[0] = !a && !b && c
 Sums:
 	"short with don't cares 1" = [0]
-Gate scores: NOTs = 2, ANDs = 2, ORs = 0
+
+Gate cost: NOTs = 2, ANDs = 2, ORs = 0

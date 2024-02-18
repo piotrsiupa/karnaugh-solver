@@ -13,6 +13,9 @@ best fit:
 solution:
 <False>
 
+Gate cost: NOTs = 0, ANDs = 0, ORs = 0
+
+
 --- zero must be F ---
 
 goal:
@@ -27,6 +30,9 @@ best fit:
 
 solution:
 <False>
+
+Gate cost: NOTs = 0, ANDs = 0, ORs = 0
+
 
 --- one must be F ---
 
@@ -43,6 +49,9 @@ best fit:
 solution:
 <False>
 
+Gate cost: NOTs = 0, ANDs = 0, ORs = 0
+
+
 --- zero must be T ---
 
 goal:
@@ -57,6 +66,9 @@ best fit:
 
 solution:
 <True>
+
+Gate cost: NOTs = 0, ANDs = 0, ORs = 0
+
 
 --- one must be T ---
 
@@ -73,6 +85,9 @@ best fit:
 solution:
 <True>
 
+Gate cost: NOTs = 0, ANDs = 0, ORs = 0
+
+
 === optimized solution ===
 
 Negated inputs: <none>
@@ -83,4 +98,5 @@ Sums:
 	"one must be F" = <False>
 	"zero must be T" = <True>
 	"one must be T" = <True>
-Gate scores: NOTs = 0, ANDs = 0, ORs = 0
+
+Gate cost: NOTs = 0, ANDs = 0, ORs = 0

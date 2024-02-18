@@ -31,14 +31,14 @@ typename PetricksMethod<INDEX_T>::index_t PetricksMethod<INDEX_T>::findEssential
 }
 
 template<std::unsigned_integral INDEX_T>
-Implicants PetricksMethod<INDEX_T>::extractEssentials(const std::string &functionName)
+typename PetricksMethod<INDEX_T>::primeImplicants_t PetricksMethod<INDEX_T>::extractEssentials(const std::string &functionName)
 {
 	const std::string progressName = "Extracting essentials of \"" + functionName + '"';
 	Progress progress(Progress::Stage::SOLVING, progressName.c_str(), 1);
 	progress.step();
 	auto progressStep = progress.makeCountingStepHelper(minterms->size());
 	
-	Implicants essentials;
+	primeImplicants_t essentials;
 	for (const Minterm minterm : *minterms)
 	{
 		progressStep.substep();
@@ -211,17 +211,17 @@ typename PetricksMethod<INDEX_T>::sumOfProducts_t PetricksMethod<INDEX_T>::findS
 }
 
 template<std::unsigned_integral INDEX_T>
-typename PetricksMethod<INDEX_T>::solutions_t PetricksMethod<INDEX_T>::solve(const std::string &functionName)
+Solutions PetricksMethod<INDEX_T>::solve(const std::string &functionName)
 {
-	Implicants essentials = extractEssentials(functionName);
+	primeImplicants_t essentials = extractEssentials(functionName);
 	sumOfProducts_t sumOfProducts = findSumOfProducts(functionName);
 	
 	if (sumOfProducts.empty())
 		return !essentials.empty()
-			? solutions_t{std::move(essentials)}
-			: solutions_t{{Implicant::none()}};
+			? Solutions{std::move(essentials)}
+			: Solutions{{Implicant::none()}};
 	
-	solutions_t solutions;
+	Solutions solutions;
 	solutions.reserve(sumOfProducts.size());
 	for (const auto &x : sumOfProducts)
 	{

@@ -8,7 +8,6 @@
 #include <map>
 
 #include "options.hh"
-#include "PetricksMethod.hh"
 
 
 std::vector<Minterm> QuineMcCluskey::bitMasks;
@@ -269,7 +268,7 @@ void QuineMcCluskey::validate(const Minterms &allowedMinterms, const Minterms &t
 }
 #endif
 
-QuineMcCluskey::solutions_t QuineMcCluskey::runPetricksMethod(Implicants &&primeImplicants)
+Solutions QuineMcCluskey::runPetricksMethod(Implicants &&primeImplicants)
 {
 	if (primeImplicants.size() <= PetricksMethod<std::uint8_t>::MAX_PRIME_IMPL_COUNT)
 		return PetricksMethod<std::uint8_t>::solve(*targetMinterms, std::move(primeImplicants), functionName);
@@ -284,7 +283,7 @@ QuineMcCluskey::solutions_t QuineMcCluskey::runPetricksMethod(Implicants &&prime
 	return {};
 }
 
-QuineMcCluskey::solutions_t QuineMcCluskey::solve() &&
+Solutions QuineMcCluskey::solve() &&
 {
 #ifdef NDEBUG
 	Implicants primeImplicants = findPrimeImplicants();

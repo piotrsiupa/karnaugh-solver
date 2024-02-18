@@ -4,22 +4,22 @@
 #include <string_view>
 #include <vector>
 
-#include "Implicants.hh"
+#include "Solution.hh"
 #include "Input.hh"
 #include "Names.hh"
 #include "Karnaugh.hh"
 #include "OptimizedSolutions.hh"
+#include "Solutions.hh"
 
 
 // This could be split into 2 classes (`Karnaughs` and `Solutions`) so `&&` functions make more sense but it is coupled enough for me to not bother.
 class Karnaughs
 {
 	using karnaughs_t = std::vector<Karnaugh>;
-	using solutions_t = std::vector<Implicants>;
-	using solutionses_t = std::vector<solutions_t>;
+	using solutionses_t = std::vector<Solutions>;
 	
 	karnaughs_t karnaughs;
-	solutions_t bestSolutions;
+	Solutions bestSolutions;
 	OptimizedSolutions optimizedSolutions;
 	
 	[[nodiscard]] bool shouldFunctionNamesBeUsed() const;
@@ -43,10 +43,12 @@ class Karnaughs
 public:
 	[[nodiscard]] bool loadData(Input &input);
 	void solve() &&;  // This function is `&&` as a reminder the it removes some data in the process (to save memory) and because of that it cannot be called twice.
+	
 	void printHuman();
 	void printVerilog();
 	void printVhdl();
 	void printCpp();
 	void printMath();
+	void printGateCost();
 	void print();
 };

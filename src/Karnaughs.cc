@@ -11,13 +11,22 @@
 
 void Karnaughs::printHumanBestSolutions() const
 {
+	bool first = true;
 	for (std::size_t i = 0; i != karnaughs.size(); ++i)
 	{
+		if (first == true)
+		{
+			first = false;
+		}
+		else
+		{
+			if (options::outputFormat.getValue() != options::OutputFormat::HUMAN_SHORT)
+				std::cout << '\n' << '\n';
+		}
 		std::cout << "--- " << karnaughs[i].getFunctionName() << " ---\n";
-		if (options::outputFormat.getValue() == options::OutputFormat::HUMAN_LONG)
+		if (options::outputFormat.getValue() != options::OutputFormat::HUMAN_SHORT)
 			std::cout << '\n';
 		karnaughs[i].printHumanSolution(bestSolutions[i]);
-		std::cout << '\n';
 	}
 }
 
@@ -126,7 +135,7 @@ std::string Karnaughs::getName()
 
 bool Karnaughs::areInputsUsed() const
 {
-	for (const Implicants &bestSolution : bestSolutions)
+	for (const Solution &bestSolution : bestSolutions)
 		for (const Implicant &implicant : bestSolution)
 			if (!implicant.empty())
 				return true;
@@ -161,14 +170,14 @@ void Karnaughs::findBestNonOptimizedSolutions(const solutionses_t &solutionses)
 {
 	Progress progress(Progress::Stage::OPTIMIZING, "Electing the best solutions", solutionses.size(), true);
 	bestSolutions.reserve(solutionses.size());
-	for (const solutions_t &solutions : solutionses)
+	for (const Solutions &solutions : solutionses)
 	{
 		progress.step();
 		auto progressStep = progress.makeCountingStepHelper(solutions.size());
 		using score_t = std::size_t;
-		const Implicants *bestSolution = nullptr;
+		const Solution *bestSolution = nullptr;
 		score_t bestScore = std::numeric_limits<score_t>::max();
-		for (const Implicants &solution : solutions)
+		for (const Solution &solution : solutions)
 		{
 			progressStep.substep();
 			if (solution.empty())
@@ -183,7 +192,7 @@ void Karnaughs::findBestNonOptimizedSolutions(const solutionses_t &solutionses)
 				score += (implicant.getBitCount() - 1) * 2;
 				falseBits |= implicant.getFalseBits();
 			}
-			score += std::bitset<32>(falseBits).count();
+			score += std::bitset<::maxBits>(falseBits).count();
 			if (score < bestScore)
 			{
 				bestScore = score;
@@ -203,7 +212,7 @@ void Karnaughs::findBestOptimizedSolutions(const solutionses_t &solutionses)
 	std::size_t bestGateScore = SIZE_MAX;
 	Progress::steps_t steps = 1;
 	if (options::status.getValue())
-		for (const solutions_t &solutions : solutionses)
+		for (const Solutions &solutions : solutionses)
 			steps *= solutions.size();
 #ifdef NDEBUG
 	Progress progress(Progress::Stage::OPTIMIZING, "Eliminating common subexpressions", steps, true);
@@ -213,7 +222,7 @@ void Karnaughs::findBestOptimizedSolutions(const solutionses_t &solutionses)
 	for (std::vector<std::size_t> indexes(solutionses.size(), 0);;)
 	{
 		progress.step();
-		std::vector<const Implicants*> solutions;
+		std::vector<const Solution*> solutions;
 		solutions.reserve(indexes.size());
 		for (std::size_t i = 0; i != indexes.size(); ++i)
 			solutions.push_back(&solutionses[i][indexes[i]]);
@@ -248,7 +257,7 @@ void Karnaughs::findBestSolutions(const solutionses_t &solutionses)
 
 void Karnaughs::solve() &&
 {
-	const std::vector<solutions_t> solutionses = std::move(*this).makeSolutionses();
+	const std::vector<Solutions> solutionses = std::move(*this).makeSolutionses();
 	findBestSolutions(solutionses);
 }
 
@@ -256,11 +265,26 @@ void Karnaughs::printHuman()
 {
 	const bool bestSolutionsVisible = options::skipOptimization.isRaised() || options::outputFormat.getValue() != options::OutputFormat::HUMAN_SHORT;
 	if (bestSolutionsVisible)
+	{
 		printHumanBestSolutions();
+		if (options::outputFormat.getValue() != options::OutputFormat::HUMAN_SHORT)
+		{
+			if (bestSolutions.size() != 1 && options::skipOptimization.isRaised())
+			{
+				if (!bestSolutions.empty())
+					std::cout << "\n\n=== summary ===\n" << '\n';
+				bestSolutions.printGateCost(std::cout, false);
+			}
+		}
+	}
 	if (!options::skipOptimization.isRaised())
 	{
 		if (options::outputFormat.getValue() != options::OutputFormat::HUMAN_SHORT)
-			std::cout << "=== optimized solution ===\n\n";
+		{
+			if (!bestSolutions.empty())
+				std::cout << "\n\n";
+			std::cout << "=== optimized solution ===\n" << '\n';
+		}
 		printHumanOptimizedSolution();
 		std::cout << std::flush;
 	}
@@ -419,6 +443,19 @@ void Karnaughs::printMath()
 	}
 }
 
+void Karnaughs::printGateCost()
+{
+	for (const Solution &bestSolution : bestSolutions)
+		bestSolution.printGateCost(std::cout, true);
+	std::cout << "=== summary ===\n";
+	bestSolutions.printGateCost(std::cout, true);
+	if (!options::skipOptimization.isRaised())
+	{
+		std::cout << "=== optimized solution ===\n";
+		optimizedSolutions.printGateCost(std::cout, true);
+	}
+}
+
 void Karnaughs::print()
 {
 	switch (options::outputFormat.getValue())
@@ -442,6 +479,9 @@ void Karnaughs::print()
 	case options::OutputFormat::MATH_PROG:
 	case options::OutputFormat::MATH_NAMES:
 		printMath();
+		break;
+	case options::OutputFormat::GATE_COSTS:
+		printGateCost();
 		break;
 	}
 }
