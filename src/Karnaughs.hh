@@ -4,21 +4,21 @@
 #include <string_view>
 #include <vector>
 
-#include "Implicants.hh"
+#include "Solution.hh"
 #include "Input.hh"
 #include "Names.hh"
 #include "Karnaugh.hh"
 #include "OptimizedSolutions.hh"
+#include "Solutions.hh"
 
 
 class Karnaughs
 {
 	using karnaughs_t = std::vector<Karnaugh>;
-	using solutions_t = std::vector<Implicants>;
-	using solutionses_t = std::vector<solutions_t>;
+	using solutionses_t = std::vector<Solutions>;
 	
 	karnaughs_t karnaughs;
-	solutions_t bestSolutions;
+	Solutions bestSolutions;
 	OptimizedSolutions optimizedSolutions;
 	
 	[[nodiscard]] bool shouldFunctionNamesBeUsed() const;
@@ -41,11 +41,13 @@ class Karnaughs
 	
 public:
 	[[nodiscard]] bool loadData(Input &input);
+	
 	void solve();
 	void printHuman();
 	void printVerilog();
 	void printVhdl();
 	void printCpp();
 	void printMath();
+	void printGateCost();
 	void print();
 };

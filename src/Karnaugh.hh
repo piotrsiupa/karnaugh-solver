@@ -4,20 +4,16 @@
 #include <vector>
 
 #include "global.hh"
-#include "Implicant.hh"
-#include "Implicants.hh"
 #include "Input.hh"
 #include "Minterm.hh"
 #include "Minterms.hh"
 #include "Progress.hh"
+#include "Solution.hh"
+#include "Solutions.hh"
 
 
 class Karnaugh
 {
-public:
-	using solutions_t = std::vector<Implicants>;
-	
-private:
 	using grayCode_t = std::vector<Minterm>;
 	
 	static std::size_t nameCount;
@@ -30,11 +26,11 @@ private:
 	static void printBits(const Minterm minterm, const bits_t bitCount);
 	static void prettyPrintTable(const Minterms &target, const Minterms &allowed = {});
 	void prettyPrintTable() const;
-	static void prettyPrintSolution(const Implicants &solution);
+	static void prettyPrintSolution(const Solution &solution);
 	
 	bool loadMinterms(Minterms &minterms, Input &input, Progress &progress) const;
 #ifndef NDEBUG
-	void validate(const solutions_t &solutions) const;
+	void validate(const Solutions &solutions) const;
 #endif
 	
 public:
@@ -46,11 +42,11 @@ public:
 	const std::string& getFunctionName() const { return functionName; }
 	
 	bool loadData(Input &input);
-	solutions_t solve() const;
+	Solutions solve() const;
 	
-	void printHumanSolution(const Implicants &solution) const;
-	void printVerilogSolution(const Implicants &solution) const;
-	void printVhdlSolution(const Implicants &solution) const;
-	void printCppSolution(const Implicants &solution) const;
-	void printMathSolution(const Implicants &solution) const;
+	void printHumanSolution(const Solution &solution) const;
+	void printVerilogSolution(const Solution &solution) const;
+	void printVhdlSolution(const Solution &solution) const;
+	void printCppSolution(const Solution &solution) const;
+	void printMathSolution(const Solution &solution) const;
 };

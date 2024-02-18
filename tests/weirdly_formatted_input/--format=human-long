@@ -10,6 +10,9 @@ goal:
 solution:
 (!w && !x && y) || (!w && !y && z)
 
+Gate cost: NOTs = 4, ANDs = 4, ORs = 1
+
+
 === optimized solution ===
 
 Negated inputs: w, x, y
@@ -18,4 +21,5 @@ Products:
 	[1] = !w && !y && z
 Sums:
 	"my-function" = [0] || [1]
-Gate scores: NOTs = 3, ANDs = 4, ORs = 1
+
+Gate cost: NOTs = 3, ANDs = 4, ORs = 1

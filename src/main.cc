@@ -41,6 +41,7 @@ static void printHelp()
 			"\tmath-ascii\t- A notation like \"math-formal\" but it uses only ASCII.\n"
 			"\tmath-prog\t- A mathematical notation with programming operators.\n"
 			"\tmath-names\t- A mathematical notation that uses names of operators.\n"
+			"\tgate-costs\t- Only gate costs. (Useful mostly for development.)\n"
 			"\n"
 			"Input:\n"
 			"The input is read from the stdin and has the following format:\nINPUTS_DESCRIPTION <line-break> LIST_OF_FUNCTIONS\n"
@@ -69,7 +70,7 @@ static void printHelp()
 static void printVersion()
 {
 	std::cout <<
-			"karnaugh (Karnaugh Map Solver) version 0.2.2\n"
+			"karnaugh (Karnaugh Map Solver) version 0.2.3\n"
 			"Author: Piotr Siupa\n"
 #ifndef NDEBUG
 			"This is a development build which contains additional assertions. This may slow down the execution.\n"

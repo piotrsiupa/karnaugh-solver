@@ -1,11 +1,23 @@
 --- always_true ---
+
 <True>
 
+Gate cost: NOTs = 0, ANDs = 0, ORs = 0
+
+
 --- always_false ---
+
 <False>
 
+Gate cost: NOTs = 0, ANDs = 0, ORs = 0
+
+
 --- dont_care ---
+
 <False>
+
+Gate cost: NOTs = 0, ANDs = 0, ORs = 0
+
 
 === optimized solution ===
 
@@ -15,4 +27,5 @@ Sums:
 	"always_true" = <True>
 	"always_false" = <False>
 	"dont_care" = <False>
-Gate scores: NOTs = 0, ANDs = 0, ORs = 0
+
+Gate cost: NOTs = 0, ANDs = 0, ORs = 0

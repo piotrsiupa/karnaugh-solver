@@ -7,11 +7,10 @@
 #include <string>
 
 #include "options.hh"
-#include "PetricksMethod.hh"
 #include "Progress.hh"
 
 
-Implicants QuineMcCluskey::findPrimeImplicants(const Minterms &allowedMinterms, const std::string &functionName) const
+QuineMcCluskey::primeImplicants_t QuineMcCluskey::findPrimeImplicants(const Minterms &allowedMinterms, const std::string &functionName) const
 {
 	const std::string progressName = "Merging implicants of \"" + functionName + '"';
 	Progress progress(Progress::Stage::SOLVING, progressName.c_str(), ::bits + 1, true);
@@ -20,7 +19,7 @@ Implicants QuineMcCluskey::findPrimeImplicants(const Minterms &allowedMinterms, 
 	for (const Minterm &minterm : allowedMinterms)
 		implicants.emplace_back(Implicant{minterm}, false);
 	
-	Implicants primeImplicants;
+	primeImplicants_t primeImplicants;
 	
 	::bits_t implicantSize = ::bits;
 	char subtaskDescription[96] = "";
@@ -69,9 +68,9 @@ Implicants QuineMcCluskey::findPrimeImplicants(const Minterms &allowedMinterms, 
 	return primeImplicants;
 }
 
-QuineMcCluskey::solutions_t QuineMcCluskey::solve(const Minterms &allowedMinterms, const Minterms &targetMinterms, const std::string &functionName) const
+Solutions QuineMcCluskey::solve(const Minterms &allowedMinterms, const Minterms &targetMinterms, const std::string &functionName) const
 {
-	Implicants primeImplicants = findPrimeImplicants(allowedMinterms, functionName);
+	primeImplicants_t primeImplicants = findPrimeImplicants(allowedMinterms, functionName);
 	if (primeImplicants.size() <= PetricksMethod<std::uint8_t>::MAX_PRIME_IMPL_COUNT)
 		return PetricksMethod<std::uint8_t>::solve(targetMinterms, std::move(primeImplicants), functionName);
 	else if (primeImplicants.size() <= PetricksMethod<std::uint16_t>::MAX_PRIME_IMPL_COUNT)
