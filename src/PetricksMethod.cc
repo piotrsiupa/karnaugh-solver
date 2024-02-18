@@ -196,8 +196,8 @@ inline typename PetricksMethod<INDEX_T>::sumOfProducts_t PetricksMethod<INDEX_T>
 		progress.step();
 		progress.substep(-0.0);
 		std::ranges::sort(sumOfProducts);
-		const auto [eraseBegin, eraseEnd] = std::ranges::unique(sumOfProducts);
-		sumOfProducts.erase(eraseBegin, eraseEnd);
+		const auto eraseBegin = std::unique(sumOfProducts.begin(), sumOfProducts.end());
+		sumOfProducts.erase(eraseBegin, sumOfProducts.end());
 	}
 	if (maxSums != 0)
 	{
