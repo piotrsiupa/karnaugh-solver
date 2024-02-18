@@ -1,8 +1,14 @@
 --- f0 ---
 !a && !b
 
+Gate cost: NOTs = 2, ANDs = 1, ORs = 0
+
+
 --- f1 ---
 !a && !b && c
+
+Gate cost: NOTs = 2, ANDs = 2, ORs = 0
+
 
 === optimized solution ===
 

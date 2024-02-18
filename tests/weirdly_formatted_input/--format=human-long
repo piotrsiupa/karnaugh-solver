@@ -10,6 +10,9 @@ goal:
 solution:
 (!w && !x && y) || (!w && !y && z)
 
+Gate cost: NOTs = 4, ANDs = 4, ORs = 1
+
+
 === optimized solution ===
 
 Negated inputs: w, x, y

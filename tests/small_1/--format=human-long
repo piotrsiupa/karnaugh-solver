@@ -10,6 +10,9 @@ goal:
 solution:
 !a && !b && c && !d
 
+Gate cost: NOTs = 3, ANDs = 3, ORs = 0
+
+
 === optimized solution ===
 
 Negated inputs: a, b, d

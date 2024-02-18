@@ -17,6 +17,9 @@ best fit:
 solution:
 !a && d
 
+Gate cost: NOTs = 1, ANDs = 1, ORs = 0
+
+
 === optimized solution ===
 
 Negated inputs: a

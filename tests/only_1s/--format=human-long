@@ -8,6 +8,9 @@ goal:
 solution:
 <True>
 
+Gate cost: NOTs = 0, ANDs = 0, ORs = 0
+
+
 === optimized solution ===
 
 Negated inputs: <none>

@@ -41,6 +41,9 @@ best fit:
 solution:
 (!d && e) || (!d && !h) || (b && c && e)
 
+Gate cost: NOTs = 3, ANDs = 4, ORs = 2
+
+
 === optimized solution ===
 
 Negated inputs: d, h

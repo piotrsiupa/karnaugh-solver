@@ -7,6 +7,9 @@ goal:
 solution:
 <True>
 
+Gate cost: NOTs = 0, ANDs = 0, ORs = 0
+
+
 --- always_false ---
 
 goal:
@@ -15,6 +18,9 @@ goal:
 
 solution:
 <False>
+
+Gate cost: NOTs = 0, ANDs = 0, ORs = 0
+
 
 --- dont_care ---
 
@@ -28,5 +34,10 @@ best fit:
 
 solution:
 <False>
+
+Gate cost: NOTs = 0, ANDs = 0, ORs = 0
+
+
+=== Summary ===
 
 Gate cost: NOTs = 0, ANDs = 0, ORs = 0

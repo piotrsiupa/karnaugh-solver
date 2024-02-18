@@ -261,7 +261,11 @@ void Karnaughs::printHuman()
 	{
 		printHumanBestSolutions();
 		if (options::skipOptimization.isRaised() && options::outputFormat.getValue() != options::OutputFormat::HUMAN_SHORT)
+		{
+			std::cout << "=== Summary ===\n";
+			std::cout << '\n';
 			bestSolutions.printGateCost(std::cout, false);
+		}
 	}
 	if (!options::skipOptimization.isRaised())
 	{

@@ -5,6 +5,9 @@ The Karnaugh map is too big to be displayed.
 solution:
 (A && B && C) || (F && H && K && L) || (G && J && K && L) || (A && E && H && I && K && L) || (B && D && E && J && K && L) || (C && D && E && H && I && J && K && L)
 
+Gate cost: NOTs = 0, ANDs = 25, ORs = 5
+
+
 === optimized solution ===
 
 Negated inputs: <none>

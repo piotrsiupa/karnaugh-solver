@@ -26,6 +26,11 @@ void Solution::printHuman(std::ostream &o) const
 			implicant.printHuman(o, true);
 		}
 	}
+	if (options::outputFormat.getValue() != options::OutputFormat::HUMAN_SHORT)
+	{
+		o << '\n' << '\n';
+		printGateCost(o, false);
+	}
 }
 
 void Solution::printVerilog(std::ostream &o) const

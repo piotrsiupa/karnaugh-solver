@@ -8,6 +8,9 @@ goal:
 solution:
 <True>
 
+Gate cost: NOTs = 0, ANDs = 0, ORs = 0
+
+
 --- pass_though ---
 
 goal:
@@ -17,6 +20,9 @@ goal:
 
 solution:
 the_only_input
+
+Gate cost: NOTs = 0, ANDs = 0, ORs = 0
+
 
 --- negate ---
 
@@ -28,6 +34,9 @@ goal:
 solution:
 !the_only_input
 
+Gate cost: NOTs = 1, ANDs = 0, ORs = 0
+
+
 --- false ---
 
 goal:
@@ -37,6 +46,9 @@ goal:
 
 solution:
 <False>
+
+Gate cost: NOTs = 0, ANDs = 0, ORs = 0
+
 
 === optimized solution ===
 

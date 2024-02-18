@@ -17,6 +17,9 @@ best fit:
 solution:
 !a && d
 
+Gate cost: NOTs = 1, ANDs = 1, ORs = 0
+
+
 --- f1 ---
 
 goal:
@@ -35,5 +38,10 @@ best fit:
 
 solution:
 !a && !b && c
+
+Gate cost: NOTs = 2, ANDs = 2, ORs = 0
+
+
+=== Summary ===
 
 Gate cost: NOTs = 3, ANDs = 3, ORs = 0

@@ -10,6 +10,9 @@ goal:
 solution:
 (a && !b && c && !d) || (a && !b && !c && d) || (!a && b && c && !d) || (!a && b && !c && d)
 
+Gate cost: NOTs = 8, ANDs = 12, ORs = 3
+
+
 --- second ---
 
 goal:
@@ -21,6 +24,9 @@ goal:
 
 solution:
 (a && b && c && d) || (a && !b && !c && d) || (!a && b && c && !d) || (!a && b && !c && d)
+
+Gate cost: NOTs = 6, ANDs = 12, ORs = 3
+
 
 --- third ---
 
@@ -34,6 +40,9 @@ goal:
 solution:
 (a && !b && !c && d) || (!a && b && c && !d) || (!a && b && !c && d)
 
+Gate cost: NOTs = 6, ANDs = 9, ORs = 2
+
+
 --- fourth ---
 
 goal:
@@ -45,6 +54,9 @@ goal:
 
 solution:
 (a && !b && !c && d) || (!a && b && c && !d) || (!a && !b && !c && !d)
+
+Gate cost: NOTs = 8, ANDs = 9, ORs = 2
+
 
 === optimized solution ===
 
