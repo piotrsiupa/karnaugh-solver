@@ -70,6 +70,7 @@ namespace options
 		else
 		{
 			std::cerr << "Invalid value \"" << argument << "\" for the option \"--" << getLongNames().front() << "\"!\n";
+			std::cerr << "Allowed values are: always, never and default.\n";
 			return false;
 		}
 		return true;
@@ -88,7 +89,7 @@ namespace options
 					first = false;
 				else
 					pattern += '|';
-				pattern += '(' + std::string(mapping.first) + ')';
+				pattern += '(' + std::string(mapping.regex) + ')';
 			}
 			regex = std::regex(pattern, std::regex_constants::icase);
 			regexReady = true;
@@ -103,13 +104,24 @@ namespace options
 		if (!std::regex_match(&*argument.begin(), &*argument.end(), match, regex))
 		{
 			std::cerr << "Invalid value \"" << argument << "\" for the option \"--" << getLongNames().front() << "\"!\n";
+			std::cerr << "Allowed values are: ";
+			bool first = true;
+			for (const Mapping &mapping : mappings)
+			{
+				if (first)
+					first = false;
+				else
+					std::cerr << ", ";
+				std::cerr << mapping.officialName;
+			}
+			std::cerr << ".\n";
 			return false;
 		}
 		for (std::size_t i = 0; i != mappings.size(); ++i)
 		{
 			if (match[i + 1].length() != 0)
 			{
-				value = mappings[i].second;
+				value = mappings[i].value;
 				return true;
 			}
 		}
@@ -127,17 +139,17 @@ namespace options
 	Trilean status({"status", "progress", "progress-bar", "progress-bars", "stat", "stats"}, 's', [](){ return ::terminalStderr; });
 	
 	Mapped<OutputFormat, OutputFormat::HUMAN_LONG> outputFormat({"format", "output-format", "notation", "output-notation"}, 'f', {
-			{"human(?:[-_]readable)?[-_](?:long|big)|(?:long|big)[-_]human(?:[-_]readable)?|h[-_]?(?:r[-_]?)?l|l[-_]?h(?:[-_]?r)?|full|default", OutputFormat::HUMAN_LONG},
-			{"human(?:[-_]readable)?(?:[-_](?:medium|middle))?|(?:(?:medium|middle)[-_])?human(?:[-_]readable)?|h(?:[-_]?r)?(?:[-_]?m)?|(?:m[-_]?)?h(?:[-_]?r)?|medium|middle|shorter", OutputFormat::HUMAN},
-			{"human(?:[-_]readable)?[-_](?:short|small)|(?:short|small)[-_]human(?:[-_]readable)?|h[-_]?(?:r[-_]?)?s|s[-_]?h(?:[-_]?r)?|short|small|tiny|minimal", OutputFormat::HUMAN_SHORT},
-			{"verilog", OutputFormat::VERILOG},
-			{"vhdl", OutputFormat::VHDL},
-			{"cpp|c\\+\\+|cc|hpp|h\\+\\+|hh", OutputFormat::CPP},
-			{"math(?:ematic(?:s|al)?)?(?:[-_]formal|formal[-_]math(?:ematic(?:s|al)?)?)?|m(?:[-_]?f)?|f[-_]?m", OutputFormat::MATH_FORMAL},
-			{"math(?:ematic(?:s|al)?)?[-_]prog(?:ram(?:ing)?)?|prog(?:ram(?:ming)?)?[-_]math(?:ematic(?:s|al)?)?|m[-_]?p|p[-_]?m", OutputFormat::MATH_PROG},
-			{"math(?:ematic(?:s|al)?)?[-_]ascii|ascii[-_]math(?:ematic(?:s|al)?)?|m[-_]?a|a[-_]?m", OutputFormat::MATH_ASCII},
-			{"math(?:ematic(?:s|al)?)?[-_](?:names?|words?|text)|(?:names?|words?|text)[-_]math(?:ematic(?:s|al)?)?|m[-_]?[nwt]|[nwt][-_]?m", OutputFormat::MATH_NAMES},
-			{"(?:gates?[-_ ])?(?:costs?|scores?|stat(?:s|istics?)?|infos?)|g[-_ ]?[csi]", OutputFormat::GATE_COSTS},
+			{"human-long", "human(?:[-_]readable)?[-_](?:long|big)|(?:long|big)[-_]human(?:[-_]readable)?|h[-_]?(?:r[-_]?)?l|l[-_]?h(?:[-_]?r)?|full|default", OutputFormat::HUMAN_LONG},
+			{"human", "human(?:[-_]readable)?(?:[-_](?:medium|middle))?|(?:(?:medium|middle)[-_])?human(?:[-_]readable)?|h(?:[-_]?r)?(?:[-_]?m)?|(?:m[-_]?)?h(?:[-_]?r)?|medium|middle|shorter", OutputFormat::HUMAN},
+			{"human-short", "human(?:[-_]readable)?[-_](?:short|small)|(?:short|small)[-_]human(?:[-_]readable)?|h[-_]?(?:r[-_]?)?s|s[-_]?h(?:[-_]?r)?|short|small|tiny|minimal", OutputFormat::HUMAN_SHORT},
+			{"verilog", "verilog", OutputFormat::VERILOG},
+			{"vhdl", "vhdl", OutputFormat::VHDL},
+			{"cpp", "cpp|c\\+\\+|cc|hpp|h\\+\\+|hh", OutputFormat::CPP},
+			{"math-formal", "math(?:ematic(?:s|al)?)?(?:[-_]formal|formal[-_]math(?:ematic(?:s|al)?)?)?|m(?:[-_]?f)?|f[-_]?m", OutputFormat::MATH_FORMAL},
+			{"math-ascii", "math(?:ematic(?:s|al)?)?[-_]ascii|ascii[-_]math(?:ematic(?:s|al)?)?|m[-_]?a|a[-_]?m", OutputFormat::MATH_ASCII},
+			{"math-prog", "math(?:ematic(?:s|al)?)?[-_]prog(?:ram(?:ing)?)?|prog(?:ram(?:ming)?)?[-_]math(?:ematic(?:s|al)?)?|m[-_]?p|p[-_]?m", OutputFormat::MATH_PROG},
+			{"math-names", "math(?:ematic(?:s|al)?)?[-_](?:names?|words?|text)|(?:names?|words?|text)[-_]math(?:ematic(?:s|al)?)?|m[-_]?[nwt]|[nwt][-_]?m", OutputFormat::MATH_NAMES},
+			{"gate-costs", "(?:gates?[-_ ])?(?:costs?|scores?|stat(?:s|istics?)?|infos?)|g[-_ ]?[csi]", OutputFormat::GATE_COSTS},
 		});
 	Text name({"name", "module-name", "class-name"}, 'n');
 	

@@ -84,7 +84,12 @@ namespace options
 	class Mapped : public Option
 	{
 	public:
-		using Mapping = std::pair<std::string_view, T>;
+		struct Mapping
+		{
+			std::string_view officialName;
+			std::string_view regex;
+			T value;
+		};
 		using Mappings = std::vector<Mapping>;
 		
 	private:
@@ -130,8 +135,8 @@ namespace options
 		VHDL,
 		CPP,
 		MATH_FORMAL,
-		MATH_PROG,
 		MATH_ASCII,
+		MATH_PROG,
 		MATH_NAMES,
 		GATE_COSTS,
 	};
