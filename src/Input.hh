@@ -90,7 +90,7 @@ bool Input::hasNextInLine()
 {
 	while (true)
 	{
-		if (currentChar == '\0' || currentChar == '\n') [[unlikely]]
+		if (currentChar == '\0' || currentChar == '\n' || currentChar == '#') [[unlikely]]
 			return false;
 		if (!std::isspace(currentChar) && (currentChar == '-' || currentChar == '_' || !std::ispunct(currentChar)))
 			return true;
@@ -114,7 +114,7 @@ std::string Input::getLine()
 	while (true)
 	{
 		currentChar = getChar();
-		if (currentChar == '\n' || currentChar == '\0') [[unlikely]]
+		if (currentChar == '\n' || currentChar == '\0' || currentChar == '#') [[unlikely]]
 			break;
 		line += currentChar;
 	}

@@ -86,7 +86,12 @@ namespace options
 	class Mapped : public Option
 	{
 	public:
-		using Mapping = std::pair<std::string_view, T>;
+		struct Mapping
+		{
+			std::string_view officialName;
+			std::string_view regex;
+			T value;
+		};
 		using Mappings = std::vector<Mapping>;
 		
 	private:
@@ -149,8 +154,8 @@ namespace options
 		VHDL,
 		CPP,
 		MATH_FORMAL,
-		MATH_PROG,
 		MATH_ASCII,
+		MATH_PROG,
 		MATH_NAMES,
 		GATE_COSTS,
 	};
@@ -163,14 +168,16 @@ namespace options
 	};
 	
 	extern Flag help;
+	extern Flag helpOptions;
 	extern Flag version;
 	
 	extern Trilean prompt;
 	extern Trilean status;
 	
-	extern Flag skipOptimization;
 	extern Mapped<OutputFormat, OutputFormat::HUMAN_LONG> outputFormat;
 	extern OptionalText name;
+	
+	extern Flag skipOptimization;
 	
 	extern std::vector<std::string_view> freeArgs;
 	

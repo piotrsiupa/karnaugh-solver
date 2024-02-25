@@ -55,6 +55,7 @@ namespace options
 		else [[unlikely]]
 		{
 			std::cerr << "Invalid value \"" << argument << "\" for the option \"--" << getMainLongName() << "\"!\n";
+			std::cerr << "Allowed values are: always, never and default.\n";
 			return false;
 		}
 		return true;
@@ -73,7 +74,7 @@ namespace options
 					first = false;
 				else
 					pattern += '|';
-				pattern += '(' + std::string(mapping.first) + ')';
+				pattern += '(' + std::string(mapping.regex) + ')';
 			}
 			regex = std::regex(pattern, std::regex_constants::icase);
 			regexReady = true;
@@ -88,13 +89,24 @@ namespace options
 		if (!std::regex_match(&*argument.begin(), &*argument.end(), match, regex)) [[unlikely]]
 		{
 			std::cerr << "Invalid value \"" << argument << "\" for the option \"--" << getMainLongName() << "\"!\n";
+			std::cerr << "Allowed values are: ";
+			bool first = true;
+			for (const Mapping &mapping : mappings)
+			{
+				if (first)
+					first = false;
+				else
+					std::cerr << ", ";
+				std::cerr << mapping.officialName;
+			}
+			std::cerr << ".\n";
 			return false;
 		}
 		for (std::size_t i = 0; i != mappings.size(); ++i)
 		{
 			if (match[i + 1].length() != 0)
 			{
-				value = mappings[i].second;
+				value = mappings[i].value;
 				return true;
 			}
 		}
@@ -128,34 +140,36 @@ namespace options
 	
 	// Why regex instead of one name for each option? Because it's fun. (And because I won't remember exact spelling so the program needs to figure out what I mean.)
 	
-	Flag help("help", "h(?:elp)?", 'h');
-	Flag version("version", "version|author", 'v');
+	Flag help("help", "(?:(?:f(?:ull)?|l(?:ong)?)[-_ ])?h(?:elp)?|[fl]h", 'h');
+	Flag helpOptions("help-options", "(?:(?:t(?:run(?:c(?:ated)?)?)?|s(?:hort)?|o(?:pt(?:ions?)?)?(?:[-_ ]o(?:nly)?)?)?[-_ ]h(?:elp)?|(?:t|s|oo?)h)|(?:h(?:elp)?[-_ ](?:(?:w(?:ith)?[-_ ])?(?:o(?:nly)?|j(?:ust)?)[-_ ]o(?:pt(?:ions?)?)?|o(?:pt(?:ions?)?)?(?:[-_ ]o(?:nly)?)?)|h(?:w?[oj]o|oo?))", 'H');
+	Flag version("version", "v(?:er(?:s(?:ions?)?)?)?|auth(?:ors?)?", 'v');
 	
 	Trilean prompt("prompt", "prompts?|hints?", 'p', [](){ return ::terminalInput; });
 	Trilean status("status", "stat(?:s|us)?|progress(?:[-_ ]bars?)?", 's', [](){ return ::terminalStderr; });
 	
-	Flag skipOptimization("no-optimize", "(?:no|skip)[-_ ](?:opti(?:m(?:iz(?:e|ation))?)?|cse)", 'O');
 	Mapped<OutputFormat, OutputFormat::HUMAN_LONG> outputFormat("format", "(?:output[-_ ])?(?:format|notation|lang(?:uage)?)", 'f', {
-			{"human(?:[-_ ]readable)?[-_ ](?:long|big)|(?:long|big)[-_ ]human(?:[-_ ]readable)?|h[-_ ]?(?:r[-_ ]?)?l|l[-_ ]?h(?:[-_ ]?r)?|full|default", OutputFormat::HUMAN_LONG},
-			{"human(?:[-_ ]readable)?(?:[-_ ](?:medium|middle))?|(?:(?:medium|middle)[-_ ])?human(?:[-_ ]readable)?|h(?:[-_ ]?r)?(?:[-_ ]?m)?|(?:m[-_ ]?)?h(?:[-_ ]?r)?|medium|middle|shorter", OutputFormat::HUMAN},
-			{"human(?:[-_ ]readable)?[-_ ](?:short|small)|(?:short|small)[-_ ]human(?:[-_ ]readable)?|h[-_ ]?(?:r[-_ ]?)?s|s[-_ ]?h(?:[-_ ]?r)?|short|small|tiny|minimal", OutputFormat::HUMAN_SHORT},
-			{"verilog", OutputFormat::VERILOG},
-			{"vhdl", OutputFormat::VHDL},
-			{"cpp|c\\+\\+|cc|hpp|h\\+\\+|hh", OutputFormat::CPP},
-			{"math(?:ematic(?:s|al)?)?(?:[-_ ]formal|formal[-_ ]math(?:ematic(?:s|al)?)?)?|m(?:[-_ ]?f)?|f[-_ ]?m", OutputFormat::MATH_FORMAL},
-			{"math(?:ematic(?:s|al)?)?[-_ ]prog(?:ram(?:ing)?)?|prog(?:ram(?:ming)?)?[-_ ]math(?:ematic(?:s|al)?)?|m[-_ ]?p|p[-_ ]?m", OutputFormat::MATH_PROG},
-			{"math(?:ematic(?:s|al)?)?[-_ ]ascii|ascii[-_ ]math(?:ematic(?:s|al)?)?|m[-_ ]?a|a[-_ ]?m", OutputFormat::MATH_ASCII},
-			{"math(?:ematic(?:s|al)?)?[-_ ](?:names?|words?|text)|(?:names?|words?|text)[-_ ]math(?:ematic(?:s|al)?)?|m[-_ ]?[nwt]|[nwt][-_ ]?m", OutputFormat::MATH_NAMES},
-			{"(?:gates?[-_ ])?(?:costs?|scores?|stat(?:s|istics?)?|infos?)|g[-_ ]?[csi]", OutputFormat::GATE_COSTS},
+			{"human-long", "human(?:[-_ ]readable)?[-_ ](?:long|big)|(?:long|big)[-_ ]human(?:[-_ ]readable)?|h[-_ ]?(?:r[-_ ]?)?l|l[-_ ]?h(?:[-_ ]?r)?|full|default", OutputFormat::HUMAN_LONG},
+			{"human", "human(?:[-_ ]readable)?(?:[-_ ](?:medium|middle))?|(?:(?:medium|middle)[-_ ])?human(?:[-_ ]readable)?|h(?:[-_ ]?r)?(?:[-_ ]?m)?|(?:m[-_ ]?)?h(?:[-_ ]?r)?|medium|middle|shorter", OutputFormat::HUMAN},
+			{"human-short", "human(?:[-_ ]readable)?[-_ ](?:short|small)|(?:short|small)[-_ ]human(?:[-_ ]readable)?|h[-_ ]?(?:r[-_ ]?)?s|s[-_ ]?h(?:[-_ ]?r)?|short|small|tiny|minimal", OutputFormat::HUMAN_SHORT},
+			{"verilog", "verilog", OutputFormat::VERILOG},
+			{"vhdl", "vhdl", OutputFormat::VHDL},
+			{"cpp", "cpp|c\\+\\+|cc|hpp|h\\+\\+|hh", OutputFormat::CPP},
+			{"math-formal", "math(?:ematic(?:s|al)?)?(?:[-_ ]formal|formal[-_ ]math(?:ematic(?:s|al)?)?)?|m(?:[-_ ]?f)?|f[-_ ]?m", OutputFormat::MATH_FORMAL},
+			{"math-ascii", "math(?:ematic(?:s|al)?)?[-_ ]ascii|ascii[-_ ]math(?:ematic(?:s|al)?)?|m[-_ ]?a|a[-_ ]?m", OutputFormat::MATH_ASCII},
+			{"math-prog", "math(?:ematic(?:s|al)?)?[-_ ]prog(?:ram(?:ing)?)?|prog(?:ram(?:ming)?)?[-_ ]math(?:ematic(?:s|al)?)?|m[-_ ]?p|p[-_ ]?m", OutputFormat::MATH_PROG},
+			{"math-names", "math(?:ematic(?:s|al)?)?[-_ ](?:names?|words?|text)|(?:names?|words?|text)[-_ ]math(?:ematic(?:s|al)?)?|m[-_ ]?[nwt]|[nwt][-_ ]?m", OutputFormat::MATH_NAMES},
+			{"gate-costs", "(?:gates?[-_ ])?(?:costs?|scores?|stat(?:s|istics?)?|infos?)|g[-_ ]?[csi]", OutputFormat::GATE_COSTS},
 		});
 	OptionalText name("name", "(?:(?:module|class)[-_ ])?name", 'n');
 	
 	Mapped<PrimeImplicantsHeuristic, PrimeImplicantsHeuristic::AUTO> primeImplicantsHeuristic("i-heuristic", "(?:p(?:rime)?[-_ ])?i(?:mpl(?:ic(?:ant)?)?)?[-_ ]h(?:eur(?:is(?:tic)?)?)?|p?ih", 'i', {
-			{"brute(?:[-_ ]force)?|bf|s(?:low)?", PrimeImplicantsHeuristic::BRUTE_FORCE},
-			{"a(?:uto)?|d(?:efault)?", PrimeImplicantsHeuristic::AUTO},
-			{"g(?:reedy?)?|f(?:ast)?", PrimeImplicantsHeuristic::GREEDY},
+			{"brute-force", "brute(?:[-_ ]force)?|bf|s(?:low)?", PrimeImplicantsHeuristic::BRUTE_FORCE},
+			{"auto", "a(?:uto)?|d(?:efault)?", PrimeImplicantsHeuristic::AUTO},
+			{"greedy", "g(?:reedy?)?|f(?:ast)?", PrimeImplicantsHeuristic::GREEDY},
 		});
 	Number<std::int_fast8_t> greedyImplicantAdjustments("greedy-i-retries", "(?:g(?:reedy?)?(?:(?:[-_ ]p(?:rime)?)?[-_ ]i(?:mpl(?:ic(?:ant)?)?)?)?|(?:(?:p(?:rime)?[-_ ])?i(?:mpl(?:ic(?:ant)?)?)?|g(?:reedy?)?)[-_ ]h(?:eur(?:is(?:t(?:ics?)?)?)?)?)[-_ ](?:(?:(?:re)?tr(?:y(?:[-_ ]count)?|ies)|(?:refine|redo|attempt|adjustment|repeat)(?:s|[-_ ]count)?|(?:pass|fix)(?:es|[-_ ]count)?)|(?:strengths?|counts?|[prtafsc]))|(?:gp?i|(?:g|p?i)?h)[prtafsc]", 'g', -1, 32, -1);
+	
+	Flag skipOptimization("no-optimize", "(?:no|skip)[-_ ](?:opti(?:m(?:iz(?:e|ation))?)?|cse)", 'O');
 	
 	std::vector<std::string_view> freeArgs;
 	
@@ -189,7 +203,13 @@ namespace options
 			[[nodiscard]] static bool parse(const int argc, const char *const *const argv) { return Parser(argc, argv).parse(); }
 		};
 		
-		const std::vector<Option*> Parser::allOptions = {&help, &version, &prompt, &prompt.getNegatedOption(), &status, &status.getNegatedOption(), &skipOptimization, &outputFormat, &name, &primeImplicantsHeuristic, &greedyImplicantAdjustments};
+		const std::vector<Option*> Parser::allOptions = {
+					&help, &helpOptions, &version,
+					&prompt, &prompt.getNegatedOption(), &status, &status.getNegatedOption(),
+					&outputFormat, &name,
+					&primeImplicantsHeuristic, &greedyImplicantAdjustments,
+					&skipOptimization
+				};
 		bool Parser::allOptionsRegexReady = false;
 		std::regex Parser::allOptionsRegex;
 		
