@@ -212,7 +212,7 @@ namespace options
 					&outputFormat, &name,
 					&primeImplicantsHeuristic, &greedyImplicantAdjustments,
 					&solutionsLimit,
-					&skipOptimization
+					&skipOptimization,
 				};
 		bool Parser::allOptionsRegexReady = false;
 		std::regex Parser::allOptionsRegex;
