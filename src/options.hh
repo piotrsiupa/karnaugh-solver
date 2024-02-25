@@ -145,6 +145,13 @@ namespace options
 	};
 	
 	
+	extern Flag help;
+	extern Flag helpOptions;
+	extern Flag version;
+	
+	extern Trilean prompt;
+	extern Trilean status;
+	
 	enum class OutputFormat
 	{
 		HUMAN_LONG,
@@ -159,6 +166,8 @@ namespace options
 		MATH_NAMES,
 		GATE_COSTS,
 	};
+	extern Mapped<OutputFormat, OutputFormat::HUMAN_LONG> outputFormat;
+	extern OptionalText name;
 	
 	enum class PrimeImplicantsHeuristic
 	{
@@ -166,23 +175,12 @@ namespace options
 		AUTO,
 		GREEDY,
 	};
-	
-	extern Flag help;
-	extern Flag helpOptions;
-	extern Flag version;
-	
-	extern Trilean prompt;
-	extern Trilean status;
-	
-	extern Mapped<OutputFormat, OutputFormat::HUMAN_LONG> outputFormat;
-	extern OptionalText name;
+	extern Mapped<PrimeImplicantsHeuristic, PrimeImplicantsHeuristic::AUTO> primeImplicantsHeuristic;
+	extern Number<std::int_fast8_t> greedyImplicantAdjustments;
 	
 	extern Flag skipOptimization;
 	
 	extern std::vector<std::string_view> freeArgs;
-	
-	extern Mapped<PrimeImplicantsHeuristic, PrimeImplicantsHeuristic::AUTO> primeImplicantsHeuristic;
-	extern Number<std::int_fast8_t> greedyImplicantAdjustments;
 	
 	
 	[[nodiscard]] bool parse(const int argc, const char *const *const argv);

@@ -208,7 +208,7 @@ namespace options
 					&prompt, &prompt.getNegatedOption(), &status, &status.getNegatedOption(),
 					&outputFormat, &name,
 					&primeImplicantsHeuristic, &greedyImplicantAdjustments,
-					&skipOptimization
+					&skipOptimization,
 				};
 		bool Parser::allOptionsRegexReady = false;
 		std::regex Parser::allOptionsRegex;
