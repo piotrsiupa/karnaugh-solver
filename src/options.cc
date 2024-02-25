@@ -119,7 +119,8 @@ namespace options
 	}
 	
 	
-	Flag help({"help"}, 'h');
+	Flag help({"help", "full-help", "long-help"}, 'h');
+	Flag helpOptions({"help-options", "truncated-help", "short-help"}, 'H');
 	Flag version({"version"}, 'v');
 	
 	Trilean prompt({"prompt", "prompts", "hint", "hints"}, 'p', [](){ return ::terminalInput; });
@@ -170,7 +171,7 @@ namespace options
 			[[nodiscard]] static bool parse(const int argc, const char *const *const argv) { return Parser(argc, argv).parse(); }
 		};
 		
-		Option *const Parser::allOptions[] = {&help, &version, &prompt, &prompt.getNegatedOption(), &status, &status.getNegatedOption(), &outputFormat, &name, &skipOptimization};
+		Option *const Parser::allOptions[] = {&help, &helpOptions, &version, &prompt, &prompt.getNegatedOption(), &status, &status.getNegatedOption(), &outputFormat, &name, &skipOptimization};
 		
 		bool Parser::parseShortOption(const char *&shortName, Option &option)
 		{

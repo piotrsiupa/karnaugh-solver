@@ -147,7 +147,12 @@ int main(const int argc, const char *const *const argv)
 	if (options::outputFormat.getValue() == options::OutputFormat::MATH_FORMAL || options::outputFormat.getValue() == options::OutputFormat::MATH_PROG || options::outputFormat.getValue() == options::OutputFormat::MATH_ASCII || options::outputFormat.getValue() == options::OutputFormat::MATH_NAMES)
 		options::skipOptimization.raise();
 	
-	if (options::help.isRaised())
+	if (options::helpOptions.isRaised())  // `--help-options` is before `--help` because it should be used when both flags are present.
+	{
+		printShortHelp();
+		return 0;
+	}
+	else if (options::help.isRaised())
 	{
 		printHelp();
 		return 0;

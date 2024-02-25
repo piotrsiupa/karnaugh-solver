@@ -3,7 +3,7 @@
 #include <iostream>
 
 
-void printHelp()
+void printShortHelp()
 {
 	std::cout <<
 			"This program performs a logic function minimization of a function described as\na list of minterms and don't-cares to a SOP form and after that it performs\na common subexpression elimination.\n"
@@ -12,7 +12,8 @@ void printHelp()
 			"Usage:\tkarnaugh [OPTIONS...] [--] [INPUT_FILE]\n"
 			"Options:\n"
 			" general:\n"
-			"    -h, --help\t\t- Print this help text.\n"
+			"    -h, --help\t\t- Print full help text, including lists of option\n\t\t\t  arguments and description of the input format.\n"
+			"    -H, --help-options\t- Print shortened help text, truncated at options.\n"
 			"    -v, --version\t- Print version information.\n"
 			" user interface:\n"
 			"    -p, --prompt[=X]\t- Set whether hints are shown when the input is read.\n\t\t\t  Valid values are \"never\", \"always\" and \"default\".\n\t\t\t  (No value means \"always\".) By default, hints are shown\n\t\t\t  only when input is read from a TTY.\n"
@@ -24,6 +25,14 @@ void printHelp()
 			"    -n, --name=X\t- Set module name for Verilog output or entity name for\n\t\t\t  VHDL output or class name for C++ output.\n\t\t\t  (By default, the name of the input file is used,\n\t\t\t  or \"Karnaugh\" if input is read from stdin.)\n"
 			" 3rd stage - common subexpression elimination:\n"
 			"    -O, --no-optimize\t- Skip the common subexpression elimination optimization\n\t\t\t  and show only a raw solution for each function.\n"
+		;
+}
+
+void printHelp()
+{
+	printShortHelp();
+	std::cout <<
+			"\n"
 			"\n"
 			"Output formats:\n"
 			"\thuman-long\t- The default format which displays all the information\n\t\t\t  in a human-readable way.\n"
@@ -37,6 +46,7 @@ void printHelp()
 			"\tmath-prog\t- A mathematical notation with programming operators.\n"
 			"\tmath-names\t- A mathematical notation that uses names of operators.\n"
 			"\tgate-costs\t- Only gate costs. (Useful mostly for development.)\n"
+			"\n"
 			"\n"
 			"Input:\n"
 			"The input format is similar to CSV but less constrained in some ways.\n"
@@ -61,7 +71,7 @@ void printHelp()
 			"\t# Name is skipped for this one\n"
 			"\t5 14\n"
 			"\t0 1 3 4 7, 10;11 12 ,13 15 # You can mix different separators.\n"
-			;
+		;
 }
 
 void printVersion()

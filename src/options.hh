@@ -137,6 +137,7 @@ namespace options
 	};
 	
 	extern Flag help;
+	extern Flag helpOptions;
 	extern Flag version;
 	
 	extern Trilean prompt;
