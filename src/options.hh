@@ -82,7 +82,7 @@ namespace options
 		[[nodiscard]] bool getValue() { if (undecided) { value = getDefault(); undecided = false; } return value; }
 	};
 	
-	template<typename T, T DEFAULT_VALUE>
+	template<typename T>
 	class Mapped : public Option
 	{
 	public:
@@ -98,12 +98,12 @@ namespace options
 		const Mappings mappings;
 		bool regexReady = false;
 		std::regex regex;
-		T value = DEFAULT_VALUE;
+		T value;
 		
 		void prepareRegex();
 		
 	public:
-		Mapped(const std::string_view mainLongName, const std::string_view longNamesRegex, const char shortName, Mappings &&mappings) : Option(mainLongName, longNamesRegex, shortName), mappings(std::move(mappings)) {}
+		Mapped(const std::string_view mainLongName, const std::string_view longNamesRegex, const char shortName, Mappings &&mappings, const T defaultValue) : Option(mainLongName, longNamesRegex, shortName), mappings(std::move(mappings)), value(defaultValue) {}
 		
 		[[nodiscard]] bool needsArgument() const final { return true; }
 		[[nodiscard]] bool parse(std::string_view argument) final;
@@ -166,7 +166,7 @@ namespace options
 		MATH_NAMES,
 		GATE_COSTS,
 	};
-	extern Mapped<OutputFormat, OutputFormat::HUMAN_LONG> outputFormat;
+	extern Mapped<OutputFormat> outputFormat;
 	extern OptionalText name;
 	
 	enum class PrimeImplicantsHeuristic
@@ -175,7 +175,7 @@ namespace options
 		AUTO,
 		GREEDY,
 	};
-	extern Mapped<PrimeImplicantsHeuristic, PrimeImplicantsHeuristic::AUTO> primeImplicantsHeuristic;
+	extern Mapped<PrimeImplicantsHeuristic> primeImplicantsHeuristic;
 	extern Number<std::int_fast8_t> greedyImplicantAdjustments;
 	
 	extern Number<std::intmax_t> solutionsLimit;

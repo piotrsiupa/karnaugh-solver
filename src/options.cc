@@ -62,8 +62,8 @@ namespace options
 		return true;
 	}
 	
-	template<typename T, T DEFAULT_VALUE>
-	void Mapped<T, DEFAULT_VALUE>::prepareRegex()
+	template<typename T>
+	void Mapped<T>::prepareRegex()
 	{
 		if (!regexReady)
 		{
@@ -82,8 +82,8 @@ namespace options
 		}
 	}
 	
-	template<typename T, T DEFAULT_VALUE>
-	bool Mapped<T, DEFAULT_VALUE>::parse(std::string_view argument)
+	template<typename T>
+	bool Mapped<T>::parse(std::string_view argument)
 	{
 		prepareRegex();
 		std::cmatch match;
@@ -148,7 +148,7 @@ namespace options
 	Trilean prompt("prompt", "prompts?|hints?", 'p', [](){ return ::terminalInput; });
 	Trilean status("status", "stat(?:s|us)?|progress(?:[-_ ]bars?)?", 's', [](){ return ::terminalStderr; });
 	
-	Mapped<OutputFormat, OutputFormat::HUMAN_LONG> outputFormat("format", "(?:output[-_ ])?(?:format|notation|lang(?:uage)?)", 'f', {
+	Mapped<OutputFormat> outputFormat("format", "(?:output[-_ ])?(?:format|notation|lang(?:uage)?)", 'f', {
 			{"human-long", "human(?:[-_ ]readable)?[-_ ](?:long|big)|(?:long|big)[-_ ]human(?:[-_ ]readable)?|h[-_ ]?(?:r[-_ ]?)?l|l[-_ ]?h(?:[-_ ]?r)?|full|default", OutputFormat::HUMAN_LONG},
 			{"human", "human(?:[-_ ]readable)?(?:[-_ ](?:medium|middle))?|(?:(?:medium|middle)[-_ ])?human(?:[-_ ]readable)?|h(?:[-_ ]?r)?(?:[-_ ]?m)?|(?:m[-_ ]?)?h(?:[-_ ]?r)?|medium|middle|shorter", OutputFormat::HUMAN},
 			{"human-short", "human(?:[-_ ]readable)?[-_ ](?:short|small)|(?:short|small)[-_ ]human(?:[-_ ]readable)?|h[-_ ]?(?:r[-_ ]?)?s|s[-_ ]?h(?:[-_ ]?r)?|short|small|tiny|minimal", OutputFormat::HUMAN_SHORT},
@@ -160,14 +160,14 @@ namespace options
 			{"math-prog", "math(?:ematic(?:s|al)?)?[-_ ]prog(?:ram(?:ing)?)?|prog(?:ram(?:ming)?)?[-_ ]math(?:ematic(?:s|al)?)?|m[-_ ]?p|p[-_ ]?m", OutputFormat::MATH_PROG},
 			{"math-names", "math(?:ematic(?:s|al)?)?[-_ ](?:names?|words?|text)|(?:names?|words?|text)[-_ ]math(?:ematic(?:s|al)?)?|m[-_ ]?[nwt]|[nwt][-_ ]?m", OutputFormat::MATH_NAMES},
 			{"gate-costs", "(?:gates?[-_ ])?(?:costs?|scores?|stat(?:s|istics?)?|infos?)|g[-_ ]?[csi]", OutputFormat::GATE_COSTS},
-		});
+		}, OutputFormat::HUMAN_LONG);
 	OptionalText name("name", "(?:(?:module|class)[-_ ])?name", 'n');
 	
-	Mapped<PrimeImplicantsHeuristic, PrimeImplicantsHeuristic::AUTO> primeImplicantsHeuristic("i-heuristic", "(?:p(?:rime)?[-_ ])?i(?:mpl(?:ic(?:ant)?)?)?[-_ ]h(?:eur(?:is(?:tic)?)?)?|p?ih", 'i', {
+	Mapped<PrimeImplicantsHeuristic> primeImplicantsHeuristic("i-heuristic", "(?:p(?:rime)?[-_ ])?i(?:mpl(?:ic(?:ant)?)?)?[-_ ]h(?:eur(?:is(?:tic)?)?)?|p?ih", 'i', {
 			{"brute-force", "brute(?:[-_ ]force)?|bf|s(?:low)?", PrimeImplicantsHeuristic::BRUTE_FORCE},
 			{"auto", "a(?:uto)?|d(?:efault)?", PrimeImplicantsHeuristic::AUTO},
 			{"greedy", "g(?:reedy?)?|f(?:ast)?", PrimeImplicantsHeuristic::GREEDY},
-		});
+		}, PrimeImplicantsHeuristic::AUTO);
 	Number<std::int_fast8_t> greedyImplicantAdjustments("greedy-i-retries", "(?:g(?:reedy?)?(?:(?:[-_ ]p(?:rime)?)?[-_ ]i(?:mpl(?:ic(?:ant)?)?)?)?|(?:(?:p(?:rime)?[-_ ])?i(?:mpl(?:ic(?:ant)?)?)?|g(?:reedy?)?)[-_ ]h(?:eur(?:is(?:t(?:ics?)?)?)?)?)[-_ ](?:(?:(?:re)?tr(?:y(?:[-_ ]count)?|ies)|(?:refine|redo|attempt|adjustment|repeat)(?:s|[-_ ]count)?|(?:pass|fix)(?:es|[-_ ]count)?)|(?:strengths?|counts?|[prtafsc]))|(?:gp?i|(?:g|p?i)?h)[prtafsc]", 'g', -1, 32, -1);
 	
 	Number<std::intmax_t> solutionsLimit("solutions-limit", "(?:m(?:ax)?(?:[-_ ]s(?:ol(?:ut(?:ions?)?)?)?)?|ms?)|(?:(?:s(?:ol(?:ut(?:ions?)?)?)?[-_ ])?l(?:im(?:its?)?)?|s?l)", 'm', -1, std::max(static_cast<std::intmax_t>(std::numeric_limits<std::size_t>::max()), std::numeric_limits<std::intmax_t>::max()), -1);
