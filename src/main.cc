@@ -13,6 +13,39 @@
 #include "options.hh"
 
 
+static bool parseOptions(const int argc, const char *const *const argv)
+{
+	if (!options::parse(argc, argv))
+		return false;
+	const bool outputFormatIsMath = options::outputFormat.getValue() == options::OutputFormat::MATH_FORMAL || options::outputFormat.getValue() == options::OutputFormat::MATH_ASCII || options::outputFormat.getValue() == options::OutputFormat::MATH_PROG || options::outputFormat.getValue() == options::OutputFormat::MATH_NAMES;
+	if (outputFormatIsMath)
+		options::skipOptimization.raise();
+	return true;
+}
+
+static bool handleInfoFlags()
+{
+	bool infoFlagRaised = false;
+	if (options::helpOptions.isRaised())  // If both `--help` and `--help-options` are raised, `--help-options` is treated as a modifier for `--help`.
+	{
+		printShortHelp();
+		infoFlagRaised = true;
+	}
+	else if (options::help.isRaised())
+	{
+		printHelp();
+		infoFlagRaised = true;
+	}
+	if (options::version.isRaised())
+	{
+		if (infoFlagRaised)  // `--help` and `--version` are allowed together because why not.
+			std::cout << "\n\n";
+		printVersion();
+		infoFlagRaised = true;
+	}
+	return infoFlagRaised;
+}
+
 static bool parseInputBits(Input &input)
 {
 	if (options::prompt.getValue())
@@ -157,26 +190,11 @@ int main(const int argc, const char *const *const argv)
 {
 	Progress::init();
 	
-	if (!options::parse(argc, argv))
+	if (!parseOptions(argc, argv))
 		return 1;
-	if (options::outputFormat.getValue() == options::OutputFormat::MATH_FORMAL || options::outputFormat.getValue() == options::OutputFormat::MATH_PROG || options::outputFormat.getValue() == options::OutputFormat::MATH_ASCII || options::outputFormat.getValue() == options::OutputFormat::MATH_NAMES)
-		options::skipOptimization.raise();
 	
-	if (options::helpOptions.isRaised())  // `--help-options` is before `--help` because it should be used when both flags are present.
-	{
-		printShortHelp();
+	if (handleInfoFlags())
 		return 0;
-	}
-	else if (options::help.isRaised())
-	{
-		printHelp();
-		return 0;
-	}
-	else if (options::version.isRaised())
-	{
-		printVersion();
-		return 0;
-	}
 	
 	enableAnsiSequences();
 	
