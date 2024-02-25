@@ -107,7 +107,8 @@ DONT_CARES_OF_THE_SECOND_FUNCTION
 
 The description of inputs is either a list of their names or just their count.
 
-Input names, minterms and don't-cares are lists of numbers separated by whitespaces and/or and punctuation characters except `-` and `_`. (A single dash may be used to indicate an empty list.)
+Input names, minterms and don't-cares are lists of numbers separated by whitespaces and/or and punctuation characters except `-`, `_` and `#`.
+(A single dash may be used to indicate an empty list.)
 
 Lines with any letters in them are considered to contain names.
 
@@ -147,7 +148,7 @@ a, b, c, d
 # amount of gates even further. (2 less ANDs)
 tricky_1 # This name could be skipped. The program would generate one if needed.
 5 14
-0 1 3 4 7, 10;11 12 ,13 15 # You can mix different separators.
+0 1 3 4 7, 10;11 12 ,13 15  # You can mix different separators.
 ```
 
 ### Human readable output (long variant)
