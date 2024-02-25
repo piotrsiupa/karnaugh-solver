@@ -8,6 +8,9 @@
 
 void Input::trimLine()
 {
+	const auto commentStart = line.find_first_of('#');
+	if (commentStart != std::string::npos)
+		line.erase(std::next(line.begin(), commentStart), line.end());
     line.erase(line.begin(), std::find_if(line.begin(), line.end(), [](unsigned char ch) { return !std::isspace(ch); }));
     line.erase(std::find_if(line.rbegin(), line.rend(), [](unsigned char ch) { return !std::isspace(ch); }).base(), line.end());
 }
@@ -35,7 +38,7 @@ void Input::load(Progress *const progress)
 			return;
 		}
 		trimLine();
-	} while (line.empty() || line.front() == '#');
+	} while (line.empty());
 	state = State::LOADED;
 }
 

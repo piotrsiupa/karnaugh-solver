@@ -111,9 +111,9 @@ Input names, minterms and don't-cares are lists of numbers separated by whitespa
 
 Lines with any letters in them are considered to contain names.
 
-Leading and trailing whitespaces are stripped.
+Leading and trailing whitespaces are stripped as well as everything after the `#` character (comments).
 
-Empty lines and lines starting with `#` (comments) are ignored.
+Blank lines and comment-only lines are ignored.
 
 
 ## Example (and output formats)
