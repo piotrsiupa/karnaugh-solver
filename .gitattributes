@@ -5,4 +5,3 @@
 SConstruct text
 *.py text
 tests/*/* text
-*.sh text eol=lf

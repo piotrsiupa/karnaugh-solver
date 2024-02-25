@@ -13,16 +13,11 @@ It's because the current version of the program is too slow to handle them (beca
 
 This script runs all the enabled tests and prints the result.
 It takes one argument which is the path to the program which will be tested.
-(The suggested way to run the tests is through `scons`.)
-
-
-# `tests/benchmark.sh`
-
-It's just some script I use for benchmarking.
-You can run it with the option `--help` if you're interested.
+(The suggested way to run the tests is through `scons` but it works well as a standalone script too.)
+You can run it with the option `--help` if you're interested in learning more.
 
 
 # `tests/gen-random-input.py`
 
 It's a simple script for generating random inputs for the program.
-You can run it with the option `--help` if you're interested.
+You can run it with the option `--help` if you're interested in learning more.
