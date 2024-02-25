@@ -107,13 +107,14 @@ DONT_CARES_OF_THE_SECOND_FUNCTION
 
 The description of inputs is either a list of their names or just their count.
 
-Input names, minterms and don't-cares are lists of numbers separated by whitespaces and/or and punctuation characters except `-` and `_`. (A single dash may be used to indicate an empty list.)
+Input names, minterms and don't-cares are lists of numbers separated by whitespaces and/or and punctuation characters except `-`, `_` and `#`.
+(A single dash may be used to indicate an empty list.)
 
 Lines with any letters in them are considered to contain names.
 
-Leading and trailing whitespaces are stripped.
+Leading and trailing whitespaces are stripped as well as everything after the `#` character (comments).
 
-Empty lines and lines starting with `#` (comments) are ignored.
+Blank lines and comment-only lines are ignored.
 
 
 ## Example (and output formats)
@@ -131,23 +132,23 @@ Each part was formatted a little differently to show various styles allowed by t
 
 ([file](tests/tricky_one/input))
 ```
-# This tests is used as the example in `README.md`.
 # Notice various ways of separating the values.
+# (This is a comment btw; it will be ignored.)
 a, b, c, d
 
 # Solvers tend to get a solution for this one along the lines of a'b'd' + bc'd,
 # instead of the optimal one: a'c' + abd. (1 less AND and 2 less NOTs)
- tricky_0    
-  0; 5; 13   
-  1; 2; 4; 15
+ tricky_0    # You can also have whitespaces and other weird characters in these names but this breaks generated code.
+  0; 5; 13  # Leading and training white characters are ignored. 
+1; 2; 4; 15
 
 # Solvers tend to not be biased against using NOT gates which often results in
 # solution a'c' + ac, instead of bd + ab. (2 less NOTs)
 # Beside that, this solution can reuse parts of the previous one reducing the
 # amount of gates even further. (2 less ANDs)
-tricky_1
+tricky_1 # This name could be skipped. The program would generate one if needed.
 5 14
-0 1 3 4 7 10 11 12 13 15
+0 1 3 4 7, 10;11 12 ,13 15  # You can mix different separators.
 ```
 
 ### Human readable output (long variant)
