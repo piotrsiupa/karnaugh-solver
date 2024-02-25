@@ -178,7 +178,13 @@ namespace options
 	extern Mapped<PrimeImplicantsHeuristic> primeImplicantsHeuristic;
 	extern Number<std::int_fast8_t> greedyImplicantAdjustments;
 	
-	extern Number<std::intmax_t> solutionsLimit;
+	enum class SolutionsHeuristic
+	{
+		PETRICK,
+		LIMITED_PETRICK,
+	};
+	extern Mapped<SolutionsHeuristic> solutionsHeuristics;
+	extern Number<std::size_t> solutionsLimit;
 	
 	extern Flag skipOptimization;
 	

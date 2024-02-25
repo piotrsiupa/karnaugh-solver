@@ -171,6 +171,20 @@ typename PetricksMethod<INDEX_T>::productOfSumsOfProducts_t PetricksMethod<INDEX
 }
 
 template<std::unsigned_integral INDEX_T>
+std::size_t PetricksMethod<INDEX_T>::calcMaxSums()
+{
+	switch (options::solutionsHeuristics.getValue())
+	{
+	case options::SolutionsHeuristic::PETRICK:
+		return 0;
+	case options::SolutionsHeuristic::LIMITED_PETRICK:
+		return options::solutionsLimit.getValue() == 0 ? 256 : static_cast<std::size_t>(options::solutionsLimit.getValue());
+	}
+	// Unreachable
+	return 0;
+}
+
+template<std::unsigned_integral INDEX_T>
 inline typename PetricksMethod<INDEX_T>::sumOfProducts_t PetricksMethod<INDEX_T>::multiplySumsOfProducts(sumOfProducts_t &&multiplier0, sumOfProducts_t &&multiplier1, const std::size_t maxSums, Progress &progress)
 {
 	sumOfProducts_t sumOfProducts;
@@ -307,7 +321,7 @@ typename PetricksMethod<INDEX_T>::sumOfProducts_t PetricksMethod<INDEX_T>::findS
 		return sumOfProducts_t{};
 	
 	
-	const std::size_t maxSums = options::solutionsLimit.getValue() == -1 ? 256 : static_cast<std::size_t>(options::solutionsLimit.getValue());
+	const std::size_t maxSums = calcMaxSums();
 	if (maxSums == 1)
 	{
 		Progress progress(Progress::Stage::SOLVING, "Merging solutions", productOfSumsOfProducts.size() - 1, false);

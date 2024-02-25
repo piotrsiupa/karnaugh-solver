@@ -34,6 +34,7 @@ class PetricksMethod
 	productOfSums_t createPreliminaryProductOfSums(const std::string &functionName) const;
 	static void removeRedundantSums(productOfSums_t &productOfSums, const std::string &functionName);
 	productOfSumsOfProducts_t createProductOfSums(const std::string &functionName);
+	static std::size_t calcMaxSums();
 	static sumOfProducts_t multiplySumsOfProducts(sumOfProducts_t &&multiplier0, sumOfProducts_t &&multiplier1, const std::size_t maxSums, Progress &progress);
 	static sumOfProducts_t multiplySumsOfProducts_max1(sumOfProducts_t &&multiplier0, sumOfProducts_t &&multiplier1);
 	sumOfProducts_t findSumOfProducts(const std::string &functionName);
