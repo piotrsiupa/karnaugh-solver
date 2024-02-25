@@ -142,9 +142,10 @@ namespace options
 	extern Trilean prompt;
 	extern Trilean status;
 	
-	extern Flag skipOptimization;
 	extern Mapped<OutputFormat, OutputFormat::HUMAN_LONG> outputFormat;
 	extern Text name;
+	
+	extern Flag skipOptimization;
 	
 	extern std::vector<std::string_view> freeArgs;
 	
