@@ -42,11 +42,8 @@ bool Progress::checkProgramRunTime(const timePoint_t currentTime)
 
 bool Progress::checkReportInterval(const bool force)
 {
-	if (substepsSoFar == 1) [[unlikely]]
-	{
-		substepsToSkip = 1;
+	if (substepsSoFar == 0) [[unlikely]]
 		return (force || reportLines == 0) && checkProgramRunTime(std::chrono::steady_clock::now());
-	}
 	const timePoint_t currentTime = std::chrono::steady_clock::now();
 	const double secondsSinceStepStart = std::chrono::duration<double>(currentTime - stepStartTime).count();
 	const double secondsSinceLastReport = std::chrono::duration<double>(currentTime - lastReportTime).count();
