@@ -256,23 +256,21 @@ inline typename PetricksMethod<INDEX_T>::sumOfProducts_t PetricksMethod<INDEX_T>
 }
 
 template<std::unsigned_integral INDEX_T>
-inline typename PetricksMethod<INDEX_T>::sumOfProducts_t PetricksMethod<INDEX_T>::multiplySumsOfProducts_max1(sumOfProducts_t &&multiplier0, sumOfProducts_t &&multiplier1)
+inline void PetricksMethod<INDEX_T>::multiplySumsOfProducts_max1(CompactSet<index_t> &product0, sumOfProducts_t &&multiplier1)
 {
-	assert(!multiplier0.empty());
 	assert(!multiplier1.empty());
 	
 	std::size_t minAdditionalSize = SIZE_MAX, minAdditionalSizeIndex = 0;
-	product_t &product0 = multiplier0.front();
 	for (std::size_t i = 0; i != multiplier1.size(); ++i)
 	{
 		const product_t &product1 = multiplier1[i];
-		const std::size_t additionalSize = std::ranges::count_if(product1, [product0 = std::as_const(product0)](const index_t index){ return !std::ranges::binary_search(product0, index); });
+		const std::size_t additionalSize = std::ranges::count_if(product1, [product0 = std::as_const(product0)](const index_t index){ return !product0.contains(index); });
 		if (additionalSize < minAdditionalSize)
 		{
-			if (additionalSize == 0)
-				return std::move(multiplier0);
 			minAdditionalSize = additionalSize;
 			minAdditionalSizeIndex = i;
+			if (additionalSize == 0)
+				break;
 		}
 	}
 	assert(minAdditionalSize != SIZE_MAX);
@@ -282,35 +280,9 @@ inline typename PetricksMethod<INDEX_T>::sumOfProducts_t PetricksMethod<INDEX_T>
 		assert(!product0.empty());
 		assert(!product1.empty());
 		assert(minAdditionalSize <= product1.size());
-		std::size_t i = product0.size() - 1;
-		std::size_t j = product1.size() - 1;
-		product0.resize(product0.size() + minAdditionalSize);
-		index_t val = product1[j];
-		for (std::size_t k = product0.size() - 1;; --k)
-		{
-			if (product0[i] < val)
-			{
-				product0[k] = val;
-				if (j == 0)
-					break;
-				if (product0[i] == val)
-					if (--i == SIZE_MAX)
-						break;
-				val = product1[--j];
-			}
-			else
-			{
-				product0[k] = product0[i];
-				if (--i == SIZE_MAX)
-					break;
-			}
-		}
-		if (i == SIZE_MAX)
-			do
-				product0[j] = product1[j];
-			while (j-- != 0);
+		for (const index_t index : product1)
+			product0.insert(index);
 	}
-	return std::move(multiplier0);
 }
 
 template<std::unsigned_integral INDEX_T>
@@ -325,25 +297,26 @@ typename PetricksMethod<INDEX_T>::sumOfProducts_t PetricksMethod<INDEX_T>::findS
 	if (maxSums == 1)
 	{
 		Progress progress(Progress::Stage::SOLVING, "Merging solutions", productOfSumsOfProducts.size() - 1, false);
+		CompactSet<index_t> product0(primeImplicants.size());
 		{
-			sumOfProducts_t &sumOfProducts = productOfSumsOfProducts.back();
-			const typename sumOfProducts_t::iterator smallestProduct = std::ranges::min_element(sumOfProducts, [](const product_t &x, const product_t &y){ return x.size() < y.size(); });
-			if (smallestProduct != sumOfProducts.begin())
-				sumOfProducts.front() = std::move(*smallestProduct);
-			sumOfProducts.resize(1);
-			sumOfProducts.shrink_to_fit();
-			sumOfProducts.front().reserve(primeImplicants.size());
+			const sumOfProducts_t sumOfProducts = std::move(productOfSumsOfProducts.back());
+			productOfSumsOfProducts.pop_back();
+			const typename sumOfProducts_t::const_iterator smallestProduct = std::ranges::min_element(sumOfProducts, [](const product_t &x, const product_t &y){ return x.size() < y.size(); });
+			for (const index_t index : *smallestProduct)
+				product0.insert(index);
 		}
-		while (productOfSumsOfProducts.size() != 1)
+		while (!productOfSumsOfProducts.empty())
 		{
 			progress.step();
 			progress.substep(0.0);
-			sumOfProducts_t multiplier0 = std::move(productOfSumsOfProducts.back());
-			productOfSumsOfProducts.pop_back();
 			sumOfProducts_t multiplier1 = std::move(productOfSumsOfProducts.back());
 			productOfSumsOfProducts.pop_back();
-			productOfSumsOfProducts.emplace_back(multiplySumsOfProducts_max1(std::move(multiplier0), std::move(multiplier1)));
+			multiplySumsOfProducts_max1(product0, std::move(multiplier1));
 		}
+		product_t &product = productOfSumsOfProducts.emplace_back().emplace_back();
+		product.reserve(product0.size());
+		for (const index_t index : product0)
+			product.push_back(index);
 	}
 	else
 	{
@@ -362,6 +335,7 @@ typename PetricksMethod<INDEX_T>::sumOfProducts_t PetricksMethod<INDEX_T>::findS
 			productOfSumsOfProducts.emplace_back(multiplySumsOfProducts(std::move(multiplier0), std::move(multiplier1), maxSums, progress));
 		}
 	}
+	productOfSumsOfProducts.front().shrink_to_fit();
 	
 	return std::move(productOfSumsOfProducts.front());
 }

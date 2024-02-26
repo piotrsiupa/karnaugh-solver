@@ -8,6 +8,7 @@
 #include <utility>
 #include <vector>
 
+#include "CompactSet.hh"
 #include "Implicants.hh"
 #include "Minterm.hh"
 #include "Minterms.hh"
@@ -36,7 +37,7 @@ class PetricksMethod
 	productOfSumsOfProducts_t createProductOfSums(const std::string &functionName);
 	static std::size_t calcMaxSums();
 	static sumOfProducts_t multiplySumsOfProducts(sumOfProducts_t &&multiplier0, sumOfProducts_t &&multiplier1, const std::size_t maxSums, Progress &progress);
-	static sumOfProducts_t multiplySumsOfProducts_max1(sumOfProducts_t &&multiplier0, sumOfProducts_t &&multiplier1);
+	static void multiplySumsOfProducts_max1(CompactSet<index_t> &product0, sumOfProducts_t &&multiplier1);
 	sumOfProducts_t findSumOfProducts(const std::string &functionName);
 	
 public:
