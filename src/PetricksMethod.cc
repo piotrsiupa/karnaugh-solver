@@ -185,7 +185,7 @@ std::size_t PetricksMethod<INDEX_T>::calcMaxSums()
 }
 
 template<std::unsigned_integral INDEX_T>
-inline typename PetricksMethod<INDEX_T>::sumOfProducts_t PetricksMethod<INDEX_T>::multiplySumsOfProducts(sumOfProducts_t &&multiplier0, sumOfProducts_t &&multiplier1, const std::size_t maxSums, Progress &progress)
+inline typename PetricksMethod<INDEX_T>::sumOfProducts_t PetricksMethod<INDEX_T>::multiplySumsOfProducts(sumOfProducts_t &&multiplier0, const sumOfProducts_t &multiplier1, const std::size_t maxSums, Progress &progress)
 {
 	sumOfProducts_t sumOfProducts;
 	sumOfProducts.reserve(multiplier0.size() * multiplier1.size());
@@ -256,7 +256,7 @@ inline typename PetricksMethod<INDEX_T>::sumOfProducts_t PetricksMethod<INDEX_T>
 }
 
 template<std::unsigned_integral INDEX_T>
-inline void PetricksMethod<INDEX_T>::multiplySumsOfProducts_max1(CompactSet<index_t> &product0, sumOfProducts_t &&multiplier1)
+inline void PetricksMethod<INDEX_T>::multiplySumsOfProducts_max1(CompactSet<index_t> &product0, const sumOfProducts_t &multiplier1)
 {
 	assert(!multiplier1.empty());
 	
@@ -311,7 +311,7 @@ typename PetricksMethod<INDEX_T>::sumOfProducts_t PetricksMethod<INDEX_T>::findS
 			progress.substep(0.0);
 			sumOfProducts_t multiplier1 = std::move(productOfSumsOfProducts.back());
 			productOfSumsOfProducts.pop_back();
-			multiplySumsOfProducts_max1(product0, std::move(multiplier1));
+			multiplySumsOfProducts_max1(product0, multiplier1);
 		}
 		product_t &product = productOfSumsOfProducts.emplace_back().emplace_back();
 		product.reserve(product0.size());
