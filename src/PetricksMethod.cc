@@ -173,19 +173,11 @@ typename PetricksMethod<INDEX_T>::productOfSumsOfProducts_t PetricksMethod<INDEX
 template<std::unsigned_integral INDEX_T>
 std::size_t PetricksMethod<INDEX_T>::calcMaxSums()
 {
-	switch (options::solutionsHeuristics.getValue())
-	{
-	case options::SolutionsHeuristic::PETRICK:
-		return 0;
-	case options::SolutionsHeuristic::LIMITED_PETRICK:
-		return options::solutionsLimit.getValue() == 0 ? 256 : static_cast<std::size_t>(options::solutionsLimit.getValue());
-	}
-	// Unreachable
-	return 0;
+	return options::solutionsLimit.getValue() == 0 ? 256 : static_cast<std::size_t>(options::solutionsLimit.getValue()); //XXX better default
 }
 
 template<std::unsigned_integral INDEX_T>
-inline typename PetricksMethod<INDEX_T>::sumOfProducts_t PetricksMethod<INDEX_T>::multiplySumsOfProducts(sumOfProducts_t &&multiplier0, const sumOfProducts_t &multiplier1, const std::size_t maxSums, Progress &progress)
+inline typename PetricksMethod<INDEX_T>::sumOfProducts_t PetricksMethod<INDEX_T>::multiplySumsOfProducts(sumOfProducts_t &&multiplier0, const sumOfProducts_t &multiplier1, Progress &progress)
 {
 	sumOfProducts_t sumOfProducts;
 	sumOfProducts.reserve(multiplier0.size() * multiplier1.size());
@@ -208,51 +200,102 @@ inline typename PetricksMethod<INDEX_T>::sumOfProducts_t PetricksMethod<INDEX_T>
 		const auto infoGuard = progress.addInfo("sorting");
 		progress.step();
 		progress.substep(-0.0);
-		if (maxSums == 0)
-			std::ranges::sort(sumOfProducts);
-		else
-			std::ranges::sort(sumOfProducts, [](const product_t &x, const product_t &y){ return x.size() < y.size() || (x.size() == y.size() && x < y); });
+		std::ranges::sort(sumOfProducts);
 		const auto eraseBegin = std::unique(sumOfProducts.begin(), sumOfProducts.end());
 		sumOfProducts.erase(eraseBegin, sumOfProducts.end());
 	}
-	if (maxSums == 0)
+	const auto infoGuard = progress.addInfo("reducing");
+	progress.step();
+	auto progressStep = progress.makeCountingStepHelper(sumOfProducts.size());
+	for (auto x = sumOfProducts.begin(); x != sumOfProducts.end(); ++x)
 	{
-		const auto infoGuard = progress.addInfo("reducing");
-		progress.step();
-		auto progressStep = progress.makeCountingStepHelper(sumOfProducts.size());
-		for (auto x = sumOfProducts.begin(); x != sumOfProducts.end(); ++x)
+		progressStep.substep();
+		if (x->size() <= 2)
+			continue;
+		for (auto value = x->cbegin(); value != x->cend(); ++value)
 		{
-			progressStep.substep();
-			if (x->size() <= 2)
-				continue;
-			for (auto value = x->cbegin(); value != x->cend(); ++value)
+			const auto rangeBegin = std::lower_bound(sumOfProducts.cbegin(), sumOfProducts.cend(), *value, [](const sum_t &sum, const INDEX_T value){ return sum.front() < value; });
+			const auto rangeEnd = std::upper_bound(rangeBegin, sumOfProducts.cend(), *value, [](const INDEX_T value, const sum_t &sum){ return sum.front() != value; });
+			for (auto y = rangeBegin; y != rangeEnd; ++y)
 			{
-				const auto rangeBegin = std::lower_bound(sumOfProducts.cbegin(), sumOfProducts.cend(), *value, [](const sum_t &sum, const INDEX_T value){ return sum.front() < value; });
-				const auto rangeEnd = std::upper_bound(rangeBegin, sumOfProducts.cend(), *value, [](const INDEX_T value, const sum_t &sum){ return sum.front() != value; });
-				for (auto y = rangeBegin; y != rangeEnd; ++y)
+				if (y->size() == 1)
+					continue;
+				if (x->size() > y->size() && std::ranges::includes(*x, *y))
 				{
-					if (y->size() == 1)
-						continue;
-					if (x->size() > y->size() && std::ranges::includes(*x, *y))
-					{
-						x->resize(1);
-						goto next_x;
-					}
+					x->resize(1);
+					goto next_x;
 				}
 			}
-			next_x:;
 		}
-		sumOfProducts.erase(std::remove_if(sumOfProducts.begin(), sumOfProducts.end(), [](const auto &x){ return x.size() == 1; }), sumOfProducts.end());
+		next_x:;
 	}
-	else
-	{
-		const auto infoGuard = progress.addInfo("limiting");
-		progress.step();
-		progress.substep(-0.0);
-		if (sumOfProducts.size() > maxSums)
-			sumOfProducts.resize(maxSums);
-	}
+	sumOfProducts.erase(std::remove_if(sumOfProducts.begin(), sumOfProducts.end(), [](const auto &x){ return x.size() == 1; }), sumOfProducts.end());
 	return sumOfProducts;
+}
+
+template<std::unsigned_integral INDEX_T>
+inline void PetricksMethod<INDEX_T>::multiplySumsOfProducts_maxN(std::vector<CompactSet<index_t>> &multiplier0, const sumOfProducts_t &multiplier1, const std::size_t maxSums)
+{
+	assert(!multiplier0.empty());
+	assert(!multiplier1.empty());
+	
+	struct SizeInfo
+	{
+		std::size_t i, j;
+		index_t size;
+	};
+	std::vector<SizeInfo> sizeInfos;
+	sizeInfos.reserve(multiplier0.size() * multiplier1.size());
+	for (std::size_t i = 0; i != multiplier0.size(); ++i)
+	{
+		for (std::size_t j = 0; j != multiplier1.size(); ++j)
+		{
+			const CompactSet<index_t> &product0 = multiplier0[i];
+			const product_t &product1 = multiplier1[j];
+			sizeInfos.emplace_back(i, j, product0.size() + std::ranges::count_if(product1, [product0](const index_t index){ return !product0.contains(index); }));
+		}
+	}
+	if (sizeInfos.size() > maxSums)
+	{
+		std::ranges::sort(sizeInfos, [](const SizeInfo &x, const SizeInfo &y){ return x.size < y.size; });
+		sizeInfos.resize(maxSums);
+		std::ranges::sort(sizeInfos, [](const SizeInfo &x, const SizeInfo &y){ return x.i < y.i; });
+	}
+	// `sizeInfos` must be sorted by `i` from this point.
+	
+	std::vector<std::size_t> mapping;
+	{
+		mapping.reserve(multiplier0.size());
+		for (const SizeInfo &sizeInfo : sizeInfos)
+			mapping.push_back(sizeInfo.i);
+		const auto [eraseBegin, eraseEnd] = std::ranges::unique(mapping);
+		mapping.erase(eraseBegin, eraseEnd);
+	}
+	
+	std::vector<std::size_t> reverseMapping(multiplier0.size());
+	for (std::size_t i = 0; i != mapping.size(); ++i)
+	{
+		reverseMapping[mapping[i]] = i;
+		if (mapping[i] != i)
+			std::ranges::swap(multiplier0[i], multiplier0[mapping[i]]);
+	}
+	
+	assert(multiplier0.size() <= sizeInfos.size());
+	while (multiplier0.size() < sizeInfos.size())
+		multiplier0.emplace_back(primeImplicants.size());
+	
+	assert(!sizeInfos.empty());
+	for (std::size_t i = sizeInfos.size(); i-- != 0;)
+	{
+		if (std::size_t mappedPos = reverseMapping[sizeInfos[i].i]; mappedPos != i)
+			multiplier0[i] = multiplier0[mappedPos];
+		CompactSet<index_t> &product0 = multiplier0[i];
+		const product_t &product1 = multiplier1[sizeInfos[i].j];
+		assert(!product0.empty());
+		assert(!product1.empty());
+		for (const index_t index : product1)
+			product0.insert(index);
+	}
 }
 
 template<std::unsigned_integral INDEX_T>
@@ -273,6 +316,7 @@ inline void PetricksMethod<INDEX_T>::multiplySumsOfProducts_max1(CompactSet<inde
 				break;
 		}
 	}
+	
 	assert(minAdditionalSize != SIZE_MAX);
 	if (minAdditionalSize != 0)
 	{
@@ -293,49 +337,91 @@ typename PetricksMethod<INDEX_T>::sumOfProducts_t PetricksMethod<INDEX_T>::findS
 		return sumOfProducts_t{};
 	
 	
-	const std::size_t maxSums = calcMaxSums();
-	if (maxSums == 1)
+	switch (options::solutionsHeuristics.getValue())
 	{
-		Progress progress(Progress::Stage::SOLVING, "Merging solutions", productOfSumsOfProducts.size() - 1, false);
-		CompactSet<index_t> product0(primeImplicants.size());
+	case options::SolutionsHeuristic::PETRICK:
 		{
-			const sumOfProducts_t sumOfProducts = std::move(productOfSumsOfProducts.back());
-			productOfSumsOfProducts.pop_back();
-			const typename sumOfProducts_t::const_iterator smallestProduct = std::ranges::min_element(sumOfProducts, [](const product_t &x, const product_t &y){ return x.size() < y.size(); });
-			for (const index_t index : *smallestProduct)
-				product0.insert(index);
+			Progress progress(Progress::Stage::SOLVING, "Merging solutions", (productOfSumsOfProducts.size() - 1) * 3, false);
+			while (productOfSumsOfProducts.size() != 1)
+			{
+				sumOfProducts_t multiplier0 = std::move(productOfSumsOfProducts.back());
+				productOfSumsOfProducts.pop_back();
+				sumOfProducts_t multiplier1 = std::move(productOfSumsOfProducts.back());
+				productOfSumsOfProducts.pop_back();
+				productOfSumsOfProducts.emplace_back(multiplySumsOfProducts(std::move(multiplier0), multiplier1, progress));
+			}
+			productOfSumsOfProducts.front().shrink_to_fit();
 		}
-		while (!productOfSumsOfProducts.empty())
+		break;
+	case options::SolutionsHeuristic::LIMITED_PETRICK:
 		{
-			progress.step();
-			progress.substep(0.0);
-			sumOfProducts_t multiplier1 = std::move(productOfSumsOfProducts.back());
-			productOfSumsOfProducts.pop_back();
-			multiplySumsOfProducts_max1(product0, multiplier1);
+			const std::size_t maxSums = calcMaxSums();
+			if (maxSums != 1)
+			{
+				Progress progress(Progress::Stage::SOLVING, "Merging solutions", productOfSumsOfProducts.size(), false);
+				std::vector<CompactSet<index_t>> multiplier0;
+				multiplier0.reserve(maxSums);
+				{
+					progress.step();
+					progress.substep(0.0);
+					sumOfProducts_t sumOfProducts = std::move(productOfSumsOfProducts.back());
+					productOfSumsOfProducts.pop_back();
+					std::ranges::sort(sumOfProducts, [](const product_t &x, const product_t &y){ return x.size() < y.size(); });
+					if (sumOfProducts.size() > maxSums)
+						sumOfProducts.resize(maxSums);
+					for (const product_t &product : sumOfProducts)
+					{
+						CompactSet<index_t> &product0 = multiplier0.emplace_back(primeImplicants.size());
+						for (const index_t index : product)
+							product0.insert(index);
+					}
+				}
+				while (!productOfSumsOfProducts.empty())
+				{
+					progress.step();
+					progress.substep(0.0);
+					sumOfProducts_t multiplier1 = std::move(productOfSumsOfProducts.back());
+					productOfSumsOfProducts.pop_back();
+					multiplySumsOfProducts_maxN(multiplier0, multiplier1, maxSums);
+				}
+				sumOfProducts_t &sumOfProducts = productOfSumsOfProducts.emplace_back();
+				for (const CompactSet<index_t> &product0 : multiplier0)
+				{
+					product_t &product = sumOfProducts.emplace_back();
+					product.reserve(product0.size());
+					for (const index_t index : product0)
+						product.push_back(index);
+				}
+			}
+			else
+			{
+				Progress progress(Progress::Stage::SOLVING, "Merging solutions", productOfSumsOfProducts.size(), false);
+				CompactSet<index_t> product0(primeImplicants.size());
+				{
+					progress.step();
+					progress.substep(0.0);
+					const sumOfProducts_t sumOfProducts = std::move(productOfSumsOfProducts.back());
+					productOfSumsOfProducts.pop_back();
+					const typename sumOfProducts_t::const_iterator smallestProduct = std::ranges::min_element(sumOfProducts, [](const product_t &x, const product_t &y){ return x.size() < y.size(); });
+					for (const index_t index : *smallestProduct)
+						product0.insert(index);
+				}
+				while (!productOfSumsOfProducts.empty())
+				{
+					progress.step();
+					progress.substep(0.0);
+					sumOfProducts_t multiplier1 = std::move(productOfSumsOfProducts.back());
+					productOfSumsOfProducts.pop_back();
+					multiplySumsOfProducts_max1(product0, multiplier1);
+				}
+				product_t &product = productOfSumsOfProducts.emplace_back().emplace_back();
+				product.reserve(product0.size());
+				for (const index_t index : product0)
+					product.push_back(index);
+			}
 		}
-		product_t &product = productOfSumsOfProducts.emplace_back().emplace_back();
-		product.reserve(product0.size());
-		for (const index_t index : product0)
-			product.push_back(index);
+		break;
 	}
-	else
-	{
-		Progress progress(Progress::Stage::SOLVING, "Merging solutions", (productOfSumsOfProducts.size() - 1) * 3, false);
-		if (maxSums != 0 && productOfSumsOfProducts.back().size() > maxSums)
-		{
-			std::ranges::sort(productOfSumsOfProducts.back(), [](const product_t &x, const product_t &y){ return x.size() < y.size() || (x.size() == y.size() && x < y); });
-			productOfSumsOfProducts.back().resize(maxSums);
-		}
-		while (productOfSumsOfProducts.size() != 1)
-		{
-			sumOfProducts_t multiplier0 = std::move(productOfSumsOfProducts.back());
-			productOfSumsOfProducts.pop_back();
-			sumOfProducts_t multiplier1 = std::move(productOfSumsOfProducts.back());
-			productOfSumsOfProducts.pop_back();
-			productOfSumsOfProducts.emplace_back(multiplySumsOfProducts(std::move(multiplier0), std::move(multiplier1), maxSums, progress));
-		}
-	}
-	productOfSumsOfProducts.front().shrink_to_fit();
 	
 	return std::move(productOfSumsOfProducts.front());
 }

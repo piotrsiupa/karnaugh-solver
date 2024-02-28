@@ -87,7 +87,7 @@ void printHelp()
 			"\tlimited\t- It's the same Petrick's Method as the previous one but the\n\t\t  amount of solutions that can be stored at one time is limited\n\t\t  so they won't get out of control. "
 						"Only N solutions that look\n\t\t  the best at the moment are kept, which tends to get a decent\n\t\t  end result. "
 						"The time needed is loosely proportional to N.\n\t\t  "
-						"However, N=1 is a special case with a simpler algorithm and it\n\t\t  is about 50 times faster.\n\t\t  "
+						"However, N=1 is a special case with a simpler algorithm and it\n\t\t  is about 60% faster.\n\t\t  "
 						"(See the option `--max-solutions`.)\n"
 			"\n"
 			"\n"
