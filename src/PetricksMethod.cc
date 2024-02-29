@@ -252,7 +252,7 @@ inline void PetricksMethod<INDEX_T>::multiplySumsOfProducts_maxN(std::vector<Com
 		{
 			const CompactSet<index_t> &product0 = multiplier0[i];
 			const product_t &product1 = multiplier1[j];
-			sizeInfos.emplace_back(i, j, product0.size() + std::ranges::count_if(product1, [product0](const index_t index){ return !product0.contains(index); }));
+			sizeInfos.emplace_back(SizeInfo{i, j, static_cast<index_t>(product0.size() + std::ranges::count_if(product1, [product0](const index_t index){ return !product0.contains(index); }))});
 		}
 	}
 	if (sizeInfos.size() > maxSums)
@@ -268,8 +268,8 @@ inline void PetricksMethod<INDEX_T>::multiplySumsOfProducts_maxN(std::vector<Com
 		mapping.reserve(multiplier0.size());
 		for (const SizeInfo &sizeInfo : sizeInfos)
 			mapping.push_back(sizeInfo.i);
-		const auto [eraseBegin, eraseEnd] = std::ranges::unique(mapping);
-		mapping.erase(eraseBegin, eraseEnd);
+		const auto eraseBegin = std::unique(mapping.begin(), mapping.end());
+		mapping.erase(eraseBegin, mapping.end());
 	}
 	
 	std::vector<std::size_t> reverseMapping(multiplier0.size());
@@ -431,8 +431,8 @@ typename PetricksMethod<INDEX_T>::sumOfProducts_t PetricksMethod<INDEX_T>::findS
 			for (const sumOfProducts_t &sumOfProducts : productOfSumsOfProducts)
 				newProduct.push_back(sumOfProducts.front().front());
 			std::ranges::sort(newProduct);
-			const auto [eraseBegin, eraseEnd] = std::ranges::unique(newProduct);
-			newProduct.erase(eraseBegin, eraseEnd);
+			const auto eraseBegin = std::unique(newProduct.begin(), newProduct.end());
+			newProduct.erase(eraseBegin, newProduct.end());
 			newProduct.shrink_to_fit();
 			productOfSumsOfProducts.clear();
 			productOfSumsOfProducts.emplace_back().emplace_back(std::move(newProduct));
