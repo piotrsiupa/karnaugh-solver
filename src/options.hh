@@ -171,8 +171,8 @@ namespace options
 	
 	enum class PrimeImplicantsHeuristic
 	{
-		BRUTE_FORCE,
 		AUTO,
+		BRUTE_FORCE,
 		GREEDY,
 	};
 	extern Mapped<PrimeImplicantsHeuristic> primeImplicantsHeuristic;
@@ -182,6 +182,7 @@ namespace options
 	{
 		PETRICK,
 		LIMITED_PETRICK,
+		GREEDY,
 	};
 	extern Mapped<SolutionsHeuristic> solutionsHeuristics;
 	extern Number<std::size_t> solutionsLimit;

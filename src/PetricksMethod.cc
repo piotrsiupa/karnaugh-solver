@@ -421,6 +421,24 @@ typename PetricksMethod<INDEX_T>::sumOfProducts_t PetricksMethod<INDEX_T>::findS
 			}
 		}
 		break;
+	case options::SolutionsHeuristic::GREEDY:
+		{
+			Progress progress(Progress::Stage::SOLVING, "Merging solutions (greedy)", 1, false);
+			progress.step();
+			progress.substep(-0.0, true);
+			product_t newProduct;
+			newProduct.resize(productOfSumsOfProducts.size());
+			for (const sumOfProducts_t &sumOfProducts : productOfSumsOfProducts)
+				newProduct.push_back(sumOfProducts.front().front());
+			std::ranges::sort(newProduct);
+			const auto [eraseBegin, eraseEnd] = std::ranges::unique(newProduct);
+			newProduct.erase(eraseBegin, eraseEnd);
+			newProduct.shrink_to_fit();
+			productOfSumsOfProducts.clear();
+			productOfSumsOfProducts.emplace_back().emplace_back(std::move(newProduct));
+			productOfSumsOfProducts.shrink_to_fit();
+		}
+		break;
 	}
 	
 	return std::move(productOfSumsOfProducts.front());

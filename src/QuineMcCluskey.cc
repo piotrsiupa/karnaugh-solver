@@ -226,15 +226,15 @@ Implicants QuineMcCluskey::findPrimeImplicants()
 {
 	switch (options::primeImplicantsHeuristic.getValue())
 	{
-	case options::PrimeImplicantsHeuristic::BRUTE_FORCE:
-		brute_force:
-		return findPrimeImplicantsWithoutHeuristic();
-		
 	case options::PrimeImplicantsHeuristic::AUTO:
 		if (::bits < 20)
 			goto brute_force;
 		else
 			goto greedy;
+		
+	case options::PrimeImplicantsHeuristic::BRUTE_FORCE:
+		brute_force:
+		return findPrimeImplicantsWithoutHeuristic();
 		
 	case options::PrimeImplicantsHeuristic::GREEDY:
 		greedy:
