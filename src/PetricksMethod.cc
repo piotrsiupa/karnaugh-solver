@@ -171,9 +171,14 @@ typename PetricksMethod<INDEX_T>::productOfSumsOfProducts_t PetricksMethod<INDEX
 }
 
 template<std::unsigned_integral INDEX_T>
-std::size_t PetricksMethod<INDEX_T>::calcMaxSums()
+std::size_t PetricksMethod<INDEX_T>::calcMaxSums() const
 {
-	return options::solutionsLimit.getValue() == 0 ? 256 : static_cast<std::size_t>(options::solutionsLimit.getValue()); //XXX better default
+	if (options::solutionsLimit.getValue())
+		return options::solutionsLimit.getValue();
+	else if (::bits > 25)
+		return 1;
+	else
+		return 10000000 / primeImplicants.size();
 }
 
 template<std::unsigned_integral INDEX_T>
@@ -339,8 +344,19 @@ typename PetricksMethod<INDEX_T>::sumOfProducts_t PetricksMethod<INDEX_T>::findS
 	
 	switch (options::solutionsHeuristics.getValue())
 	{
+	case options::SolutionsHeuristic::AUTO:
+		{
+			const std::size_t magnitudeEstimation = std::accumulate(productOfSumsOfProducts.cbegin(), productOfSumsOfProducts.cend(), 0, [](std::size_t x, const sumOfProducts_t &y){ return x + y.size(); }) - productOfSumsOfProducts.size();
+			if (magnitudeEstimation <= 63)
+				goto petrick;
+			else if (::bits <= 27)
+				goto limited_petrick;
+			else
+				goto greedy;
+		}
 	case options::SolutionsHeuristic::PETRICK:
 		{
+			petrick:
 			Progress progress(Progress::Stage::SOLVING, "Merging solutions", (productOfSumsOfProducts.size() - 1) * 3, false);
 			while (productOfSumsOfProducts.size() != 1)
 			{
@@ -355,6 +371,7 @@ typename PetricksMethod<INDEX_T>::sumOfProducts_t PetricksMethod<INDEX_T>::findS
 		break;
 	case options::SolutionsHeuristic::LIMITED_PETRICK:
 		{
+			limited_petrick:
 			const std::size_t maxSums = calcMaxSums();
 			if (maxSums != 1)
 			{
@@ -423,6 +440,7 @@ typename PetricksMethod<INDEX_T>::sumOfProducts_t PetricksMethod<INDEX_T>::findS
 		break;
 	case options::SolutionsHeuristic::GREEDY:
 		{
+			greedy:
 			Progress progress(Progress::Stage::SOLVING, "Merging solutions (greedy)", 1, false);
 			progress.step();
 			progress.substep(-0.0, true);
@@ -430,6 +448,7 @@ typename PetricksMethod<INDEX_T>::sumOfProducts_t PetricksMethod<INDEX_T>::findS
 			newProduct.resize(productOfSumsOfProducts.size());
 			for (const sumOfProducts_t &sumOfProducts : productOfSumsOfProducts)
 				newProduct.push_back(sumOfProducts.front().front());
+			progress.substep(-0.5, true);
 			std::ranges::sort(newProduct);
 			const auto eraseBegin = std::unique(newProduct.begin(), newProduct.end());
 			newProduct.erase(eraseBegin, newProduct.end());

@@ -180,6 +180,7 @@ namespace options
 	
 	enum class SolutionsHeuristic
 	{
+		AUTO,
 		PETRICK,
 		LIMITED_PETRICK,
 		GREEDY,

@@ -81,6 +81,8 @@ void printHelp()
 			"\n"
 			"\n"
 			"Solutions heuristics:\n"
+			"\tauto\t- Chooses the best method that is fast enough. "
+						"(default)\n"
 			"\tpetrick\t- Petrick's Method. It will find the best solution but its non-\n\t\t  -polynomial time causes it to be viable only when the number\n\t\t  of inputs is very small. "
 						"(It should work for <=6 inputs.)\n\t\t  "
 						"For bigger cases you'll either run out of RAM and will wait\n\t\t  years for the result (depending on how much RAM you have).\n"
