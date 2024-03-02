@@ -88,7 +88,7 @@ typename PetricksMethod<INDEX_T>::productOfSums_t PetricksMethod<INDEX_T>::creat
 	auto progressStep = progress.makeCountingStepHelper(primeImplicants.size());
 	
 	productOfSums_t productOfSums(mintermMap.size());
-	for (std::size_t i = 0; i != primeImplicants.size(); ++i)
+	for (index_t i = 0; i != primeImplicants.size(); ++i)
 	{
 		progressStep.substep();
 		const Implicant &primeImplicant = primeImplicants[i];
@@ -468,7 +468,7 @@ typename PetricksMethod<INDEX_T>::sumOfProducts_t PetricksMethod<INDEX_T>::findS
 	{
 	case options::SolutionsHeuristic::AUTO:
 		{
-			const std::size_t magnitudeEstimation = std::accumulate(productOfSumsOfProducts.cbegin(), productOfSumsOfProducts.cend(), 0, [](std::size_t x, const sumOfProducts_t &y){ return x + y.size(); }) - productOfSumsOfProducts.size();
+			const std::size_t magnitudeEstimation = std::accumulate<decltype(productOfSumsOfProducts.cbegin()), std::size_t>(productOfSumsOfProducts.cbegin(), productOfSumsOfProducts.cend(), 0, [](std::size_t x, const sumOfProducts_t &y){ return x + y.size(); }) - productOfSumsOfProducts.size();
 			if (magnitudeEstimation <= 63)
 				return findSumOfProducts_petrick(std::move(productOfSumsOfProducts));
 			else if (::bits <= 27)
