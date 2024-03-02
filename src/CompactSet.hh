@@ -67,6 +67,8 @@ public:
 	[[nodiscard]] inline bool operator==(const CompactSet &other) const noexcept;
 	[[nodiscard]] inline auto operator<=>(const CompactSet &other) const noexcept;
 	
+	[[nodiscard]] CompactSet operator~() const { CompactSet copy = *this; copy.bits.flip(); copy.size_ = max_size() - size_; return copy; }
+	
 	[[nodiscard]] bool empty() const noexcept { return size_ == 0; }
 	[[nodiscard]] bool full() const noexcept { return size_ == bits.size(); }
 	[[nodiscard]] size_type size() const noexcept { return size_; }

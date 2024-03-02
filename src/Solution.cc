@@ -3,6 +3,14 @@
 #include "options.hh"
 
 
+Minterms Solution::getMinterms() const
+{
+	Minterms minterms;
+	for (const Implicant &implicant : *this)
+		implicant.addToMinterms(minterms);
+	return minterms;
+}
+
 void Solution::printHuman(std::ostream &o) const
 {
 	if (size() == 1)

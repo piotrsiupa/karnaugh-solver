@@ -117,6 +117,7 @@ public:
 	
 	void step(const bool force = false);
 	void substep(const calcStepCompletion_t &calcStepCompletion, const bool force = false) { if (visible) { if (--substepsToSkip == 0 || force) [[unlikely]] handleStep(calcStepCompletion, force); ++substepsSoFar; } }
+	void substep(const completion_t &completion, const bool force = false) { return substep([completion](){ return completion; }, force); }
 	template<typename T = std::size_t, typename T2 = T>
 	[[nodiscard]] CountingStepHelper<T> makeCountingStepHelper(const T2 n) { return {*this, n}; }
 	

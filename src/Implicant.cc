@@ -23,58 +23,30 @@ Implicant::splitBits_t Implicant::splitBits() const
 
 bool Implicant::isAnyInMinterms(const Minterms &minterms) const
 {
-	if (*this == none()) [[unlikely]]
-		return false;
-	const Minterm inversedMask = ~mask & ::maxMinterm;
-	Minterm unmaskedPart = 0;
-	do
-	{
-		if (minterms.contains(bits | unmaskedPart))
+	for (const Minterm minterm : *this)
+		if (minterms.contains(minterm))
 			return true;
-		unmaskedPart = (unmaskedPart - inversedMask) & inversedMask;
-	} while (unmaskedPart != 0);
 	return false;
 }
 
 bool Implicant::areAllInMinterms(const Minterms &minterms) const
 {
-	if (*this == none()) [[unlikely]]
-		return true;
-	const Minterm inversedMask = ~mask & ::maxMinterm;
-	Minterm unmaskedPart = 0;
-	do
-	{
-		if (!minterms.contains(bits | unmaskedPart))
+	for (const Minterm minterm : *this)
+		if (!minterms.contains(minterm))
 			return false;
-		unmaskedPart = (unmaskedPart - inversedMask) & inversedMask;
-	} while (unmaskedPart != 0);
 	return true;
 }
 
 void Implicant::addToMinterms(Minterms &minterms) const
 {
-	if (*this == none()) [[unlikely]]
-		return;
-	const Minterm inversedMask = ~mask & ::maxMinterm;
-	Minterm unmaskedPart = 0;
-	do
-	{
-		minterms.insert(bits | unmaskedPart);
-		unmaskedPart = (unmaskedPart - inversedMask) & inversedMask;
-	} while (unmaskedPart != 0);
+	for (const Minterm minterm : *this)
+		minterms.insert(minterm);
 }
 
 void Implicant::removeFromMinterms(Minterms &minterms) const
 {
-	if (*this == none()) [[unlikely]]
-		return;
-	const Minterm inversedMask = ~mask & ::maxMinterm;
-	Minterm unmaskedPart = 0;
-	do
-	{
-		minterms.erase(bits | unmaskedPart);
-		unmaskedPart = (unmaskedPart - inversedMask) & inversedMask;
-	} while (unmaskedPart != 0);
+	for (const Minterm minterm : *this)
+		minterms.erase(minterm);
 }
 
 void Implicant::printHuman(std::ostream &o, const bool parentheses) const

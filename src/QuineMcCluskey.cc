@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <cstring>
 #include <iostream>
+#include <limits>
 #include <map>
 
 #include "options.hh"
@@ -31,7 +32,7 @@ void QuineMcCluskey::removeDontCareOnlyImplicants(Implicants &implicants, Progre
 {
 	const auto infoGuard = progress.addInfo("removing useless prime implicants");
 	progress.step();
-	progress.substep([](){ return -0.0; }, true);
+	progress.substep(-0.0, true);
 	
 	const auto eraseBegin = std::remove_if(implicants.begin(), implicants.end(), [&targetMinterms = *targetMinterms](const Implicant &implicant){ return !implicant.isAnyInMinterms(targetMinterms); });
 	implicants.erase(eraseBegin, implicants.end());
@@ -41,7 +42,7 @@ void QuineMcCluskey::cleanupImplicants(Implicants &implicants, Progress &progres
 {
 	const auto infoGuard = progress.addInfo("sorting prime implicants");
 	progress.step();
-	progress.substep([](){ return -0.0; }, true);
+	progress.substep(-0.0, true);
 	
 	implicants.humanSort();
 	implicants.shrink_to_fit();
@@ -145,7 +146,7 @@ Implicants QuineMcCluskey::createPrimeImplicantsWithoutHeuristic(Progress &progr
 	std::vector<std::pair<Implicant, bool>> implicants;
 	{
 		const auto infoGuard = progress.addInfo("preparing initial list of implicants");
-		progress.substep([](){ return -0.0; }, true);
+		progress.substep(-0.0, true);
 		implicants.reserve(allowedMinterms->size());
 		for (const Minterm &minterm : *allowedMinterms)
 			implicants.emplace_back(Implicant{minterm}, false);
@@ -225,15 +226,15 @@ Implicants QuineMcCluskey::findPrimeImplicants()
 {
 	switch (options::primeImplicantsHeuristic.getValue())
 	{
-	case options::PrimeImplicantsHeuristic::BRUTE_FORCE:
-		brute_force:
-		return findPrimeImplicantsWithoutHeuristic();
-		
 	case options::PrimeImplicantsHeuristic::AUTO:
 		if (::bits < 20)
 			goto brute_force;
 		else
 			goto greedy;
+		
+	case options::PrimeImplicantsHeuristic::BRUTE_FORCE:
+		brute_force:
+		return findPrimeImplicantsWithoutHeuristic();
 		
 	case options::PrimeImplicantsHeuristic::GREEDY:
 		greedy:
@@ -270,14 +271,14 @@ void QuineMcCluskey::validate(const Minterms &allowedMinterms, const Minterms &t
 
 Solutions QuineMcCluskey::runPetricksMethod(Implicants &&primeImplicants)
 {
-	if (primeImplicants.size() <= PetricksMethod<std::uint8_t>::MAX_PRIME_IMPL_COUNT)
-		return PetricksMethod<std::uint8_t>::solve(*targetMinterms, std::move(primeImplicants), functionName);
-	else if (primeImplicants.size() <= PetricksMethod<std::uint16_t>::MAX_PRIME_IMPL_COUNT)
-		return PetricksMethod<std::uint16_t>::solve(*targetMinterms, std::move(primeImplicants), functionName);
-	else if (primeImplicants.size() <= PetricksMethod<std::uint32_t>::MAX_PRIME_IMPL_COUNT)
-		return PetricksMethod<std::uint32_t>::solve(*targetMinterms, std::move(primeImplicants), functionName);
-	else if (primeImplicants.size() <= PetricksMethod<std::uint64_t>::MAX_PRIME_IMPL_COUNT)
-		return PetricksMethod<std::uint64_t>::solve(*targetMinterms, std::move(primeImplicants), functionName);
+	if (primeImplicants.size() <= std::numeric_limits<std::uint8_t>::max())
+		return PetricksMethod<std::uint8_t>(*targetMinterms, std::move(primeImplicants)).solve(functionName);
+	else if (primeImplicants.size() <= std::numeric_limits<std::uint16_t>::max())
+		return PetricksMethod<std::uint16_t>(*targetMinterms, std::move(primeImplicants)).solve(functionName);
+	else if (primeImplicants.size() <= std::numeric_limits<std::uint32_t>::max())
+		return PetricksMethod<std::uint32_t>(*targetMinterms, std::move(primeImplicants)).solve(functionName);
+	else if (primeImplicants.size() <= std::numeric_limits<std::uint64_t>::max())
+		return PetricksMethod<std::uint64_t>(*targetMinterms, std::move(primeImplicants)).solve(functionName);
 	else
 		std::cerr << "The number of prime implicants is ridiculous and this has no right to work! I won't even try.\n";
 	return {};

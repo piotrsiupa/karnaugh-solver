@@ -6,6 +6,7 @@
 #include <cmath>
 #include <iostream>
 #include <numbers>
+#include <optional>
 
 #include "options.hh"
 #include "QuineMcCluskey.hh"
@@ -174,19 +175,30 @@ std::unique_ptr<Minterms> Karnaugh::loadMinterms(Input &input, Progress &progres
 void Karnaugh::validate(const Solutions &solutions) const
 {
 	const std::string progressName = "Validating solutions for \"" + functionName + "\" (development build)";
-	Progress progress(Progress::Stage::SOLVING, progressName.c_str(), solutions.size(), true);
+	Progress progress(Progress::Stage::SOLVING, progressName.c_str(), solutions.size() * 2, true);
 	for (const Solution &solution : solutions)
 	{
-		progress.step();
-		for (Minterm i = 0;; ++i)
+		std::optional<Minterms> actualMinterms;
 		{
-			progress.substep([i = std::as_const(i)](){ return static_cast<Progress::completion_t>(i) / (static_cast<Progress::completion_t>(::maxMinterm) + 1.0); });
-			if (targetMinterms->contains(i))
-				assert(solution.covers(i));
-			else if (!allowedMinterms->contains(i))
-				assert(!solution.covers(i));
-			if (i == ::maxMinterm)
-				break;
+			const auto infoGuard = progress.addInfo("Finding out what the found solution actually does");
+			progress.step();
+			progress.substep(-0.0);
+			actualMinterms.emplace(solution.getMinterms());
+		}
+		{
+			const auto infoGuard = progress.addInfo("Comparing the actual solution the the expected one");
+			progress.step();
+			auto progressStep = progress.makeCountingStepHelper(static_cast<Progress::completion_t>(::maxMinterm) + 1.0);
+			for (Minterm i = 0;; ++i)
+			{
+				progressStep.substep();
+				if (targetMinterms->contains(i))
+					assert(actualMinterms->contains(i));
+				else if (!allowedMinterms->contains(i))
+					assert(!actualMinterms->contains(i));
+				if (i == ::maxMinterm)
+					break;
+			}
 		}
 	}
 }
@@ -231,7 +243,7 @@ bool Karnaugh::loadData(Input &input)
 	{
 		const auto infoGuard = progress.addInfo("listing possible minterms");
 		progress.step(true);
-		progress.substep([](){ return -0.0; }, true);
+		progress.substep(-0.0, true);
 		duplicates_t duplicates;
 		std::set_intersection(
 				allowedMinterms->cbegin(), targetMinterms->cend(),
@@ -244,7 +256,7 @@ bool Karnaugh::loadData(Input &input)
 			printDuplicates(duplicates, cerr);
 			cerr << "! (They will be ignored.)\n";
 		}
-		progress.substep([](){ return -0.5; }, true);
+		progress.substep(-0.5, true);
 		allowedMinterms->unsafe_insert(*targetMinterms, duplicates.size());
 	}
 

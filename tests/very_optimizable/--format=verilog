@@ -9,20 +9,20 @@ module very_optimizable (
 	
 	// Products
 	assign prods[0] = a & b & c & d;
-	assign prods[1] = !c & d;
-	assign prods[2] = !a & b;
+	assign prods[1] = c & !d;
+	assign prods[2] = a & !b;
 	assign prods[3] = prods[2] & prods[1];
-	assign prods[4] = c & !d;
+	assign prods[4] = !c & d;
 	assign prods[5] = prods[2] & prods[4];
-	assign prods[6] = a & !b;
+	assign prods[6] = !a & b;
 	assign prods[7] = prods[1] & prods[6];
 	assign prods[8] = prods[4] & prods[6];
 	assign prods[9] = !a & !b & !c & !d;
 	
 	// Sums
 	assign sums[0] = prods[5] | prods[7];
-	assign sums[1] = prods[3] | sums[0];
-	assign sums[2] = prods[8] | sums[1];
+	assign sums[1] = prods[8] | sums[0];
+	assign sums[2] = prods[3] | sums[1];
 	assign sums[3] = prods[0] | sums[1];
 	assign sums[4] = prods[9] | sums[0];
 	

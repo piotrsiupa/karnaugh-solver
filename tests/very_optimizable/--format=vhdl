@@ -17,20 +17,20 @@ begin
 	
 	-- Products
 	prods(0) <= a and b and c and d;
-	prods(1) <= not c and d;
-	prods(2) <= not a and b;
+	prods(1) <= c and not d;
+	prods(2) <= a and not b;
 	prods(3) <= prods(2) and prods(1);
-	prods(4) <= c and not d;
+	prods(4) <= not c and d;
 	prods(5) <= prods(2) and prods(4);
-	prods(6) <= a and not b;
+	prods(6) <= not a and b;
 	prods(7) <= prods(1) and prods(6);
 	prods(8) <= prods(4) and prods(6);
 	prods(9) <= not a and not b and not c and not d;
 	
 	-- Sums
 	sums(0) <= prods(5) or prods(7);
-	sums(1) <= prods(3) or sums(0);
-	sums(2) <= prods(8) or sums(1);
+	sums(1) <= prods(8) or sums(0);
+	sums(2) <= prods(3) or sums(1);
 	sums(3) <= prods(0) or sums(1);
 	sums(4) <= prods(9) or sums(0);
 	
