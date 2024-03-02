@@ -11,6 +11,9 @@ void CompactSet<T>::validate() const noexcept
 #endif
 
 
-#include "Minterm.hh"
+#include <cstdint>
 
-template class CompactSet<Minterm>;
+template class CompactSet<std::uint8_t>;
+template class CompactSet<std::uint16_t>;
+template class CompactSet<std::uint32_t>;
+template class CompactSet<std::uint64_t>;

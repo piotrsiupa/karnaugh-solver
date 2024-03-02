@@ -382,6 +382,9 @@ typename PetricksMethod<INDEX_T>::sumOfProducts_t PetricksMethod<INDEX_T>::findS
 	sumOfProducts_t sumOfProducts;
 	for (const CompactSet<index_t> &product0 : multiplier0)
 	{
+#ifndef NDEBUG
+		product0.validate();
+#endif
 		product_t &product = sumOfProducts.emplace_back();
 		product.reserve(product0.size());
 		for (const index_t index : product0)
@@ -415,6 +418,9 @@ typename PetricksMethod<INDEX_T>::sumOfProducts_t PetricksMethod<INDEX_T>::findS
 	sumOfProducts_t sumOfProducts;
 	product_t &product = sumOfProducts.emplace_back();
 	product.reserve(product0.size());
+#ifndef NDEBUG
+	product0.validate();
+#endif
 	for (const index_t index : product0)
 		product.push_back(index);
 	return sumOfProducts;
