@@ -39,6 +39,11 @@ class PetricksMethod
 	static sumOfProducts_t multiplySumsOfProducts(sumOfProducts_t &&multiplier0, const sumOfProducts_t &multiplier1, Progress &progress);
 	void multiplySumsOfProducts_maxN(std::vector<CompactSet<index_t>> &multiplier0, const sumOfProducts_t &multiplier1, const std::size_t maxSums);
 	static void multiplySumsOfProducts_max1(CompactSet<index_t> &product0, const sumOfProducts_t &multiplier1);
+	sumOfProducts_t findSumOfProducts_petrick(productOfSumsOfProducts_t productOfSumsOfProducts);
+	sumOfProducts_t findSumOfProducts_limitedPetrick_n(productOfSumsOfProducts_t productOfSumsOfProducts, const std::size_t maxSums);
+	sumOfProducts_t findSumOfProducts_limitedPetrick_1(productOfSumsOfProducts_t productOfSumsOfProducts);
+	sumOfProducts_t findSumOfProducts_limitedPetrick(productOfSumsOfProducts_t productOfSumsOfProducts);
+	sumOfProducts_t findSumOfProducts_greedy(productOfSumsOfProducts_t productOfSumsOfProducts);
 	sumOfProducts_t findSumOfProducts(const std::string &functionName);
 	
 public:
