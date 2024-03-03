@@ -53,44 +53,45 @@ Progress::completion_t SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::estimateCo
 }
 
 template<typename SET, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
-bool SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::chooseNextSubsets(subsetSelections_t &subsetSelections, usageCounts_t &usageCounts) const
+bool SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::chooseNextSubsets(subsetSelections_t &subsetSelectionsIndexes, usageCounts_t &usageCounts) const
 {
 	try_again:
 	// Don't let the familiar sight of the loop make an impression that control flow of this function is in any way understandable without analyzing specific paths.
-	for (std::size_t i = 0; i != subsetSelections.size(); ++i)
+	for (std::size_t i = 0; i != subsetSelectionsIndexes.size(); ++i)
 	{
 		if (usageCounts[i] == 0)
 			continue;
 		const possibleSubsets_t &possibleSubsets = graph[i].second;
 		if (possibleSubsets.empty())
 			continue;
-		subsetSelection_t &subsetSelection = subsetSelections[i];
-		if (subsetSelection.empty())
+		subsetSelection_t &subsetSelectionIndex = subsetSelectionsIndexes[i];
+		if (subsetSelectionIndex.empty())
 		{
-			subsetSelection.push_back(0);
+			subsetSelectionIndex.push_back(0);
 			++usageCounts[possibleSubsets[0]];
 		}
-		else if (subsetSelection.back() != possibleSubsets.size() - 1)
+		else if (subsetSelectionIndex.back() != possibleSubsets.size() - 1)
 		{
-			subsetSelection.push_back(subsetSelection.back() + 1);
-			++usageCounts[possibleSubsets[subsetSelection.back()]];
+			const std::size_t nextSubset = subsetSelectionIndex.back() + 1;
+			subsetSelectionIndex.push_back(nextSubset);
+			++usageCounts[possibleSubsets[nextSubset]];
 		}
-		else if (subsetSelection.size() == 1)
+		else if (subsetSelectionIndex.size() == 1)
 		{
 			--usageCounts[possibleSubsets.back()];
-			subsetSelection.pop_back();
+			subsetSelectionIndex.clear();
 			continue;
 		}
 		else
 		{
-			subsetSelection.pop_back();
-			--usageCounts[possibleSubsets[subsetSelection.back()]];
-			++subsetSelection.back();
+			subsetSelectionIndex.pop_back();
+			--usageCounts[possibleSubsets[subsetSelectionIndex.back()]];
+			++subsetSelectionIndex.back();
 			--usageCounts[possibleSubsets.back()];
-			++usageCounts[possibleSubsets[subsetSelection.back()]];
+			++usageCounts[possibleSubsets[subsetSelectionIndex.back()]];
 		}
-		for (std::size_t j = 0; j != subsetSelections.size(); ++j)
-			if (usageCounts[j] == 1 && subsetSelections[j].empty())
+		for (std::size_t j = 0; j != subsetSelectionsIndexes.size(); ++j)
+			if (usageCounts[j] == 1 && subsetSelectionsIndexes[j].empty())
 				goto try_again;
 		return true;
 	}
@@ -98,59 +99,33 @@ bool SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::chooseNextSubsets(subsetSele
 }
 
 template<typename SET, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
-void SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::removeRedundantNodes(subsetSelections_t &subsetSelections, usageCounts_t &usageCounts) const
-{
-	for (std::size_t nodeIndex = 0; nodeIndex != subsetSelections.size(); ++nodeIndex)
-	{
-		if (usageCounts[nodeIndex] == 0)
-			continue;
-		for (std::size_t i = 0; i != subsetSelections[nodeIndex].size();)
-		{
-			const std::size_t subset = subsetSelections[nodeIndex][i];
-			if (usageCounts[subset] == 1)
-			{
-				subsetSelections[nodeIndex].erase(subsetSelections[nodeIndex].begin() + i);
-				usageCounts[subset] = 0;
-				subsetSelections[nodeIndex].insert(subsetSelections[nodeIndex].end(), subsetSelections[subset].cbegin(), subsetSelections[subset].cend());
-			}
-			else
-			{
-				++i;
-			}
-		}
-	}
-}
-
-template<typename SET, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
 std::pair<typename SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::subsetSelections_t, typename SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::usageCounts_t> SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::findBestSubsets(Progress &progress) const
 {
-	subsetSelections_t subsetSelections(graph.size()), bestSubsetSelections(graph.size());
+	subsetSelections_t subsetSelectionIndexes(graph.size()), bestSubsetSelections(graph.size());
 	usageCounts_t usageCounts(graph.size()), bestUsageCounts(graph.size());
 	for (const std::size_t endNode : endNodes)
 		usageCounts[endNode] = SIZE_MAX - graph.size();
 	std::size_t bestGates = SIZE_MAX;
-	const auto estimateCompletion = [this, &subsetSelections = std::as_const(subsetSelections), &usageCounts = std::as_const(usageCounts)](){ return SetOptimizer::estimateCompletion(subsetSelections, usageCounts); };
+	const auto estimateCompletion = [this, &subsetSelectionIndexes = std::as_const(subsetSelectionIndexes), &usageCounts = std::as_const(usageCounts)](){ return SetOptimizer::estimateCompletion(subsetSelectionIndexes, usageCounts); };
 	while (true)
 	{
 		progress.substep(estimateCompletion);
-		subsetSelections_t candidateSubsetSelections(subsetSelections.size());
-		for (std::size_t i = 0; i != subsetSelections.size(); ++i)
+		subsetSelections_t subsetSelections(graph.size());
+		for (std::size_t i = 0; i != subsetSelectionIndexes.size(); ++i)
 		{
-			candidateSubsetSelections[i].reserve(subsetSelections[i].size());
-			for (const std::size_t &subset : subsetSelections[i])
-				candidateSubsetSelections[i].push_back(graph[i].second[subset]);
+			subsetSelections[i].reserve(subsetSelectionIndexes[i].size());
+			for (const std::size_t &subsetIndex : subsetSelectionIndexes[i])
+				subsetSelections[i].push_back(graph[i].second[subsetIndex]);
 		}
-		usageCounts_t candidateUsageCounts = usageCounts;
-		removeRedundantNodes(candidateSubsetSelections, candidateUsageCounts);
 		
-		const gateCount_t gates = countGates(candidateSubsetSelections, candidateUsageCounts);
+		const gateCount_t gates = countGates(subsetSelections, usageCounts);
 		if (gates < bestGates)
 		{
-			bestSubsetSelections = std::move(candidateSubsetSelections);
-			bestUsageCounts = std::move(candidateUsageCounts);
+			bestSubsetSelections = std::move(subsetSelections);
+			bestUsageCounts = usageCounts;
 			bestGates = gates;
 		}
-		if (!chooseNextSubsets(subsetSelections, usageCounts))
+		if (!chooseNextSubsets(subsetSelectionIndexes, usageCounts))
 			break;
 	}
 	

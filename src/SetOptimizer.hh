@@ -51,7 +51,6 @@ private:
 	static std::pair<Progress::completion_t, Progress::completion_t> estimateCompletion(const subsetSelection_t &subsetSelection, const possibleSubsets_t &possibleSubsets);
 	Progress::completion_t estimateCompletion(const subsetSelections_t &subsetSelections, const usageCounts_t &usageCounts) const;
 	bool chooseNextSubsets(subsetSelections_t &subsetSelections, usageCounts_t &usageCounts) const;
-	void removeRedundantNodes(subsetSelections_t &subsetSelections, usageCounts_t &usageCounts) const;
 	std::pair<subsetSelections_t, usageCounts_t> findBestSubsets(Progress &progress) const;
 	void removeUnusedSubsets(subsetSelections_t &subsetSelections, usageCounts_t &usageCounts);
 	sets_t makeSets() const;
