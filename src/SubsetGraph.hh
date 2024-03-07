@@ -30,7 +30,7 @@ private:
 	using groupsMap_t = std::map<value_t, std::size_t>;
 	using groupedSet_t = std::vector<groupId_t>;
 	using groupedSets_t = std::vector<groupedSet_t>;
-	struct GroupedSetHierarchyEntry
+	struct GroupedEntry
 	{
 		std::vector<groupId_t> groupIds;
 		std::vector<std::size_t> subsets;
@@ -38,22 +38,22 @@ private:
 		std::size_t supersetCount;
 		bool isOriginalSet;
 	};
-	using groupedSetHierarchy_t = std::vector<GroupedSetHierarchyEntry>;
+	using grouped_t = std::vector<GroupedEntry>;
 	
 	std::vector<group_t> groups;
-	groupedSetHierarchy_t groupedSetHierarchy;
+	grouped_t grouped;
 	
 	groupsMap_t createGroups(const sets_t &sets);
 	groupedSets_t groupSets(const sets_t &sets, const groupsMap_t &groupsMap);
-	void makeInitialSetHierarchy(const groupedSets_t &groupedSets);
-	void trimSetHierarchy();
-	void addMoreEdgesToSetHierarchy();
-	void removeRedundantEdgesFromSetHierarchy();
-	void sortSetHierarchy();
-	setHierarchy_t ungroupSetHierarchy() const;
+	void makeInitial(const groupedSets_t &groupedSets);
+	void trim();
+	void addMoreEdges();
+	void removeRedundantEdges();
+	void sort();
+	setHierarchy_t ungroup() const;
 	
-	setHierarchy_t makeSetHierarchy_(const sets_t &sets);
+	setHierarchy_t make(const sets_t &sets);
 
 public:
-	static setHierarchy_t makeSetHierarchy(const sets_t &sets) { return SubsetGraph().makeSetHierarchy_(sets); }
+	static setHierarchy_t makeSetHierarchy(const sets_t &sets) { return SubsetGraph().make(sets); }
 };
