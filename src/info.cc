@@ -47,6 +47,8 @@ void printShortHelp()
 						"(See \"Solutions heuristics\".)\n"
 			" 3rd stage - common subexpression elimination:\n"
 			"    -O, --no-optimize\t- Skip the common subexpression elimination optimization\n\t\t\t  and show only a raw solution for each function.\n"
+			"    -e, --cse-heuristic\t- Set heuristic for eliminating common subexpressions.\n\t\t\t  "
+						"(See \"Common subexpression elimination heuristics\".)\n"
 		;
 }
 
@@ -93,6 +95,13 @@ void printHelp()
 						"(See the option `--max-solutions`.)\n"
 			"\tgreedy\t- It just takes the first available solution for each minterm.\n\t\t  "
 						"It's extremely fast and it takes very little memory but the\n\t\t  final solution is worse than for the other heuristics.\n"
+			"\n"
+			"\n"
+			"Common subexpression elimination heuristics:\n"
+			"\tbrute-force\t- It checks all possible graphs of expressions which\n\t\t\t  guarantees the optimal result but it takes some much\n\t\t\t  time that it's viable only for very small solutions.\n"
+			"\texhuastive\t- It's similar to the brute-force but it doesn't check\n\t\t\t  all possible combinations of graph edges but only all\n\t\t\t  combinations of nodes. "
+						"It doesn't guarantee the\n\t\t\t  optimal solution but it still often finds it. "
+						"It's\n\t\t\t  a lot faster than the brute-force but still very slow.\n"
 			"\n"
 			"\n"
 			"Input:\n"

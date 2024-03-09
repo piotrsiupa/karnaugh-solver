@@ -55,5 +55,6 @@ private:
 	setHierarchy_t make(const sets_t &sets);
 
 public:
+	// The returned graph is topologicaly sorted in such a way that each subset is always before a set that uses it.
 	static setHierarchy_t makeSetHierarchy(const sets_t &sets) { return SubsetGraph().make(sets); }
 };

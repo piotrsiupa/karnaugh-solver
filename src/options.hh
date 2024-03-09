@@ -189,6 +189,12 @@ namespace options
 	extern Number<std::size_t> solutionsLimit;
 	
 	extern Flag skipOptimization;
+	enum class OptimizationHeuristic
+	{
+		BRUTE_FORCE,
+		EXHAUSTIVE,
+	};
+	extern Mapped<OptimizationHeuristic> optimizationHeuristics;
 	
 	extern std::vector<std::string_view> freeArgs;
 	

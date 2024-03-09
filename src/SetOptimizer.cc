@@ -4,6 +4,8 @@
 #include <cmath>
 #include <cstdint>
 
+#include "options.hh"
+
 
 template<typename SET, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
 typename SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::Result SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::extractCommonParts(const sets_t &oldSets, Progress &progress)
@@ -99,13 +101,13 @@ bool SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::chooseNextSubsets(subsetSele
 }
 
 template<typename SET, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
-std::pair<typename SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::subsetSelections_t, typename SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::usageCounts_t> SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::findBestSubsets(Progress &progress) const
+std::pair<typename SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::subsetSelections_t, typename SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::usageCounts_t> SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::findBestSubsets_bruteForce(Progress &progress) const
 {
 	subsetSelections_t subsetSelectionIndexes(graph.size()), bestSubsetSelections(graph.size());
 	usageCounts_t usageCounts(graph.size()), bestUsageCounts(graph.size());
 	for (const std::size_t endNode : endNodes)
 		usageCounts[endNode] = SIZE_MAX - graph.size();
-	std::size_t bestGates = SIZE_MAX;
+	gateCount_t bestGates = SIZE_MAX;
 	const auto estimateCompletion = [this, &subsetSelectionIndexes = std::as_const(subsetSelectionIndexes), &usageCounts = std::as_const(usageCounts)](){ return SetOptimizer::estimateCompletion(subsetSelectionIndexes, usageCounts); };
 	while (true)
 	{
@@ -130,6 +132,76 @@ std::pair<typename SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::subsetSelectio
 	}
 	
 	return {bestSubsetSelections, bestUsageCounts};
+}
+
+template<typename SET, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
+std::pair<typename SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::subsetSelections_t, typename SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::usageCounts_t> SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::findBestSubsets_exhaustive(Progress &progress) const
+{
+	auto progressStep = progress.makeCountingStepHelper(std::pow(Progress::completion_t(2), graph.size() - endNodes.size()));
+	
+	subsetSelections_t subsetSelections(graph.size()), bestSubsetSelections(graph.size());
+	
+	usageCounts_t usageCounts(graph.size()), bestUsageCounts(graph.size());
+	for (const std::size_t endNode : endNodes)
+		usageCounts[endNode] = SIZE_MAX;
+	
+	gateCount_t bestGates = SIZE_MAX;
+	
+	while (true)
+	{
+		progressStep.substep();
+		
+		for (std::size_t i = 0; i != graph.size(); ++i)
+		{
+			subsetSelection_t &subsetSelection = subsetSelections[i];
+			subsetSelection.clear();
+			for (const std::size_t &possibleSubset : graph[i].second)
+				if (usageCounts[possibleSubset] != 0)
+					subsetSelection.push_back(possibleSubset);
+		}
+		
+		const gateCount_t gates = countGates(subsetSelections, usageCounts);
+		if (gates < bestGates)
+		{
+			bestSubsetSelections = subsetSelections;
+			bestUsageCounts = usageCounts;
+			bestGates = gates;
+		}
+		
+		for (std::size_t i = 0;; ++i)
+		{
+			if (i == graph.size())
+				return {bestSubsetSelections, bestUsageCounts};
+			if (usageCounts[i] == SIZE_MAX)
+				continue;
+			if (usageCounts[i] == 0)
+			{
+				usageCounts[i] = 1;
+				break;
+			}
+			else
+			{
+				usageCounts[i] = 0;
+				continue;
+			}
+		}
+	}
+	
+}
+
+template<typename SET, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
+std::pair<typename SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::subsetSelections_t, typename SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::usageCounts_t> SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::findBestSubsets(Progress &progress) const
+{
+	switch (options::optimizationHeuristics.getValue())
+	{
+	case options::OptimizationHeuristic::BRUTE_FORCE:
+		return findBestSubsets_bruteForce(progress);
+	case options::OptimizationHeuristic::EXHAUSTIVE:
+		return findBestSubsets_exhaustive(progress);
+	}
+	
+	// unreachable
+	return {{}, {}};
 }
 
 template<typename SET, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
