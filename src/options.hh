@@ -20,7 +20,7 @@ namespace options
 		const char shortName;
 		
 	public:
-		Option(const std::string_view mainLongName, const std::string_view longNamesRegex, const char shortName = '\0') : mainLongName(mainLongName), longNamesRegex(longNamesRegex), shortName(shortName) {}
+		Option(const std::string_view mainLongName, const std::string_view longNamesRegex, const char shortName = '\0');
 		
 		[[nodiscard]] const std::string_view& getMainLongName() const { return mainLongName; }
 		[[nodiscard]] const std::string_view& getLongNamesRegex() const { return longNamesRegex; }
@@ -28,6 +28,13 @@ namespace options
 		
 		[[nodiscard]] virtual bool needsArgument() const = 0;
 		[[nodiscard]] virtual bool parse(std::string_view argument) = 0;
+		
+	protected:
+#ifdef NDEBUG
+		static void checkForCapturingGroups(const std::string_view) {}
+#else
+		static void checkForCapturingGroups(const std::string_view regex);
+#endif
 	};
 	
 	class NoArgOption : public Option
@@ -103,7 +110,7 @@ namespace options
 		void prepareRegex();
 		
 	public:
-		Mapped(const std::string_view mainLongName, const std::string_view longNamesRegex, const char shortName, Mappings &&mappings, const T defaultValue) : Option(mainLongName, longNamesRegex, shortName), mappings(std::move(mappings)), value(defaultValue) {}
+		Mapped(const std::string_view mainLongName, const std::string_view longNamesRegex, const char shortName, Mappings &&mappings, const T defaultValue);
 		
 		[[nodiscard]] bool needsArgument() const final { return true; }
 		[[nodiscard]] bool parse(std::string_view argument) final;
