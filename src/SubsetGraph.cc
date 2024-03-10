@@ -68,43 +68,40 @@ typename SubsetGraph<VALUE_T, CONTAINER>::groupedSets_t SubsetGraph<VALUE_T, CON
 template<typename VALUE_T, template<typename> class CONTAINER>
 void SubsetGraph<VALUE_T, CONTAINER>::makeInitial(const groupedSets_t &groupedSets)
 {
-	std::map<groupedSet_t, GroupedEntry> partialSets;
 	for (std::size_t i = 0; i != groupedSets.size(); ++i)
-	{
-		if (const auto foundPartialSet = partialSets.find(groupedSets[i]); foundPartialSet != partialSets.end())
-		{
-			foundPartialSet->second.setIds.push_back(i);
-			foundPartialSet->second.isOriginalSet = true;
-		}
+		if (const auto foundGrouped = std::ranges::find_if(grouped, [&groupedSet = groupedSets[i]](const GroupedEntry &entry){ return entry.groupIds == groupedSet; }); foundGrouped != grouped.end())
+			foundGrouped->setIds.push_back(i);
 		else
-		{
-			partialSets[groupedSets[i]] = GroupedEntry{groupedSets[i], {}, {i}, 0, true};
-		}
-		for (std::size_t j = i + 1; j != groupedSets.size(); ++j)
+			grouped.push_back(GroupedEntry{groupedSets[i], {}, {i}, 0, true});
+	
+	for (std::size_t i = 0; i != grouped.size(); ++i)
+	{
+		const std::size_t sizeBeforeLoop = grouped.size();
+		for (std::size_t j = i + 1; j != sizeBeforeLoop; ++j)
 		{
 			groupedSet_t partialSet;
-			std::ranges::set_intersection(groupedSets[i], groupedSets[j], std::back_inserter(partialSet));
+			std::ranges::set_intersection(grouped[i].groupIds, grouped[j].groupIds, std::back_inserter(partialSet));
 			if (partialSet.size() > 1 || (partialSet.size() == 1 && groups[partialSet[0]].size() > 1))
 			{
-				if (const auto foundPartialSet = partialSets.find(partialSet); foundPartialSet != partialSets.end())
+				auto foundGrouped = std::ranges::find_if(grouped, [&partialSet = std::as_const(partialSet)](const GroupedEntry &entry){ return entry.groupIds == partialSet; });
+				if (foundGrouped == grouped.end())
 				{
-					if (groupedSets[i].size() != partialSet.size())
-						foundPartialSet->second.setIds.push_back(i);
-					if (groupedSets[j].size() != partialSet.size())
-						foundPartialSet->second.setIds.push_back(j);
+					grouped.push_back(GroupedEntry{partialSet, {}, {}, 0, false});
+					foundGrouped = std::ranges::next(grouped.begin(), grouped.size() - 1);
 				}
-				else
-				{
-					partialSets[partialSet] = GroupedEntry{partialSet, {}, {i, j}, 0, false};
-				}
+				if (foundGrouped != std::ranges::next(grouped.begin(), i))
+					foundGrouped->setIds.insert(foundGrouped->setIds.end(), grouped[i].setIds.cbegin(), grouped[i].setIds.cend());
+				if (foundGrouped != std::ranges::next(grouped.begin(), j))
+					foundGrouped->setIds.insert(foundGrouped->setIds.end(), grouped[j].setIds.cbegin(), grouped[j].setIds.cend());
 			}
 		}
 	}
-	for (auto &partialSet : partialSets)
+	
+	for (auto &x : grouped)
 	{
-		std::set<setId_t> setIds(partialSet.second.setIds.begin(), partialSet.second.setIds.end());
-		partialSet.second.setIds = {setIds.begin(), setIds.end()};
-		grouped.push_back(std::move(partialSet.second));
+		std::ranges::sort(x.setIds);
+		const auto [eraseBegin, eraseEnd] = std::ranges::unique(x.setIds);
+		x.setIds.erase(eraseBegin, eraseEnd);
 	}
 }
 

@@ -32,10 +32,10 @@ Gate cost: NOTs = 0, ANDs = 3, ORs = 2
 
 Negated inputs: in0, in1, carry_in
 Products:
-	[0] = in0 && in1
-	[1] = in1 && carry_in
-	[2] = in0 && carry_in
-	[3] = carry_in && [0]
+	[0] = in1 && carry_in
+	[1] = in0 && carry_in
+	[2] = in0 && in1
+	[3] = carry_in && [2]
 	[4] = in0 && !in1 && !carry_in
 	[5] = !in0 && in1 && !carry_in
 	[6] = !in0 && !in1 && carry_in
