@@ -94,7 +94,7 @@ void SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::removeRedundantNodes(subsetS
 }
 
 template<typename SET, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
-std::pair<Progress::completion_t, Progress::completion_t> SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::estimateCompletion(const subsetSelection_t &subsetSelection, const possibleSubsets_t &possibleSubsets)
+std::pair<Progress::completion_t, Progress::completion_t> SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::estimateBruteForceCompletion(const subsetSelection_t &subsetSelection, const possibleSubsets_t &possibleSubsets)
 {
 	const Progress::completion_t stepCompletion = 1.0 / std::pow(2.0, possibleSubsets.size());
 	Progress::completion_t completion = 0.0, currentPositionWeight = 1.0;
@@ -113,14 +113,14 @@ std::pair<Progress::completion_t, Progress::completion_t> SetOptimizer<SET, VALU
 }
 
 template<typename SET, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
-Progress::completion_t SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::estimateCompletion(const subsetSelections_t &subsetSelections, const usageCounts_t &usageCounts) const
+Progress::completion_t SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::estimateBruteForceCompletion(const subsetSelections_t &subsetSelections, const usageCounts_t &usageCounts) const
 {
 	Progress::completion_t completion = 0.0;
 	for (std::size_t i = 0; i != subsetSelections.size(); ++i)
 	{
 		if (usageCounts[i] == 0)
 			continue;
-		const auto [partialStepCompletion, partialCompletion] = estimateCompletion(subsetSelections[i], graph[i].second);
+		const auto [partialStepCompletion, partialCompletion] = estimateBruteForceCompletion(subsetSelections[i], graph[i].second);
 		completion *= partialStepCompletion;
 		completion += partialCompletion;
 	}
@@ -128,7 +128,7 @@ Progress::completion_t SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::estimateCo
 }
 
 template<typename SET, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
-bool SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::chooseNextSubsets(subsetSelections_t &subsetSelectionsIndexes, usageCounts_t &usageCounts) const
+bool SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::chooseNextSubsetsForBruteForce(subsetSelections_t &subsetSelectionsIndexes, usageCounts_t &usageCounts) const
 {
 	try_again:
 	// Don't let the familiar sight of the loop make an impression that control flow of this function is in any way understandable without analyzing specific paths.
@@ -181,7 +181,7 @@ std::pair<typename SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::subsetSelectio
 	for (const std::size_t endNode : endNodes)
 		usageCounts[endNode] = SIZE_MAX - graph.size();
 	gateCount_t bestGates = SIZE_MAX;
-	const auto estimateCompletion = [this, &subsetSelectionIndexes = std::as_const(subsetSelectionIndexes), &usageCounts = std::as_const(usageCounts)](){ return SetOptimizer::estimateCompletion(subsetSelectionIndexes, usageCounts); };
+	const auto estimateCompletion = [this, &subsetSelectionIndexes = std::as_const(subsetSelectionIndexes), &usageCounts = std::as_const(usageCounts)](){ return SetOptimizer::estimateBruteForceCompletion(subsetSelectionIndexes, usageCounts); };
 	while (true)
 	{
 		progress.substep(estimateCompletion);
@@ -200,7 +200,7 @@ std::pair<typename SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::subsetSelectio
 			bestUsageCounts = usageCounts;
 			bestGates = gates;
 		}
-		if (!chooseNextSubsets(subsetSelectionIndexes, usageCounts))
+		if (!chooseNextSubsetsForBruteForce(subsetSelectionIndexes, usageCounts))
 			break;
 	}
 	

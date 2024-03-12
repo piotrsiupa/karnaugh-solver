@@ -53,9 +53,9 @@ private:
 	void removeSingleUseNonFinalNodes(subsetSelections_t &subsetSelections, usageCounts_t &usageCounts) const;
 	void removeRedundantNodes(subsetSelections_t &subsetSelections, usageCounts_t &usageCounts) const;
 	
-	static std::pair<Progress::completion_t, Progress::completion_t> estimateCompletion(const subsetSelection_t &subsetSelection, const possibleSubsets_t &possibleSubsets);
-	Progress::completion_t estimateCompletion(const subsetSelections_t &subsetSelections, const usageCounts_t &usageCounts) const;
-	bool chooseNextSubsets(subsetSelections_t &subsetSelections, usageCounts_t &usageCounts) const;
+	static std::pair<Progress::completion_t, Progress::completion_t> estimateBruteForceCompletion(const subsetSelection_t &subsetSelection, const possibleSubsets_t &possibleSubsets);
+	Progress::completion_t estimateBruteForceCompletion(const subsetSelections_t &subsetSelections, const usageCounts_t &usageCounts) const;
+	bool chooseNextSubsetsForBruteForce(subsetSelections_t &subsetSelections, usageCounts_t &usageCounts) const;
 	std::pair<subsetSelections_t, usageCounts_t> findBestSubsets_bruteForce(Progress &progress) const;
 	
 	std::pair<subsetSelections_t, usageCounts_t> findBestSubsets_exhaustive(Progress &progress) const;
