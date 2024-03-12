@@ -1,6 +1,7 @@
 #include "./SetOptimizer.hh"
 
 #include <algorithm>
+#include <cassert>
 #include <cmath>
 #include <cstdint>
 
@@ -21,37 +22,36 @@ typename SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::Result SetOptimizer<SET,
 }
 
 template<typename SET, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
-void SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::removeRedundantNodes(subsetSelections_t &subsetSelections, usageCounts_t &usageCounts) const
+void SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::switchToParentNodesIfAllowed(subsetSelections_t &subsetSelections, usageCounts_t &usageCounts) const
 {
-	// Move to parent nodes
 	for (std::size_t nodeIndex = 0; nodeIndex != subsetSelections.size(); ++nodeIndex)
 	{
 		if (usageCounts[nodeIndex] == 0)
 			continue;
 		bool changed = false;
 		subsetSelection_t &subsetSelection = subsetSelections[nodeIndex];
-		for (std::size_t checkedSubnodeIndex = 0; checkedSubnodeIndex != subsetSelection.size(); ++checkedSubnodeIndex)
+		for (std::size_t targetSubsetIndex = 0; targetSubsetIndex != subsetSelection.size(); ++targetSubsetIndex)
 		{
-			if (subsetSelections[subsetSelection[checkedSubnodeIndex]].empty())
+			if (subsetSelections[subsetSelection[targetSubsetIndex]].empty())  // There is no parents to switch to.
 				continue;
-			set_t missingElements = graph[nodeIndex].first;
+			set_t missingElementsWithoutTarget = graph[nodeIndex].first;
 			for (std::size_t i = 0; i != subsetSelection.size(); ++i)
-				if (i != checkedSubnodeIndex)
-					substractSet(missingElements, graph[subsetSelection[i]].first);
-			set_t selfProvidedElements = missingElements;
-			substractSet(selfProvidedElements, graph[subsetSelection[checkedSubnodeIndex]].first);
+				if (i != targetSubsetIndex)
+					substractSet(missingElementsWithoutTarget, graph[subsetSelection[i]].first);
+			set_t correctMissingElements = missingElementsWithoutTarget;
+			substractSet(correctMissingElements, graph[subsetSelection[targetSubsetIndex]].first);
 			repeat_subnode_index:
-			for (std::size_t subSubNode : subsetSelections[subsetSelection[checkedSubnodeIndex]])
+			for (std::size_t subSubNode : subsetSelections[subsetSelection[targetSubsetIndex]])
 			{
-				set_t missingElementsWithoutsubSubNode = missingElements;
-				substractSet(missingElementsWithoutsubSubNode, graph[subSubNode].first);
-				if (missingElementsWithoutsubSubNode == selfProvidedElements)
+				set_t missingElementsWithParentInstead = missingElementsWithoutTarget;
+				substractSet(missingElementsWithParentInstead, graph[subSubNode].first);
+				if (missingElementsWithParentInstead == correctMissingElements)
 				{
-					--usageCounts[subsetSelection[checkedSubnodeIndex]];
+					--usageCounts[subsetSelection[targetSubsetIndex]];
 					++usageCounts[subSubNode];
-					subsetSelection[checkedSubnodeIndex] = subSubNode;
+					subsetSelection[targetSubsetIndex] = subSubNode;
 					changed = true;
-					if (subsetSelections[subSubNode].empty())
+					if (subsetSelections[subSubNode].empty())  // There is no parent to switch to.
 						break;
 					else
 						goto repeat_subnode_index;
@@ -61,28 +61,36 @@ void SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::removeRedundantNodes(subsetS
 		if (changed)
 			std::ranges::sort(subsetSelection);
 	}
-	
-	// Remove single-use nodes
+}
+
+template<typename SET, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
+void SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::removeSingleUseNonFinalNodes(subsetSelections_t &subsetSelections, usageCounts_t &usageCounts) const
+{
 	for (std::size_t nodeIndex = 0; nodeIndex != subsetSelections.size(); ++nodeIndex)
 	{
 		if (usageCounts[nodeIndex] == 0)
 			continue;
 		subsetSelection_t &subsetSelection = subsetSelections[nodeIndex];
-		for (std::size_t i = 0; i != subsetSelection.size();)
+		for (std::size_t subsetIndex = 0; subsetIndex != subsetSelection.size();)
 		{
-			const std::size_t subset = subsetSelection[i];
+			const std::size_t subset = subsetSelection[subsetIndex];
 			if (usageCounts[subset] == 1)
 			{
-				subsetSelection.erase(subsetSelection.begin() + i);
+				subsetSelection.erase(subsetSelection.begin() + subsetIndex);
 				usageCounts[subset] = 0;
 				subsetSelection.insert(subsetSelection.end(), subsetSelections[subset].cbegin(), subsetSelections[subset].cend());
+				continue;
 			}
-			else
-			{
-				++i;
-			}
+			++subsetIndex;
 		}
 	}
+}
+
+template<typename SET, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
+void SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::removeRedundantNodes(subsetSelections_t &subsetSelections, usageCounts_t &usageCounts) const
+{
+	switchToParentNodesIfAllowed(subsetSelections, usageCounts);
+	removeSingleUseNonFinalNodes(subsetSelections, usageCounts);
 }
 
 template<typename SET, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
@@ -238,7 +246,7 @@ std::pair<typename SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::subsetSelectio
 		for (std::size_t i = 0;; ++i)
 		{
 			if (i == graph.size())
-				return {bestSubsetSelections, bestUsageCounts};
+				goto break_main_loop;
 			if (usageCounts[i] == SIZE_MAX)
 				continue;
 			if (usageCounts[i] == 0)
@@ -253,7 +261,25 @@ std::pair<typename SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::subsetSelectio
 			}
 		}
 	}
+	break_main_loop:
 	
+	for (std::size_t i = 0; i != bestSubsetSelections.size(); ++i)
+	{
+		if (bestUsageCounts[i] == 0)
+			continue;
+		for (std::size_t subset : bestSubsetSelections[i])
+			if (bestUsageCounts[subset] != SIZE_MAX)
+				++bestUsageCounts[subset];
+	}
+	assert(std::ranges::none_of(bestUsageCounts, [](std::size_t x){ return x == 1; }));
+	for (std::size_t i = 0; i != graph.size(); ++i)
+		if (bestUsageCounts[i] == SIZE_MAX)
+			bestUsageCounts[i] -= graph.size();
+		else if (bestUsageCounts[i] != 0)
+			--bestUsageCounts[i];
+	removeRedundantNodes(bestSubsetSelections, bestUsageCounts);
+	
+	return {bestSubsetSelections, bestUsageCounts};
 }
 
 template<typename SET, typename VALUE_ID, template<typename> class FINDER_CONTAINER>

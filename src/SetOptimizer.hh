@@ -49,6 +49,8 @@ protected:
 	virtual void substractSet(set_t &set, const set_t &otherSet) const = 0;
 	
 private:
+	void switchToParentNodesIfAllowed(subsetSelections_t &subsetSelections, usageCounts_t &usageCounts) const;
+	void removeSingleUseNonFinalNodes(subsetSelections_t &subsetSelections, usageCounts_t &usageCounts) const;
 	void removeRedundantNodes(subsetSelections_t &subsetSelections, usageCounts_t &usageCounts) const;
 	
 	static std::pair<Progress::completion_t, Progress::completion_t> estimateCompletion(const subsetSelection_t &subsetSelection, const possibleSubsets_t &possibleSubsets);
