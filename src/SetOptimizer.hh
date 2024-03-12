@@ -46,15 +46,23 @@ protected:
 	virtual void makeGraph(const typename SubsetFinder::setHierarchy_t &setHierarchy) = 0;
 	virtual gateCount_t countGates(const subsetSelections_t &subsetSelections, const usageCounts_t &usageCounts) const = 0;
 	virtual void substractSubsets(sets_t &sets, const subsetSelections_t &subsetSelections) = 0;
+	virtual void substractSet(set_t &set, const set_t &otherSet) const = 0;
 	
 private:
+	void removeRedundantNodes(subsetSelections_t &subsetSelections, usageCounts_t &usageCounts) const;
+	
 	static std::pair<Progress::completion_t, Progress::completion_t> estimateCompletion(const subsetSelection_t &subsetSelection, const possibleSubsets_t &possibleSubsets);
 	Progress::completion_t estimateCompletion(const subsetSelections_t &subsetSelections, const usageCounts_t &usageCounts) const;
 	bool chooseNextSubsets(subsetSelections_t &subsetSelections, usageCounts_t &usageCounts) const;
 	std::pair<subsetSelections_t, usageCounts_t> findBestSubsets_bruteForce(Progress &progress) const;
+	
 	std::pair<subsetSelections_t, usageCounts_t> findBestSubsets_exhaustive(Progress &progress) const;
+	
 	std::pair<subsetSelections_t, usageCounts_t> findBestSubsets(Progress &progress) const;
+	
 	void removeUnusedSubsets(subsetSelections_t &subsetSelections, usageCounts_t &usageCounts);
+	
 	sets_t makeSets() const;
+	
 	finalSets_t makeFinalSets(const sets_t &oldSets, const sets_t &newSets);
 };

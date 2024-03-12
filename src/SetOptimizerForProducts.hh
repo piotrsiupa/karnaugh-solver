@@ -18,4 +18,5 @@ protected:
 	void makeGraph(const SubsetFinder::setHierarchy_t &setHierarchy) final;
 	gateCount_t countGates(const subsetSelections_t &subsetSelections, const usageCounts_t &usageCounts) const final;
 	void substractSubsets(sets_t &sets, const subsetSelections_t &subsetSelections) final;
+	void substractSet(set_t &set, const set_t &otherSet) const { set.substract(otherSet); }
 };

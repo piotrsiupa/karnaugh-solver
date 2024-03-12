@@ -21,6 +21,71 @@ typename SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::Result SetOptimizer<SET,
 }
 
 template<typename SET, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
+void SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::removeRedundantNodes(subsetSelections_t &subsetSelections, usageCounts_t &usageCounts) const
+{
+	// Move to parent nodes
+	for (std::size_t nodeIndex = 0; nodeIndex != subsetSelections.size(); ++nodeIndex)
+	{
+		if (usageCounts[nodeIndex] == 0)
+			continue;
+		bool changed = false;
+		subsetSelection_t &subsetSelection = subsetSelections[nodeIndex];
+		for (std::size_t checkedSubnodeIndex = 0; checkedSubnodeIndex != subsetSelection.size(); ++checkedSubnodeIndex)
+		{
+			if (subsetSelections[subsetSelection[checkedSubnodeIndex]].empty())
+				continue;
+			set_t missingElements = graph[nodeIndex].first;
+			for (std::size_t i = 0; i != subsetSelection.size(); ++i)
+				if (i != checkedSubnodeIndex)
+					substractSet(missingElements, graph[subsetSelection[i]].first);
+			set_t selfProvidedElements = missingElements;
+			substractSet(selfProvidedElements, graph[subsetSelection[checkedSubnodeIndex]].first);
+			repeat_subnode_index:
+			for (std::size_t subSubNode : subsetSelections[subsetSelection[checkedSubnodeIndex]])
+			{
+				set_t missingElementsWithoutsubSubNode = missingElements;
+				substractSet(missingElementsWithoutsubSubNode, graph[subSubNode].first);
+				if (missingElementsWithoutsubSubNode == selfProvidedElements)
+				{
+					--usageCounts[subsetSelection[checkedSubnodeIndex]];
+					++usageCounts[subSubNode];
+					subsetSelection[checkedSubnodeIndex] = subSubNode;
+					changed = true;
+					if (subsetSelections[subSubNode].empty())
+						break;
+					else
+						goto repeat_subnode_index;
+				}
+			}
+		}
+		if (changed)
+			std::ranges::sort(subsetSelection);
+	}
+	
+	// Remove single-use nodes
+	for (std::size_t nodeIndex = 0; nodeIndex != subsetSelections.size(); ++nodeIndex)
+	{
+		if (usageCounts[nodeIndex] == 0)
+			continue;
+		subsetSelection_t &subsetSelection = subsetSelections[nodeIndex];
+		for (std::size_t i = 0; i != subsetSelection.size();)
+		{
+			const std::size_t subset = subsetSelection[i];
+			if (usageCounts[subset] == 1)
+			{
+				subsetSelection.erase(subsetSelection.begin() + i);
+				usageCounts[subset] = 0;
+				subsetSelection.insert(subsetSelection.end(), subsetSelections[subset].cbegin(), subsetSelections[subset].cend());
+			}
+			else
+			{
+				++i;
+			}
+		}
+	}
+}
+
+template<typename SET, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
 std::pair<Progress::completion_t, Progress::completion_t> SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::estimateCompletion(const subsetSelection_t &subsetSelection, const possibleSubsets_t &possibleSubsets)
 {
 	const Progress::completion_t stepCompletion = 1.0 / std::pow(2.0, possibleSubsets.size());
@@ -130,6 +195,8 @@ std::pair<typename SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::subsetSelectio
 		if (!chooseNextSubsets(subsetSelectionIndexes, usageCounts))
 			break;
 	}
+	
+	removeRedundantNodes(bestSubsetSelections, bestUsageCounts);
 	
 	return {bestSubsetSelections, bestUsageCounts};
 }
