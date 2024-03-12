@@ -58,6 +58,8 @@ private:
 	bool chooseNextSubsetsForBruteForce(subsetSelections_t &subsetSelections, usageCounts_t &usageCounts) const;
 	std::pair<subsetSelections_t, usageCounts_t> findBestSubsets_bruteForce(Progress &progress) const;
 	
+	bool chooseNextSubsetsForExhaustive(usageCounts_t &usageCounts) const;
+	void cleanupResultOfExhaustive(subsetSelections_t &subsetSelections, usageCounts_t &usageCounts) const;
 	std::pair<subsetSelections_t, usageCounts_t> findBestSubsets_exhaustive(Progress &progress) const;
 	
 	std::pair<subsetSelections_t, usageCounts_t> findBestSubsets(Progress &progress) const;

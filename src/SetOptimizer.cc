@@ -210,6 +210,47 @@ std::pair<typename SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::subsetSelectio
 }
 
 template<typename SET, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
+bool SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::chooseNextSubsetsForExhaustive(usageCounts_t &usageCounts) const
+{
+	for (std::size_t i = 0; i != graph.size(); ++i)
+	{
+		if (usageCounts[i] == SIZE_MAX)
+			continue;
+		if (usageCounts[i] == 0)
+		{
+			usageCounts[i] = 1;
+			return true;
+		}
+		else
+		{
+			usageCounts[i] = 0;
+			continue;
+		}
+	}
+	return false;
+}
+
+template<typename SET, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
+void SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::cleanupResultOfExhaustive(subsetSelections_t &subsetSelections, usageCounts_t &usageCounts) const
+{
+	for (std::size_t i = 0; i != subsetSelections.size(); ++i)
+	{
+		if (usageCounts[i] == 0)
+			continue;
+		for (std::size_t subset : subsetSelections[i])
+			if (usageCounts[subset] != SIZE_MAX)
+				++usageCounts[subset];
+	}
+	assert(std::ranges::none_of(usageCounts, [](std::size_t x){ return x == 1; }));
+	
+	for (std::size_t i = 0; i != graph.size(); ++i)
+		if (usageCounts[i] == SIZE_MAX)
+			usageCounts[i] -= graph.size();
+		else if (usageCounts[i] != 0)
+			--usageCounts[i];
+}
+
+template<typename SET, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
 std::pair<typename SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::subsetSelections_t, typename SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::usageCounts_t> SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::findBestSubsets_exhaustive(Progress &progress) const
 {
 	auto progressStep = progress.makeCountingStepHelper(std::pow(Progress::completion_t(2), graph.size() - endNodes.size()));
@@ -243,40 +284,11 @@ std::pair<typename SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::subsetSelectio
 			bestGates = gates;
 		}
 		
-		for (std::size_t i = 0;; ++i)
-		{
-			if (i == graph.size())
-				goto break_main_loop;
-			if (usageCounts[i] == SIZE_MAX)
-				continue;
-			if (usageCounts[i] == 0)
-			{
-				usageCounts[i] = 1;
-				break;
-			}
-			else
-			{
-				usageCounts[i] = 0;
-				continue;
-			}
-		}
+		if (!chooseNextSubsetsForExhaustive(usageCounts))
+			break;
 	}
-	break_main_loop:
 	
-	for (std::size_t i = 0; i != bestSubsetSelections.size(); ++i)
-	{
-		if (bestUsageCounts[i] == 0)
-			continue;
-		for (std::size_t subset : bestSubsetSelections[i])
-			if (bestUsageCounts[subset] != SIZE_MAX)
-				++bestUsageCounts[subset];
-	}
-	assert(std::ranges::none_of(bestUsageCounts, [](std::size_t x){ return x == 1; }));
-	for (std::size_t i = 0; i != graph.size(); ++i)
-		if (bestUsageCounts[i] == SIZE_MAX)
-			bestUsageCounts[i] -= graph.size();
-		else if (bestUsageCounts[i] != 0)
-			--bestUsageCounts[i];
+	cleanupResultOfExhaustive(bestSubsetSelections, bestUsageCounts);
 	removeRedundantNodes(bestSubsetSelections, bestUsageCounts);
 	
 	return {bestSubsetSelections, bestUsageCounts};
