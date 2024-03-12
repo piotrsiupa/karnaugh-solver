@@ -82,7 +82,7 @@ However, defining the preprocessor macro `NDEBUG` for all files is strongly reco
 
 ## License
 
-This program is distributed under the MIT license. A full copy of it is available in the `LICENSE` file.
+This program is distributed under the MIT license. A full copy of it is available in the [`LICENSE`](LICENSE) file.
 
 
 ## Input format
