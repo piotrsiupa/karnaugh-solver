@@ -10,7 +10,8 @@ else:
 AddOption('--dbg', action='store_true', help='Debug build. (add debug info and turn off optimization)')
 if GetOption('dbg'):
     if 'msvc' in env['TOOLS']:
-        Exit('Debug build is not supported for MSVC in this script')
+        env.Append(CCFLAGS=['/Zi'])
+        env.Append(LINKERFLAGS=['/DEBUG'])
     else:
         env.Append(CCFLAGS=['-g3'])
 else:
