@@ -7,11 +7,23 @@ if GetOption('clang'):
 else:
     env = Environment()  # default toolchain
 
+AddOption('--dbg', action='store_true', help='Debug build. (add debug info and turn off optimization)')
+if GetOption('dbg'):
+    if 'msvc' in env['TOOLS']:
+        Exit('Debug build is not supported for MSVC in this script')
+    else:
+        env.Append(CCFLAGS=['-g3'])
+else:
+    if 'msvc' in env['TOOLS']:
+        env.Append(CCFLAGS=['/O2'])
+    else:
+        env.Append(CCFLAGS=['-O3'])
+
 if 'msvc' in env['TOOLS']:
-    env.Append(CCFLAGS=['/O2', '/W4', '/std:c++17', '/FS', '/EHsc'])
+    env.Append(CCFLAGS=['/W4', '/std:c++17', '/FS', '/EHsc'])
     env.Append(CPPDEFINES=['_CRT_SECURE_NO_WARNINGS'])
 else:
-    env.Append(CCFLAGS=['-O3', '-Wall', '-Wextra', '-pedantic', '-std=c++17'])
+    env.Append(CCFLAGS=['-Wall', '-Wextra', '-pedantic', '-std=c++17'])
 if 'g++' in env['TOOLS'] or 'clang++' in env['TOOLS']:
     env.Append(CCFLAGS=['-fdiagnostics-color=always'])
 if 'clang++' in env['TOOLS']:
