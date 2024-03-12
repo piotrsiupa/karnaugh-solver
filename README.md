@@ -249,7 +249,7 @@ This format cannot be used with common subexpression elimination. (It implies `-
 It uses Unicode characters for boolean algebra operators, which may interfere with some programs like older terminals.
 To bypass that issue, other variants of this output format are available. They replace the Unicode characters with [ASCII art](tests/tricky_one/--format=math-ascii), [names of operations](tests/tricky_one/--format=math-names) or [programming operators](tests/tricky_one/--format=math-prog).
 
-([file](tests/tricky_0/--format=math-formal)
+([file](tests/tricky_one/--format=math-formal))
 ```
 tricky_0(a, b, c, d) = (¬a ∧ ¬c) ∨ (a ∧ b ∧ d)
 tricky_1(a, b, c, d) = (a ∧ b) ∨ (b ∧ d)
