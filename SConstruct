@@ -8,14 +8,11 @@ else:
     env = Environment()  # default toolchain
 
 if 'msvc' in env['TOOLS']:
-    # Flags for MSVC.
     env.Append(CCFLAGS=['/O2', '/W4', '/std:c++17', '/FS', '/EHsc'])
     env.Append(CPPDEFINES=['_CRT_SECURE_NO_WARNINGS'])
 else:
-    # Non-MSVC compilers tends to use these flags.
     env.Append(CCFLAGS=['-O3', '-Wall', '-Wextra', '-pedantic', '-std=c++17'])
 if 'g++' in env['TOOLS'] or 'clang++' in env['TOOLS']:
-    # This option is supported by GCC and Clang but probably not other compilers.
     env.Append(CCFLAGS=['-fdiagnostics-color=always'])
 if 'clang++' in env['TOOLS']:
     # Clang doesn't conform to the standard by default. This fixes it.
@@ -28,7 +25,7 @@ if GetOption('dev'):
     else:
         env.Append(CCFLAGS=['-Werror'])
 else:
-    # Turm off assertions.
+    # Turn off assertions.
     env.Append(CPPDEFINES=['NDEBUG'])
     # Set multithreaded build as default.
     SetOption('num_jobs', multiprocessing.cpu_count())
