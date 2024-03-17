@@ -1,0 +1,13 @@
+library IEEE;
+use IEEE.std_logic_1164.all;
+
+entity no_tables is
+	port(
+		a, b, c, d : in std_logic
+	);
+end no_tables;
+
+architecture behavioural of no_tables is
+begin
+	
+end behavioural;

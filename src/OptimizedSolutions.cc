@@ -670,19 +670,18 @@ void OptimizedSolutions::printVhdlFinalSums(std::ostream &o, const Names &functi
 				printVhdlSumBody(o, sumId);
 			o << ";\n";
 		}
-		o << "\t\n";
 	}
 }
 
 void OptimizedSolutions::printCppFinalSums(std::ostream &o, const Names &functionNames) const
 {
+	o << "\t// Results\n";
 	if (finalSums.empty())
 	{
 		o << "\treturn {};\n";
 	}
 	else
 	{
-		o << "\t// Results\n";
 		o << "\toutput_t o = {};\n";
 		for (std::size_t i = 0; i != finalSums.size(); ++i)
 		{
@@ -887,6 +886,7 @@ void OptimizedSolutions::printVhdl(std::ostream &o, const Names &functionNames) 
 	printVhdlProducts(o);
 	printVhdlSums(o);
 	printVhdlFinalSums(o, functionNames);
+	o << "\t\n";
 }
 
 void OptimizedSolutions::printCpp(std::ostream &o, const Names &functionNames) const

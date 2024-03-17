@@ -146,9 +146,9 @@ void Karnaughs::printVerilogOptimizedSolution(const Names &functionNames) const
 void Karnaughs::printVhdlBestSolutions(const Names &functionNames) const
 {
 	std::cout << "begin\n";
+	std::cout << "\t\n";
 	if (!karnaughs.empty())
 	{
-		std::cout << "\t\n";
 		for (std::size_t i = 0; i != karnaughs.size(); ++i)
 		{
 			std::cout << '\t';
