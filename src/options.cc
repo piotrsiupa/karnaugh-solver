@@ -135,8 +135,16 @@ namespace options
 	Flag helpOptions({"help-options", "truncated-help", "short-help"}, 'H');
 	Flag version({"version"}, 'v');
 	
-	Trilean prompt({"prompt", "prompts", "hint", "hints"}, 'p', [](){ return ::terminalInput; });
-	Trilean status({"status", "progress", "progress-bar", "progress-bars", "stat", "stats"}, 's', [](){ return ::terminalStderr; });
+	Trilean prompt({"prompt", "prompts", "hint", "hints"}, 'p', [](){
+			return ::terminalInput;
+		});
+	Trilean status({"status", "progress", "progress-bar", "progress-bars", "stat", "stats"}, 's', [](){
+#ifdef NO_DEFAULT_PROGRESS
+			return false;
+#else
+			return ::terminalStderr;
+#endif
+		});
 	
 	Mapped<OutputFormat, OutputFormat::HUMAN_LONG> outputFormat({"format", "output-format", "notation", "output-notation"}, 'f', {
 			{"human-long", "human(?:[-_]readable)?[-_](?:long|big)|(?:long|big)[-_]human(?:[-_]readable)?|h[-_]?(?:r[-_]?)?l|l[-_]?h(?:[-_]?r)?|full|default", OutputFormat::HUMAN_LONG},

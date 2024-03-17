@@ -14,6 +14,7 @@ if GetOption('dbg'):
         env.Append(LINKERFLAGS=['/DEBUG'])
     else:
         env.Append(CCFLAGS=['-g3'])
+    env.Append(CPPDEFINES=['NO_DEFAULT_PROGRESS'])
 else:
     if 'msvc' in env['TOOLS']:
         env.Append(CCFLAGS=['/O2'])
