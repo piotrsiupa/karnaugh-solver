@@ -1,0 +1,39 @@
+digraph no_input
+{
+	subgraph constants
+	{
+		node [shape=octagon, style=dashed];
+		true;
+		false;
+	}
+	subgraph function_0
+	{
+		subgraph sum
+		{
+			node [shape=rectangle, style=filled];
+			edge [taillabel="||"];
+			f0 [label="always_true"];
+			f0 -> true;
+		}
+	}
+	subgraph function_1
+	{
+		subgraph sum
+		{
+			node [shape=rectangle, style=filled];
+			edge [taillabel="||"];
+			f1 [label="always_false"];
+			f1 -> false;
+		}
+	}
+	subgraph function_2
+	{
+		subgraph sum
+		{
+			node [shape=rectangle, style=filled];
+			edge [taillabel="||"];
+			f2 [label="dont_care"];
+			f2 -> false;
+		}
+	}
+}

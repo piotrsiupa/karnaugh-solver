@@ -131,6 +131,7 @@ namespace options
 		HUMAN_LONG,
 		HUMAN,
 		HUMAN_SHORT,
+		GRAPH,
 		VERILOG,
 		VHDL,
 		CPP,

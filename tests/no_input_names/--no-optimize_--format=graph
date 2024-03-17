@@ -1,0 +1,30 @@
+digraph no_input_names
+{
+	subgraph inputs
+	{
+		node [shape=house];
+		i0 [label="i0"];
+		i1 [label="i1"];
+		i2 [label="i2"];
+		i3 [label="i3"];
+	}
+	subgraph function_0
+	{
+		subgraph products
+		{
+			node [shape=ellipse];
+			edge [taillabel="&"];
+			f0_s0 [label="[0]"];
+			f0_s0 -> i1, i3;
+			f0_s1 [label="[1]"];
+			f0_s1 -> i0, i2, i3;
+		}
+		subgraph sum
+		{
+			node [shape=rectangle, style=filled];
+			edge [taillabel="||"];
+			f0 [label="f0"];
+			f0 -> f0_s0, f0_s1;
+		}
+	}
+}

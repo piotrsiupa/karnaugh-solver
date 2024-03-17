@@ -82,6 +82,29 @@ void Implicant::printHuman(std::ostream &o, const bool parentheses) const
 		o << ')';
 }
 
+void Implicant::printGraph(std::ostream &o) const
+{
+	if (bitCount == 0)
+	{
+		if (isError())
+			o << "false";
+		else
+			o << "true";
+		return;
+	}
+	bool first = true;
+	for (const auto &[bitIndex, negated] : splitBits())
+	{
+		if (first)
+			first = false;
+		else
+			o << ", ";
+		if (negated)
+			o << 'n';
+		o << 'i' << static_cast<unsigned>(bitIndex);
+	}
+}
+
 void Implicant::printVerilog(std::ostream &o, const bool parentheses) const
 {
 	if (bitCount == 0)

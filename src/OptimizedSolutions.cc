@@ -85,6 +85,11 @@ void OptimizedSolutions::printHumanId(std::ostream &o, const id_t id) const
 	o << '[' << normalizedIds[id] << ']';
 }
 
+void OptimizedSolutions::printGraphId(std::ostream &o, const id_t id) const
+{
+	o << 's' << normalizedIds[id];
+}
+
 void OptimizedSolutions::printVerilogId(std::ostream &o, const id_t id) const
 {
 	if (isProduct(id))
@@ -134,6 +139,27 @@ void OptimizedSolutions::printHumanNegatedInputs(std::ostream &o) const
 	o << '\n';
 }
 
+void OptimizedSolutions::printGraphNegatedInputs(std::ostream &o) const
+{
+	if (negatedInputs == 0)
+		return;
+	o << "\tsubgraph negated_inputs\n";
+	o << "\t{\n";
+	o << "\t\tnode [shape=diamond];\n";
+	o << "\t\tedge [taillabel=\"!\"];\n";
+	for (Minterm i = 0; i != ::bits; ++i)
+	{
+		if ((negatedInputs & (1 << (::bits - i - 1))) != 0)
+		{
+			o << "\t\tni" << i << " [label=\"!";
+			::inputNames.printGraphName(o, i);
+			o << "\"];\n";
+			o << "\t\tni" << i << " -> i" << i << ";\n";
+		}
+	}
+	o << "\t}\n";
+}
+
 void OptimizedSolutions::printHumanProductBody(std::ostream &o, const id_t productId) const
 {
 	const auto &[primeImplicant, ids] = getProduct(productId);
@@ -168,6 +194,58 @@ void OptimizedSolutions::printHumanProducts(std::ostream &o) const
 			continue;
 		printHumanProduct(o, makeProductId(i));
 	}
+}
+
+void OptimizedSolutions::printGraphProductBody(std::ostream &o, const id_t productId) const
+{
+	const auto &[primeImplicant, ids] = getProduct(productId);
+	bool needsComma = primeImplicant != Implicant::all();
+	if (needsComma || ids.empty())
+		primeImplicant.printGraph(o);
+	for (const auto &id : ids)
+	{
+		if (needsComma)
+			o << ", ";
+		else
+			needsComma = true;
+		printGraphId(o, id);
+	}
+}
+
+void OptimizedSolutions::printGraphProduct(std::ostream &o, const id_t productId) const
+{
+	o << "\t\t";
+	printGraphId(o, productId);
+	o << " [label=\"";
+	printHumanId(o, productId);
+	o << "\"];";
+	o << '\n';
+	o << "\t\t";
+	printGraphId(o, productId);
+	o << " -> ";
+	printGraphProductBody(o, productId);
+	o << ";\n";
+}
+
+void OptimizedSolutions::printGraphProducts(std::ostream &o) const
+{
+	bool anyIsPrinted = false;
+	for (std::size_t i = 0; i != products.size(); ++i)
+	{
+		if (!isProductWorthPrinting(makeProductId(i)))
+			continue;
+		if (!anyIsPrinted)
+		{
+			anyIsPrinted = true;
+			o << "\tsubgraph products\n";
+			o << "\t{\n";
+			o << "\t\tnode [shape=ellipse];\n";
+			o << "\t\tedge [taillabel=\"&\"];\n";
+		}
+		printGraphProduct(o, makeProductId(i));
+	}
+	if (anyIsPrinted)
+		o << "\t}\n";
 }
 
 void OptimizedSolutions::printVerilogProductBody(std::ostream &o, const id_t productId) const
@@ -334,6 +412,57 @@ void OptimizedSolutions::printHumanSums(std::ostream &o) const
 	}
 }
 
+void OptimizedSolutions::printGraphSumBody(std::ostream &o, const id_t sumId) const
+{
+	bool first = true;
+	for (const auto &partId : getSum(sumId))
+	{
+		if (first)
+			first = false;
+		else
+			o << ", ";
+		if (!isProduct(partId) || isProductWorthPrinting(partId))
+			printGraphId(o, partId);
+		else
+			getProduct(partId).first.printGraph(o);
+	}
+}
+
+void OptimizedSolutions::printGraphSum(std::ostream &o, const id_t sumId) const
+{
+	o << "\t\t";
+	printGraphId(o, sumId);
+	o << " [label=\"";
+	printHumanId(o, sumId);
+	o << "\"];\n";
+	o << "\t\t";
+	printGraphId(o, sumId);
+	o << " -> ";
+	printGraphSumBody(o, sumId);
+	o << ";\n";
+}
+
+void OptimizedSolutions::printGraphSums(std::ostream &o) const
+{
+	bool anyIsPrinted = false;
+	for (std::size_t i = 0; i != sums.size(); ++i)
+	{
+		if (!isSumWorthPrinting(makeSumId(i), false))
+			continue;
+		if (!anyIsPrinted)
+		{
+			anyIsPrinted = true;
+			o << "\tsubgraph sums\n";
+			o << "\t{\n";
+			o << "\t\tnode [shape=rectangle];\n";
+			o << "\t\tedge [taillabel=\"||\"];\n";
+		}
+		printGraphSum(o, makeSumId(i));
+	}
+	if (anyIsPrinted)
+		o << "\t}\n";
+}
+
 void OptimizedSolutions::printVerilogSumBody(std::ostream &o, const id_t sumId) const
 {
 	bool first = true;
@@ -476,6 +605,30 @@ void OptimizedSolutions::printHumanFinalSums(std::ostream &o, const Names &funct
 			printHumanSumBody(o, sumId);
 		o << '\n';
 	}
+}
+
+void OptimizedSolutions::printGraphFinalSums(std::ostream &o, const Names &functionNames) const
+{
+	if (finalSums.empty())
+		return;
+	o << "\tsubgraph final_sums\n";
+	o << "\t{\n";
+	o << "\t\tnode [shape=rectangle, style=filled];\n";
+	o << "\t\tedge [taillabel=\"||\"];\n";
+	for (std::size_t i = 0; i != finalSums.size(); ++i)
+	{
+		o << "\t\tf" << i << " [label=\"";
+		functionNames.printGraphName(o, i);
+		o << "\"];\n";
+		o << "\t\tf" << i << " -> ";
+		const id_t sumId = finalSums[i];
+		if (isSumWorthPrinting(sumId, false))
+			printGraphId(o, sumId);
+		else
+			printGraphSumBody(o, sumId);
+		o << ";\n";
+	}
+	o << "\t}\n";
 }
 
 void OptimizedSolutions::printVerilogFinalSums(std::ostream &o, const Names &functionNames) const
@@ -672,6 +825,28 @@ OptimizedSolutions::OptimizedSolutions(const solutions_t &solutions, Progress &p
 #endif
 }
 
+std::pair<bool, bool> OptimizedSolutions::checkForUsedConstants() const
+{
+	bool usesFalse = false, usesTrue = false;
+	for (const id_t sumId : finalSums)
+	{
+		const sum_t &sum = getSum(sumId);
+		if (sum.size() >= 2)
+			continue;
+		const id_t productId = sum.front();
+		if (!isProduct(productId))
+			continue;
+		const product_t &product = getProduct(productId);
+		if (product.first.getBitCount() != 0)
+			continue;
+		if (product.first.isError())
+			usesFalse = true;
+		else
+			usesTrue = true;
+	}
+	return {usesFalse, usesTrue};
+}
+
 void OptimizedSolutions::printHuman(std::ostream &o, const Names &functionNames) const
 {
 	generateHumanIds();
@@ -684,6 +859,15 @@ void OptimizedSolutions::printHuman(std::ostream &o, const Names &functionNames)
 		o << '\n';
 		printGateCost(o, false);
 	}
+}
+
+void OptimizedSolutions::printGraph(std::ostream &o, const Names &functionNames) const
+{
+	generateHumanIds();
+	printGraphNegatedInputs(o);
+	printGraphProducts(o);
+	printGraphSums(o);
+	printGraphFinalSums(o, functionNames);
 }
 
 void OptimizedSolutions::printVerilog(std::ostream &o, const Names &functionNames) const

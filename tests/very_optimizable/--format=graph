@@ -1,0 +1,71 @@
+digraph very_optimizable
+{
+	subgraph inputs
+	{
+		node [shape=house];
+		i0 [label="a"];
+		i1 [label="b"];
+		i2 [label="c"];
+		i3 [label="d"];
+	}
+	subgraph negated_inputs
+	{
+		node [shape=diamond];
+		edge [taillabel="!"];
+		ni0 [label="!a"];
+		ni0 -> i0;
+		ni1 [label="!b"];
+		ni1 -> i1;
+		ni2 [label="!c"];
+		ni2 -> i2;
+		ni3 [label="!d"];
+		ni3 -> i3;
+	}
+	subgraph products
+	{
+		node [shape=ellipse];
+		edge [taillabel="&"];
+		s0 [label="[0]"];
+		s0 -> i0, i1, i2, i3;
+		s1 [label="[1]"];
+		s1 -> ni2, i3;
+		s2 [label="[2]"];
+		s2 -> ni0, i1;
+		s3 [label="[3]"];
+		s3 -> s2, s1;
+		s4 [label="[4]"];
+		s4 -> i2, ni3;
+		s5 [label="[5]"];
+		s5 -> s2, s4;
+		s6 [label="[6]"];
+		s6 -> i0, ni1;
+		s7 [label="[7]"];
+		s7 -> s1, s6;
+		s8 [label="[8]"];
+		s8 -> s4, s6;
+		s9 [label="[9]"];
+		s9 -> ni0, ni1, ni2, ni3;
+	}
+	subgraph sums
+	{
+		node [shape=rectangle];
+		edge [taillabel="||"];
+		s10 [label="[10]"];
+		s10 -> s5, s7;
+		s11 [label="[11]"];
+		s11 -> s3, s10;
+	}
+	subgraph final_sums
+	{
+		node [shape=rectangle, style=filled];
+		edge [taillabel="||"];
+		f0 [label="first"];
+		f0 -> s8, s11;
+		f1 [label="second"];
+		f1 -> s0, s11;
+		f2 [label="third"];
+		f2 -> s11;
+		f3 [label="fourth"];
+		f3 -> s9, s10;
+	}
+}

@@ -9,6 +9,62 @@
 #include "Progress.hh"
 
 
+void Karnaughs::printGraphInputs() const
+{
+	if (::bits == 0)
+		return;
+	std::cout << "\tsubgraph inputs\n";
+	std::cout << "\t{\n";
+	std::cout << "\t\tnode [shape=house];\n";
+	for (Minterm i = 0; i != ::bits; ++i)
+	{
+		std::cout << "\t\ti" << i << " [label=\"";
+		::inputNames.printGraphName(std::cout, i);
+		std::cout << "\"];\n";
+	}
+	std::cout << "\t}\n";
+}
+
+std::pair<bool, bool> Karnaughs::checkForUsedConstants() const
+{
+	if (options::skipOptimization.isRaised())
+	{
+		bool anyUsesFalse = false, anyUsesTrue = false;
+		for (const Solution &solution : bestSolutions)
+		{
+			const auto [usesFalse, usesTrue] = solution.checkForUsedConstants();
+			anyUsesFalse |= usesFalse;
+			anyUsesTrue |= usesTrue;
+		}
+		return {anyUsesFalse, anyUsesTrue};
+	}
+	else
+	{
+		return optimizedSolutions.checkForUsedConstants();
+	}
+}
+
+void Karnaughs::printGraphConstants() const
+{
+	const auto [usesFalse, usesTrue] = checkForUsedConstants();
+	if (!usesFalse && !usesTrue)
+		return;
+	std::cout << "\tsubgraph constants\n";
+	std::cout << "\t{\n";
+	std::cout << "\t\tnode [shape=octagon, style=dashed];\n";
+	if (usesTrue)
+		std::cout << "\t\ttrue;\n";
+	if (usesFalse)
+		std::cout << "\t\tfalse;\n";
+	std::cout << "\t}\n";
+}
+
+void Karnaughs::printGraphRoots() const
+{
+	printGraphInputs();
+	printGraphConstants();
+}
+
 void Karnaughs::printHumanBestSolutions() const
 {
 	bool first = true;
@@ -28,6 +84,13 @@ void Karnaughs::printHumanBestSolutions() const
 			std::cout << '\n';
 		karnaughs[i].printHumanSolution(bestSolutions[i]);
 	}
+}
+
+void Karnaughs::printGraphBestSolutions() const
+{
+	std::size_t idShift = 0;
+	for (std::size_t i = 0; i != karnaughs.size(); ++i)
+		idShift = karnaughs[i].printGraphSolution(bestSolutions[i], i, idShift);
 }
 
 bool Karnaughs::shouldFunctionNamesBeUsed() const
@@ -51,6 +114,12 @@ void Karnaughs::printHumanOptimizedSolution() const
 {
 	const Names functionNames = gatherFunctionNames();
 	optimizedSolutions.printHuman(std::cout, functionNames);
+}
+
+void Karnaughs::printGraphOptimizedSolution() const
+{
+	const Names functionNames = gatherFunctionNames();
+	optimizedSolutions.printGraph(std::cout, functionNames);
 }
 
 void Karnaughs::printVerilogBestSolutions(const Names &functionNames) const
@@ -292,6 +361,18 @@ void Karnaughs::printHuman()
 	}
 }
 
+void Karnaughs::printGraph()
+{
+	std::cout << "digraph " << getName() << '\n';
+	std::cout << "{\n";
+	printGraphRoots();
+	if (options::skipOptimization.isRaised())
+		printGraphBestSolutions();
+	else
+		printGraphOptimizedSolution();
+	std::cout << "}\n";
+}
+
 void Karnaughs::printVerilog()
 {
 	std::cout << "module " << getName() << " (\n";
@@ -466,6 +547,9 @@ void Karnaughs::print()
 	case options::OutputFormat::HUMAN:
 	case options::OutputFormat::HUMAN_SHORT:
 		printHuman();
+		break;
+	case options::OutputFormat::GRAPH:
+		printGraph();
 		break;
 	case options::OutputFormat::VERILOG:
 		printVerilog();

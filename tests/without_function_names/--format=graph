@@ -1,0 +1,38 @@
+digraph without_function_names
+{
+	subgraph inputs
+	{
+		node [shape=house];
+		i0 [label="a"];
+		i1 [label="b"];
+		i2 [label="c"];
+		i3 [label="d"];
+	}
+	subgraph negated_inputs
+	{
+		node [shape=diamond];
+		edge [taillabel="!"];
+		ni0 [label="!a"];
+		ni0 -> i0;
+		ni1 [label="!b"];
+		ni1 -> i1;
+	}
+	subgraph products
+	{
+		node [shape=ellipse];
+		edge [taillabel="&"];
+		s0 [label="[0]"];
+		s0 -> ni0, ni1;
+		s1 [label="[1]"];
+		s1 -> i2, s0;
+	}
+	subgraph final_sums
+	{
+		node [shape=rectangle, style=filled];
+		edge [taillabel="||"];
+		f0 [label="f0"];
+		f0 -> s0;
+		f1 [label="f1"];
+		f1 -> s1;
+	}
+}

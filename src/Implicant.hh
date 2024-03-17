@@ -62,6 +62,7 @@ public:
 	static Implicant merge(const Implicant &x, const Implicant &y);
 	
 	void printHuman(std::ostream &o, const bool parentheses) const;
+	void printGraph(std::ostream &o) const;
 	void printVerilog(std::ostream &o, const bool parentheses) const;
 	void printVhdl(std::ostream &o, const bool parentheses) const;
 	void printCpp(std::ostream &o, const bool parentheses) const;

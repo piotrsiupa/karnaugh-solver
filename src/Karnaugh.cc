@@ -233,6 +233,15 @@ void Karnaugh::printHumanSolution(const Solution &solution) const
 	Solution(solution).sort().printHuman(std::cout);
 }
 
+std::size_t Karnaugh::printGraphSolution(const Solution &solution, const std::size_t functionNum, std::size_t idShift) const
+{
+	std::cout << "\tsubgraph function_" << functionNum << '\n';
+	std::cout << "\t{\n";
+	idShift = Solution(solution).sort().printGraph(std::cout, functionNum, functionName, idShift);
+	std::cout << "\t}\n";
+	return idShift;
+}
+
 void Karnaugh::printVerilogSolution(const Solution &solution) const
 {
 	Solution(solution).sort().printVerilog(std::cout);
