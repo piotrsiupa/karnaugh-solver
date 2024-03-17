@@ -42,7 +42,7 @@ std::size_t Solution::printGraphProducts(std::ostream &o, const std::size_t func
 		o << "\t\tsubgraph products\n";
 		o << "\t\t{\n";
 		o << "\t\t\tnode [shape=ellipse];\n";
-		o << "\t\t\tedge [taillabel=\"&\"];\n";
+		o << "\t\t\tedge [taillabel=\"&&\"];\n";
 		for (std::size_t i = 0; i != size(); ++i)
 		{
 			o << "\t\t\tf" << functionNum << "_s" << i << " [label=\"[" << idShift++ << "]\"];\n";

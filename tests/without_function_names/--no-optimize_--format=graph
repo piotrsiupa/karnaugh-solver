@@ -20,7 +20,7 @@ digraph without_function_names
 		subgraph products
 		{
 			node [shape=ellipse];
-			edge [taillabel="&"];
+			edge [taillabel="&&"];
 			f0_s0 [label="[0]"];
 			f0_s0 -> f0_ni0_0, i3;
 		}
@@ -46,7 +46,7 @@ digraph without_function_names
 		subgraph products
 		{
 			node [shape=ellipse];
-			edge [taillabel="&"];
+			edge [taillabel="&&"];
 			f1_s0 [label="[1]"];
 			f1_s0 -> f1_ni0_0, f1_ni1_0, i2;
 		}

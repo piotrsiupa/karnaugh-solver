@@ -13,7 +13,7 @@ digraph no_input_names
 		subgraph products
 		{
 			node [shape=ellipse];
-			edge [taillabel="&"];
+			edge [taillabel="&&"];
 			f0_s0 [label="[0]"];
 			f0_s0 -> i1, i3;
 			f0_s1 [label="[1]"];

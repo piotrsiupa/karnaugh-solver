@@ -24,7 +24,7 @@ digraph very_optimizable
 	subgraph products
 	{
 		node [shape=ellipse];
-		edge [taillabel="&"];
+		edge [taillabel="&&"];
 		s0 [label="[0]"];
 		s0 -> i0, i1, i2, i3;
 		s1 [label="[1]"];

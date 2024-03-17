@@ -240,7 +240,7 @@ void OptimizedSolutions::printGraphProducts(std::ostream &o) const
 			o << "\tsubgraph products\n";
 			o << "\t{\n";
 			o << "\t\tnode [shape=ellipse];\n";
-			o << "\t\tedge [taillabel=\"&\"];\n";
+			o << "\t\tedge [taillabel=\"&&\"];\n";
 		}
 		printGraphProduct(o, makeProductId(i));
 	}
