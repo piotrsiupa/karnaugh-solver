@@ -365,7 +365,8 @@ void Karnaughs::printGraph()
 {
 	std::cout << "digraph " << getName() << '\n';
 	std::cout << "{\n";
-	printGraphRoots();
+	if (options::outputFormat.getValue() == options::OutputFormat::GRAPH)
+		printGraphRoots();
 	if (options::skipOptimization.isRaised())
 		printGraphBestSolutions();
 	else
@@ -549,6 +550,7 @@ void Karnaughs::print()
 		printHuman();
 		break;
 	case options::OutputFormat::GRAPH:
+	case options::OutputFormat::REDUCED_GRAPH:
 		printGraph();
 		break;
 	case options::OutputFormat::VERILOG:

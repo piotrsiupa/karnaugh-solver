@@ -45,21 +45,30 @@ std::size_t Solution::printGraphProducts(std::ostream &o, const std::size_t func
 		o << "\t\t\tedge [taillabel=\"&&\"];\n";
 		for (std::size_t i = 0; i != size(); ++i)
 		{
-			o << "\t\t\tf" << functionNum << "_s" << i << " [label=\"[" << idShift++ << "]\"];\n";
-			o << "\t\t\tf" << functionNum << "_s" << i << " -> ";
-			bool first = true;
-			for (const auto &[bit, negated] : (*this)[i].splitBits())
+			if (options::outputFormat.getValue() == options::OutputFormat::GRAPH)
 			{
-				if (first)
-					first = false;
-				else
-					o << ", ";
-				if (negated)
-					o << 'f' << functionNum << "_ni" << static_cast<unsigned>(bit) << '_' << i;
-				else
-					o << 'i' << static_cast<unsigned>(bit);
+				o << "\t\t\tf" << functionNum << "_s" << i << " [label=\"[" << idShift++ << "]\"];\n";
+				o << "\t\t\tf" << functionNum << "_s" << i << " -> ";
+				bool first = true;
+				for (const auto &[bit, negated] : (*this)[i].splitBits())
+				{
+					if (first)
+						first = false;
+					else
+						o << ", ";
+					if (negated)
+						o << 'f' << functionNum << "_ni" << static_cast<unsigned>(bit) << '_' << i;
+					else
+						o << 'i' << static_cast<unsigned>(bit);
+				}
+				o << ";\n";
 			}
-			o << ";\n";
+			else
+			{
+				o << "\t\t\tf" << functionNum << "_s" << i << " [label=\"[" << idShift++ << "] = ";
+				(*this)[i].printHuman(o, false);
+				o << "\"];\n";
+			}
 		}
 		o << "\t\t}\n";
 	}
@@ -72,21 +81,31 @@ void Solution::printGraphSum(std::ostream &o, const std::size_t functionNum, con
 	o << "\t\t{\n";
 	o << "\t\t\tnode [shape=rectangle, style=filled];\n";
 	o << "\t\t\tedge [taillabel=\"||\"];\n";
-	o << "\t\t\tf" << functionNum << " [label=\"" << functionName << "\"];\n";
-	o << "\t\t\tf" << functionNum << " -> ";
-	bool first = true;
-	for (std::size_t i = 0; i != size(); ++i)
+	if (options::outputFormat.getValue() == options::OutputFormat::GRAPH || size() >= 2)
 	{
-		if (first)
-			first = false;
-		else
-			o << ", ";
-		if ((*this)[i].getBitCount() == 0)
-			o << ((*this)[i].isError() ? "false" : "true");
-		else
-			o << 'f' << functionNum << "_s" << i;
+		o << "\t\t\tf" << functionNum << " [label=\"" << functionName << "\"];\n";
+		o << "\t\t\tf" << functionNum << " -> ";
+		bool first = true;
+		for (std::size_t i = 0; i != size(); ++i)
+		{
+			if (first)
+				first = false;
+			else
+				o << ", ";
+			if ((*this)[i].getBitCount() == 0)
+				o << ((*this)[i].isError() ? "false" : "true");
+			else
+				o << 'f' << functionNum << "_s" << i;
+		}
+		o << ";\n";
 	}
-	o << ";\n";
+	else
+	{
+		
+		o << "\t\t\tf" << functionNum << " [label=\"" << functionName << " = ";
+		front().printHuman(o, false);
+		o << "\"];\n";
+	}
 	o << "\t\t}\n";
 }
 
@@ -131,8 +150,11 @@ void Solution::printHuman(std::ostream &o) const
 
 std::size_t Solution::printGraph(std::ostream &o, const std::size_t functionNum, const std::string_view functionName, std::size_t idShift) const
 {
-	printGraphNegatedInputs(o, functionNum);
-	idShift = printGraphProducts(o, functionNum, idShift);
+	const bool isFullGraph = options::outputFormat.getValue() == options::OutputFormat::GRAPH;
+	if (isFullGraph)
+		printGraphNegatedInputs(o, functionNum);
+	if (isFullGraph || size() >= 2)
+		idShift = printGraphProducts(o, functionNum, idShift);
 	printGraphSum(o, functionNum, functionName);
 	return idShift;
 }

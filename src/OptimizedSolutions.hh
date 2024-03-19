@@ -35,7 +35,8 @@ private:
 	mutable std::vector<id_t> normalizedIds;
 	
 	bool isWorthPrinting(const id_t id, const bool simpleFinalSums) const { return isProduct(id) ? isProductWorthPrinting(id) : isSumWorthPrinting(id, simpleFinalSums); }
-	std::size_t generateHumanIds() const;
+	void generateHumanIds() const;
+	void generateGraphIds() const;
 	std::pair<std::size_t, std::size_t> generateNormalizedIds() const;
 	void printVerilogImmediates(std::ostream &o, const std::size_t immediateProductCount, const std::size_t immediateSumCount) const;
 	void printVhdlImmediates(std::ostream &o, const std::size_t immediateProductCount, const std::size_t immediateSumCount) const;
@@ -51,9 +52,10 @@ private:
 	void printHumanProductBody(std::ostream &o, const id_t productId) const;
 	void printHumanProduct(std::ostream &o, const id_t productId) const;
 	void printHumanProducts(std::ostream &o) const;
+	std::size_t findProductEndNode(const id_t productId, std::size_t startFunctionNum = 0) const;
 	void printGraphProductBody(std::ostream &o, const id_t productId) const;
-	void printGraphProduct(std::ostream &o, const id_t productId) const;
-	void printGraphProducts(std::ostream &o) const;
+	void printGraphProduct(std::ostream &o, const Names &functionNames, const id_t productId) const;
+	void printGraphProducts(std::ostream &o, const Names &functionNames) const;
 	void printVerilogProductBody(std::ostream &o, const id_t productId) const;
 	void printVerilogProduct(std::ostream &o, const id_t productId) const;
 	void printVerilogProducts(std::ostream &o) const;
@@ -63,13 +65,14 @@ private:
 	void printCppProductBody(std::ostream &o, const id_t productId) const;
 	void printCppProduct(std::ostream &o, const id_t productId) const;
 	void printCppProducts(std::ostream &o) const;
-	bool isSumWorthPrinting(const id_t sumId, const bool simpleFinalSums) const { if (simpleFinalSums) return getSum(sumId).size() >= 2; for (const sum_t &sum : sums) for (const id_t &id : sum) if (id == sumId) return true; return false; }
+	bool isSumWorthPrinting(const id_t sumId, const bool simpleFinalSums) const;
 	void printHumanSumBody(std::ostream &o, const id_t sumId) const;
 	void printHumanSum(std::ostream &o, const id_t sumId) const;
 	void printHumanSums(std::ostream &o) const;
+	std::size_t findSumEndNode(const id_t sumId) const;
 	void printGraphSumBody(std::ostream &o, const id_t sumId) const;
-	void printGraphSum(std::ostream &o, const id_t sumId) const;
-	void printGraphSums(std::ostream &o) const;
+	void printGraphSum(std::ostream &o, const Names &functionNames, const id_t sumId) const;
+	void printGraphSums(std::ostream &o, const Names &functionNames) const;
 	void printVerilogSumBody(std::ostream &o, const id_t sumId) const;
 	void printVerilogSum(std::ostream &o, const id_t sumId) const;
 	void printVerilogSums(std::ostream &o) const;
