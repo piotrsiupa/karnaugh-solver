@@ -2,6 +2,7 @@ digraph hard_to_print_optimized
 {
 	subgraph inputs
 	{
+		rank=same;
 		node [shape=house];
 		i0 [label="q"];
 		i1 [label="x"];

@@ -15,6 +15,7 @@ void Karnaughs::printGraphInputs() const
 		return;
 	std::cout << "\tsubgraph inputs\n";
 	std::cout << "\t{\n";
+	std::cout << "\t\trank=same;\n";
 	std::cout << "\t\tnode [shape=house];\n";
 	for (Minterm i = 0; i != ::bits; ++i)
 	{

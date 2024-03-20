@@ -2,6 +2,7 @@ digraph no_input_names
 {
 	subgraph inputs
 	{
+		rank=same;
 		node [shape=house];
 		i0 [label="i0"];
 		i1 [label="i1"];
