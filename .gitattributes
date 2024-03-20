@@ -8,3 +8,4 @@
 *.py text
 *.sh text eol=lf
 *.md text
+*.png binary

@@ -14,7 +14,7 @@ After that, it (optionally) performs a [common subexpression elimination](https:
 If there are multiple solutions, the one with the smallest cost in logic gates is chosen.
 (The cost calculation takes the CSE into account.)
 
-The result is printed in a human readable format (default) or in variety of other formats, including Verilog, VHDL, C++ and more.
+The result is printed in a human readable format (default) or in variety of other formats, including Verilog, VHDL, DOT graph, C++ and more.
 
 ### I haven't understood any of that; speak human!
 
@@ -26,7 +26,7 @@ The program then looks for a smallest logic circuit that does that.
 The popular way to do it by hand for smaller circuits are [Karnaugh maps](https://en.wikipedia.org/wiki/Karnaugh_map).
 This program doesn't really do that under the hood. It uses a different (faster) method that gives the same result.
 However, the result is displayed (by default) as a Karnaugh map and hence the program name.
-There are also other output formats, including Verilog and VHDL (popular formats of hardware description) or even C++ code.
+There are also other output formats, including Verilog and VHDL (popular formats of hardware description), a script to display a graph (in the DOT language) or even C++ code.
 
 Additionally, the program can find common parts of the resulting circuits and reuse them in multiple places to not waste logic gates for doing the same thing multiple times.
 (This is one of the main selling points.)
@@ -239,6 +239,23 @@ Sums:
 	"tricky_0" = [1] || [2]
 	"tricky_1" = [0] || [2]
 ```
+
+### Graph
+
+An input for Graphviz (DOT format) that shows how to build the circuit using logic gates (although, it doesn't use the proper symbols for the gates).
+
+([file](tests/tricky_one/--format=graph))
+
+![there should be picture of the generated graph](docs-files/tricky_one-graph.png "Full graph")
+
+### Reduced graph
+
+This is similar to the normal graph but its heavily altered to reduce the number of nodes.
+The notation is more complicated and it would be harder to read if the reduction of node number wasn't helping even more.
+
+([file](tests/tricky_one/--format=reduced-graph))
+
+![there should be picture of the generated graph](docs-files/tricky_one-reduced-graph.png "Reduced graph")
 
 ### Mathematical
 
