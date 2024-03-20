@@ -35,6 +35,7 @@ private:
 	mutable std::vector<id_t> normalizedIds;
 	
 	bool isWorthPrinting(const id_t id, const bool simpleFinalSums) const { return isProduct(id) ? isProductWorthPrinting(id) : isSumWorthPrinting(id, simpleFinalSums); }
+	bool isWorthPrintingOnGraph(const id_t id, const bool isFullGraph) const { return isProduct(id) ? isProductWorthPrintingOnGraph(id, isFullGraph) : isSumWorthPrintingOnGraph(id, isFullGraph); }
 	void generateHumanIds() const;
 	void generateGraphIds() const;
 	std::pair<std::size_t, std::size_t> generateNormalizedIds() const;
@@ -53,6 +54,7 @@ private:
 	void printHumanProduct(std::ostream &o, const id_t productId) const;
 	void printHumanProducts(std::ostream &o) const;
 	std::size_t findProductEndNode(const id_t productId, std::size_t startFunctionNum = 0) const;
+	bool isProductWorthPrintingOnGraph(const id_t productId, const bool isFullGraph) const { return isProductWorthPrinting(productId) || (!isFullGraph && findProductEndNode(productId) != SIZE_MAX); }
 	void printGraphProductBody(std::ostream &o, const id_t productId) const;
 	void printGraphProduct(std::ostream &o, const Names &functionNames, const id_t productId) const;
 	void printGraphProducts(std::ostream &o, const Names &functionNames) const;
@@ -69,7 +71,8 @@ private:
 	void printHumanSumBody(std::ostream &o, const id_t sumId) const;
 	void printHumanSum(std::ostream &o, const id_t sumId) const;
 	void printHumanSums(std::ostream &o) const;
-	std::size_t findSumEndNode(const id_t sumId) const;
+	std::size_t findSumEndNode(const id_t sumId, const std::size_t startFunctionNum = 0) const;
+	bool isSumWorthPrintingOnGraph(const id_t sumId, const bool isFullGraph) const { return isFullGraph ? isSumWorthPrinting(sumId, false) : getSum(sumId).size() != 1; }
 	void printGraphSumBody(std::ostream &o, const id_t sumId) const;
 	void printGraphSum(std::ostream &o, const Names &functionNames, const id_t sumId) const;
 	void printGraphSums(std::ostream &o, const Names &functionNames) const;
