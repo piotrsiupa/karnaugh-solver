@@ -3,6 +3,7 @@
 #include <algorithm>
 
 #include "options.hh"
+#include "utils.hh"
 
 
 void Solution::printGraphNegatedInputs(std::ostream &o, const std::size_t functionNum) const
@@ -49,12 +50,10 @@ std::size_t Solution::printGraphProducts(std::ostream &o, const std::size_t func
 			{
 				o << "\t\t\tf" << functionNum << "_s" << i << " [label=\"[" << idShift++ << "]\"];\n";
 				o << "\t\t\tf" << functionNum << "_s" << i << " -> ";
-				bool first = true;
+				First first;
 				for (const auto &[bit, negated] : (*this)[i].splitBits())
 				{
-					if (first)
-						first = false;
-					else
+					if (!first)
 						o << ", ";
 					if (negated)
 						o << 'f' << functionNum << "_ni" << static_cast<unsigned>(bit) << '_' << i;
@@ -85,12 +84,10 @@ void Solution::printGraphSum(std::ostream &o, const std::size_t functionNum, con
 	{
 		o << "\t\t\tf" << functionNum << " [label=\"" << functionName << "\"];\n";
 		o << "\t\t\tf" << functionNum << " -> ";
-		bool first = true;
+		First first;
 		for (std::size_t i = 0; i != size(); ++i)
 		{
-			if (first)
-				first = false;
-			else
+			if (!first)
 				o << ", ";
 			if ((*this)[i].getBitCount() == 0)
 				o << ((*this)[i].isError() ? "false" : "true");

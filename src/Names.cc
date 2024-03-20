@@ -1,5 +1,7 @@
 #include "./Names.hh"
 
+#include "utils.hh"
+
 
 void Names::printVerilogNames(std::ostream &o) const
 {
@@ -18,12 +20,10 @@ void Names::printVhdlNames(std::ostream &o) const
 {
 	if (useInCode)
 	{
-		bool first = true;
+		First first;
 		for (const std::string &name : names)
 		{
-			if (first)
-				first = false;
-			else
+			if (!first)
 				o << ", ";
 			o << name;
 		}
@@ -50,12 +50,10 @@ void Names::printCppType(std::ostream &o) const
 		if (!names.empty())
 		{
 			o << "bool ";
-			bool first = true;
+			First first;
 			for (const std::string &name : names)
 			{
-				if (first)
-					first = false;
-				else
+				if (!first)
 					o << ", ";
 				o << name;
 			}
@@ -71,12 +69,10 @@ void Names::printCppType(std::ostream &o) const
 
 void Names::printMathNames(std::ostream &o) const
 {
-	bool first = true;
+	First first;
 	for (const std::string &name : names)
 	{
-		if (first)
-			first = false;
-		else
+		if (!first)
 			o << ", ";
 		o << name;
 	}

@@ -5,6 +5,7 @@
 #include <iostream>
 
 #include "global.hh"
+#include "utils.hh"
 
 
 namespace options
@@ -82,12 +83,10 @@ namespace options
 		if (!regexReady)
 		{
 			std::string pattern;
-			bool first = true;
+			First first;
 			for (const Mapping &mapping : mappings)
 			{
-				if (first)
-					first = false;
-				else
+				if (!first)
 					pattern += '|';
 				pattern += '(' + std::string(mapping.regex) + ')';
 			}
@@ -105,12 +104,10 @@ namespace options
 		{
 			std::cerr << "Invalid value \"" << argument << "\" for the option \"--" << getLongNames().front() << "\"!\n";
 			std::cerr << "Allowed values are: ";
-			bool first = true;
+			First first;
 			for (const Mapping &mapping : mappings)
 			{
-				if (first)
-					first = false;
-				else
+				if (!first)
 					std::cerr << ", ";
 				std::cerr << mapping.officialName;
 			}

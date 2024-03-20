@@ -7,6 +7,7 @@
 
 #include "options.hh"
 #include "Progress.hh"
+#include "utils.hh"
 
 
 void Karnaughs::printGraphInputs() const
@@ -68,18 +69,11 @@ void Karnaughs::printGraphRoots() const
 
 void Karnaughs::printHumanBestSolutions() const
 {
-	bool first = true;
+	First first;
 	for (std::size_t i = 0; i != karnaughs.size(); ++i)
 	{
-		if (first == true)
-		{
-			first = false;
-		}
-		else
-		{
-			if (options::outputFormat.getValue() != options::OutputFormat::HUMAN_SHORT)
-				std::cout << '\n' << '\n';
-		}
+		if (!first && options::outputFormat.getValue() != options::OutputFormat::HUMAN_SHORT)
+			std::cout << '\n' << '\n';
 		std::cout << "--- " << karnaughs[i].getFunctionName() << " ---\n";
 		if (options::outputFormat.getValue() != options::OutputFormat::HUMAN_SHORT)
 			std::cout << '\n';
@@ -457,49 +451,49 @@ void Karnaughs::printCpp()
 	std::cout << ";\n";
 	std::cout << "\t\n";
 	std::cout << "\t[[nodiscard]] constexpr output_t operator()(";
-	bool first = true;
-	for (std::size_t i = 0; i != ::inputNames.getSize(); ++i)
 	{
-		if (first)
-			first = false;
-		else
-			std::cout << ", ";
-		std::cout << "const bool ";
-		::inputNames.printCppRawName(std::cout, i);
+		First first;
+		for (std::size_t i = 0; i != ::inputNames.getSize(); ++i)
+		{
+			if (!first)
+				std::cout << ", ";
+			std::cout << "const bool ";
+			::inputNames.printCppRawName(std::cout, i);
+		}
 	}
 	std::cout << ") const { return (*this)({";
-	first = true;
-	for (std::size_t i = 0; i != ::inputNames.getSize(); ++i)
 	{
-		if (first)
-			first = false;
-		else
-			std::cout << ", ";
-		::inputNames.printCppRawName(std::cout, i);
+		First first;
+		for (std::size_t i = 0; i != ::inputNames.getSize(); ++i)
+		{
+			if (!first)
+				std::cout << ", ";
+			::inputNames.printCppRawName(std::cout, i);
+		}
 	}
 	std::cout << "}); }\n";
 	std::cout << "\t[[nodiscard]] constexpr output_t operator()(const input_t &i) const { return calc(i); }\n";
 	std::cout << "\t\n";
 	std::cout << "\t[[nodiscard]] static constexpr output_t calc(";
-	first = true;
-	for (std::size_t i = 0; i != ::inputNames.getSize(); ++i)
 	{
-		if (first)
-			first = false;
-		else
-			std::cout << ", ";
-		std::cout << "const bool ";
-		::inputNames.printCppRawName(std::cout, i);
+		First first;
+		for (std::size_t i = 0; i != ::inputNames.getSize(); ++i)
+		{
+			if (!first)
+				std::cout << ", ";
+			std::cout << "const bool ";
+			::inputNames.printCppRawName(std::cout, i);
+		}
 	}
 	std::cout << ") { return calc({";
-	first = true;
-	for (std::size_t i = 0; i != ::inputNames.getSize(); ++i)
 	{
-		if (first)
-			first = false;
-		else
-			std::cout << ", ";
-		::inputNames.printCppRawName(std::cout, i);
+		First first;
+		for (std::size_t i = 0; i != ::inputNames.getSize(); ++i)
+		{
+			if (!first)
+				std::cout << ", ";
+			::inputNames.printCppRawName(std::cout, i);
+		}
 	}
 	std::cout << "}); }\n";
 	std::cout << "\t[[nodiscard]] static constexpr output_t calc(const input_t &i);\n";

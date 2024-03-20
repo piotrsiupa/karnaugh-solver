@@ -7,6 +7,7 @@
 #include "options.hh"
 #include "SetOptimizerForProducts.hh"
 #include "SetOptimizerForSums.hh"
+#include "utils.hh"
 
 
 void OptimizedSolutions::generateHumanIds() const
@@ -127,20 +128,14 @@ void OptimizedSolutions::printCppId(std::ostream &o, const id_t id) const
 void OptimizedSolutions::printHumanNegatedInputs(std::ostream &o) const
 {
 	o << "Negated inputs:";
-	bool first = true;
+	First first;
 	for (Minterm i = 0; i != ::bits; ++i)
 	{
 		if ((negatedInputs & (1 << (::bits - i - 1))) != 0)
 		{
-			if (first)
-			{
-				first = false;
-				o << ' ';
-			}
-			else
-			{
-				o << ", ";
-			}
+			if (!first)
+				o << ',';
+			o << ' ';
 			::inputNames.printHumanName(o, i);
 		}
 	}
@@ -446,12 +441,10 @@ bool OptimizedSolutions::isSumWorthPrinting(const id_t sumId, const bool simpleF
 
 void OptimizedSolutions::printHumanSumBody(std::ostream &o, const id_t sumId) const
 {
-	bool first = true;
+	First first;
 	for (const auto &partId : getSum(sumId))
 	{
-		if (first)
-			first = false;
-		else
+		if (!first)
 			o << " || ";
 		if (!isProduct(partId) || isProductWorthPrinting(partId))
 			printHumanId(o, partId);
@@ -491,22 +484,18 @@ std::size_t OptimizedSolutions::findSumEndNode(const id_t sumId, const std::size
 void OptimizedSolutions::printGraphSumBody(std::ostream &o, const id_t sumId) const
 {
 	const bool isFullGraph = options::outputFormat.getValue() == options::OutputFormat::GRAPH;
-	bool first = true;
+	First first;
 	for (const auto &partId : getSum(sumId))
 	{
 		if (!isProduct(partId) || isProductWorthPrinting(partId))
 		{
-			if (first)
-				first = false;
-			else
+			if (!first)
 				o << ", ";
 			printGraphId(o, partId);
 		}
 		else if (isFullGraph)
 		{
-			if (first)
-				first = false;
-			else
+			if (!first)
 				o << ", ";
 			getProduct(partId).first.printGraph(o);
 		}
@@ -539,20 +528,12 @@ void OptimizedSolutions::printGraphSum(std::ostream &o, const Names &functionNam
 	bool hasParent = isFullGraph;
 	if (!isFullGraph)
 	{
-		bool first = true;
+		First first;
 		for (const auto &partId : getSum(sumId))
 		{
 			if (isProduct(partId) && !isProductWorthPrinting(partId))
 			{
-				if (first)
-				{
-					first = false;
-					o << " = ";
-				}
-				else
-				{
-					o << " || ";
-				}
+				o << (first ? " = " : " || ");
 				getProduct(partId).first.printHuman(o, false);
 			}
 			else
@@ -600,12 +581,10 @@ void OptimizedSolutions::printGraphSums(std::ostream &o, const Names &functionNa
 
 void OptimizedSolutions::printVerilogSumBody(std::ostream &o, const id_t sumId) const
 {
-	bool first = true;
+	First first;
 	for (const auto &partId : getSum(sumId))
 	{
-		if (first)
-			first = false;
-		else
+		if (!first)
 			o << " | ";
 		if (!isProduct(partId) || isProductWorthPrinting(partId))
 			printVerilogId(o, partId);
@@ -643,12 +622,10 @@ void OptimizedSolutions::printVerilogSums(std::ostream &o) const
 
 void OptimizedSolutions::printVhdlSumBody(std::ostream &o, const id_t sumId) const
 {
-	bool first = true;
+	First first;
 	for (const auto &partId : getSum(sumId))
 	{
-		if (first)
-			first = false;
-		else
+		if (!first)
 			o << " or ";
 		if (!isProduct(partId) || isProductWorthPrinting(partId))
 			printVhdlId(o, partId);
@@ -685,12 +662,10 @@ void OptimizedSolutions::printVhdlSums(std::ostream &o) const
 
 void OptimizedSolutions::printCppSumBody(std::ostream &o, const id_t sumId) const
 {
-	bool first = true;
+	First first;
 	for (const auto &partId : getSum(sumId))
 	{
-		if (first)
-			first = false;
-		else
+		if (!first)
 			o << " || ";
 		if (!isProduct(partId) || isProductWorthPrinting(partId))
 			printCppId(o, partId);
