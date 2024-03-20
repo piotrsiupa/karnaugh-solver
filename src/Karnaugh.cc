@@ -6,6 +6,7 @@
 
 #include "options.hh"
 #include "QuineMcCluskey.hh"
+#include "utils.hh"
 
 
 std::size_t Karnaugh::nameCount = 0;
@@ -50,14 +51,12 @@ void Karnaugh::prettyPrintTable(const Minterms &target, const Minterms &allowed)
 	{
 		printBits(x, std::max(bits_t(1), vBits));
 		std::cout << ' ';
-		bool first = true;
+		First first;
 		for (int i = 0; i != (hBits - 1) / 2; ++i)
 			std::cout << ' ';
 		for (const Minterm y : hGrayCode)
 		{
-			if (first)
-				first = false;
-			else
+			if (!first)
 				for (int i = 0; i != hBits; ++i)
 					std::cout << ' ';
 			const Minterm minterm = (x << hBits) | y;
@@ -231,6 +230,15 @@ void Karnaugh::printHumanSolution(const Solution &solution) const
 		std::cout << "solution:\n";
 	}
 	Solution(solution).sort().printHuman(std::cout);
+}
+
+std::size_t Karnaugh::printGraphSolution(const Solution &solution, const std::size_t functionNum, std::size_t idShift) const
+{
+	std::cout << "\tsubgraph function_" << functionNum << '\n';
+	std::cout << "\t{\n";
+	idShift = Solution(solution).sort().printGraph(std::cout, functionNum, functionName, idShift);
+	std::cout << "\t}\n";
+	return idShift;
 }
 
 void Karnaugh::printVerilogSolution(const Solution &solution) const

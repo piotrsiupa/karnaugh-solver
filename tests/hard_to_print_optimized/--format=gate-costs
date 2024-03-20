@@ -1,0 +1,19 @@
+Gate cost: NOTs = 0, ANDs = 0, ORs = 0, overall cost = 0, cost without input NOTs = 0
+Gate cost: NOTs = 0, ANDs = 0, ORs = 0, overall cost = 0, cost without input NOTs = 0
+Gate cost: NOTs = 2, ANDs = 1, ORs = 0, overall cost = 4, cost without input NOTs = 2
+Gate cost: NOTs = 3, ANDs = 2, ORs = 0, overall cost = 7, cost without input NOTs = 4
+Gate cost: NOTs = 4, ANDs = 2, ORs = 1, overall cost = 10, cost without input NOTs = 6
+Gate cost: NOTs = 0, ANDs = 0, ORs = 0, overall cost = 0, cost without input NOTs = 0
+Gate cost: NOTs = 0, ANDs = 0, ORs = 0, overall cost = 0, cost without input NOTs = 0
+Gate cost: NOTs = 2, ANDs = 1, ORs = 0, overall cost = 4, cost without input NOTs = 2
+Gate cost: NOTs = 4, ANDs = 2, ORs = 1, overall cost = 10, cost without input NOTs = 6
+Gate cost: NOTs = 1, ANDs = 0, ORs = 0, overall cost = 1, cost without input NOTs = 0
+Gate cost: NOTs = 2, ANDs = 1, ORs = 0, overall cost = 4, cost without input NOTs = 2
+Gate cost: NOTs = 4, ANDs = 2, ORs = 1, overall cost = 10, cost without input NOTs = 6
+Gate cost: NOTs = 0, ANDs = 0, ORs = 1, overall cost = 2, cost without input NOTs = 2
+Gate cost: NOTs = 1, ANDs = 0, ORs = 2, overall cost = 5, cost without input NOTs = 4
+Gate cost: NOTs = 1, ANDs = 0, ORs = 0, overall cost = 1, cost without input NOTs = 0
+=== summary ===
+Gate cost: NOTs = 24, ANDs = 11, ORs = 6, overall cost = 58, cost without input NOTs = 34
+=== optimized solution ===
+Gate cost: NOTs = 4, ANDs = 2, ORs = 3, overall cost = 14, cost without input NOTs = 10

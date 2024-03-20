@@ -1,0 +1,5 @@
+module no_tables (
+	input wire a, b, c, d,
+);
+	
+endmodule

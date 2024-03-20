@@ -5,6 +5,7 @@
 #include <iostream>
 
 #include "global.hh"
+#include "utils.hh"
 
 
 namespace options
@@ -82,12 +83,10 @@ namespace options
 		if (!regexReady)
 		{
 			std::string pattern;
-			bool first = true;
+			First first;
 			for (const Mapping &mapping : mappings)
 			{
-				if (first)
-					first = false;
-				else
+				if (!first)
 					pattern += '|';
 				pattern += '(' + std::string(mapping.regex) + ')';
 			}
@@ -105,12 +104,10 @@ namespace options
 		{
 			std::cerr << "Invalid value \"" << argument << "\" for the option \"--" << getLongNames().front() << "\"!\n";
 			std::cerr << "Allowed values are: ";
-			bool first = true;
+			First first;
 			for (const Mapping &mapping : mappings)
 			{
-				if (first)
-					first = false;
-				else
+				if (!first)
 					std::cerr << ", ";
 				std::cerr << mapping.officialName;
 			}
@@ -135,13 +132,23 @@ namespace options
 	Flag helpOptions({"help-options", "truncated-help", "short-help"}, 'H');
 	Flag version({"version"}, 'v');
 	
-	Trilean prompt({"prompt", "prompts", "hint", "hints"}, 'p', [](){ return ::terminalInput; });
-	Trilean status({"status", "progress", "progress-bar", "progress-bars", "stat", "stats"}, 's', [](){ return ::terminalStderr; });
+	Trilean prompt({"prompt", "prompts", "hint", "hints"}, 'p', [](){
+			return ::terminalInput;
+		});
+	Trilean status({"status", "progress", "progress-bar", "progress-bars", "stat", "stats"}, 's', [](){
+#ifdef NO_DEFAULT_PROGRESS
+			return false;
+#else
+			return ::terminalStderr;
+#endif
+		});
 	
 	Mapped<OutputFormat, OutputFormat::HUMAN_LONG> outputFormat({"format", "output-format", "notation", "output-notation"}, 'f', {
 			{"human-long", "human(?:[-_]readable)?[-_](?:long|big)|(?:long|big)[-_]human(?:[-_]readable)?|h[-_]?(?:r[-_]?)?l|l[-_]?h(?:[-_]?r)?|full|default", OutputFormat::HUMAN_LONG},
 			{"human", "human(?:[-_]readable)?(?:[-_](?:medium|middle))?|(?:(?:medium|middle)[-_])?human(?:[-_]readable)?|h(?:[-_]?r)?(?:[-_]?m)?|(?:m[-_]?)?h(?:[-_]?r)?|medium|middle|shorter", OutputFormat::HUMAN},
 			{"human-short", "human(?:[-_]readable)?[-_](?:short|small)|(?:short|small)[-_]human(?:[-_]readable)?|h[-_]?(?:r[-_]?)?s|s[-_]?h(?:[-_]?r)?|short|small|tiny|minimal", OutputFormat::HUMAN_SHORT},
+			{"graph", "(?:(?:f(?:u(?:ll)?)?|e(?:x(?:p(?:a(?:n(?:d(?:ed)?)?|s(?:i(?:ve)?)?)?)?)?)?|b(?:i(?:g(?:ge(?:r|st))?)?)?|l(?:a(?:r(?:ge(?:r|st)?)?)?)?)[-_ ])?(?:g(?:r(?:a(?:ph(?:s|ic(?:al)?)?)?)?)?|d(?:ot)?|vi(?:s(?:u(?:als?)?)?)?)", OutputFormat::GRAPH},
+			{"reduced-graph", "(?:(?:r(?:e(?:d(?:u(?:c(?:ed)?)?)?)?)?|s(?:m(?:all(?:e(?:r|st))?)?)?|m(?:i(?:n(?:i(?:mal)?)?)?)?|c(?:o(?:m(?:p(?:act|r(?:es(?:sed)?)?))?)?)?)[-_ ])(?:g(?:r(?:a(?:ph(?:s|ic(?:al)?)?)?)?)?|d(?:ot)?|vi(?:s(?:u(?:als?)?)?)?)", OutputFormat::REDUCED_GRAPH},
 			{"verilog", "verilog", OutputFormat::VERILOG},
 			{"vhdl", "vhdl", OutputFormat::VHDL},
 			{"cpp", "cpp|c\\+\\+|cc|hpp|h\\+\\+|hh", OutputFormat::CPP},

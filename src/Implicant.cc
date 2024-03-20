@@ -1,6 +1,7 @@
 #include "Implicant.hh"
 
 #include "options.hh"
+#include "utils.hh"
 
 
 bool Implicant::operator<(const Implicant &other) const
@@ -67,12 +68,10 @@ void Implicant::printHuman(std::ostream &o, const bool parentheses) const
 	const bool needsParentheses = parentheses && bitCount != 1;
 	if (needsParentheses)
 		o << '(';
-	bool first = true;
+	First first;
 	for (const auto &[bitIndex, negated] : splitBits())
 	{
-		if (first)
-			first = false;
-		else
+		if (!first)
 			o << " && ";
 		if (negated)
 			o << '!';
@@ -80,6 +79,27 @@ void Implicant::printHuman(std::ostream &o, const bool parentheses) const
 	}
 	if (needsParentheses)
 		o << ')';
+}
+
+void Implicant::printGraph(std::ostream &o) const
+{
+	if (bitCount == 0)
+	{
+		if (isError())
+			o << "false";
+		else
+			o << "true";
+		return;
+	}
+	First first;
+	for (const auto &[bitIndex, negated] : splitBits())
+	{
+		if (!first)
+			o << ", ";
+		if (negated)
+			o << 'n';
+		o << 'i' << static_cast<unsigned>(bitIndex);
+	}
 }
 
 void Implicant::printVerilog(std::ostream &o, const bool parentheses) const
@@ -95,12 +115,10 @@ void Implicant::printVerilog(std::ostream &o, const bool parentheses) const
 	const bool needsParentheses = parentheses && bitCount != 1;
 	if (needsParentheses)
 		o << '(';
-	bool first = true;
+	First first;
 	for (const auto &[bitIndex, negated] : splitBits())
 	{
-		if (first)
-			first = false;
-		else
+		if (!first)
 			o << " & ";
 		if (negated)
 			o << '!';
@@ -123,12 +141,10 @@ void Implicant::printVhdl(std::ostream &o, const bool parentheses) const
 	const bool needsParentheses = parentheses && bitCount != 1;
 	if (needsParentheses)
 		o << '(';
-	bool first = true;
+	First first;
 	for (const auto &[bitIndex, negated] : splitBits())
 	{
-		if (first)
-			first = false;
-		else
+		if (!first)
 			o << " and ";
 		if (negated)
 			o << "not ";
@@ -151,12 +167,10 @@ void Implicant::printCpp(std::ostream &o, const bool parentheses) const
 	const bool needsParentheses = parentheses && bitCount != 1;
 	if (needsParentheses)
 		o << '(';
-	bool first = true;
+	First first;
 	for (const auto &[bitIndex, negated] : splitBits())
 	{
-		if (first)
-			first = false;
-		else
+		if (!first)
 			o << " && ";
 		if (negated)
 			o << "!";
@@ -215,14 +229,10 @@ void Implicant::printMath(std::ostream &o, const bool parentheses) const
 	const bool needsParentheses = parentheses && bitCount != 1;
 	if (needsParentheses)
 		o << '(';
-	bool first = true;
+	First first;
 	for (const auto &[bitIndex, negated] : splitBits())
 	{
-		if (first)
-		{
-			first = false;
-		}
-		else
+		if (!first)
 		{
 			switch (options::outputFormat.getValue())
 			{

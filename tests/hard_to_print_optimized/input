@@ -1,0 +1,64 @@
+# This example is designed to have a lot of corner cases wile printing the result.
+# (especially for the output format `reduced-graph`)
+
+q, x, y, z
+
+none
+-
+-
+
+all
+7
+0, 1, 2, 3, 4, 5, 6, 8, 9, 10, 11, 12, 13, 14, 15
+
+some
+0, 1, 2, 3
+-
+
+even_less
+0, 1
+-
+
+more_than_less
+0, 1, 2, 4, 6, 8, 10, 12, 14
+-
+
+none_again
+-
+-
+
+all_again
+0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15
+-
+
+some_again
+0, 1, 2, 3
+-
+
+more_than_less_again
+0, 1, 2, 4, 6, 8, 10, 12, 14
+-
+
+half
+0, 2, 4, 6, 8, 10, 12, 14
+-
+
+some_the_third_time
+0, 1, 2, 3
+-
+
+more_than_less_the_third_time
+0, 1, 2, 4, 6, 8, 10, 12, 14
+-
+
+most
+2, 3, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15
+-
+
+even_more
+0, 1, 2, 3, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15
+-
+
+half_again
+0, 2, 4, 6, 8, 10, 12, 14
+-

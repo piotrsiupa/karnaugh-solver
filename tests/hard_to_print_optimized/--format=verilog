@@ -1,0 +1,36 @@
+module hard_to_print_optimized (
+	input wire q, x, y, z,
+	output wire none, all, some, even_less, more_than_less, none_again, all_again, some_again, more_than_less_again, half, some_the_third_time, more_than_less_the_third_time, most, even_more, half_again,
+);
+	
+	// Internal signals
+	wire [1:0] prods;
+	wire [2:0] sums;
+	
+	// Products
+	assign prods[0] = !q & !x;
+	assign prods[1] = !y & prods[0];
+	
+	// Sums
+	assign sums[0] = prods[1] | !z;
+	assign sums[1] = y | q;
+	assign sums[2] = !x | sums[1];
+	
+	// Results
+	assign none = 0;
+	assign all = 1;
+	assign some = prods[0];
+	assign even_less = prods[1];
+	assign more_than_less = sums[0];
+	assign none_again = 0;
+	assign all_again = 1;
+	assign some_again = prods[0];
+	assign more_than_less_again = sums[0];
+	assign half = !z;
+	assign some_the_third_time = prods[0];
+	assign more_than_less_the_third_time = sums[0];
+	assign most = sums[1];
+	assign even_more = sums[2];
+	assign half_again = !z;
+	
+endmodule

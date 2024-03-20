@@ -7,27 +7,85 @@
 
 #include "options.hh"
 #include "Progress.hh"
+#include "utils.hh"
 
+
+void Karnaughs::printGraphInputs() const
+{
+	if (::bits == 0)
+		return;
+	std::cout << "\tsubgraph inputs\n";
+	std::cout << "\t{\n";
+	std::cout << "\t\trank=same;\n";
+	std::cout << "\t\tnode [shape=house];\n";
+	for (Minterm i = 0; i != ::bits; ++i)
+	{
+		std::cout << "\t\ti" << i << " [label=\"";
+		::inputNames.printGraphName(std::cout, i);
+		std::cout << "\"];\n";
+	}
+	std::cout << "\t}\n";
+}
+
+std::pair<bool, bool> Karnaughs::checkForUsedConstants() const
+{
+	if (options::skipOptimization.isRaised())
+	{
+		bool anyUsesFalse = false, anyUsesTrue = false;
+		for (const Solution &solution : bestSolutions)
+		{
+			const auto [usesFalse, usesTrue] = solution.checkForUsedConstants();
+			anyUsesFalse |= usesFalse;
+			anyUsesTrue |= usesTrue;
+		}
+		return {anyUsesFalse, anyUsesTrue};
+	}
+	else
+	{
+		return optimizedSolutions.checkForUsedConstants();
+	}
+}
+
+void Karnaughs::printGraphConstants() const
+{
+	const auto [usesFalse, usesTrue] = checkForUsedConstants();
+	if (!usesFalse && !usesTrue)
+		return;
+	std::cout << "\tsubgraph constants\n";
+	std::cout << "\t{\n";
+	std::cout << "\t\tnode [shape=octagon, style=dashed];\n";
+	if (usesTrue)
+		std::cout << "\t\ttrue;\n";
+	if (usesFalse)
+		std::cout << "\t\tfalse;\n";
+	std::cout << "\t}\n";
+}
+
+void Karnaughs::printGraphRoots() const
+{
+	printGraphInputs();
+	printGraphConstants();
+}
 
 void Karnaughs::printHumanBestSolutions() const
 {
-	bool first = true;
+	First first;
 	for (std::size_t i = 0; i != karnaughs.size(); ++i)
 	{
-		if (first == true)
-		{
-			first = false;
-		}
-		else
-		{
-			if (options::outputFormat.getValue() != options::OutputFormat::HUMAN_SHORT)
-				std::cout << '\n' << '\n';
-		}
+		if (!first && options::outputFormat.getValue() != options::OutputFormat::HUMAN_SHORT)
+			std::cout << '\n' << '\n';
 		std::cout << "--- " << karnaughs[i].getFunctionName() << " ---\n";
 		if (options::outputFormat.getValue() != options::OutputFormat::HUMAN_SHORT)
 			std::cout << '\n';
 		karnaughs[i].printHumanSolution(bestSolutions[i]);
 	}
+}
+
+void Karnaughs::printGraphBestSolutions() const
+{
+	std::size_t idShift = 0;
+	for (std::size_t i = 0; i != karnaughs.size(); ++i)
+		idShift = karnaughs[i].printGraphSolution(bestSolutions[i], i, idShift);
 }
 
 bool Karnaughs::shouldFunctionNamesBeUsed() const
@@ -51,6 +109,12 @@ void Karnaughs::printHumanOptimizedSolution() const
 {
 	const Names functionNames = gatherFunctionNames();
 	optimizedSolutions.printHuman(std::cout, functionNames);
+}
+
+void Karnaughs::printGraphOptimizedSolution() const
+{
+	const Names functionNames = gatherFunctionNames();
+	optimizedSolutions.printGraph(std::cout, functionNames);
 }
 
 void Karnaughs::printVerilogBestSolutions(const Names &functionNames) const
@@ -77,9 +141,9 @@ void Karnaughs::printVerilogOptimizedSolution(const Names &functionNames) const
 void Karnaughs::printVhdlBestSolutions(const Names &functionNames) const
 {
 	std::cout << "begin\n";
+	std::cout << "\t\n";
 	if (!karnaughs.empty())
 	{
-		std::cout << "\t\n";
 		for (std::size_t i = 0; i != karnaughs.size(); ++i)
 		{
 			std::cout << '\t';
@@ -292,6 +356,19 @@ void Karnaughs::printHuman()
 	}
 }
 
+void Karnaughs::printGraph()
+{
+	std::cout << "digraph " << getName() << '\n';
+	std::cout << "{\n";
+	if (options::outputFormat.getValue() == options::OutputFormat::GRAPH)
+		printGraphRoots();
+	if (options::skipOptimization.isRaised())
+		printGraphBestSolutions();
+	else
+		printGraphOptimizedSolution();
+	std::cout << "}\n";
+}
+
 void Karnaughs::printVerilog()
 {
 	std::cout << "module " << getName() << " (\n";
@@ -374,49 +451,49 @@ void Karnaughs::printCpp()
 	std::cout << ";\n";
 	std::cout << "\t\n";
 	std::cout << "\t[[nodiscard]] constexpr output_t operator()(";
-	bool first = true;
-	for (std::size_t i = 0; i != ::inputNames.getSize(); ++i)
 	{
-		if (first)
-			first = false;
-		else
-			std::cout << ", ";
-		std::cout << "const bool ";
-		::inputNames.printCppRawName(std::cout, i);
+		First first;
+		for (std::size_t i = 0; i != ::inputNames.getSize(); ++i)
+		{
+			if (!first)
+				std::cout << ", ";
+			std::cout << "const bool ";
+			::inputNames.printCppRawName(std::cout, i);
+		}
 	}
 	std::cout << ") const { return (*this)({";
-	first = true;
-	for (std::size_t i = 0; i != ::inputNames.getSize(); ++i)
 	{
-		if (first)
-			first = false;
-		else
-			std::cout << ", ";
-		::inputNames.printCppRawName(std::cout, i);
+		First first;
+		for (std::size_t i = 0; i != ::inputNames.getSize(); ++i)
+		{
+			if (!first)
+				std::cout << ", ";
+			::inputNames.printCppRawName(std::cout, i);
+		}
 	}
 	std::cout << "}); }\n";
 	std::cout << "\t[[nodiscard]] constexpr output_t operator()(const input_t &i) const { return calc(i); }\n";
 	std::cout << "\t\n";
 	std::cout << "\t[[nodiscard]] static constexpr output_t calc(";
-	first = true;
-	for (std::size_t i = 0; i != ::inputNames.getSize(); ++i)
 	{
-		if (first)
-			first = false;
-		else
-			std::cout << ", ";
-		std::cout << "const bool ";
-		::inputNames.printCppRawName(std::cout, i);
+		First first;
+		for (std::size_t i = 0; i != ::inputNames.getSize(); ++i)
+		{
+			if (!first)
+				std::cout << ", ";
+			std::cout << "const bool ";
+			::inputNames.printCppRawName(std::cout, i);
+		}
 	}
 	std::cout << ") { return calc({";
-	first = true;
-	for (std::size_t i = 0; i != ::inputNames.getSize(); ++i)
 	{
-		if (first)
-			first = false;
-		else
-			std::cout << ", ";
-		::inputNames.printCppRawName(std::cout, i);
+		First first;
+		for (std::size_t i = 0; i != ::inputNames.getSize(); ++i)
+		{
+			if (!first)
+				std::cout << ", ";
+			::inputNames.printCppRawName(std::cout, i);
+		}
 	}
 	std::cout << "}); }\n";
 	std::cout << "\t[[nodiscard]] static constexpr output_t calc(const input_t &i);\n";
@@ -466,6 +543,10 @@ void Karnaughs::print()
 	case options::OutputFormat::HUMAN:
 	case options::OutputFormat::HUMAN_SHORT:
 		printHuman();
+		break;
+	case options::OutputFormat::GRAPH:
+	case options::OutputFormat::REDUCED_GRAPH:
+		printGraph();
 		break;
 	case options::OutputFormat::VERILOG:
 		printVerilog();
