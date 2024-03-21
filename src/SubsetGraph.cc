@@ -100,7 +100,7 @@ void SubsetGraph<VALUE_T, CONTAINER>::makeInitial(const groupedSets_t &groupedSe
 	for (auto &x : grouped)
 	{
 		std::ranges::sort(x.setIds);
-		const auto [eraseBegin, eraseEnd] = std::ranges::unique(x.setIds);
+		const auto eraseBegin = std::unique(x.setIds.begin(), x.setIds.end()), eraseEnd = x.setIds.end();
 		x.setIds.erase(eraseBegin, eraseEnd);
 	}
 }
