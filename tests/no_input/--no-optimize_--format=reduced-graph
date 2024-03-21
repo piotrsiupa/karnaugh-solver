@@ -1,0 +1,30 @@
+digraph no_input
+{
+	subgraph function_0
+	{
+		subgraph sum
+		{
+			node [shape=rectangle, style=filled];
+			edge [taillabel="||"];
+			f0 [label="always_true = <True>"];
+		}
+	}
+	subgraph function_1
+	{
+		subgraph sum
+		{
+			node [shape=rectangle, style=filled];
+			edge [taillabel="||"];
+			f1 [label="always_false = <False>"];
+		}
+	}
+	subgraph function_2
+	{
+		subgraph sum
+		{
+			node [shape=rectangle, style=filled];
+			edge [taillabel="||"];
+			f2 [label="dont_care = <False>"];
+		}
+	}
+}

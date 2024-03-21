@@ -7,16 +7,27 @@ if GetOption('clang'):
 else:
     env = Environment()  # default toolchain
 
+AddOption('--dbg', action='store_true', help='Debug build. (add debug info and turn off optimization)')
+if GetOption('dbg'):
+    if 'msvc' in env['TOOLS']:
+        env.Append(CCFLAGS=['/Zi'])
+        env.Append(LINKERFLAGS=['/DEBUG'])
+    else:
+        env.Append(CCFLAGS=['-g3'])
+    env.Append(CPPDEFINES=['NO_DEFAULT_PROGRESS'])
+else:
+    if 'msvc' in env['TOOLS']:
+        env.Append(CCFLAGS=['/O2'])
+    else:
+        env.Append(CCFLAGS=['-O3'])
+
 env.Replace(CPP_STANDARD='c++20')
 if 'msvc' in env['TOOLS']:
-    # Flags for MSVC.
-    env.Append(CCFLAGS=['/O2', '/W4', '/std:$CPP_STANDARD', '/FS', '/EHsc', '/utf-8'])
+    env.Append(CCFLAGS=['/W4', '/std:$CPP_STANDARD', '/FS', '/EHsc', '/utf-8'])
     env.Append(CPPDEFINES=['_CRT_SECURE_NO_WARNINGS'])
 else:
-    # Non-MSVC compilers tends to use these flags.
-    env.Append(CCFLAGS=['-O3', '-Wall', '-Wextra', '-pedantic', '-std=$CPP_STANDARD'])
+    env.Append(CCFLAGS=['-Wall', '-Wextra', '-pedantic', '-std=$CPP_STANDARD'])
 if 'g++' in env['TOOLS'] or 'clang++' in env['TOOLS']:
-    # This option is supported by GCC and Clang but probably not other compilers.
     env.Append(CCFLAGS=['-fdiagnostics-color=always'])
 if 'clang++' in env['TOOLS']:
     # Clang doesn't conform to the standard by default. This fixes it.

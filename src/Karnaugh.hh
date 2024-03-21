@@ -62,6 +62,7 @@ public:
 	Solutions solve() &&;  // This function is `&&` as a reminder the it removes some data in the process (to save memory) and because of that it cannot be called twice.
 	
 	void printHumanSolution(const Solution &solution) const;
+	[[nodiscard]] std::size_t printGraphSolution(const Solution &solution, const std::size_t functionNum, const std::size_t idShift) const;
 	void printVerilogSolution(const Solution &solution) const;
 	void printVhdlSolution(const Solution &solution) const;
 	void printCppSolution(const Solution &solution) const;

@@ -8,6 +8,7 @@
 #include <limits>
 
 #include "global.hh"
+#include "utils.hh"
 
 
 namespace options
@@ -68,12 +69,10 @@ namespace options
 		if (!regexReady)
 		{
 			std::string pattern;
-			bool first = true;
+			First first;
 			for (const Mapping &mapping : mappings)
 			{
-				if (first)
-					first = false;
-				else
+				if (!first)
 					pattern += '|';
 				pattern += '(' + std::string(mapping.regex) + ')';
 			}
@@ -91,12 +90,10 @@ namespace options
 		{
 			std::cerr << "Invalid value \"" << argument << "\" for the option \"--" << getMainLongName() << "\"!\n";
 			std::cerr << "Allowed values are: ";
-			bool first = true;
+			First first;
 			for (const Mapping &mapping : mappings)
 			{
-				if (first)
-					first = false;
-				else
+				if (!first)
 					std::cerr << ", ";
 				std::cerr << mapping.officialName;
 			}
@@ -145,13 +142,23 @@ namespace options
 	Flag helpOptions("help-options", "(?:(?:t(?:run(?:c(?:ated)?)?)?|s(?:hort)?|o(?:pt(?:ions?)?)?[-_ ]o(?:nly)?)?[-_ ]h(?:elp)?|(?:t|s|oo?)h)|(?:h(?:elp)?[-_ ](?:(?:w(?:ith)?[-_ ])?(?:o(?:nly)?|j(?:ust)?)[-_ ]o(?:pt(?:ions?)?)?|o(?:pt(?:ions?)?)?(?:[-_ ]o(?:nly)?)?)|h(?:w?[oj]o|oo))", 'H');
 	Flag version("version", "v(?:er(?:s(?:ions?)?)?)?|auth(?:ors?)?", 'v');
 	
-	Trilean prompt("prompt", "prompts?|hints?", 'p', [](){ return ::terminalInput; });
-	Trilean status("status", "stat(?:s|us)?|progress(?:[-_ ]bars?)?", 's', [](){ return ::terminalStderr; });
+	Trilean prompt("prompt", "prompts?|hints?", 'p', [](){
+			return ::terminalInput;
+		});
+	Trilean status("status", "stat(?:s|us)?|progress(?:[-_ ]bars?)?", 's', [](){
+#ifdef NO_DEFAULT_PROGRESS
+			return false;
+#else
+			return ::terminalStderr;
+#endif
+		});
 	
 	Mapped<OutputFormat> outputFormat("format", "(?:output[-_ ])?(?:format|notation|lang(?:uage)?)", 'f', {
 			{"human-long", "human(?:[-_ ]readable)?[-_ ](?:long|big)|(?:long|big)[-_ ]human(?:[-_ ]readable)?|h[-_ ]?(?:r[-_ ]?)?l|l[-_ ]?h(?:[-_ ]?r)?|full|default", OutputFormat::HUMAN_LONG},
 			{"human", "human(?:[-_ ]readable)?(?:[-_ ](?:medium|middle))?|(?:(?:medium|middle)[-_ ])?human(?:[-_ ]readable)?|h(?:[-_ ]?r)?(?:[-_ ]?m)?|(?:m[-_ ]?)?h(?:[-_ ]?r)?|medium|middle|shorter", OutputFormat::HUMAN},
 			{"human-short", "human(?:[-_ ]readable)?[-_ ](?:short|small)|(?:short|small)[-_ ]human(?:[-_ ]readable)?|h[-_ ]?(?:r[-_ ]?)?s|s[-_ ]?h(?:[-_ ]?r)?|short|small|tiny|minimal", OutputFormat::HUMAN_SHORT},
+			{"graph", "(?:(?:f(?:u(?:ll)?)?|e(?:x(?:p(?:a(?:n(?:d(?:ed)?)?|s(?:i(?:ve)?)?)?)?)?)?|b(?:i(?:g(?:ge(?:r|st))?)?)?|l(?:a(?:r(?:ge(?:r|st)?)?)?)?)[-_ ])?(?:g(?:r(?:a(?:ph(?:s|ic(?:al)?)?)?)?)?|d(?:ot)?|vi(?:s(?:u(?:als?)?)?)?)", OutputFormat::GRAPH},
+			{"reduced-graph", "(?:(?:r(?:e(?:d(?:u(?:c(?:ed)?)?)?)?)?|s(?:m(?:all(?:e(?:r|st))?)?)?|m(?:i(?:n(?:i(?:mal)?)?)?)?|c(?:o(?:m(?:p(?:act|r(?:es(?:sed)?)?))?)?)?)[-_ ])(?:g(?:r(?:a(?:ph(?:s|ic(?:al)?)?)?)?)?|d(?:ot)?|vi(?:s(?:u(?:als?)?)?)?)", OutputFormat::REDUCED_GRAPH},
 			{"verilog", "verilog", OutputFormat::VERILOG},
 			{"vhdl", "vhdl", OutputFormat::VHDL},
 			{"cpp", "cpp|c\\+\\+|cc|hpp|h\\+\\+|hh", OutputFormat::CPP},

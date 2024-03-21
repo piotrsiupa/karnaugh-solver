@@ -62,6 +62,8 @@ void printHelp()
 			"\thuman-long\t- The default format which displays all the information\n\t\t\t  in a human-readable way.\n"
 			"\thuman\t\t- A format similar to \"human-long\" but it without the\n\t\t\t  graphical representations of Karnaugh maps which\n\t\t\t  normally take most of the vertical space.\n"
 			"\thuman-short\t- A minimalistic result of the program without any\n\t\t\t  additional fluff, in a human-readable way.\n"
+			"\tgraph\t\t- `human-short` as a graph in the DOT language.\n"
+			"\treduced-graph\t- Similar `graph` but input nodes are omitted for\n\t\t\t  readability. (Instead, they are shown as labels.)\n"
 			"\tverilog\t\t- A Verilog module.\n"
 			"\tvhdl\t\t- A VHDL entity.\n"
 			"\tcpp\t\t- A C++ class (both a functor and static functions).\n"
@@ -133,7 +135,7 @@ void printHelp()
 void printVersion()
 {
 	std::cout <<
-			"karnaugh (Karnaugh Map Solver) version 0.2.5\n"
+			"karnaugh (Karnaugh Map Solver) version 0.3.0\n"
 			"Author: Piotr Siupa\n"
 #ifndef NDEBUG
 			"This is a development build which contains additional assertions!\n"

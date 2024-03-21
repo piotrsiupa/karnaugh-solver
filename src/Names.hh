@@ -25,6 +25,7 @@ public:
 	Names& operator=(Names &&) = default;
 	
 	void printHumanName(std::ostream &o, const std::size_t i) const { o << names[i]; }
+	void printGraphName(std::ostream &o, const std::size_t i) const { o << names[i]; }
 	void printVerilogName(std::ostream &o, const std::size_t i) const { if (useInCode) o << names[i]; else o << replacementName << '[' << i << ']'; }
 	void printVerilogNames(std::ostream &o) const;
 	void printVhdlName(std::ostream &o, const std::size_t i) const { if (useInCode) o << names[i]; else o << replacementName << '(' << i << ')'; }

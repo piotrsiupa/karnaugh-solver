@@ -2,6 +2,7 @@
 
 #include <string>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 #include "Solution.hh"
@@ -24,8 +25,14 @@ class Karnaughs
 	
 	[[nodiscard]] bool shouldFunctionNamesBeUsed() const;
 	Names gatherFunctionNames() const;
+	void printGraphInputs() const;
+	std::pair<bool, bool> checkForUsedConstants() const;
+	void printGraphConstants() const;
+	void printGraphRoots() const;
 	void printHumanBestSolutions() const;
 	void printHumanOptimizedSolution() const;
+	void printGraphBestSolutions() const;
+	void printGraphOptimizedSolution() const;
 	void printVerilogBestSolutions(const Names &functionNames) const;
 	void printVerilogOptimizedSolution(const Names &functionNames) const;
 	void printVhdlBestSolutions(const Names &functionNames) const;
@@ -45,6 +52,7 @@ public:
 	void solve() &&;  // This function is `&&` as a reminder the it removes some data in the process (to save memory) and because of that it cannot be called twice.
 	
 	void printHuman();
+	void printGraph();
 	void printVerilog();
 	void printVhdl();
 	void printCpp();

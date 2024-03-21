@@ -1,0 +1,20 @@
+digraph no_input
+{
+	subgraph constants
+	{
+		node [shape=octagon, style=dashed];
+		true;
+		false;
+	}
+	subgraph final_sums
+	{
+		node [shape=rectangle, style=filled];
+		edge [taillabel="||"];
+		f0 [label="always_true"];
+		f0 -> true;
+		f1 [label="always_false"];
+		f1 -> false;
+		f2 [label="dont_care"];
+		f2 -> false;
+	}
+}

@@ -1,0 +1,47 @@
+class hard_to_print_optimized
+{
+public:
+	using input_t = struct { bool q, x, y, z; };
+	using output_t = struct { bool none, all, some, even_less, more_than_less, none_again, all_again, some_again, more_than_less_again, half, some_the_third_time, more_than_less_the_third_time, most, even_more, half_again; };
+	
+	[[nodiscard]] constexpr output_t operator()(const bool q, const bool x, const bool y, const bool z) const { return (*this)({q, x, y, z}); }
+	[[nodiscard]] constexpr output_t operator()(const input_t &i) const { return calc(i); }
+	
+	[[nodiscard]] static constexpr output_t calc(const bool q, const bool x, const bool y, const bool z) { return calc({q, x, y, z}); }
+	[[nodiscard]] static constexpr output_t calc(const input_t &i);
+};
+
+constexpr hard_to_print_optimized::output_t hard_to_print_optimized::calc(const input_t &i)
+{
+	// Intermediary values
+	bool prods[2] = {};
+	bool sums[3] = {};
+	
+	// Products
+	prods[0] = !i.q && !i.x;
+	prods[1] = !i.y && prods[0];
+	
+	// Sums
+	sums[0] = prods[1] || !i.z;
+	sums[1] = i.q || i.y;
+	sums[2] = !i.x || sums[1];
+	
+	// Results
+	output_t o = {};
+	o.none = false;
+	o.all = true;
+	o.some = prods[0];
+	o.even_less = prods[1];
+	o.more_than_less = sums[0];
+	o.none_again = false;
+	o.all_again = true;
+	o.some_again = prods[0];
+	o.more_than_less_again = sums[0];
+	o.half = !i.z;
+	o.some_the_third_time = prods[0];
+	o.more_than_less_the_third_time = sums[0];
+	o.most = sums[1];
+	o.even_more = sums[2];
+	o.half_again = !i.z;
+	return o;
+}

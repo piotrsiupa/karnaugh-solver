@@ -1,7 +1,10 @@
-.gitignore text
-.gitattributes text
+/.gitignore text
+/.gitattributes text
+/LICENSE text
+/SConstruct text
+/tests/*/* text
 *.hh text
 *.cc text
-SConstruct text
 *.py text
-tests/*/* text
+*.md text
+*.png binary

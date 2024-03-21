@@ -7,9 +7,10 @@
 #include "options.hh"
 #include "SetOptimizerForProducts.hh"
 #include "SetOptimizerForSums.hh"
+#include "utils.hh"
 
 
-std::size_t OptimizedSolutions::generateHumanIds() const
+void OptimizedSolutions::generateHumanIds() const
 {
 	const id_t idCount = products.size() + sums.size();
 	normalizedIds.resize(idCount);
@@ -17,7 +18,17 @@ std::size_t OptimizedSolutions::generateHumanIds() const
 	for (id_t id = 0; id != idCount; ++id)
 		if (isWorthPrinting(id, false))
 			normalizedIds[id] = currentHumanId++;
-	return currentHumanId;
+}
+
+void OptimizedSolutions::generateGraphIds() const
+{
+	const bool isFullGraph = options::outputFormat.getValue() == options::OutputFormat::GRAPH;
+	const id_t idCount = products.size() + sums.size();
+	normalizedIds.resize(idCount);
+	id_t currentGraphId = 0;
+	for (id_t id = 0; id != idCount; ++id)
+		if (isWorthPrintingOnGraph(id, isFullGraph))
+			normalizedIds[id] = currentGraphId++;
 }
 
 std::pair<std::size_t, std::size_t> OptimizedSolutions::generateNormalizedIds() const
@@ -85,6 +96,11 @@ void OptimizedSolutions::printHumanId(std::ostream &o, const id_t id) const
 	o << '[' << normalizedIds[id] << ']';
 }
 
+void OptimizedSolutions::printGraphId(std::ostream &o, const id_t id) const
+{
+	o << 's' << normalizedIds[id];
+}
+
 void OptimizedSolutions::printVerilogId(std::ostream &o, const id_t id) const
 {
 	if (isProduct(id))
@@ -112,26 +128,41 @@ void OptimizedSolutions::printCppId(std::ostream &o, const id_t id) const
 void OptimizedSolutions::printHumanNegatedInputs(std::ostream &o) const
 {
 	o << "Negated inputs:";
-	bool first = true;
+	First first;
 	for (Minterm i = 0; i != ::bits; ++i)
 	{
 		if ((negatedInputs & (1 << (::bits - i - 1))) != 0)
 		{
-			if (first)
-			{
-				first = false;
-				o << ' ';
-			}
-			else
-			{
-				o << ", ";
-			}
+			if (!first)
+				o << ',';
+			o << ' ';
 			::inputNames.printHumanName(o, i);
 		}
 	}
 	if (first)
 		o << " <none>";
 	o << '\n';
+}
+
+void OptimizedSolutions::printGraphNegatedInputs(std::ostream &o) const
+{
+	if (negatedInputs == 0)
+		return;
+	o << "\tsubgraph negated_inputs\n";
+	o << "\t{\n";
+	o << "\t\tnode [shape=diamond];\n";
+	o << "\t\tedge [taillabel=\"!\"];\n";
+	for (Minterm i = 0; i != ::bits; ++i)
+	{
+		if ((negatedInputs & (1 << (::bits - i - 1))) != 0)
+		{
+			o << "\t\tni" << i << " [label=\"!";
+			::inputNames.printGraphName(o, i);
+			o << "\"];\n";
+			o << "\t\tni" << i << " -> i" << i << ";\n";
+		}
+	}
+	o << "\t}\n";
 }
 
 void OptimizedSolutions::printHumanProductBody(std::ostream &o, const id_t productId) const
@@ -168,6 +199,103 @@ void OptimizedSolutions::printHumanProducts(std::ostream &o) const
 			continue;
 		printHumanProduct(o, makeProductId(i));
 	}
+}
+
+std::size_t OptimizedSolutions::findProductEndNode(const id_t productId, std::size_t startFunctionNum) const
+{
+	for (std::size_t i = startFunctionNum; i != finalSums.size(); ++i)
+	{
+		const sum_t &sum = getSum(finalSums[i]);
+		if (sum.size() == 1 && sum.front() == productId)
+			return i;
+	}
+	return SIZE_MAX;
+}
+
+void OptimizedSolutions::printGraphProductBody(std::ostream &o, const id_t productId) const
+{
+	const bool isFullGraph = options::outputFormat.getValue() == options::OutputFormat::GRAPH;
+	const auto &[primeImplicant, ids] = getProduct(productId);
+	bool needsComma = isFullGraph && primeImplicant != Implicant::all();
+	if (needsComma || ids.empty())
+		primeImplicant.printGraph(o);
+	for (const auto &id : ids)
+	{
+		if (needsComma)
+			o << ", ";
+		else
+			needsComma = true;
+		printGraphId(o, id);
+	}
+}
+
+void OptimizedSolutions::printGraphProduct(std::ostream &o, const Names &functionNames, const id_t productId) const
+{
+	const bool isFullGraph = options::outputFormat.getValue() == options::OutputFormat::GRAPH;
+	std::size_t functionNum = isFullGraph ? SIZE_MAX : findProductEndNode(productId);
+	o << "\t\t";
+	printGraphId(o, productId);
+	o << " [label=\"";
+	if (functionNum == SIZE_MAX)
+	{
+		printHumanId(o, productId);
+	}
+	else
+	{
+		while (true)
+		{
+			functionNames.printGraphName(o, functionNum);
+			const std::size_t additionalFunNum = findProductEndNode(productId, functionNum + 1);
+			if (additionalFunNum == SIZE_MAX)
+				break;
+			o << ", ";
+			functionNum = additionalFunNum;
+		}
+	}
+	if (!isFullGraph)
+	{
+		const auto &[primeImplicant, ids] = getProduct(productId);
+		if (primeImplicant.getBitCount() != 0 || ids.empty())
+		{
+			o << " = ";
+			primeImplicant.printHuman(o, false);
+		}
+	}
+	o << '"';
+	if (functionNum != SIZE_MAX)
+		o << ", style=filled";
+	o << "];";
+	o << '\n';
+	if (isFullGraph || !getProduct(productId).second.empty())
+	{
+		o << "\t\t";
+		printGraphId(o, productId);
+		o << " -> ";
+		printGraphProductBody(o, productId);
+		o << ";\n";
+	}
+}
+
+void OptimizedSolutions::printGraphProducts(std::ostream &o, const Names &functionNames) const
+{
+	const bool isFullGraph = options::outputFormat.getValue() == options::OutputFormat::GRAPH;
+	bool anyIsPrinted = false;
+	for (std::size_t i = 0; i != products.size(); ++i)
+	{
+		if (!isProductWorthPrintingOnGraph(makeProductId(i), isFullGraph))
+			continue;
+		if (!anyIsPrinted)
+		{
+			anyIsPrinted = true;
+			o << "\tsubgraph products\n";
+			o << "\t{\n";
+			o << "\t\tnode [shape=ellipse];\n";
+			o << "\t\tedge [taillabel=\"&&\"];\n";
+		}
+		printGraphProduct(o, functionNames, makeProductId(i));
+	}
+	if (anyIsPrinted)
+		o << "\t}\n";
 }
 
 void OptimizedSolutions::printVerilogProductBody(std::ostream &o, const id_t productId) const
@@ -298,14 +426,25 @@ void OptimizedSolutions::printCppProducts(std::ostream &o) const
 		o << "\t\n";
 }
 
+bool OptimizedSolutions::isSumWorthPrinting(const id_t sumId, const bool simpleFinalSums) const
+{
+	if (simpleFinalSums)
+		return getSum(sumId).size() >= 2;
+	if (std::count(finalSums.cbegin(), finalSums.cend(), sumId) >= 2 && getSum(sumId).size() >= 2)
+		return true;
+	for (const sum_t &sum : sums)
+		for (const id_t &id : sum)
+			if (id == sumId)
+				return true;
+	return false;
+}
+
 void OptimizedSolutions::printHumanSumBody(std::ostream &o, const id_t sumId) const
 {
-	bool first = true;
+	First first;
 	for (const auto &partId : getSum(sumId))
 	{
-		if (first)
-			first = false;
-		else
+		if (!first)
 			o << " || ";
 		if (!isProduct(partId) || isProductWorthPrinting(partId))
 			printHumanId(o, partId);
@@ -334,14 +473,118 @@ void OptimizedSolutions::printHumanSums(std::ostream &o) const
 	}
 }
 
-void OptimizedSolutions::printVerilogSumBody(std::ostream &o, const id_t sumId) const
+std::size_t OptimizedSolutions::findSumEndNode(const id_t sumId, const std::size_t startFunctionNum) const
 {
-	bool first = true;
+	for (std::size_t i = startFunctionNum; i != finalSums.size(); ++i)
+		if (finalSums[i] == sumId)
+			return i;
+	return SIZE_MAX;
+}
+
+void OptimizedSolutions::printGraphSumBody(std::ostream &o, const id_t sumId) const
+{
+	const bool isFullGraph = options::outputFormat.getValue() == options::OutputFormat::GRAPH;
+	First first;
 	for (const auto &partId : getSum(sumId))
 	{
-		if (first)
-			first = false;
-		else
+		if (!isProduct(partId) || isProductWorthPrinting(partId))
+		{
+			if (!first)
+				o << ", ";
+			printGraphId(o, partId);
+		}
+		else if (isFullGraph)
+		{
+			if (!first)
+				o << ", ";
+			getProduct(partId).first.printGraph(o);
+		}
+	}
+}
+
+void OptimizedSolutions::printGraphSum(std::ostream &o, const Names &functionNames, const id_t sumId) const
+{
+	const bool isFullGraph = options::outputFormat.getValue() == options::OutputFormat::GRAPH;
+	std::size_t functionNum = isFullGraph ? SIZE_MAX : findSumEndNode(sumId);
+	o << "\t\t";
+	printGraphId(o, sumId);
+	o << " [label=\"";
+	if (functionNum == SIZE_MAX)
+	{
+		printHumanId(o, sumId);
+	}
+	else
+	{
+		while (true)
+		{
+			functionNames.printGraphName(o, functionNum);
+			const std::size_t additionalFunNum = findSumEndNode(sumId, functionNum + 1);
+			if (additionalFunNum == SIZE_MAX)
+				break;
+			o << ", ";
+			functionNum = additionalFunNum;
+		}
+	}
+	bool hasParent = isFullGraph;
+	if (!isFullGraph)
+	{
+		First first;
+		for (const auto &partId : getSum(sumId))
+		{
+			if (isProduct(partId) && !isProductWorthPrinting(partId))
+			{
+				o << (first ? " = " : " || ");
+				getProduct(partId).first.printHuman(o, false);
+			}
+			else
+			{
+				hasParent = true;
+			}
+		}
+	}
+	o << '"';
+	if (functionNum != SIZE_MAX)
+		o << ", style=filled";
+	o << "];\n";
+	if (hasParent)
+	{
+		o << "\t\t";
+		printGraphId(o, sumId);
+		o << " -> ";
+		printGraphSumBody(o, sumId);
+		o << ";\n";
+	}
+}
+
+void OptimizedSolutions::printGraphSums(std::ostream &o, const Names &functionNames) const
+{
+	const bool isFullGraph = options::outputFormat.getValue() == options::OutputFormat::GRAPH;
+	bool anyIsPrinted = false;
+	for (std::size_t i = 0; i != sums.size(); ++i)
+	{
+		const id_t sumId = makeSumId(i);
+		if (!isSumWorthPrintingOnGraph(sumId, isFullGraph))
+			continue;
+		if (!anyIsPrinted)
+		{
+			anyIsPrinted = true;
+			o << "\tsubgraph sums\n";
+			o << "\t{\n";
+			o << "\t\tnode [shape=rectangle];\n";
+			o << "\t\tedge [taillabel=\"||\"];\n";
+		}
+		printGraphSum(o, functionNames, sumId);
+	}
+	if (anyIsPrinted)
+		o << "\t}\n";
+}
+
+void OptimizedSolutions::printVerilogSumBody(std::ostream &o, const id_t sumId) const
+{
+	First first;
+	for (const auto &partId : getSum(sumId))
+	{
+		if (!first)
 			o << " | ";
 		if (!isProduct(partId) || isProductWorthPrinting(partId))
 			printVerilogId(o, partId);
@@ -379,12 +622,10 @@ void OptimizedSolutions::printVerilogSums(std::ostream &o) const
 
 void OptimizedSolutions::printVhdlSumBody(std::ostream &o, const id_t sumId) const
 {
-	bool first = true;
+	First first;
 	for (const auto &partId : getSum(sumId))
 	{
-		if (first)
-			first = false;
-		else
+		if (!first)
 			o << " or ";
 		if (!isProduct(partId) || isProductWorthPrinting(partId))
 			printVhdlId(o, partId);
@@ -421,12 +662,10 @@ void OptimizedSolutions::printVhdlSums(std::ostream &o) const
 
 void OptimizedSolutions::printCppSumBody(std::ostream &o, const id_t sumId) const
 {
-	bool first = true;
+	First first;
 	for (const auto &partId : getSum(sumId))
 	{
-		if (first)
-			first = false;
-		else
+		if (!first)
 			o << " || ";
 		if (!isProduct(partId) || isProductWorthPrinting(partId))
 			printCppId(o, partId);
@@ -478,6 +717,30 @@ void OptimizedSolutions::printHumanFinalSums(std::ostream &o, const Names &funct
 	}
 }
 
+void OptimizedSolutions::printGraphFinalSums(std::ostream &o, const Names &functionNames) const
+{
+	if (finalSums.empty())
+		return;
+	o << "\tsubgraph final_sums\n";
+	o << "\t{\n";
+	o << "\t\tnode [shape=rectangle, style=filled];\n";
+	o << "\t\tedge [taillabel=\"||\"];\n";
+	for (std::size_t i = 0; i != finalSums.size(); ++i)
+	{
+		o << "\t\tf" << i << " [label=\"";
+		functionNames.printGraphName(o, i);
+		o << "\"];\n";
+		o << "\t\tf" << i << " -> ";
+		const id_t sumId = finalSums[i];
+		if (isSumWorthPrinting(sumId, false))
+			printGraphId(o, sumId);
+		else
+			printGraphSumBody(o, sumId);
+		o << ";\n";
+	}
+	o << "\t}\n";
+}
+
 void OptimizedSolutions::printVerilogFinalSums(std::ostream &o, const Names &functionNames) const
 {
 	if (!finalSums.empty())
@@ -517,19 +780,18 @@ void OptimizedSolutions::printVhdlFinalSums(std::ostream &o, const Names &functi
 				printVhdlSumBody(o, sumId);
 			o << ";\n";
 		}
-		o << "\t\n";
 	}
 }
 
 void OptimizedSolutions::printCppFinalSums(std::ostream &o, const Names &functionNames) const
 {
+	o << "\t// Results\n";
 	if (finalSums.empty())
 	{
 		o << "\treturn {};\n";
 	}
 	else
 	{
-		o << "\t// Results\n";
 		o << "\toutput_t o = {};\n";
 		for (std::size_t i = 0; i != finalSums.size(); ++i)
 		{
@@ -672,6 +934,25 @@ OptimizedSolutions::OptimizedSolutions(const solutions_t &solutions, Progress &p
 #endif
 }
 
+std::pair<bool, bool> OptimizedSolutions::checkForUsedConstants() const
+{
+	bool usesFalse = false, usesTrue = false;
+	for (const id_t sumId : finalSums)
+	{
+		const sum_t &sum = getSum(sumId);
+		if (sum.size() >= 2)
+			continue;
+		const id_t productId = sum.front();
+		if (!isProduct(productId))
+			continue;
+		const product_t &product = getProduct(productId);
+		const auto [thisUsesFalse, thisUsesTrue] = product.first.checkForUsedConstants();
+		usesFalse |= thisUsesFalse;
+		usesTrue |= thisUsesTrue;
+	}
+	return {usesFalse, usesTrue};
+}
+
 void OptimizedSolutions::printHuman(std::ostream &o, const Names &functionNames) const
 {
 	generateHumanIds();
@@ -684,6 +965,18 @@ void OptimizedSolutions::printHuman(std::ostream &o, const Names &functionNames)
 		o << '\n';
 		printGateCost(o, false);
 	}
+}
+
+void OptimizedSolutions::printGraph(std::ostream &o, const Names &functionNames) const
+{
+	const bool isFullGraph = options::outputFormat.getValue() == options::OutputFormat::GRAPH;
+	generateGraphIds();
+	if (isFullGraph)
+		printGraphNegatedInputs(o);
+	printGraphProducts(o, functionNames);
+	printGraphSums(o, functionNames);
+	if (isFullGraph)
+		printGraphFinalSums(o, functionNames);
 }
 
 void OptimizedSolutions::printVerilog(std::ostream &o, const Names &functionNames) const
@@ -703,6 +996,7 @@ void OptimizedSolutions::printVhdl(std::ostream &o, const Names &functionNames) 
 	printVhdlProducts(o);
 	printVhdlSums(o);
 	printVhdlFinalSums(o, functionNames);
+	o << "\t\n";
 }
 
 void OptimizedSolutions::printCpp(std::ostream &o, const Names &functionNames) const
