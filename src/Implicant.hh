@@ -84,7 +84,9 @@ public:
 	[[nodiscard]] const_iterator cbegin() const { return begin(); }
 	[[nodiscard]] constexpr const_iterator cend() const { return end(); }
 	
+	[[nodiscard]] constexpr std::pair<bool, bool> checkForUsedConstants() const { return empty() ? (bits == 0 ? std::make_pair(false, true) : std::make_pair(true, false)) : std::make_pair(false, false); }
 	void printHuman(std::ostream &o, const bool parentheses) const;
+	void printGraph(std::ostream &o) const;
 	void printVerilog(std::ostream &o, const bool parentheses) const;
 	void printVhdl(std::ostream &o, const bool parentheses) const;
 	void printCpp(std::ostream &o, const bool parentheses) const;

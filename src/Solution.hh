@@ -11,6 +11,10 @@
 
 class Solution final : public GateCost, public Implicants
 {
+	void printGraphNegatedInputs(std::ostream &o, const std::size_t functionNum) const;
+	[[nodiscard]] std::size_t printGraphProducts(std::ostream &o, const std::size_t functionNum, std::size_t idShift) const;
+	void printGraphSum(std::ostream &o, const std::size_t functionNum, const std::string_view functionName) const;
+
 public:
 	using Implicants::Implicants;
 	
@@ -22,7 +26,9 @@ public:
 	
 	Minterms getMinterms() const;
 	
+	std::pair<bool, bool> checkForUsedConstants() const;
 	void printHuman(std::ostream &o) const;
+	std::size_t printGraph(std::ostream &o, const std::size_t functionNum, const std::string_view functionName, const std::size_t idShift) const;
 	void printVerilog(std::ostream &o) const;
 	void printVhdl(std::ostream &o) const;
 	void printCpp(std::ostream &o) const;

@@ -15,5 +15,6 @@ public:
 
 constexpr nothing::output_t nothing::calc(const input_t &)
 {
+	// Results
 	return {};
 }

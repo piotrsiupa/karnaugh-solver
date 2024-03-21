@@ -6,4 +6,5 @@ end nothing;
 
 architecture behavioural of nothing is
 begin
+	
 end behavioural;

@@ -1,0 +1,37 @@
+digraph very_optimizable
+{
+	subgraph products
+	{
+		node [shape=ellipse];
+		edge [taillabel="&&"];
+		s0 [label="[0] = c && !d"];
+		s1 [label="[1] = a && !b"];
+		s2 [label="[2]"];
+		s2 -> s1, s0;
+		s3 [label="[3] = !c && d"];
+		s4 [label="[4]"];
+		s4 -> s1, s3;
+		s5 [label="[5] = !a && b"];
+		s6 [label="[6]"];
+		s6 -> s0, s5;
+		s7 [label="[7]"];
+		s7 -> s3, s5;
+		s8 [label="[8] = a && b && c && d"];
+		s9 [label="[9] = !a && !b && !c && !d"];
+	}
+	subgraph sums
+	{
+		node [shape=rectangle];
+		edge [taillabel="||"];
+		s10 [label="[10]"];
+		s10 -> s4, s6;
+		s11 [label="third", style=filled];
+		s11 -> s7, s10;
+		s12 [label="first", style=filled];
+		s12 -> s2, s11;
+		s13 [label="second", style=filled];
+		s13 -> s8, s11;
+		s14 [label="fourth", style=filled];
+		s14 -> s9, s10;
+	}
+}

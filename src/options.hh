@@ -157,6 +157,8 @@ namespace options
 		HUMAN_LONG,
 		HUMAN,
 		HUMAN_SHORT,
+		GRAPH,
+		REDUCED_GRAPH,
 		VERILOG,
 		VHDL,
 		CPP,
