@@ -1,6 +1,6 @@
 #pragma once
 
-#include <bitset>
+#include <bit>
 #include <climits>
 #include <cstdint>
 #include <ostream>
@@ -60,9 +60,9 @@ public:
 	[[nodiscard]] constexpr mask_t getMask() const { return mask; }
 	[[nodiscard]] constexpr mask_t getTrueBits() const { return bits & mask; }
 	[[nodiscard]] constexpr mask_t getFalseBits() const { return ~bits & mask; }
-	[[nodiscard]] bits_t getBitCount() const { return static_cast<bits_t>(std::bitset<::maxBits>(mask).count()); } // constexpr since C++23
-	[[nodiscard]] bits_t getTrueBitCount() const { return static_cast<bits_t>(std::bitset<::maxBits>(getTrueBits()).count()); } // constexpr since C++23
-	[[nodiscard]] bits_t getFalseBitCount() const { return static_cast<bits_t>(std::bitset<::maxBits>(getFalseBits()).count()); } // constexpr since C++23
+	[[nodiscard]] constexpr bits_t getBitCount() const { return static_cast<bits_t>(std::popcount(mask)); }
+	[[nodiscard]] constexpr bits_t getTrueBitCount() const { return static_cast<bits_t>(std::popcount(getTrueBits())); }
+	[[nodiscard]] constexpr bits_t getFalseBitCount() const { return static_cast<bits_t>(std::popcount(getFalseBits())); }
 	[[nodiscard]] splitBits_t splitBits() const;
 	
 	void add(const Implicant &other) { this->bits |= other.bits; this->mask |= other.mask; }
@@ -110,7 +110,7 @@ constexpr std::strong_ordering Implicant::const_iterator::operator<=>(const cons
 Implicant Implicant::findBiggestInUnion(const Implicant &x, const Implicant &y)
 {
 	const mask_t conflicts = (x.bits ^ y.bits) & (x.mask & y.mask);
-	const bits_t conflictCount = static_cast<bits_t>(std::bitset<::maxBits>(conflicts).count());
+	const bits_t conflictCount = static_cast<bits_t>(std::popcount(conflicts));
 	return conflictCount == 1  // Implicants are "touching". ("1" means touching; "0" means intersecting.)
 		? Implicant((x.bits | y.bits) & ~conflicts, (x.mask | y.mask) & ~conflicts)
 		: none();
