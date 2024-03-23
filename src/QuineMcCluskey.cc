@@ -175,9 +175,7 @@ Implicants QuineMcCluskey::createPrimeImplicantsWithoutHeuristic(Progress &progr
 			static_assert(::maxBits == 32);
 			const std::uint_fast64_t mask = ~static_cast<std::uint64_t>(bitMask);
 			const auto makeComparisonValue = [mask](const Implicant &implicant){ return ((static_cast<std::uint_fast64_t>(implicant.getMask()) << 32) | static_cast<std::uint_fast64_t>(implicant.getBits())) & static_cast<std::uint_fast64_t>(mask); };
-			std::ranges::sort(implicants, [makeComparisonValue](const std::pair<Implicant, bool> &x, const std::pair<Implicant, bool> &y){
-					return makeComparisonValue(x.first) < makeComparisonValue(y.first);
-				});
+			std::ranges::sort(implicants, std::ranges::less{}, [makeComparisonValue](const std::pair<Implicant, bool> &x){ return makeComparisonValue(x.first); });
 			std::pair<Implicant, bool> *previous = &implicants.front();
 			for (auto iter = std::next(implicants.begin()); iter != implicants.end(); ++iter)
 			{

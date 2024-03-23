@@ -262,9 +262,9 @@ inline void PetricksMethod<INDEX_T>::multiplySumsOfProducts_maxN(std::vector<Com
 	}
 	if (sizeInfos.size() > maxSums)
 	{
-		std::ranges::sort(sizeInfos, [](const SizeInfo &x, const SizeInfo &y){ return x.size < y.size; });
+		std::ranges::sort(sizeInfos, std::ranges::less{}, &SizeInfo::size);
 		sizeInfos.resize(maxSums);
-		std::ranges::sort(sizeInfos, [](const SizeInfo &x, const SizeInfo &y){ return x.i < y.i; });
+		std::ranges::sort(sizeInfos, std::ranges::less{}, &SizeInfo::i);
 	}
 	// `sizeInfos` must be sorted by `i` from this point.
 	
@@ -361,7 +361,7 @@ typename PetricksMethod<INDEX_T>::sumOfProducts_t PetricksMethod<INDEX_T>::findS
 		progress.substep(0.0);
 		sumOfProducts_t sumOfProducts = std::move(productOfSumsOfProducts.back());
 		productOfSumsOfProducts.pop_back();
-		std::ranges::sort(sumOfProducts, [](const product_t &x, const product_t &y){ return x.size() < y.size(); });
+		std::ranges::sort(sumOfProducts, std::ranges::less{}, &product_t::size);
 		if (sumOfProducts.size() > maxSums)
 			sumOfProducts.resize(maxSums);
 		for (const product_t &product : sumOfProducts)
@@ -403,7 +403,7 @@ typename PetricksMethod<INDEX_T>::sumOfProducts_t PetricksMethod<INDEX_T>::findS
 		progress.substep(0.0);
 		const sumOfProducts_t sumOfProducts = std::move(productOfSumsOfProducts.back());
 		productOfSumsOfProducts.pop_back();
-		const typename sumOfProducts_t::const_iterator smallestProduct = std::ranges::min_element(sumOfProducts, [](const product_t &x, const product_t &y){ return x.size() < y.size(); });
+		const typename sumOfProducts_t::const_iterator smallestProduct = std::ranges::min_element(sumOfProducts, std::ranges::less{}, &product_t::size);
 		for (const index_t index : *smallestProduct)
 			product0.insert(index);
 	}

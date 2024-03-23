@@ -69,7 +69,7 @@ template<typename VALUE_T, template<typename> class CONTAINER>
 void SubsetGraph<VALUE_T, CONTAINER>::makeInitial(const groupedSets_t &groupedSets)
 {
 	for (std::size_t i = 0; i != groupedSets.size(); ++i)
-		if (const auto foundGrouped = std::ranges::find_if(grouped, [&groupedSet = groupedSets[i]](const GroupedEntry &entry){ return entry.groupIds == groupedSet; }); foundGrouped != grouped.end())
+		if (const auto foundGrouped = std::ranges::find(grouped, groupedSets[i], &GroupedEntry::groupIds); foundGrouped != grouped.end())
 			foundGrouped->setIds.push_back(i);
 		else
 			grouped.push_back(GroupedEntry{groupedSets[i], {}, {i}, 0, true});
@@ -83,7 +83,7 @@ void SubsetGraph<VALUE_T, CONTAINER>::makeInitial(const groupedSets_t &groupedSe
 			std::ranges::set_intersection(grouped[i].groupIds, grouped[j].groupIds, std::back_inserter(partialSet));
 			if (partialSet.size() > 1 || (partialSet.size() == 1 && groups[partialSet[0]].size() > 1))
 			{
-				auto foundGrouped = std::ranges::find_if(grouped, [&partialSet = std::as_const(partialSet)](const GroupedEntry &entry){ return entry.groupIds == partialSet; });
+				auto foundGrouped = std::ranges::find(grouped, partialSet, &GroupedEntry::groupIds);
 				if (foundGrouped == grouped.end())
 				{
 					grouped.push_back(GroupedEntry{partialSet, {}, {}, 0, false});
