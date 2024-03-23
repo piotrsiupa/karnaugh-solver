@@ -6,6 +6,7 @@
 #include <cstdint>
 
 #include "options.hh"
+#include "utils.hh"
 
 
 template<typename SET, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
@@ -295,6 +296,49 @@ std::pair<typename SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::subsetSelectio
 }
 
 template<typename SET, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
+std::pair<typename SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::subsetSelections_t, typename SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::usageCounts_t> SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::findBestSubsets_cursory(Progress &progress) const
+{
+	progress.substep(0.0);
+	
+	subsetSelections_t subsetSelections(graph.size());
+	usageCounts_t usageCounts(graph.size());
+	for (std::size_t i = 0; i != subsetSelections.size(); ++i)
+	{
+		subsetSelections[i] = graph[i].second;
+		for (std::size_t subset : subsetSelections[i])
+			++usageCounts[subset];
+	}
+	for (const std::size_t endNode : endNodes)
+		usageCounts[endNode] = SIZE_MAX - graph.size();
+	std::vector<bool> subsetsToRemove(subsetSelections.size());
+	for (std::size_t i = 0; i != subsetSelections.size(); ++i)
+	{
+		subsetSelection_t &subsetSelection = subsetSelections[i];
+		set_t correctMissingElements = graph[i].first;
+		for (const std::size_t subset : subsetSelection)
+			substractSet(correctMissingElements, graph[subset].first);
+		std::fill(subsetsToRemove.begin(), subsetsToRemove.end(), false);
+		for (const std::size_t j : sort_indexes(subsetSelection, std::ranges::less{}, [&subsetSelections](const std::size_t subset){ return subsetSelections[subset].size(); }))
+		{
+			set_t missingElementsWithoutSubset = graph[i].first;
+			for (std::size_t k = 0; k != subsetSelection.size(); ++k)
+				if (k != j && !subsetsToRemove[subsetSelection[k]])
+					substractSet(missingElementsWithoutSubset, graph[subsetSelection[k]].first);
+			if (missingElementsWithoutSubset == correctMissingElements)
+			{
+				--usageCounts[subsetSelection[j]];
+				subsetsToRemove[subsetSelection[j]] = true;
+			}
+		}
+		const auto [eraseBegin, eraseEnd] = std::ranges::remove_if(subsetSelection, [subsetsToRemove](const std::size_t x){ return subsetsToRemove[x]; });
+		subsetSelection.erase(eraseBegin, eraseEnd);
+	}
+	removeRedundantNodes(subsetSelections, usageCounts);
+	
+	return {subsetSelections, usageCounts};
+}
+
+template<typename SET, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
 std::pair<typename SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::subsetSelections_t, typename SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::usageCounts_t> SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::findBestSubsets(Progress &progress) const
 {
 	switch (options::optimizationHeuristics.getValue())
@@ -303,6 +347,8 @@ std::pair<typename SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::subsetSelectio
 		return findBestSubsets_bruteForce(progress);
 	case options::OptimizationHeuristic::EXHAUSTIVE:
 		return findBestSubsets_exhaustive(progress);
+	case options::OptimizationHeuristic::CURSORY:
+		return findBestSubsets_cursory(progress);
 	}
 	
 	// unreachable

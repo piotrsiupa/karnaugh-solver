@@ -47,6 +47,7 @@ protected:
 	virtual gateCount_t countGates(const subsetSelections_t &subsetSelections, const usageCounts_t &usageCounts) const = 0;
 	virtual void substractSubsets(sets_t &sets, const subsetSelections_t &subsetSelections) = 0;
 	virtual void substractSet(set_t &set, const set_t &otherSet) const = 0;
+	virtual bool isSubsetWorthy(const set_t &subset) const = 0;
 	
 private:
 	void switchToParentNodesIfAllowed(subsetSelections_t &subsetSelections, usageCounts_t &usageCounts) const;
@@ -61,6 +62,8 @@ private:
 	bool chooseNextSubsetsForExhaustive(usageCounts_t &usageCounts) const;
 	void cleanupResultOfExhaustive(subsetSelections_t &subsetSelections, usageCounts_t &usageCounts) const;
 	std::pair<subsetSelections_t, usageCounts_t> findBestSubsets_exhaustive(Progress &progress) const;
+	
+	std::pair<subsetSelections_t, usageCounts_t> findBestSubsets_cursory(Progress &progress) const;
 	
 	std::pair<subsetSelections_t, usageCounts_t> findBestSubsets(Progress &progress) const;
 	

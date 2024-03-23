@@ -17,5 +17,6 @@ protected:
 	void makeGraph(const SubsetFinder::setHierarchy_t &setHierarchy) final;
 	gateCount_t countGates(const subsetSelections_t &subsetSelections, const usageCounts_t &usageCounts) const final;
 	void substractSubsets(sets_t &sets, const subsetSelections_t &subsetSelections) final;
-	void substractSet(set_t &set, const set_t &otherSet) const { for (const std::size_t x : otherSet) set.erase(x); }
+	void substractSet(set_t &set, const set_t &otherSet) const final { for (const std::size_t x : otherSet) set.erase(x); }
+	bool isSubsetWorthy(const set_t &subset) const final { return subset.size() >= 2; }
 };

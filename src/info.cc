@@ -104,6 +104,8 @@ void printHelp()
 			"\texhuastive\t- It's similar to the brute-force but it doesn't check\n\t\t\t  all possible combinations of graph edges but only all\n\t\t\t  combinations of nodes. "
 						"It doesn't guarantee the\n\t\t\t  optimal solution but it still often finds it. "
 						"It's\n\t\t\t  a lot faster than the brute-force but still very slow.\n"
+			"\tcursory\t\t- It just takes all the possible nodes and edges from\n\t\t\t  the brute-force graph and then it tries to greedily\n\t\t\t  eliminate the ones that don't improve the solution.\n\t\t\t  "
+						"It has comparable results to `exhaustive` and it is\n\t\t\t  significantly faster but generating the graph is still\n\t\t\t  too slow to handle over 10 inputs.\n"
 			"\n"
 			"\n"
 			"Input:\n"

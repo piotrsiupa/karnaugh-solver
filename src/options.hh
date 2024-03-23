@@ -195,6 +195,7 @@ namespace options
 	{
 		BRUTE_FORCE,
 		EXHAUSTIVE,
+		CURSORY,
 	};
 	extern Mapped<OptimizationHeuristic> optimizationHeuristics;
 	
