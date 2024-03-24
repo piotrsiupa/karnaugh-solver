@@ -23,6 +23,7 @@ void printShortHelp()
 			" output:\n"
 			"    -f, --format=X\t- Set the output format. (See \"Output formats\".)\n\t\t\t  (Mathematical formats imply `--no-optimize`.)\n"
 			"    -n, --name=X\t- Set module name for Verilog output or entity name for\n\t\t\t  VHDL output or class name for C++ output.\n\t\t\t  (By default, the name of the input file is used,\n\t\t\t  or \"Karnaugh\" if input is read from stdin.)\n"
+			"    -G, --verbose-graph\t- Show shows all inputs in every node of a graph output,\n\t\t\t  instead only the ones added by that node. (It's more\n\t\t\t  readable but less useful for building the circuit.)\n"
 			" 3rd stage - common subexpression elimination:\n"
 			"    -O, --no-optimize\t- Skip the common subexpression elimination optimization\n\t\t\t  and show only a raw solution for each function.\n"
 		;
@@ -79,7 +80,7 @@ void printHelp()
 void printVersion()
 {
 	std::cout <<
-			"karnaugh (Karnaugh Map Solver) version 0.3.0\n"
+			"karnaugh (Karnaugh Map Solver) version 0.3.1\n"
 			"Author: Piotr Siupa\n"
 #ifndef NDEBUG
 			"This is a development build which contains additional assertions. This may slow down the execution.\n"

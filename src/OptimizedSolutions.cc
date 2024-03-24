@@ -10,6 +10,41 @@
 #include "utils.hh"
 
 
+Implicant OptimizedSolutions::flattenProduct(const id_t productId) const
+{
+	auto [primeImplicant, ids] = getProduct(productId);
+	while (!ids.empty())
+	{
+		const product_t &product = getProduct(ids.back());
+		ids.pop_back();
+		primeImplicant |= product.first;
+		ids.insert(ids.end(), product.second.cbegin(), product.second.cend());
+	}
+	return primeImplicant;
+}
+
+std::vector<OptimizedSolutions::id_t> OptimizedSolutions::flattenSum(const id_t sumId) const
+{
+	sum_t sum = getSum(sumId);
+	std::vector<id_t> productsOfSum;
+	while (!sum.empty())
+	{
+		const id_t id = sum.back();
+		sum.pop_back();
+		if (isProduct(id))
+		{
+			productsOfSum.push_back(id);
+		}
+		else
+		{
+			const sum_t &otherSum = getSum(id);
+			sum.insert(sum.end(), otherSum.cbegin(), otherSum.cend());
+		}
+	}
+	std::reverse(productsOfSum.begin(), productsOfSum.end());
+	return productsOfSum;
+}
+
 void OptimizedSolutions::generateHumanIds() const
 {
 	const id_t idCount = products.size() + sums.size();
@@ -212,7 +247,26 @@ std::size_t OptimizedSolutions::findProductEndNode(const id_t productId, std::si
 	return SIZE_MAX;
 }
 
-void OptimizedSolutions::printGraphProductBody(std::ostream &o, const id_t productId) const
+void OptimizedSolutions::printGraphProductImplicant(std::ostream &o, const id_t productId) const
+{
+	const bool isVerboseGraph = options::verboseGraph.isRaised();
+	Implicant primeImplicant = Implicant::error();
+	if (isVerboseGraph)
+	{
+		primeImplicant = flattenProduct(productId);
+	}
+	else
+	{
+		const product_t &product = getProduct(productId);
+		if (product.first.getBitCount() == 0 && !product.second.empty())
+			return;
+		primeImplicant = product.first;
+	}
+	o << " = ";
+	primeImplicant.printHuman(o, false);
+}
+
+void OptimizedSolutions::printGraphProductParents(std::ostream &o, const id_t productId) const
 {
 	const bool isFullGraph = options::outputFormat.getValue() == options::OutputFormat::GRAPH;
 	const auto &[primeImplicant, ids] = getProduct(productId);
@@ -232,6 +286,7 @@ void OptimizedSolutions::printGraphProductBody(std::ostream &o, const id_t produ
 void OptimizedSolutions::printGraphProduct(std::ostream &o, const Names &functionNames, const id_t productId) const
 {
 	const bool isFullGraph = options::outputFormat.getValue() == options::OutputFormat::GRAPH;
+	const bool isVerboseGraph = options::verboseGraph.isRaised();
 	std::size_t functionNum = isFullGraph ? SIZE_MAX : findProductEndNode(productId);
 	o << "\t\t";
 	printGraphId(o, productId);
@@ -252,15 +307,8 @@ void OptimizedSolutions::printGraphProduct(std::ostream &o, const Names &functio
 			functionNum = additionalFunNum;
 		}
 	}
-	if (!isFullGraph)
-	{
-		const auto &[primeImplicant, ids] = getProduct(productId);
-		if (primeImplicant.getBitCount() != 0 || ids.empty())
-		{
-			o << " = ";
-			primeImplicant.printHuman(o, false);
-		}
-	}
+	if (!isFullGraph || isVerboseGraph)
+		printGraphProductImplicant(o, productId);
 	o << '"';
 	if (functionNum != SIZE_MAX)
 		o << ", style=filled";
@@ -271,7 +319,7 @@ void OptimizedSolutions::printGraphProduct(std::ostream &o, const Names &functio
 		o << "\t\t";
 		printGraphId(o, productId);
 		o << " -> ";
-		printGraphProductBody(o, productId);
+		printGraphProductParents(o, productId);
 		o << ";\n";
 	}
 }
@@ -481,7 +529,31 @@ std::size_t OptimizedSolutions::findSumEndNode(const id_t sumId, const std::size
 	return SIZE_MAX;
 }
 
-void OptimizedSolutions::printGraphSumBody(std::ostream &o, const id_t sumId) const
+void OptimizedSolutions::printGraphSumProducts(std::ostream &o, const id_t sumId) const
+{
+	const bool isVerboseGraph = options::verboseGraph.isRaised();
+	sum_t sum;
+	if (isVerboseGraph)
+	{
+		sum = flattenSum(sumId);
+	}
+	else
+	{
+		sum = getSum(sumId);
+		sum.erase(std::remove_if(sum.begin(), sum.end(), [this](const id_t id){ return !isProduct(id) || isProductWorthPrinting(id); }), sum.end());
+	}
+	First first;
+	for (const auto &productId : sum)
+	{
+		o << (first ? " = " : " || ");
+		if (isVerboseGraph)
+			flattenProduct(productId).printHuman(o, sum.size() != 1);
+		else
+			getProduct(productId).first.printHuman(o, false);
+	}
+}
+
+void OptimizedSolutions::printGraphSumParents(std::ostream &o, const id_t sumId) const
 {
 	const bool isFullGraph = options::outputFormat.getValue() == options::OutputFormat::GRAPH;
 	First first;
@@ -505,6 +577,7 @@ void OptimizedSolutions::printGraphSumBody(std::ostream &o, const id_t sumId) co
 void OptimizedSolutions::printGraphSum(std::ostream &o, const Names &functionNames, const id_t sumId) const
 {
 	const bool isFullGraph = options::outputFormat.getValue() == options::OutputFormat::GRAPH;
+	const bool isVerboseGraph = options::verboseGraph.isRaised();
 	std::size_t functionNum = isFullGraph ? SIZE_MAX : findSumEndNode(sumId);
 	o << "\t\t";
 	printGraphId(o, sumId);
@@ -525,33 +598,19 @@ void OptimizedSolutions::printGraphSum(std::ostream &o, const Names &functionNam
 			functionNum = additionalFunNum;
 		}
 	}
-	bool hasParent = isFullGraph;
-	if (!isFullGraph)
-	{
-		First first;
-		for (const auto &partId : getSum(sumId))
-		{
-			if (isProduct(partId) && !isProductWorthPrinting(partId))
-			{
-				o << (first ? " = " : " || ");
-				getProduct(partId).first.printHuman(o, false);
-			}
-			else
-			{
-				hasParent = true;
-			}
-		}
-	}
+	if (!isFullGraph || isVerboseGraph)
+		printGraphSumProducts(o, sumId);
 	o << '"';
 	if (functionNum != SIZE_MAX)
 		o << ", style=filled";
 	o << "];\n";
-	if (hasParent)
+	const sum_t &sum = getSum(sumId);
+	if (isFullGraph || std::any_of(sum.cbegin(), sum.cend(), [this](const id_t id){ return !isProduct(id) || isProductWorthPrinting(id); }))
 	{
 		o << "\t\t";
 		printGraphId(o, sumId);
 		o << " -> ";
-		printGraphSumBody(o, sumId);
+		printGraphSumParents(o, sumId);
 		o << ";\n";
 	}
 }
@@ -717,6 +776,23 @@ void OptimizedSolutions::printHumanFinalSums(std::ostream &o, const Names &funct
 	}
 }
 
+void OptimizedSolutions::printGraphFinalSum(std::ostream &o, const Names &functionNames, const std::size_t i) const
+{
+	const bool isVerboseGraph = options::verboseGraph.isRaised();
+	const id_t sumId = finalSums[i];
+	o << "\t\tf" << i << " [label=\"";
+	functionNames.printGraphName(o, i);
+	if (isVerboseGraph)
+		printGraphSumProducts(o, sumId);
+	o << "\"];\n";
+	o << "\t\tf" << i << " -> ";
+	if (isSumWorthPrinting(sumId, false))
+		printGraphId(o, sumId);
+	else
+		printGraphSumParents(o, sumId);
+	o << ";\n";
+}
+
 void OptimizedSolutions::printGraphFinalSums(std::ostream &o, const Names &functionNames) const
 {
 	if (finalSums.empty())
@@ -726,18 +802,7 @@ void OptimizedSolutions::printGraphFinalSums(std::ostream &o, const Names &funct
 	o << "\t\tnode [shape=rectangle, style=filled];\n";
 	o << "\t\tedge [taillabel=\"||\"];\n";
 	for (std::size_t i = 0; i != finalSums.size(); ++i)
-	{
-		o << "\t\tf" << i << " [label=\"";
-		functionNames.printGraphName(o, i);
-		o << "\"];\n";
-		o << "\t\tf" << i << " -> ";
-		const id_t sumId = finalSums[i];
-		if (isSumWorthPrinting(sumId, false))
-			printGraphId(o, sumId);
-		else
-			printGraphSumBody(o, sumId);
-		o << ";\n";
-	}
+		printGraphFinalSum(o, functionNames, i);
 	o << "\t}\n";
 }
 

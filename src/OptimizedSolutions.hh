@@ -34,6 +34,8 @@ private:
 	
 	mutable std::vector<id_t> normalizedIds;
 	
+	Implicant flattenProduct(const id_t productId) const;
+	std::vector<id_t> flattenSum(const id_t sumId) const;
 	bool isWorthPrinting(const id_t id, const bool simpleFinalSums) const { return isProduct(id) ? isProductWorthPrinting(id) : isSumWorthPrinting(id, simpleFinalSums); }
 	bool isWorthPrintingOnGraph(const id_t id, const bool isFullGraph) const { return isProduct(id) ? isProductWorthPrintingOnGraph(id, isFullGraph) : isSumWorthPrintingOnGraph(id, isFullGraph); }
 	void generateHumanIds() const;
@@ -55,7 +57,8 @@ private:
 	void printHumanProducts(std::ostream &o) const;
 	std::size_t findProductEndNode(const id_t productId, std::size_t startFunctionNum = 0) const;
 	bool isProductWorthPrintingOnGraph(const id_t productId, const bool isFullGraph) const { return isProductWorthPrinting(productId) || (!isFullGraph && findProductEndNode(productId) != SIZE_MAX); }
-	void printGraphProductBody(std::ostream &o, const id_t productId) const;
+	void printGraphProductImplicant(std::ostream &o, const id_t productId) const;
+	void printGraphProductParents(std::ostream &o, const id_t productId) const;
 	void printGraphProduct(std::ostream &o, const Names &functionNames, const id_t productId) const;
 	void printGraphProducts(std::ostream &o, const Names &functionNames) const;
 	void printVerilogProductBody(std::ostream &o, const id_t productId) const;
@@ -73,7 +76,8 @@ private:
 	void printHumanSums(std::ostream &o) const;
 	std::size_t findSumEndNode(const id_t sumId, const std::size_t startFunctionNum = 0) const;
 	bool isSumWorthPrintingOnGraph(const id_t sumId, const bool isFullGraph) const { return isFullGraph ? isSumWorthPrinting(sumId, false) : getSum(sumId).size() != 1; }
-	void printGraphSumBody(std::ostream &o, const id_t sumId) const;
+	void printGraphSumProducts(std::ostream &o, const id_t sumId) const;
+	void printGraphSumParents(std::ostream &o, const id_t sumId) const;
 	void printGraphSum(std::ostream &o, const Names &functionNames, const id_t sumId) const;
 	void printGraphSums(std::ostream &o, const Names &functionNames) const;
 	void printVerilogSumBody(std::ostream &o, const id_t sumId) const;
@@ -86,6 +90,7 @@ private:
 	void printCppSum(std::ostream &o, const id_t sumId) const;
 	void printCppSums(std::ostream &o) const;
 	void printHumanFinalSums(std::ostream &o, const Names &functionNames) const;
+	void printGraphFinalSum(std::ostream &o, const Names &functionNames, const std::size_t i) const;
 	void printGraphFinalSums(std::ostream &o, const Names &functionNames) const;
 	void printVerilogFinalSums(std::ostream &o, const Names &functionNames) const;
 	void printVhdlFinalSums(std::ostream &o, const Names &functionNames) const;

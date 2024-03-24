@@ -40,15 +40,26 @@ std::size_t Solution::printGraphProducts(std::ostream &o, const std::size_t func
 {
 	if (std::any_of(cbegin(), cend(), [](const Implicant &x){ return x.getBitCount() != 0; }))
 	{
+		const bool isFullGraph = options::outputFormat.getValue() == options::OutputFormat::GRAPH;
+		const bool isVerbose = options::verboseGraph.isRaised();
 		o << "\t\tsubgraph products\n";
 		o << "\t\t{\n";
 		o << "\t\t\tnode [shape=ellipse];\n";
 		o << "\t\t\tedge [taillabel=\"&&\"];\n";
 		for (std::size_t i = 0; i != size(); ++i)
 		{
-			if (options::outputFormat.getValue() == options::OutputFormat::GRAPH)
+			if (!isFullGraph || isVerbose)
+			{
+				o << "\t\t\tf" << functionNum << "_s" << i << " [label=\"[" << idShift++ << "] = ";
+				(*this)[i].printHuman(o, false);
+				o << "\"];\n";
+			}
+			else
 			{
 				o << "\t\t\tf" << functionNum << "_s" << i << " [label=\"[" << idShift++ << "]\"];\n";
+			}
+			if (isFullGraph)
+			{
 				o << "\t\t\tf" << functionNum << "_s" << i << " -> ";
 				First first;
 				for (const auto &[bit, negated] : (*this)[i].splitBits())
@@ -62,12 +73,6 @@ std::size_t Solution::printGraphProducts(std::ostream &o, const std::size_t func
 				}
 				o << ";\n";
 			}
-			else
-			{
-				o << "\t\t\tf" << functionNum << "_s" << i << " [label=\"[" << idShift++ << "] = ";
-				(*this)[i].printHuman(o, false);
-				o << "\"];\n";
-			}
 		}
 		o << "\t\t}\n";
 	}
@@ -76,13 +81,30 @@ std::size_t Solution::printGraphProducts(std::ostream &o, const std::size_t func
 
 void Solution::printGraphSum(std::ostream &o, const std::size_t functionNum, const std::string_view functionName) const
 {
+	const bool isFullGraph = options::outputFormat.getValue() == options::OutputFormat::GRAPH;
+	const bool isVerbose = options::verboseGraph.isRaised();
 	o << "\t\tsubgraph sum\n";
 	o << "\t\t{\n";
 	o << "\t\t\tnode [shape=rectangle, style=filled];\n";
 	o << "\t\t\tedge [taillabel=\"||\"];\n";
-	if (options::outputFormat.getValue() == options::OutputFormat::GRAPH || size() >= 2)
+	if ((!isFullGraph && size() < 2) || isVerbose)
+	{
+		o << "\t\t\tf" << functionNum << " [label=\"" << functionName << " = ";
+		First first;
+		for (const Implicant &product : *this)
+		{
+			if (!first)
+				o << " || ";
+			product.printHuman(o, this->size() != 1);
+		}
+		o << "\"];\n";
+	}
+	else
 	{
 		o << "\t\t\tf" << functionNum << " [label=\"" << functionName << "\"];\n";
+	}
+	if (isFullGraph || size() >= 2)
+	{
 		o << "\t\t\tf" << functionNum << " -> ";
 		First first;
 		for (std::size_t i = 0; i != size(); ++i)
@@ -95,13 +117,6 @@ void Solution::printGraphSum(std::ostream &o, const std::size_t functionNum, con
 				o << 'f' << functionNum << "_s" << i;
 		}
 		o << ";\n";
-	}
-	else
-	{
-		
-		o << "\t\t\tf" << functionNum << " [label=\"" << functionName << " = ";
-		front().printHuman(o, false);
-		o << "\"];\n";
 	}
 	o << "\t\t}\n";
 }

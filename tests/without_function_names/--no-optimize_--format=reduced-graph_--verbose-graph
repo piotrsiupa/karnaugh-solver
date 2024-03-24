@@ -1,0 +1,21 @@
+digraph without_function_names
+{
+	subgraph function_0
+	{
+		subgraph sum
+		{
+			node [shape=rectangle, style=filled];
+			edge [taillabel="||"];
+			f0 [label="f0 = !a && d"];
+		}
+	}
+	subgraph function_1
+	{
+		subgraph sum
+		{
+			node [shape=rectangle, style=filled];
+			edge [taillabel="||"];
+			f1 [label="f1 = !a && !b && c"];
+		}
+	}
+}

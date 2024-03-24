@@ -243,19 +243,23 @@ Sums:
 ### Graph
 
 An input for Graphviz (DOT format) that shows how to build the circuit using logic gates (although, it doesn't use the proper symbols for the gates).
+(With the flag `--verbose-graph`, it can also show a complete equation in each node.)
 
-([file](tests/tricky_one/--format=graph))
+([file](tests/tricky_one/--format=graph) & [file](tests/tricky_one/--format=graph_--verbose-graph))
 
 ![there should be picture of the generated graph](docs-files/tricky_one-graph.png "Full graph")
+![there should be picture of the graph generated with verbose flag](docs-files/tricky_one-verbose-graph.png "Full graph")
 
 ### Reduced graph
 
 This is similar to the normal graph but its heavily altered to reduce the number of nodes.
 The notation is more complicated and it would be harder to read if the reduction of node number wasn't helping even more.
+(Similarly to `graph`, with the flag `--verbose-graph`, it shows a complete equation in each node.)
 
-([file](tests/tricky_one/--format=reduced-graph))
+([file](tests/tricky_one/--format=reduced-graph) & [file](tests/tricky_one/--format=reduced-graph_--verbose-graph))
 
 ![there should be picture of the generated graph](docs-files/tricky_one-reduced-graph.png "Reduced graph")
+![there should be picture of the graph generated with verbose flag](docs-files/tricky_one-verbose-reduced-graph.png "Reduced graph")
 
 ### Mathematical
 

@@ -1,0 +1,37 @@
+digraph very_optimizable
+{
+	subgraph products
+	{
+		node [shape=ellipse];
+		edge [taillabel="&&"];
+		s0 [label="[0] = a && b && c && d"];
+		s1 [label="[1] = !c && d"];
+		s2 [label="[2] = !a && b"];
+		s3 [label="[3] = !a && b && !c && d"];
+		s3 -> s2, s1;
+		s4 [label="[4] = c && !d"];
+		s5 [label="[5] = !a && b && c && !d"];
+		s5 -> s2, s4;
+		s6 [label="[6] = a && !b"];
+		s7 [label="[7] = a && !b && !c && d"];
+		s7 -> s1, s6;
+		s8 [label="[8] = a && !b && c && !d"];
+		s8 -> s4, s6;
+		s9 [label="[9] = !a && !b && !c && !d"];
+	}
+	subgraph sums
+	{
+		node [shape=rectangle];
+		edge [taillabel="||"];
+		s10 [label="[10] = (!a && b && c && !d) || (a && !b && !c && d)"];
+		s10 -> s5, s7;
+		s11 [label="third = (!a && b && !c && d) || (!a && b && c && !d) || (a && !b && !c && d)", style=filled];
+		s11 -> s3, s10;
+		s12 [label="first = (a && !b && c && !d) || (!a && b && !c && d) || (!a && b && c && !d) || (a && !b && !c && d)", style=filled];
+		s12 -> s8, s11;
+		s13 [label="second = (a && b && c && d) || (!a && b && !c && d) || (!a && b && c && !d) || (a && !b && !c && d)", style=filled];
+		s13 -> s0, s11;
+		s14 [label="fourth = (!a && !b && !c && !d) || (!a && b && c && !d) || (a && !b && !c && d)", style=filled];
+		s14 -> s9, s10;
+	}
+}

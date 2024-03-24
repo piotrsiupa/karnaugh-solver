@@ -159,6 +159,7 @@ namespace options
 			{"gate-costs", "(?:gates?[-_ ])?(?:costs?|scores?|stat(?:s|istics?)?|infos?)|g[-_ ]?[csi]", OutputFormat::GATE_COSTS},
 		});
 	Text name({"name", "module-name", "class-name"}, 'n');
+	Flag verboseGraph({"verbose-graph", "expanded-graph", "redundant-graph"}, 'G');
 	
 	Flag skipOptimization({"no-optimize", "no-cse", "no-optimization", "skip-optimize", "skip-cse", "skip-optimization"}, 'O');
 	
@@ -190,7 +191,7 @@ namespace options
 			[[nodiscard]] static bool parse(const int argc, const char *const *const argv) { return Parser(argc, argv).parse(); }
 		};
 		
-		Option *const Parser::allOptions[] = {&help, &helpOptions, &version, &prompt, &prompt.getNegatedOption(), &status, &status.getNegatedOption(), &outputFormat, &name, &skipOptimization};
+		Option *const Parser::allOptions[] = {&help, &helpOptions, &version, &prompt, &prompt.getNegatedOption(), &status, &status.getNegatedOption(), &outputFormat, &name, &verboseGraph, &skipOptimization};
 		
 		bool Parser::parseShortOption(const char *&shortName, Option &option)
 		{
