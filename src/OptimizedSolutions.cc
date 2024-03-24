@@ -26,14 +26,14 @@ Implicant OptimizedSolutions::flattenProduct(const id_t productId) const
 std::vector<OptimizedSolutions::id_t> OptimizedSolutions::flattenSum(const id_t sumId) const
 {
 	sum_t sum = getSum(sumId);
-	std::vector<id_t> products;
+	std::vector<id_t> productsOfSum;
 	while (!sum.empty())
 	{
 		const id_t id = sum.back();
 		sum.pop_back();
 		if (isProduct(id))
 		{
-			products.push_back(id);
+			productsOfSum.push_back(id);
 		}
 		else
 		{
@@ -41,8 +41,8 @@ std::vector<OptimizedSolutions::id_t> OptimizedSolutions::flattenSum(const id_t 
 			sum.insert(sum.end(), otherSum.cbegin(), otherSum.cend());
 		}
 	}
-	std::reverse(products.begin(), products.end());
-	return products;
+	std::reverse(productsOfSum.begin(), productsOfSum.end());
+	return productsOfSum;
 }
 
 void OptimizedSolutions::generateHumanIds() const
