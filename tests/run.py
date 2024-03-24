@@ -28,12 +28,12 @@ def time_process(process: subprocess.Popen):
     starttime = time.perf_counter()
     while True:
         try:
-            process.wait()
+            stdoutdata, _ = process.communicate()
             break
         except KeyboardInterrupt:
             process.send_signal(signal.SIGINT)
     endtime = time.perf_counter()
-    return endtime - starttime
+    return endtime - starttime, stdoutdata
 
 
 def run_test(test_name: str, program: Path, input_file: Path, output_file: Path, show_all: bool, show_diff: bool):
@@ -41,7 +41,7 @@ def run_test(test_name: str, program: Path, input_file: Path, output_file: Path,
     if show_all:
         print(f'Running "{test_name}" ({" ".join(options)})...', end=' ', flush=True)
     process = subprocess.Popen(['./' + str(program), '--no-status', '--name', test_name] + options + [input_file], stdout=subprocess.PIPE)
-    elapsed_time = time_process(process)
+    elapsed_time, stdoutdata = time_process(process)
     if process.returncode != 0:
         if not show_all:
             print(f'Test "{test_name}" ({" ".join(options)})', end=' ')
@@ -49,7 +49,7 @@ def run_test(test_name: str, program: Path, input_file: Path, output_file: Path,
         return False
     with open(output_file, 'r', encoding='utf-8', newline='') as f:
         expected_output = f.read()
-    actual_output = process.stdout.read().decode('utf-8')
+    actual_output = stdoutdata.decode('utf-8')
     if actual_output != expected_output:
         if not show_all:
             print(f'Test "{test_name}" ({" ".join(options)})', end=' ')
