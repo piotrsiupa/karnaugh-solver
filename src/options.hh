@@ -152,6 +152,7 @@ namespace options
 	
 	extern Mapped<OutputFormat, OutputFormat::HUMAN_LONG> outputFormat;
 	extern Text name;
+	extern Flag verboseGraph;
 	
 	extern Flag skipOptimization;
 	
