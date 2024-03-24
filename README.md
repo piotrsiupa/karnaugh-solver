@@ -3,6 +3,28 @@
 A CLI aplication to minimize big (up to 32 variables) logic functions, that can handle multiple mappings at once and eliminates common subexpressions.
 
 
+**Table of contents:**
+- [What does this do?](#what-does-this-do)
+    - [I haven't understood any of that; speak human!](#i-havent-understood-any-of-that-speak-human)
+- [Limitations](#limitations)
+- [Compilation](#compilation)
+    - [*SCons* Build script](#scons-build-script)
+    - [Manual build](#manual-build)
+- [License](#license)
+- [Input format](#input-format)
+- [Example (and output formats)](#example-and-output-formats)
+    - [Input](#input)
+    - [Human readable output (long variant)](#human-readable-output-long-variant)
+    - [Human readable output (medium variant)](#human-readable-output-medium-variant)
+    - [Human readable output (short variant)](#human-readable-output-short-variant)
+    - [Graph](#graph)
+    - [Reduced graph](#reduced-graph)
+    - [Mathematical notation](#mathematical-notation)
+    - [Verilog](#verilog)
+    - [VHDL](#vhdl)
+    - [Other formats](#other-formats)
+
+
 ## What does this do?
 
 This program takes a description of multiple logic functions (up to 32 input variables) in the form of lists of minterms and don't-cares.
@@ -261,7 +283,7 @@ The notation is more complicated and it would be harder to read if the reduction
 ![there should be picture of the generated graph](docs-files/tricky_one-reduced-graph.png "Reduced graph")
 ![there should be picture of the graph generated with verbose flag](docs-files/tricky_one-verbose-reduced-graph.png "Reduced graph")
 
-### Mathematical
+### Mathematical notation
 
 This is a minimalistic output format that just prints the functions using the formal mathematical notation.
 
