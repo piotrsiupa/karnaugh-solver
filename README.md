@@ -3,6 +3,28 @@
 A CLI aplication to minimize big (up to 32 variables) logic functions, that can handle multiple mappings at once and eliminates common subexpressions.
 
 
+**Table of contents:**
+- [What does this do?](#what-does-this-do)
+    - [I haven't understood any of that; speak human!](#i-havent-understood-any-of-that-speak-human)
+- [Limitations](#limitations)
+- [License](#license)
+- [Compilation](#compilation)
+    - [*SCons* Build script](#scons-build-script)
+    - [Manual build](#manual-build)
+- [Input format](#input-format)
+- [Example (and output formats)](#example-and-output-formats)
+    - [Input](#input)
+    - [Human readable output (long variant)](#human-readable-output-long-variant)
+    - [Human readable output (medium variant)](#human-readable-output-medium-variant)
+    - [Human readable output (short variant)](#human-readable-output-short-variant)
+    - [Graph](#graph)
+    - [Reduced graph](#reduced-graph)
+    - [Mathematical notation](#mathematical-notation)
+    - [Verilog](#verilog)
+    - [VHDL](#vhdl)
+    - [Other formats](#other-formats)
+
+
 ## What does this do?
 
 This program takes a description of multiple logic functions (up to 32 input variables) in the form of lists of minterms and don't-cares.
@@ -43,6 +65,11 @@ Currently there is quite a few limitations both because the program is still in 
  - The logic function is solved to the **SOP** form. (The POS form is planned for the future.)
 
 
+## License
+
+This program is distributed under the MIT license. A full copy of it is available in the [`LICENSE`](LICENSE) file.
+
+
 ## Compilation
 
 The program is written in pure C++, without use of any external libraries, which makes the compilation pretty straightforward.
@@ -78,11 +105,6 @@ If you don't want to install any additional software, you can just build all `*.
 Default options (with optimization turned on) should work fine; there is no libraries to be linked or anything like that.
 However, defining the preprocessor macro `NDEBUG` for all files is strongly recommended because assertions can significantly increase the runtime of the resulting program, especially with high number of input variables.
 (In most compilers, this is done with the flag `-DNDEBUG`.)
-
-
-## License
-
-This program is distributed under the MIT license. A full copy of it is available in the [`LICENSE`](LICENSE) file.
 
 
 ## Input format
@@ -261,7 +283,7 @@ The notation is more complicated and it would be harder to read if the reduction
 ![there should be picture of the generated graph](docs-files/tricky_one-reduced-graph.png "Reduced graph")
 ![there should be picture of the graph generated with verbose flag](docs-files/tricky_one-verbose-reduced-graph.png "Reduced graph")
 
-### Mathematical
+### Mathematical notation
 
 This is a minimalistic output format that just prints the functions using the formal mathematical notation.
 
