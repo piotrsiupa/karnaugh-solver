@@ -8,6 +8,8 @@
 #include <utility>
 #include <vector>
 
+#include "utils.hh"
+
 
 namespace options
 {
@@ -80,6 +82,34 @@ namespace options
 		[[nodiscard]] bool getValue() { if (undecided) { value = getDefault(); undecided = false; } return value; }
 	};
 	
+	class Choice : public Option
+	{
+	public:
+		struct Variant
+		{
+			std::string_view officialName;
+			std::string_view regex;
+		};
+		using Variants = std::vector<Variant>;
+		
+	private:
+		const Variants variants;
+		bool regexReady = false;
+		std::regex regex;
+		std::size_t value;
+		
+		void prepareRegex();
+		
+	public:
+		Choice(std::vector<std::string_view> &&longNames, const char shortName, Variants &&variants, const std::size_t defaultValue) : Option(std::move(longNames), shortName), variants(std::move(variants)), value(defaultValue) {}
+		
+		[[nodiscard]] bool needsArgument() const final { return true; }
+		[[nodiscard]] bool parse(std::string_view argument) final;
+		
+		void setValue(const std::size_t value) { this->value = value; }
+		[[nodiscard]] std::size_t getValue() const { return value; }
+	};
+	
 	template<typename T, T DEFAULT_VALUE>
 	class Mapped : public Option
 	{
@@ -93,21 +123,17 @@ namespace options
 		using Mappings = std::vector<Mapping>;
 		
 	private:
-		const Mappings mappings;
-		bool regexReady = false;
-		std::regex regex;
-		T value = DEFAULT_VALUE;
-		
-		void prepareRegex();
+		Choice choice;
+		const std::vector<T> values;
 		
 	public:
-		Mapped(std::vector<std::string_view> &&longNames, const char shortName, Mappings &&mappings) : Option(std::move(longNames), shortName), mappings(std::move(mappings)) {}
+		Mapped(std::vector<std::string_view> &&longNames, const char shortName, const Mappings &mappings) : Option(std::move(longNames), shortName), choice({getLongNames()[0]}, shortName, map_vector<Choice::Variant>(mappings, [](const Mapping &mapping) -> Choice::Variant { return {mapping.officialName, mapping.regex}; }), SIZE_MAX), values(map_vector<T>(mappings, [](const Mapping &mapping){ return mapping.value; })) {}
 		
-		[[nodiscard]] bool needsArgument() const final { return true; }
-		[[nodiscard]] bool parse(std::string_view argument) final;
+		[[nodiscard]] bool needsArgument() const final { return choice.needsArgument(); }
+		[[nodiscard]] bool parse(std::string_view argument) final { return choice.parse(argument); }
 		
-		void setValue(const T value) { this->value = value; }
-		[[nodiscard]] T getValue() const { return value; }
+		//void setValue(const T value) { this->value = value; } //TODO set variable storing default value and then `choice.setValue(SIZE_MAX);` (waiting for the merge of the branch in which the default value is no longet a template parameter)
+		[[nodiscard]] T getValue() const { const std::size_t i = choice.getValue(); return i == SIZE_MAX ? DEFAULT_VALUE : values[i]; }
 	};
 	
 	class Text : public Option
@@ -126,39 +152,8 @@ namespace options
 	};
 	
 	
-	enum class OutputFormat
-	{
-		HUMAN_LONG,
-		HUMAN,
-		HUMAN_SHORT,
-		GRAPH,
-		REDUCED_GRAPH,
-		VERILOG,
-		VHDL,
-		CPP,
-		MATH_FORMAL,
-		MATH_ASCII,
-		MATH_PROG,
-		MATH_NAMES,
-		GATE_COSTS,
-	};
-	
-	extern Flag help;
-	extern Flag helpOptions;
-	extern Flag version;
-	
-	extern Trilean prompt;
-	extern Trilean status;
-	
-	extern Mapped<OutputFormat, OutputFormat::HUMAN_LONG> outputFormat;
-	extern Text name;
-	extern Flag verboseGraph;
-	
-	extern Flag skipOptimization;
-	
-	extern std::vector<std::string_view> freeArgs;
-	
-	
-	[[nodiscard]] bool parse(const int argc, const char *const *const argv);
+	using optionList_t = std::vector<Option*>; //TODO use `std::span` in C++20
+	using freeArgs_t = std::vector<std::string_view>;
+	[[nodiscard]] bool parse(const int argc, const char *const *const argv, const optionList_t &allOptions, freeArgs_t &freeArgs);
 	
 }
