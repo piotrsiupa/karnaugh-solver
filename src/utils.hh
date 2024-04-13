@@ -27,3 +27,36 @@ template<std::ranges::random_access_range R, class Comp = std::ranges::less, cla
 		std::ranges::sort(indexes, comp, [&r = std::as_const(r), &proj](const std::size_t i){ return std::invoke(proj, r[i]); });
 	return indexes;
 }
+
+
+using ordering_t = std::vector<std::size_t>;
+
+[[nodiscard]] inline ordering_t makeReverseOrdering(const ordering_t ordering)
+{
+	ordering_t reverseOrdering(ordering.size());
+	for (std::size_t i = 0; i != ordering.size(); ++i)
+		reverseOrdering[ordering[i]] = i;
+	return reverseOrdering;
+}
+
+template<typename T>
+void applyOrdering(std::vector<T> &data, ordering_t &&ordering)
+{
+	for (std::size_t i = 0; i != ordering.size(); ++i)
+	{
+		const std::size_t j = ordering[i];
+		std::ranges::swap(ordering[i], ordering[j]);
+		std::ranges::swap(data[i], data[j]);
+	}
+}
+
+template<typename T>
+void applyOrdering(std::vector<T> &data, const ordering_t &ordering)
+{
+	return applyOrdering(data, ordering_t(ordering));
+}
+
+
+#ifndef NDEBUG
+void verifyUtils();
+#endif

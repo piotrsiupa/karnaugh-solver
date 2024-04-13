@@ -5,6 +5,8 @@
 #include <set>
 #include <utility>
 
+#include "utils.hh"
+
 
 template<typename VALUE_T, template<typename> class CONTAINER>
 typename SubsetGraph<VALUE_T, CONTAINER>::groupsMap_t SubsetGraph<VALUE_T, CONTAINER>::createGroups(const sets_t &sets)
@@ -217,9 +219,7 @@ void SubsetGraph<VALUE_T, CONTAINER>::sort()
 		}
 	}
 	
-	std::vector<std::size_t> reverseSortOrder(sortOrder.size());
-	for (std::size_t i = 0; i != sortOrder.size(); ++i)
-		reverseSortOrder[sortOrder[i]] = i;
+	const std::vector<std::size_t> reverseSortOrder = makeReverseOrdering(sortOrder);
 	
 	grouped_t sorted;
 	sorted.reserve(grouped.size());

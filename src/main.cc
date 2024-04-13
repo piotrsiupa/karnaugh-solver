@@ -11,6 +11,7 @@
 #include "Karnaughs.hh"
 #include "non-stdlib-stuff.hh"
 #include "options.hh"
+#include "utils.hh"
 
 
 static bool parseOptions(const int argc, const char *const *const argv)
@@ -188,6 +189,10 @@ static bool processInput(IstreamUniquePtr istream)
 
 int main(const int argc, const char *const *const argv)
 {
+#ifndef NDEBUG
+	verifyUtils();
+#endif
+	
 	Progress::init();
 	
 	if (!parseOptions(argc, argv))
