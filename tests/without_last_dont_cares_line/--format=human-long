@@ -1,0 +1,25 @@
+--- i ---
+
+goal:
+   0 1 
+00 F T
+01 F T
+11 T T
+10 F F
+
+solution:
+(a && v) || (!a && o)
+
+Gate cost: NOTs = 1, ANDs = 2, ORs = 1
+
+
+=== optimized solution ===
+
+Negated inputs: a
+Products:
+	[0] = a && v
+	[1] = !a && o
+Sums:
+	"i" = [0] || [1]
+
+Gate cost: NOTs = 1, ANDs = 2, ORs = 1

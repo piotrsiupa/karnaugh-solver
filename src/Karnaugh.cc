@@ -231,8 +231,14 @@ bool Karnaugh::loadData(Input &input)
 			std::cerr << ":\n";
 	}
 	if (input.hasNext())
+	{
 		if (allowedMinterms = loadMinterms(input, progress, true); !allowedMinterms)
 			return false;
+	}
+	else
+	{
+		allowedMinterms = std::make_unique<Minterms>();
+	}
 
 #ifndef NDEBUG
 	targetMinterms->validate();
