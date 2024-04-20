@@ -185,7 +185,7 @@ void SubsetGraph<VALUE_T, CONTAINER>::removeRedundantEdges()
 template<typename VALUE_T, template<typename> class CONTAINER>
 void SubsetGraph<VALUE_T, CONTAINER>::sort()
 {
-	std::vector<std::size_t> sortOrder;
+	permutation_t sortOrder;
 	sortOrder.reserve(grouped.size());
 	std::vector<std::size_t> entriesToProcess;
 	entriesToProcess.reserve(grouped.size() * 2);
@@ -219,11 +219,11 @@ void SubsetGraph<VALUE_T, CONTAINER>::sort()
 		}
 	}
 	
-	const std::vector<std::size_t> reverseSortOrder = makeReverseOrdering(sortOrder);
+	const permutation_t reverseSortOrder = invertPermutation(sortOrder);
 	
 	grouped_t sorted;
 	sorted.reserve(grouped.size());
-	for (const std::size_t &index : sortOrder)
+	for (const auto &index : sortOrder)
 	{
 		sorted.push_back(std::move(grouped[index]));
 		for (std::size_t &subset : sorted.back().subsets)

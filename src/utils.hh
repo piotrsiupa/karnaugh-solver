@@ -1,6 +1,7 @@
 #pragma once
 
 #include <algorithm>
+#include <cassert>
 #include <cstddef>
 #include <numeric>
 #include <vector>
@@ -15,44 +16,56 @@ public:
 };
 
 
-using ordering_t = std::vector<std::size_t>;
+using permutation_t = std::vector<std::size_t>;
 
 template<std::ranges::random_access_range R, class Comp = std::ranges::less, class Proj = std::identity>
 		requires std::sortable<std::ranges::iterator_t<R>, Comp, Proj>
-[[nodiscard]] ordering_t sort_indexes(R&& r, Comp comp = {}, Proj proj = {})
+[[nodiscard]] permutation_t makeSortingPermutation(const R& r, Comp comp = {}, Proj proj = {})
 {
-	ordering_t ordering(r.size());
-	std::iota(ordering.begin(), ordering.end(), 0);
+	permutation_t permutation(r.size());
+	std::iota(permutation.begin(), permutation.end(), 0);
 	if constexpr (std::is_same_v<Proj, std::identity>)
-		std::ranges::sort(ordering, comp, [&r = std::as_const(r)](const std::size_t i){ return r[i]; });
+		std::ranges::sort(permutation, comp, [&r = std::as_const(r)](const std::size_t i){ return r[i]; });
 	else
-		std::ranges::sort(ordering, comp, [&r = std::as_const(r), &proj](const std::size_t i){ return std::invoke(proj, r[i]); });
-	return ordering;
+		std::ranges::sort(permutation, comp, [&r = std::as_const(r), &proj](const std::size_t i){ return std::invoke(proj, r[i]); });
+	return permutation;
 }
 
-[[nodiscard]] inline ordering_t makeReverseOrdering(const ordering_t &ordering)
+[[nodiscard]] inline permutation_t invertPermutation(const permutation_t &permutation)
 {
-	ordering_t reverseOrdering(ordering.size());
-	for (std::size_t i = 0; i != ordering.size(); ++i)
-		reverseOrdering[ordering[i]] = i;
-	return reverseOrdering;
+	permutation_t inversePermutation(permutation.size());
+	for (std::size_t i = 0; i != permutation.size(); ++i)
+		inversePermutation[permutation[i]] = i;
+	return inversePermutation;
 }
 
 template<typename T>
-void applyOrdering(std::vector<T> &data, ordering_t &&ordering)
+void applyInversePermutation(std::vector<T> &data, permutation_t &&permutation)
 {
-	for (std::size_t i = 0; i != ordering.size(); ++i)
+	assert(data.size() == permutation.size());
+	if (data.size() < 2)
+		return;
+	for (std::size_t i = 1; i != permutation.size(); ++i)
 	{
-		const std::size_t j = ordering[i];
-		std::ranges::swap(ordering[i], ordering[j]);
-		std::ranges::swap(data[i], data[j]);
+		while (permutation[i] != i)
+		{
+			const std::size_t j = permutation[i];
+			std::ranges::swap(permutation[i], permutation[j]);
+			std::ranges::swap(data[i], data[j]);
+		}
 	}
 }
 
 template<typename T>
-void applyOrdering(std::vector<T> &data, const ordering_t &ordering)
+void applyInversePermutation(std::vector<T> &data, const permutation_t &permutation)
 {
-	return applyOrdering(data, ordering_t(ordering));
+	return applyInversePermutation(data, permutation_t(permutation));
+}
+
+template<typename T>
+void applyPermutation(std::vector<T> &data, const permutation_t &permutation)
+{
+	return applyInversePermutation(data, invertPermutation(permutation));
 }
 
 

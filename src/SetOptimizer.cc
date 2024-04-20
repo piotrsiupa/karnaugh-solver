@@ -318,7 +318,7 @@ std::pair<typename SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::subsetSelectio
 		for (const std::size_t subset : subsetSelection)
 			substractSet(correctMissingElements, graph[subset].first);
 		std::fill(subsetsToRemove.begin(), subsetsToRemove.end(), false);
-		for (const std::size_t j : sort_indexes(subsetSelection, std::ranges::less{}, [&subsetSelections](const std::size_t subset){ return subsetSelections[subset].size(); }))
+		for (const std::size_t j : makeSortingPermutation(subsetSelection, std::ranges::less{}, [&subsetSelections](const std::size_t subset){ return subsetSelections[subset].size(); }))
 		{
 			set_t missingElementsWithoutSubset = graph[i].first;
 			for (std::size_t k = 0; k != subsetSelection.size(); ++k)
