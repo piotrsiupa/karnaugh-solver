@@ -40,7 +40,7 @@ public:
 protected:
 	SetOptimizer() = default;
 	
-	Result extractCommonParts(const sets_t &sets, Progress &progress);
+	Result extractCommonParts(sets_t &&sets, Progress &progress);
 	
 	virtual typename SubsetFinder::sets_t convertSets(const sets_t &sets) const = 0;
 	virtual void makeGraph(const typename SubsetFinder::setHierarchy_t &setHierarchy) = 0;
@@ -71,5 +71,5 @@ private:
 	
 	sets_t makeSets() const;
 	
-	finalSets_t makeFinalSets(const sets_t &oldSets, const sets_t &newSets);
+	finalSets_t makeFinalSets(sets_t &&oldSets, const sets_t &newSets);
 };

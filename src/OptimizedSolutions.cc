@@ -822,7 +822,7 @@ OptimizedSolutions::finalPrimeImplicants_t OptimizedSolutions::extractCommonProd
 	for (const Solution *const solution : solutions)
 		for (const auto &product: *solution)
 			oldPrimeImplicants.push_back(product);
-	const auto [newPrimeImplicants, finalPrimeImplicants, subsetSelections] = SetOptimizerForProducts::optimizeSet(oldPrimeImplicants, progress);
+	const auto [newPrimeImplicants, finalPrimeImplicants, subsetSelections] = SetOptimizerForProducts::optimizeSet(std::move(oldPrimeImplicants), progress);
 	
 	products.reserve(subsetSelections.size());
 	for (std::size_t i = 0; i != subsetSelections.size(); ++i)
@@ -844,7 +844,7 @@ void OptimizedSolutions::extractCommonSumParts(const solutions_t &solutions, con
 				oldIdSet.insert(finalPrimeImplicants[i++]);
 		}
 	}
-	const auto [newIdSets, finalIdSets, subsetSelections] = SetOptimizerForSums::optimizeSet(oldIdSets, progress);
+	const auto [newIdSets, finalIdSets, subsetSelections] = SetOptimizerForSums::optimizeSet(std::move(oldIdSets), progress);
 	
 	sums.reserve(subsetSelections.size());
 	for (std::size_t i = 0; i != subsetSelections.size(); ++i)

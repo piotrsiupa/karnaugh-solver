@@ -10,14 +10,14 @@
 
 
 template<typename SET, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
-typename SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::Result SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::extractCommonParts(const sets_t &oldSets, Progress &progress)
+typename SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::Result SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::extractCommonParts(sets_t &&oldSets, Progress &progress)
 {
 	const typename SubsetFinder::setHierarchy_t setHierarchy = SubsetFinder::makeSetHierarchy(convertSets(oldSets));
 	makeGraph(setHierarchy);
 	auto [subsetSelections, usageCounts] = findBestSubsets(progress);
 	removeUnusedSubsets(subsetSelections, usageCounts);
 	sets_t newSets = makeSets();
-	const finalSets_t finalSets = makeFinalSets(oldSets, newSets);
+	const finalSets_t finalSets = makeFinalSets(std::move(oldSets), newSets);
 	substractSubsets(newSets, subsetSelections);
 	return {newSets, finalSets, subsetSelections};
 }
@@ -403,19 +403,19 @@ typename SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::sets_t SetOptimizer<SET,
 }
 
 template<typename SET, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
-typename SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::finalSets_t SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::makeFinalSets(const sets_t &oldSets, const sets_t &newSets)
+typename SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::finalSets_t SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::makeFinalSets(sets_t &&oldSets, const sets_t &newSets)
 {
+	const permutation_t oldSetsPermutation = makeSortingPermutation(oldSets);
+	applyPermutation(oldSets, oldSetsPermutation);
+	
 	finalSets_t finalSets(oldSets.size());
 	for (const std::size_t endNode : endNodes)
 	{
-		const auto &newSet = newSets[endNode];
-		auto foundOldSet = std::ranges::find(oldSets, newSet);
-		do
-		{
-			finalSets[foundOldSet - oldSets.cbegin()] = endNode;
-			foundOldSet = std::ranges::find(foundOldSet + 1, oldSets.cend(), newSet);
-		} while (foundOldSet != oldSets.cend());
+		const auto [first, last] = std::ranges::equal_range(oldSets, newSets[endNode]);
+		for (auto current = first; current != last; ++current)
+			finalSets[oldSetsPermutation[std::ranges::distance(oldSets.cbegin(), current)]] = endNode;
 	}
+	
 	return finalSets;
 }
 
