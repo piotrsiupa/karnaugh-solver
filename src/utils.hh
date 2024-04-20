@@ -15,23 +15,22 @@ public:
 };
 
 
-template<std::ranges::random_access_range R, class Comp = std::ranges::less, class Proj = std::identity>
-		requires std::sortable<std::ranges::iterator_t<R>, Comp, Proj>
-[[nodiscard]] std::vector<std::size_t> sort_indexes(R&& r, Comp comp = {}, Proj proj = {})
-{
-	std::vector<std::size_t> indexes(r.size());
-	std::iota(indexes.begin(), indexes.end(), 0);
-	if constexpr (std::is_same_v<Proj, std::identity>)
-		std::ranges::sort(indexes, comp, [&r = std::as_const(r)](const std::size_t i){ return r[i]; });
-	else
-		std::ranges::sort(indexes, comp, [&r = std::as_const(r), &proj](const std::size_t i){ return std::invoke(proj, r[i]); });
-	return indexes;
-}
-
-
 using ordering_t = std::vector<std::size_t>;
 
-[[nodiscard]] inline ordering_t makeReverseOrdering(const ordering_t ordering)
+template<std::ranges::random_access_range R, class Comp = std::ranges::less, class Proj = std::identity>
+		requires std::sortable<std::ranges::iterator_t<R>, Comp, Proj>
+[[nodiscard]] ordering_t sort_indexes(R&& r, Comp comp = {}, Proj proj = {})
+{
+	ordering_t ordering(r.size());
+	std::iota(ordering.begin(), ordering.end(), 0);
+	if constexpr (std::is_same_v<Proj, std::identity>)
+		std::ranges::sort(ordering, comp, [&r = std::as_const(r)](const std::size_t i){ return r[i]; });
+	else
+		std::ranges::sort(ordering, comp, [&r = std::as_const(r), &proj](const std::size_t i){ return std::invoke(proj, r[i]); });
+	return ordering;
+}
+
+[[nodiscard]] inline ordering_t makeReverseOrdering(const ordering_t &ordering)
 {
 	ordering_t reverseOrdering(ordering.size());
 	for (std::size_t i = 0; i != ordering.size(); ++i)

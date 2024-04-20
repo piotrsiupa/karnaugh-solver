@@ -10,7 +10,6 @@
 
 #include "Implicant.hh"
 #include "options.hh"
-#include "utils.hh"
 
 
 template<std::unsigned_integral INDEX_T>
@@ -269,17 +268,21 @@ inline void PetricksMethod<INDEX_T>::multiplySumsOfProducts_maxN(std::vector<Com
 	}
 	// `sizeInfos` must be sorted by `i` from this point.
 	
-	std::vector<std::size_t> ordering;
+	std::vector<size_t> usedMultipliers0;
 	{
-		ordering.reserve(multiplier0.size());
+		usedMultipliers0.reserve(multiplier0.size());
 		for (const SizeInfo &sizeInfo : sizeInfos)
-			ordering.push_back(sizeInfo.i);
-		const auto eraseBegin = std::unique(ordering.begin(), ordering.end());
-		ordering.erase(eraseBegin, ordering.end());
+			usedMultipliers0.push_back(sizeInfo.i);
+		const auto eraseBegin = std::unique(usedMultipliers0.begin(), usedMultipliers0.end());
+		usedMultipliers0.erase(eraseBegin, usedMultipliers0.end());
 	}
 	
-	const std::vector<std::size_t> reverseOrdering = makeReverseOrdering(ordering);
-	applyOrdering(multiplier0, std::move(ordering));
+	std::vector<size_t> multipler0Shifts(multiplier0.size());
+	for (std::size_t i = 0; i != usedMultipliers0.size(); ++i)
+	{
+		multipler0Shifts[usedMultipliers0[i]] = i;
+		std::ranges::swap(multiplier0[i], multiplier0[usedMultipliers0[i]]);
+	}
 	
 	assert(multiplier0.size() <= sizeInfos.size());
 	while (multiplier0.size() < sizeInfos.size())
@@ -288,7 +291,7 @@ inline void PetricksMethod<INDEX_T>::multiplySumsOfProducts_maxN(std::vector<Com
 	assert(!sizeInfos.empty());
 	for (std::size_t i = sizeInfos.size(); i-- != 0;)
 	{
-		if (std::size_t mappedPos = reverseOrdering[sizeInfos[i].i]; mappedPos != i)
+		if (std::size_t mappedPos = multipler0Shifts[sizeInfos[i].i]; mappedPos != i)
 			multiplier0[i] = multiplier0[mappedPos];
 		CompactSet<index_t> &product0 = multiplier0[i];
 		const product_t &product1 = multiplier1[sizeInfos[i].j];
