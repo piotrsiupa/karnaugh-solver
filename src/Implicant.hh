@@ -56,13 +56,11 @@ public:
 	[[nodiscard]] constexpr bool covers(const Minterm minterm) const { return (minterm & mask) == bits; }
 	
 	[[nodiscard]] constexpr bool empty() const { return mask == 0; }
+	[[nodiscard]] constexpr bits_t size() const { return static_cast<bits_t>(std::popcount(mask)); }
 	[[nodiscard]] constexpr mask_t getBits() const { return bits; }
 	[[nodiscard]] constexpr mask_t getMask() const { return mask; }
 	[[nodiscard]] constexpr mask_t getTrueBits() const { return bits & mask; }
 	[[nodiscard]] constexpr mask_t getFalseBits() const { return ~bits & mask; }
-	[[nodiscard]] constexpr bits_t getBitCount() const { return static_cast<bits_t>(std::popcount(mask)); }
-	[[nodiscard]] constexpr bits_t getTrueBitCount() const { return static_cast<bits_t>(std::popcount(getTrueBits())); }
-	[[nodiscard]] constexpr bits_t getFalseBitCount() const { return static_cast<bits_t>(std::popcount(getFalseBits())); }
 	[[nodiscard]] splitBits_t splitBits() const;
 	
 	void add(const Implicant &other) { this->bits |= other.bits; this->mask |= other.mask; }

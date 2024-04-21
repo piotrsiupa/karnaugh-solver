@@ -71,7 +71,7 @@ SetOptimizerForProducts::gateCount_t SetOptimizerForProducts::countGates(const s
 		Implicant reducedProduct = graph[i].first;
 		for (const std::size_t &subset : subsetSelections[i])
 			reducedProduct.substract(graph[subset].first);
-		gates += reducedProduct.getBitCount();
+		gates += reducedProduct.size();
 		if (subsetSelections[i].size() != 0 || !reducedProduct.empty())
 			--gates;
 	}

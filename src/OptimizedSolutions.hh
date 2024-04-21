@@ -49,7 +49,7 @@ private:
 	void printCppId(std::ostream &o, const id_t id) const;
 	void printHumanNegatedInputs(std::ostream &o) const;
 	void printGraphNegatedInputs(std::ostream &o) const;
-	bool isProductWorthPrinting(const id_t productId) const { const product_t &product = getProduct(productId); return product.first.getBitCount() >= 2 || !product.second.empty(); }
+	bool isProductWorthPrinting(const id_t productId) const { const product_t &product = getProduct(productId); return product.first.size() >= 2 || !product.second.empty(); }
 	void printHumanProductBody(std::ostream &o, const id_t productId) const;
 	void printHumanProduct(std::ostream &o, const id_t productId) const;
 	void printHumanProducts(std::ostream &o) const;
@@ -114,7 +114,7 @@ public:
 	std::size_t size() const { return finalSums.size(); }
 	
 	std::size_t getNotCount() const final { return std::popcount(negatedInputs); }
-	std::size_t getAndCount() const final { std::size_t andCount = 0; for (const auto &[primeImplicant, ids] : products) andCount += std::max(std::size_t(1), primeImplicant.getBitCount() + ids.size()) - 1; return andCount; }
+	std::size_t getAndCount() const final { std::size_t andCount = 0; for (const auto &[primeImplicant, ids] : products) andCount += std::max(std::size_t(1), primeImplicant.size() + ids.size()) - 1; return andCount; }
 	std::size_t getOrCount() const final { std::size_t orCount = 0; for (const auto &sum : sums) orCount += sum.size() - 1; return orCount; }
 	
 	std::pair<bool, bool> checkForUsedConstants() const;

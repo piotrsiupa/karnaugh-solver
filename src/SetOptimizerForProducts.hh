@@ -19,5 +19,5 @@ protected:
 	gateCount_t countGates(const subsetSelections_t &subsetSelections, const usageCounts_t &usageCounts) const final;
 	void substractSubsets(sets_t &sets, const subsetSelections_t &subsetSelections) final;
 	void substractSet(set_t &set, const set_t &otherSet) const final { set.substract(otherSet); }
-	bool isSubsetWorthy(const set_t &subset) const final { return subset.getBitCount() >= 2; }
+	bool isSubsetWorthy(const set_t &subset) const final { return subset.size() >= 2; }
 };

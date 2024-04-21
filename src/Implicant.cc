@@ -6,7 +6,7 @@
 
 bool Implicant::humanLess(const Implicant &other) const
 {
-	if (const auto comparison = this->getBitCount() <=> other.getBitCount(); comparison != 0)
+	if (const auto comparison = this->size() <=> other.size(); comparison != 0)
 		return comparison < 0;
 	if (const auto comparison = this->mask <=> other.mask; comparison != 0)
 		return comparison > 0;
@@ -60,7 +60,7 @@ void Implicant::printHuman(std::ostream &o, const bool parentheses) const
 			o << "<True>";
 		return;
 	}
-	const bool needsParentheses = parentheses && getBitCount() != 1;
+	const bool needsParentheses = parentheses && size() != 1;
 	if (needsParentheses)
 		o << '(';
 	First first;
@@ -107,7 +107,7 @@ void Implicant::printVerilog(std::ostream &o, const bool parentheses) const
 			o << '1';
 		return;
 	}
-	const bool needsParentheses = parentheses && getBitCount() != 1;
+	const bool needsParentheses = parentheses && size() != 1;
 	if (needsParentheses)
 		o << '(';
 	First first;
@@ -133,7 +133,7 @@ void Implicant::printVhdl(std::ostream &o, const bool parentheses) const
 			o << "'1'";
 		return;
 	}
-	const bool needsParentheses = parentheses && getBitCount() != 1;
+	const bool needsParentheses = parentheses && size() != 1;
 	if (needsParentheses)
 		o << '(';
 	First first;
@@ -159,7 +159,7 @@ void Implicant::printCpp(std::ostream &o, const bool parentheses) const
 			o << "true";
 		return;
 	}
-	const bool needsParentheses = parentheses && getBitCount() != 1;
+	const bool needsParentheses = parentheses && size() != 1;
 	if (needsParentheses)
 		o << '(';
 	First first;
@@ -221,7 +221,7 @@ void Implicant::printMath(std::ostream &o, const bool parentheses) const
 		}
 		return;
 	}
-	const bool needsParentheses = parentheses && getBitCount() != 1;
+	const bool needsParentheses = parentheses && size() != 1;
 	if (needsParentheses)
 		o << '(';
 	First first;

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <bit>
 #include <numeric>
 #include <ostream>
 
@@ -20,8 +21,8 @@ public:
 	
 	Solution& humanSort() { Implicants::humanSort(); return *this; }
 	
-	std::size_t getNotCount() const final { return std::accumulate<decltype(begin()), std::size_t>(cbegin(), cend(), 0, [](const std::size_t acc, const Implicant &implicant){ return implicant.getFalseBitCount() + acc; }); }
-	std::size_t getAndCount() const final { return std::accumulate<decltype(begin()), std::size_t>(cbegin(), cend(), 0, [](const std::size_t acc, const Implicant &implicant){ return implicant.getBitCount() == 0 ? acc : implicant.getBitCount() - 1 + acc; }); }
+	std::size_t getNotCount() const final { return std::accumulate<decltype(begin()), std::size_t>(cbegin(), cend(), 0, [](const std::size_t acc, const Implicant &implicant){ return std::popcount<bits_t>(implicant.getFalseBits()) + acc; }); }
+	std::size_t getAndCount() const final { return std::accumulate<decltype(begin()), std::size_t>(cbegin(), cend(), 0, [](const std::size_t acc, const Implicant &implicant){ return implicant.size() == 0 ? acc : implicant.size() - 1 + acc; }); }
 	std::size_t getOrCount() const final { return empty() ? 0 : size() - 1; }
 	
 	Minterms getMinterms() const;

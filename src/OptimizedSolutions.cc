@@ -255,7 +255,7 @@ void OptimizedSolutions::printGraphProduct(std::ostream &o, const Names &functio
 	if (!isFullGraph)
 	{
 		const auto &[primeImplicant, ids] = getProduct(productId);
-		if (primeImplicant.getBitCount() != 0 || ids.empty())
+		if (!primeImplicant.empty() || ids.empty())
 		{
 			o << " = ";
 			primeImplicant.printHuman(o, false);

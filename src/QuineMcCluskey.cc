@@ -80,7 +80,7 @@ void QuineMcCluskey::refineHeuristicImplicant(const Minterm initialMinterm, Impl
 			if (Implicant(implicantVariant.getBits() ^ bit, implicantVariant.getMask()).areAllInMinterms(*allowedMinterms))
 				implicantVariant.applyMask(~bit);
 		}
-		if (implicantVariant.getBitCount() <= implicant.getBitCount())
+		if (implicantVariant.size() <= implicant.size())
 			implicant = std::move(implicantVariant);
 	}
 	for (auto iter = bitMasks.cbegin(); iter != std::prev(bitMasks.cend()); ++iter)

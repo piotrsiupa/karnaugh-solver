@@ -254,7 +254,7 @@ void Karnaughs::findBestNonOptimizedSolutions(const solutionses_t &solutionses)
 			score_t score = (solution.size() - 1) * 2;
 			for (const Implicant &implicant : solution)
 			{
-				score += (implicant.getBitCount() - 1) * 2;
+				score += (implicant.size() - 1) * 2;
 				falseBits |= implicant.getFalseBits();
 			}
 			score += std::popcount(falseBits);
