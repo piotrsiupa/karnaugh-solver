@@ -4,5 +4,3 @@
 *.pdb
 /karnaugh
 /karnaugh.exe
-/benchmark-result.new
-/benchmark-result.old

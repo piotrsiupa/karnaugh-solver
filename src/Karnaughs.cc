@@ -1,6 +1,7 @@
 #include "./Karnaughs.hh"
 
 #include <algorithm>
+#include <bit>
 #include <filesystem>
 #include <iostream>
 #include <limits>
@@ -256,7 +257,7 @@ void Karnaughs::findBestNonOptimizedSolutions(const solutionses_t &solutionses)
 				score += (implicant.getBitCount() - 1) * 2;
 				falseBits |= implicant.getFalseBits();
 			}
-			score += std::bitset<::maxBits>(falseBits).count();
+			score += std::popcount(falseBits);
 			if (score < bestScore)
 			{
 				bestScore = score;

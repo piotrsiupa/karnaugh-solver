@@ -1,6 +1,6 @@
 #pragma once
 
-#include <bitset>
+#include <bit>
 #include <cstddef>
 #include <ostream>
 #include <set>
@@ -113,7 +113,7 @@ public:
 	
 	std::size_t size() const { return finalSums.size(); }
 	
-	std::size_t getNotCount() const final { return std::bitset<32>(negatedInputs).count(); }
+	std::size_t getNotCount() const final { return std::popcount(negatedInputs); }
 	std::size_t getAndCount() const final { std::size_t andCount = 0; for (const auto &[primeImplicant, ids] : products) andCount += std::max(std::size_t(1), primeImplicant.getBitCount() + ids.size()) - 1; return andCount; }
 	std::size_t getOrCount() const final { std::size_t orCount = 0; for (const auto &sum : sums) orCount += sum.size() - 1; return orCount; }
 	

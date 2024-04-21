@@ -1,6 +1,7 @@
 #include "./options.hh"
 
 #include <algorithm>
+#include <cassert>
 #include <cctype>
 #include <charconv>
 #include <cstddef>
@@ -13,6 +14,23 @@
 
 namespace options
 {
+	
+	Option::Option(const std::string_view mainLongName, const std::string_view longNamesRegex, const char shortName) :
+		mainLongName(mainLongName),
+		longNamesRegex(longNamesRegex),
+		shortName(shortName)
+	{
+		checkForCapturingGroups(longNamesRegex);
+	}
+	
+#ifndef NDEBUG
+	void Option::checkForCapturingGroups(const std::string_view regex)
+	{
+		static const std::regex capturingGroupRegex("((^|[^\\\\])(\\\\\\\\)*\\\\)?\\((\\?)?", std::regex_constants::nosubs);
+		for (std::cregex_token_iterator iter(&*regex.begin(), &*regex.end(), capturingGroupRegex); iter != std::cregex_token_iterator(); ++iter)
+			assert(iter->str().size() != 1);
+	}
+#endif
 	
 	bool NoArgOption::parse(std::string_view argument)
 	{
@@ -79,6 +97,16 @@ namespace options
 			regex = std::regex(pattern, std::regex_constants::icase);
 			regexReady = true;
 		}
+	}
+	
+	template<typename T>
+	Mapped<T>::Mapped(const std::string_view mainLongName, const std::string_view longNamesRegex, const char shortName, Mappings &&mappings, const T defaultValue) :
+		Option(mainLongName, longNamesRegex, shortName),
+		mappings(std::move(mappings)),
+		value(defaultValue)
+	{
+		for (const Mapping &mapping : this->mappings)
+			checkForCapturingGroups(mapping.regex);
 	}
 	
 	template<typename T>
