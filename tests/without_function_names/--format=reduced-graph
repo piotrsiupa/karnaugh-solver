@@ -3,9 +3,8 @@ digraph without_function_names
 	subgraph products
 	{
 		node [shape=ellipse];
-		edge [taillabel="&&"];
 		s0 [label="f0 = !a && !b", style=filled];
-		s1 [label="f1 = c", style=filled];
-		s1 -> s0;
+		s1 [label="&&\nf1 = c", style=filled];
+		s0 -> s1;
 	}
 }

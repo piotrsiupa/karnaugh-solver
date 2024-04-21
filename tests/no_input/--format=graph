@@ -9,12 +9,11 @@ digraph no_input
 	subgraph final_sums
 	{
 		node [shape=rectangle, style=filled];
-		edge [taillabel="||"];
 		f0 [label="always_true"];
-		f0 -> true;
+		true -> f0;
 		f1 [label="always_false"];
-		f1 -> false;
+		false -> f1;
 		f2 [label="dont_care"];
-		f2 -> false;
+		false -> f2;
 	}
 }

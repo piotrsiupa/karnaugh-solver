@@ -11,9 +11,8 @@ digraph no_input
 		subgraph sum
 		{
 			node [shape=rectangle, style=filled];
-			edge [taillabel="||"];
 			f0 [label="always_true"];
-			f0 -> true;
+			true -> f0;
 		}
 	}
 	subgraph function_1
@@ -21,9 +20,8 @@ digraph no_input
 		subgraph sum
 		{
 			node [shape=rectangle, style=filled];
-			edge [taillabel="||"];
 			f1 [label="always_false"];
-			f1 -> false;
+			false -> f1;
 		}
 	}
 	subgraph function_2
@@ -31,9 +29,8 @@ digraph no_input
 		subgraph sum
 		{
 			node [shape=rectangle, style=filled];
-			edge [taillabel="||"];
 			f2 [label="dont_care"];
-			f2 -> false;
+			false -> f2;
 		}
 	}
 }

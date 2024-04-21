@@ -3,35 +3,33 @@ digraph very_optimizable
 	subgraph products
 	{
 		node [shape=ellipse];
-		edge [taillabel="&&"];
 		s0 [label="[0] = a && b && c && d"];
 		s1 [label="[1] = !c && d"];
 		s2 [label="[2] = !a && b"];
-		s3 [label="[3]"];
-		s3 -> s2, s1;
+		s3 [label="&&\n[3]"];
+		s2, s1 -> s3;
 		s4 [label="[4] = c && !d"];
-		s5 [label="[5]"];
-		s5 -> s2, s4;
+		s5 [label="&&\n[5]"];
+		s2, s4 -> s5;
 		s6 [label="[6] = a && !b"];
-		s7 [label="[7]"];
-		s7 -> s1, s6;
-		s8 [label="[8]"];
-		s8 -> s4, s6;
+		s7 [label="&&\n[7]"];
+		s1, s6 -> s7;
+		s8 [label="&&\n[8]"];
+		s4, s6 -> s8;
 		s9 [label="[9] = !a && !b && !c && !d"];
 	}
 	subgraph sums
 	{
 		node [shape=rectangle];
-		edge [taillabel="||"];
-		s10 [label="[10]"];
-		s10 -> s5, s7;
-		s11 [label="third", style=filled];
-		s11 -> s3, s10;
-		s12 [label="first", style=filled];
-		s12 -> s8, s11;
-		s13 [label="second", style=filled];
-		s13 -> s0, s11;
-		s14 [label="fourth", style=filled];
-		s14 -> s9, s10;
+		s10 [label="||\n[10]"];
+		s5, s7 -> s10;
+		s11 [label="||\nthird", style=filled];
+		s3, s10 -> s11;
+		s12 [label="||\nfirst", style=filled];
+		s8, s11 -> s12;
+		s13 [label="||\nsecond", style=filled];
+		s0, s11 -> s13;
+		s14 [label="||\nfourth", style=filled];
+		s9, s10 -> s14;
 	}
 }

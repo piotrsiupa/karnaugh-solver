@@ -1,14 +1,14 @@
 library IEEE;
 use IEEE.std_logic_1164.all;
 
-entity hard_to_print_optimized is
+entity hard_to_print is
 	port(
 		q, x, y, z : in std_logic;
 		none, all, some, even_less, more_than_less, none_again, all_again, some_again, more_than_less_again, half, some_the_third_time, more_than_less_the_third_time, most, even_more, half_again : out std_logic
 	);
-end hard_to_print_optimized;
+end hard_to_print;
 
-architecture behavioural of hard_to_print_optimized is
+architecture behavioural of hard_to_print is
 	-- Internal signals
 	signal prods : std_logic_vector(1 downto 0);
 	signal sums : std_logic_vector(2 downto 0);

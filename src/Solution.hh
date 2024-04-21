@@ -12,6 +12,7 @@
 class Solution final : public GateCost, public std::vector<Implicant>
 {
 	void printGraphNegatedInputs(std::ostream &o, const std::size_t functionNum) const;
+	static void printGraphParentBit(std::ostream &o, const std::size_t functionNum, const Implicant::splitBit_t &splitBit, const std::size_t i);
 	[[nodiscard]] std::size_t printGraphProducts(std::ostream &o, const std::size_t functionNum, std::size_t idShift) const;
 	void printGraphSum(std::ostream &o, const std::size_t functionNum, const std::string_view functionName) const;
 

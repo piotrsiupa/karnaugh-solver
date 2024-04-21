@@ -5,16 +5,14 @@ digraph no_input_names
 		subgraph products
 		{
 			node [shape=ellipse];
-			edge [taillabel="&&"];
 			f0_s0 [label="[0] = i1 && i3"];
 			f0_s1 [label="[1] = i0 && i2 && i3"];
 		}
 		subgraph sum
 		{
 			node [shape=rectangle, style=filled];
-			edge [taillabel="||"];
-			f0 [label="f0"];
-			f0 -> f0_s0, f0_s1;
+			f0 [label="||\nf0"];
+			f0_s0, f0_s1 -> f0;
 		}
 	}
 }

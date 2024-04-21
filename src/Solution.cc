@@ -21,7 +21,6 @@ void Solution::printGraphNegatedInputs(std::ostream &o, const std::size_t functi
 		o << "\t\tsubgraph negated_inputs\n";
 		o << "\t\t{\n";
 		o << "\t\t\tnode [shape=diamond];\n";
-		o << "\t\t\tedge [taillabel=\"!\"];\n";
 		for (Minterm i = 0; i != ::bits; ++i)
 		{
 			for (const std::size_t j : negatedInputs[i])
@@ -29,49 +28,56 @@ void Solution::printGraphNegatedInputs(std::ostream &o, const std::size_t functi
 				o << "\t\t\tf" << functionNum << "_ni" << i << '_' << j << " [label=\"!";
 				::inputNames.printGraphName(o, i);
 				o << "\"];\n";
-				o << "\t\t\tf" << functionNum << "_ni" << i << '_' << j << " -> i" << i << ";\n";
+				o << "\t\t\ti" << i << " -> f" << functionNum << "_ni" << i << '_' << j << ";\n";
 			}
 		}
 		o << "\t\t}\n";
 	}
 }
 
+inline void Solution::printGraphParentBit(std::ostream &o, const std::size_t functionNum, const Implicant::splitBit_t &splitBit, const std::size_t i)
+{
+	const auto &[bit, negated] = splitBit;
+	if (negated)
+		o << 'f' << functionNum << "_ni" << static_cast<unsigned>(bit) << '_' << i;
+	else
+		o << 'i' << static_cast<unsigned>(bit);
+}
+
 std::size_t Solution::printGraphProducts(std::ostream &o, const std::size_t functionNum, std::size_t idShift) const
 {
-	if (std::any_of(cbegin(), cend(), [](const Implicant &x){ return x.getBitCount() != 0; }))
+	if (std::any_of(cbegin(), cend(), [](const Implicant &x){ return x.getBitCount() >= 2; }))
 	{
 		const bool isFullGraph = options::outputFormat.getValue() == options::OutputFormat::GRAPH;
 		const bool isVerbose = options::verboseGraph.isRaised();
 		o << "\t\tsubgraph products\n";
 		o << "\t\t{\n";
 		o << "\t\t\tnode [shape=ellipse];\n";
-		o << "\t\t\tedge [taillabel=\"&&\"];\n";
 		for (std::size_t i = 0; i != size(); ++i)
 		{
+			if ((*this)[i].getBitCount() < 2)
+				continue;
+			o << "\t\t\tf" << functionNum << "_s" << i << " [label=\"";
+			if (isFullGraph)
+				o << "&&\\n";
+			o << "[" << idShift++ << "]";
 			if (!isFullGraph || isVerbose)
 			{
-				o << "\t\t\tf" << functionNum << "_s" << i << " [label=\"[" << idShift++ << "] = ";
+				o << " = ";
 				(*this)[i].printHuman(o, false);
-				o << "\"];\n";
 			}
-			else
-			{
-				o << "\t\t\tf" << functionNum << "_s" << i << " [label=\"[" << idShift++ << "]\"];\n";
-			}
+			o << "\"];\n";
 			if (isFullGraph)
 			{
-				o << "\t\t\tf" << functionNum << "_s" << i << " -> ";
+				o << "\t\t\t";
 				First first;
-				for (const auto &[bit, negated] : (*this)[i].splitBits())
+				for (const auto &splitBit : (*this)[i].splitBits())
 				{
 					if (!first)
 						o << ", ";
-					if (negated)
-						o << 'f' << functionNum << "_ni" << static_cast<unsigned>(bit) << '_' << i;
-					else
-						o << 'i' << static_cast<unsigned>(bit);
+					printGraphParentBit(o, functionNum, splitBit, i);
 				}
-				o << ";\n";
+				o << " -> f" << functionNum << "_s" << i << ";\n";
 			}
 		}
 		o << "\t\t}\n";
@@ -86,37 +92,50 @@ void Solution::printGraphSum(std::ostream &o, const std::size_t functionNum, con
 	o << "\t\tsubgraph sum\n";
 	o << "\t\t{\n";
 	o << "\t\t\tnode [shape=rectangle, style=filled];\n";
-	o << "\t\t\tedge [taillabel=\"||\"];\n";
-	if ((!isFullGraph && size() < 2) || isVerbose)
+	o << "\t\t\tf" << functionNum << " [label=\"";
+	const bool hasParents = isFullGraph || (size() >= 2 && std::any_of(cbegin(), cend(), [](const Implicant &x){ return x.getBitCount() >= 2; }));
+	if (hasParents && size() >= 2)
+		o << "||\\n";
+	o << functionName;
+	if (!isFullGraph || isVerbose)
 	{
-		o << "\t\t\tf" << functionNum << " [label=\"" << functionName << " = ";
 		First first;
 		for (const Implicant &product : *this)
 		{
-			if (!first)
+			if (!isVerbose && size() >= 2 && product.getBitCount() >= 2)
+				continue;
+			if (first)
+				o << " = ";
+			else
 				o << " || ";
 			product.printHuman(o, this->size() != 1);
 		}
-		o << "\"];\n";
 	}
-	else
+	o << "\"];\n";
+	if (hasParents)
 	{
-		o << "\t\t\tf" << functionNum << " [label=\"" << functionName << "\"];\n";
-	}
-	if (isFullGraph || size() >= 2)
-	{
-		o << "\t\t\tf" << functionNum << " -> ";
+		o << "\t\t\t";
 		First first;
 		for (std::size_t i = 0; i != size(); ++i)
 		{
+			if (!isFullGraph && (*this)[i].getBitCount() <= 1)
+				continue;
 			if (!first)
 				o << ", ";
-			if ((*this)[i].getBitCount() == 0)
+			switch ((*this)[i].getBitCount())
+			{
+			case 0:
 				o << ((*this)[i].isError() ? "false" : "true");
-			else
+				break;
+			case 1:
+				printGraphParentBit(o, functionNum, (*this)[i].splitBits().front(), i);
+				break;
+			default:
 				o << 'f' << functionNum << "_s" << i;
+				break;
+			}
 		}
-		o << ";\n";
+		o << " -> f" << functionNum << ";\n";
 	}
 	o << "\t\t}\n";
 }

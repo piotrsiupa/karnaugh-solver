@@ -186,7 +186,6 @@ void OptimizedSolutions::printGraphNegatedInputs(std::ostream &o) const
 	o << "\tsubgraph negated_inputs\n";
 	o << "\t{\n";
 	o << "\t\tnode [shape=diamond];\n";
-	o << "\t\tedge [taillabel=\"!\"];\n";
 	for (Minterm i = 0; i != ::bits; ++i)
 	{
 		if ((negatedInputs & (1 << (::bits - i - 1))) != 0)
@@ -194,7 +193,7 @@ void OptimizedSolutions::printGraphNegatedInputs(std::ostream &o) const
 			o << "\t\tni" << i << " [label=\"!";
 			::inputNames.printGraphName(o, i);
 			o << "\"];\n";
-			o << "\t\tni" << i << " -> i" << i << ";\n";
+			o << "\t\ti" << i << " -> ni" << i << ";\n";
 		}
 	}
 	o << "\t}\n";
@@ -291,6 +290,9 @@ void OptimizedSolutions::printGraphProduct(std::ostream &o, const Names &functio
 	o << "\t\t";
 	printGraphId(o, productId);
 	o << " [label=\"";
+	const bool hasParents = isFullGraph || !getProduct(productId).second.empty();
+	if (hasParents)
+		o << "&&\\n";
 	if (functionNum == SIZE_MAX)
 	{
 		printHumanId(o, productId);
@@ -314,12 +316,12 @@ void OptimizedSolutions::printGraphProduct(std::ostream &o, const Names &functio
 		o << ", style=filled";
 	o << "];";
 	o << '\n';
-	if (isFullGraph || !getProduct(productId).second.empty())
+	if (hasParents)
 	{
 		o << "\t\t";
-		printGraphId(o, productId);
-		o << " -> ";
 		printGraphProductParents(o, productId);
+		o << " -> ";
+		printGraphId(o, productId);
 		o << ";\n";
 	}
 }
@@ -338,7 +340,6 @@ void OptimizedSolutions::printGraphProducts(std::ostream &o, const Names &functi
 			o << "\tsubgraph products\n";
 			o << "\t{\n";
 			o << "\t\tnode [shape=ellipse];\n";
-			o << "\t\tedge [taillabel=\"&&\"];\n";
 		}
 		printGraphProduct(o, functionNames, makeProductId(i));
 	}
@@ -578,10 +579,14 @@ void OptimizedSolutions::printGraphSum(std::ostream &o, const Names &functionNam
 {
 	const bool isFullGraph = options::outputFormat.getValue() == options::OutputFormat::GRAPH;
 	const bool isVerboseGraph = options::verboseGraph.isRaised();
+	const sum_t &sum = getSum(sumId);
 	std::size_t functionNum = isFullGraph ? SIZE_MAX : findSumEndNode(sumId);
 	o << "\t\t";
 	printGraphId(o, sumId);
 	o << " [label=\"";
+	const bool hasParents = isFullGraph || std::any_of(sum.cbegin(), sum.cend(), [this](const id_t id){ return !isProduct(id) || isProductWorthPrinting(id); });
+	if (hasParents)
+		o << "||\\n";
 	if (functionNum == SIZE_MAX)
 	{
 		printHumanId(o, sumId);
@@ -604,13 +609,12 @@ void OptimizedSolutions::printGraphSum(std::ostream &o, const Names &functionNam
 	if (functionNum != SIZE_MAX)
 		o << ", style=filled";
 	o << "];\n";
-	const sum_t &sum = getSum(sumId);
-	if (isFullGraph || std::any_of(sum.cbegin(), sum.cend(), [this](const id_t id){ return !isProduct(id) || isProductWorthPrinting(id); }))
+	if (hasParents)
 	{
 		o << "\t\t";
-		printGraphId(o, sumId);
-		o << " -> ";
 		printGraphSumParents(o, sumId);
+		o << " -> ";
+		printGraphId(o, sumId);
 		o << ";\n";
 	}
 }
@@ -630,7 +634,6 @@ void OptimizedSolutions::printGraphSums(std::ostream &o, const Names &functionNa
 			o << "\tsubgraph sums\n";
 			o << "\t{\n";
 			o << "\t\tnode [shape=rectangle];\n";
-			o << "\t\tedge [taillabel=\"||\"];\n";
 		}
 		printGraphSum(o, functionNames, sumId);
 	}
@@ -781,16 +784,18 @@ void OptimizedSolutions::printGraphFinalSum(std::ostream &o, const Names &functi
 	const bool isVerboseGraph = options::verboseGraph.isRaised();
 	const id_t sumId = finalSums[i];
 	o << "\t\tf" << i << " [label=\"";
+	if (!isSumWorthPrinting(sumId, false) && getSum(sumId).size() > 1)
+		o << "||\\n";
 	functionNames.printGraphName(o, i);
 	if (isVerboseGraph)
 		printGraphSumProducts(o, sumId);
 	o << "\"];\n";
-	o << "\t\tf" << i << " -> ";
+	o << "\t\t";
 	if (isSumWorthPrinting(sumId, false))
 		printGraphId(o, sumId);
 	else
 		printGraphSumParents(o, sumId);
-	o << ";\n";
+	o << " -> f" << i << ";\n";
 }
 
 void OptimizedSolutions::printGraphFinalSums(std::ostream &o, const Names &functionNames) const
@@ -800,7 +805,6 @@ void OptimizedSolutions::printGraphFinalSums(std::ostream &o, const Names &funct
 	o << "\tsubgraph final_sums\n";
 	o << "\t{\n";
 	o << "\t\tnode [shape=rectangle, style=filled];\n";
-	o << "\t\tedge [taillabel=\"||\"];\n";
 	for (std::size_t i = 0; i != finalSums.size(); ++i)
 		printGraphFinalSum(o, functionNames, i);
 	o << "\t}\n";

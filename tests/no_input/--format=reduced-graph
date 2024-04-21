@@ -3,7 +3,6 @@ digraph no_input
 	subgraph products
 	{
 		node [shape=ellipse];
-		edge [taillabel="&&"];
 		s0 [label="always_true = <True>", style=filled];
 		s1 [label="always_false, dont_care = <False>", style=filled];
 	}

@@ -1,4 +1,4 @@
-class hard_to_print_optimized
+class hard_to_print
 {
 public:
 	using input_t = struct { bool q, x, y, z; };
@@ -11,7 +11,7 @@ public:
 	[[nodiscard]] static constexpr output_t calc(const input_t &i);
 };
 
-constexpr hard_to_print_optimized::output_t hard_to_print_optimized::calc(const input_t &i)
+constexpr hard_to_print::output_t hard_to_print::calc(const input_t &i)
 {
 	// Intermediary values
 	bool prods[2] = {};

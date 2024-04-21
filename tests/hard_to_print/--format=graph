@@ -1,9 +1,9 @@
-digraph hard_to_print_optimized
+digraph hard_to_print
 {
 	subgraph inputs
 	{
 		rank=same;
-		node [shape=house];
+		node [shape=invhouse];
 		i0 [label="q"];
 		i1 [label="x"];
 		i2 [label="y"];
@@ -18,67 +18,63 @@ digraph hard_to_print_optimized
 	subgraph negated_inputs
 	{
 		node [shape=diamond];
-		edge [taillabel="!"];
 		ni0 [label="!q"];
-		ni0 -> i0;
+		i0 -> ni0;
 		ni1 [label="!x"];
-		ni1 -> i1;
+		i1 -> ni1;
 		ni2 [label="!y"];
-		ni2 -> i2;
+		i2 -> ni2;
 		ni3 [label="!z"];
-		ni3 -> i3;
+		i3 -> ni3;
 	}
 	subgraph products
 	{
 		node [shape=ellipse];
-		edge [taillabel="&&"];
-		s0 [label="[0]"];
-		s0 -> ni0, ni1;
-		s1 [label="[1]"];
-		s1 -> ni2, s0;
+		s0 [label="&&\n[0]"];
+		ni0, ni1 -> s0;
+		s1 [label="&&\n[1]"];
+		ni2, s0 -> s1;
 	}
 	subgraph sums
 	{
 		node [shape=rectangle];
-		edge [taillabel="||"];
-		s2 [label="[2]"];
-		s2 -> s1, ni3;
-		s3 [label="[3]"];
-		s3 -> i2, i0;
+		s2 [label="||\n[2]"];
+		s1, ni3 -> s2;
+		s3 [label="||\n[3]"];
+		i2, i0 -> s3;
 	}
 	subgraph final_sums
 	{
 		node [shape=rectangle, style=filled];
-		edge [taillabel="||"];
 		f0 [label="none"];
-		f0 -> false;
+		false -> f0;
 		f1 [label="all"];
-		f1 -> true;
+		true -> f1;
 		f2 [label="some"];
-		f2 -> s0;
+		s0 -> f2;
 		f3 [label="even_less"];
-		f3 -> s1;
+		s1 -> f3;
 		f4 [label="more_than_less"];
-		f4 -> s2;
+		s2 -> f4;
 		f5 [label="none_again"];
-		f5 -> false;
+		false -> f5;
 		f6 [label="all_again"];
-		f6 -> true;
+		true -> f6;
 		f7 [label="some_again"];
-		f7 -> s0;
+		s0 -> f7;
 		f8 [label="more_than_less_again"];
-		f8 -> s2;
+		s2 -> f8;
 		f9 [label="half"];
-		f9 -> ni3;
+		ni3 -> f9;
 		f10 [label="some_the_third_time"];
-		f10 -> s0;
+		s0 -> f10;
 		f11 [label="more_than_less_the_third_time"];
-		f11 -> s2;
+		s2 -> f11;
 		f12 [label="most"];
-		f12 -> s3;
-		f13 [label="even_more"];
-		f13 -> ni1, s3;
+		s3 -> f12;
+		f13 [label="||\neven_more"];
+		ni1, s3 -> f13;
 		f14 [label="half_again"];
-		f14 -> ni3;
+		ni3 -> f14;
 	}
 }

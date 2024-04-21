@@ -1,4 +1,4 @@
-module hard_to_print_optimized (
+module hard_to_print (
 	input wire q, x, y, z,
 	output wire none, all, some, even_less, more_than_less, none_again, all_again, some_again, more_than_less_again, half, some_the_third_time, more_than_less_the_third_time, most, even_more, half_again,
 );

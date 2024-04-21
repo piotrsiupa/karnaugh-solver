@@ -17,7 +17,8 @@ public:
 	using mask_t = std::uint32_t;
 	static_assert(sizeof(mask_t) * CHAR_BIT >= ::maxBits);
 	using minterms_t = std::vector<Minterm>;
-	using splitBits_t = std::vector<std::pair<bits_t, bool>>;
+	using splitBit_t = std::pair<bits_t, bool>;
+	using splitBits_t = std::vector<splitBit_t>;
 	
 	static constexpr Implicant all() { return {0, 0, 0}; }
 	static constexpr Implicant error() { return {~mask_t(0), ~mask_t(0), 0}; }
