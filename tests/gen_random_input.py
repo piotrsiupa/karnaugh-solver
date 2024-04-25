@@ -16,7 +16,8 @@ def print_help() -> None:
     print()
     print('FUNCTION_COUNT is the number of functions to generate randomly.')
     print()
-    print('0S_PROP, 1S_PROP, DCS_PROP are proportions of more or less how many 0s, 1s and\ndon\'t-cares will be in the requested funtion.')
+    print('0S_PROP, 1S_PROP, DCS_PROP are proportions of more or less how many 0s, 1s and')
+    print('don\'t-cares will be in the requested funtion.')
     print('(The amount won\'t be exact because it\'s all randomly generated.')
 
 
@@ -78,6 +79,7 @@ def main() -> None:
     for _ in range(function_count):
         print()
         print_function(proportions, input_size)
+
 
 if __name__ == '__main__':
     main()
