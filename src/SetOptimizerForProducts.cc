@@ -81,6 +81,11 @@ SetOptimizerForProducts::gateCount_t SetOptimizerForProducts::countGates(const s
 void SetOptimizerForProducts::substractSubsets(sets_t &sets, const subsetSelections_t &subsetSelections)
 {
 	for (std::size_t i = sets.size(); i --> 0;)
+	{
 		for (const std::size_t subsetIndex : subsetSelections[i])
+		{
 			sets[i].substract(sets[subsetIndex]);
+			assert((sets[i].getBits() & ~sets[i].getMask()) == 0);
+		}
+	}
 }

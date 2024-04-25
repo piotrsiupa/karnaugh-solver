@@ -106,6 +106,7 @@ void printHelp()
 						"It's\n\t\t\t  a lot faster than the brute-force but still very slow.\n"
 			"\tcursory\t\t- It just takes all the possible nodes and edges from\n\t\t\t  the brute-force graph and then it tries to greedily\n\t\t\t  eliminate the ones that don't improve the solution.\n\t\t\t  "
 						"It has comparable results to `exhaustive` and it is\n\t\t\t  significantly faster but generating the graph is still\n\t\t\t  too slow to handle over 10 inputs.\n"
+			"\tgreedy\t\t- It doesn't create a graph but instead compares each 2\n\t\t\t  expressions and checks if they have common parts. It\n\t\t\t  just takes the first match. It's much faster than\n\t\t\t  `cursory` and it can handle mid-size inputs but not\n\t\t\t  the ones on the higher end of the size range.\n"
 			"\n"
 			"\n"
 			"Input:\n"

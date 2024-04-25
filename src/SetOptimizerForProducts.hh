@@ -19,5 +19,6 @@ protected:
 	gateCount_t countGates(const subsetSelections_t &subsetSelections, const usageCounts_t &usageCounts) const final;
 	void substractSubsets(sets_t &sets, const subsetSelections_t &subsetSelections) final;
 	void substractSet(set_t &set, const set_t &otherSet) const final { set.substract(otherSet); }
+	set_t getSetIntersection(const set_t &set0, const set_t &set1) const final { set_t intersection = set0; intersection.intersect(set1); return intersection; }
 	bool isSubsetWorthy(const set_t &subset) const final { return subset.size() >= 2; }
 };

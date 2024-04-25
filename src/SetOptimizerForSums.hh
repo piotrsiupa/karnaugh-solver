@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <cstdint>
 #include <set>
 
@@ -18,5 +19,6 @@ protected:
 	gateCount_t countGates(const subsetSelections_t &subsetSelections, const usageCounts_t &usageCounts) const final;
 	void substractSubsets(sets_t &sets, const subsetSelections_t &subsetSelections) final;
 	void substractSet(set_t &set, const set_t &otherSet) const final { for (const std::size_t x : otherSet) set.erase(x); }
+	set_t getSetIntersection(const set_t &set0, const set_t &set1) const final { set_t intersection; std::ranges::set_intersection(set0, set1, std::inserter(intersection, intersection.begin())); return intersection; }
 	bool isSubsetWorthy(const set_t &subset) const final { return subset.size() >= 2; }
 };

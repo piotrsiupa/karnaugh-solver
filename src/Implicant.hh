@@ -65,6 +65,7 @@ public:
 	
 	void add(const Implicant &other) { this->bits |= other.bits; this->mask |= other.mask; }
 	void substract(const Implicant &other) { this->bits &= ~other.bits; this->mask &= ~other.mask; }
+	void intersect(const Implicant &other) { const Minterm intersection = other.mask & ~(this->bits ^ other.bits); this->bits &= intersection; this->mask &= intersection; }
 	void setBit(const bits_t bit, const bool value) { const mask_t bitMask = 1 << (::bits - bit - 1); if (value) bits |= bitMask; mask |= bitMask; }
 	void unsetBit(const bits_t bit) { const mask_t bitMask = ~(1 << (::bits - bit - 1)); bits &= bitMask; mask &= bitMask; }
 	void applyMask(const mask_t maskToApply) { bits &= maskToApply; mask &= maskToApply; }
