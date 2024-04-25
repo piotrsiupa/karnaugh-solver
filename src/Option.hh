@@ -106,7 +106,7 @@ namespace options
 		[[nodiscard]] bool needsArgument() const final { return true; }
 		[[nodiscard]] bool parse(std::string_view argument) final;
 		
-		void setValue(const std::size_t value) { this->value = value; }
+		void setValue(const std::size_t newValue) { this->value = newValue; }
 		[[nodiscard]] std::size_t getValue() const { return value; }
 	};
 	
