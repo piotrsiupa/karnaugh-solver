@@ -33,7 +33,7 @@ namespace options
 	extern Trilean prompt;
 	extern Trilean status;
 	
-	extern Mapped<OutputFormat, OutputFormat::HUMAN_LONG> outputFormat;
+	extern Mapped<OutputFormat> outputFormat;
 	extern Text name;
 	extern Flag verboseGraph;
 	

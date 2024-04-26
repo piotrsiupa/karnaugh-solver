@@ -54,7 +54,10 @@ namespace options
 	
 	class Trilean : public Option
 	{
+	public:
 		using getDefault_t = std::function<bool()>;
+		
+	private:
 		const getDefault_t getDefault;
 		bool undecided = true, value;
 		
@@ -110,10 +113,12 @@ namespace options
 		[[nodiscard]] std::size_t getValue() const { return value; }
 	};
 	
-	template<typename T, T DEFAULT_VALUE>
+	template<typename T>
 	class Mapped : public Option
 	{
 	public:
+		using getDefault_t = std::function<T()>;
+		
 		struct Mapping
 		{
 			std::string_view officialName;
@@ -124,16 +129,18 @@ namespace options
 		
 	private:
 		Choice choice;
+		
+		const getDefault_t getDefault;
 		const std::vector<T> values;
 		
 	public:
-		Mapped(std::vector<std::string_view> &&longNames, const char shortName, const Mappings &mappings) : Option(std::move(longNames), shortName), choice({getLongNames()[0]}, shortName, map_vector<Choice::Variant>(mappings, [](const Mapping &mapping) -> Choice::Variant { return {mapping.officialName, mapping.regex}; }), SIZE_MAX), values(map_vector<T>(mappings, [](const Mapping &mapping){ return mapping.value; })) {}
+		Mapped(std::vector<std::string_view> &&longNames, const char shortName, const getDefault_t getDefault, const Mappings &mappings) : Option(std::move(longNames), shortName), choice({getLongNames()[0]}, shortName, map_vector<Choice::Variant>(mappings, [](const Mapping &mapping) -> Choice::Variant { return {mapping.officialName, mapping.regex}; }), SIZE_MAX), getDefault(getDefault), values(map_vector<T>(mappings, [](const Mapping &mapping){ return mapping.value; })) {}
 		
 		[[nodiscard]] bool needsArgument() const final { return choice.needsArgument(); }
 		[[nodiscard]] bool parse(std::string_view argument) final { return choice.parse(argument); }
 		
-		//void setValue(const T value) { this->value = value; } //TODO set variable storing default value and then `choice.setValue(SIZE_MAX);` (waiting for the merge of the branch in which the default value is no longet a template parameter)
-		[[nodiscard]] T getValue() const { const std::size_t i = choice.getValue(); return i == SIZE_MAX ? DEFAULT_VALUE : values[i]; }
+		void resetValue() { choice.setValue(SIZE_MAX); }
+		[[nodiscard]] T getValue() const { const std::size_t i = choice.getValue(); return i == SIZE_MAX ? getDefault() : values[i]; }
 	};
 	
 	class Text : public Option
