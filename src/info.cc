@@ -3,6 +3,12 @@
 #include <iostream>
 
 
+static constexpr std::string_view versionNumber = "0.3.2";
+std::string_view getVersionNumber()
+{
+	return versionNumber;
+}
+
 void printShortHelp()
 {
 	std::cout <<
@@ -80,7 +86,7 @@ void printHelp()
 void printVersion()
 {
 	std::cout <<
-			"karnaugh (Karnaugh Map Solver) version 0.3.1\n"
+			"karnaugh (Karnaugh Map Solver) version " << versionNumber << "\n"
 			"Author: Piotr Siupa\n"
 #ifndef NDEBUG
 			"This is a development build which contains additional assertions. This may slow down the execution.\n"

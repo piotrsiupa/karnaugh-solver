@@ -14,9 +14,9 @@ A CLI aplication to minimize big (up to 32 variables) logic functions, that can 
 - [Input format](#input-format)
 - [Example (and output formats)](#example-and-output-formats)
     - [Input](#input)
-    - [Human readable output (long variant)](#human-readable-output-long-variant)
-    - [Human readable output (medium variant)](#human-readable-output-medium-variant)
-    - [Human readable output (short variant)](#human-readable-output-short-variant)
+    - [Human-readable output (long variant)](#human-readable-output-long-variant)
+    - [Human-readable output (medium variant)](#human-readable-output-medium-variant)
+    - [Human-readable output (short variant)](#human-readable-output-short-variant)
     - [Graph](#graph)
     - [Reduced graph](#reduced-graph)
     - [Mathematical notation](#mathematical-notation)
@@ -36,13 +36,13 @@ After that, it (optionally) performs a [common subexpression elimination](https:
 If there are multiple solutions, the one with the smallest cost in logic gates is chosen.
 (The cost calculation takes the CSE into account.)
 
-The result is printed in a human readable format (default) or in variety of other formats, including Verilog, VHDL, DOT graph, C++ and more.
+The result is printed in a human-readable format (default) or in variety of other formats, including Verilog, VHDL, DOT graph, C++ and more.
 
 ### I haven't understood any of that; speak human!
 
 OK, basically you tell it that you want an electronic circuit that e.g. have input pins `a`, `b`, `c` and output pins `x`, `y`, `z`.
 Then for each output you list all the combinations of input values for which the output pin should be 1. (You can also list combinations where output doesn't matter to you because e.g. they will never happen.)
-The program then looks for a smallest logic circuit that does that.
+The program then looks for the smallest logic circuit that does that.
 (It looks only for the results in the SOP form which means that it always first uses AND gates to calculate a bunch of immediate values and then OR gates to make the final results.)
 
 The popular way to do it by hand for smaller circuits are [Karnaugh maps](https://en.wikipedia.org/wiki/Karnaugh_map).
@@ -56,10 +56,10 @@ Additionally, the program can find common parts of the resulting circuits and re
 
 ## Limitations
 
-Currently there is quite a few limitations both because the program is still in development and because of its main purpose which is to be used for the game *Turing Complete*.
+Currently, there is quite a few limitations both because the program is still in development and because of its main purpose which is to be used for the game *Turing Complete*.
  - The search for the solution is done using a **brute force** method which returns the best possible result but often takes too much time and memory to be realistically useful. (Heuristics will be added in the future.)
  - The theoretical limit for the number of input variables is 32, however, the real **input limit is 5 (6 without CSE)** because of how much time the brute-force method takes (unless the logic function is trivial).
- - The number of underlying transistors are not taken into account. Instead **NOT gate, 2-input AND gate and 2-input OR gate** are treated as basic building blocks with respective costs 1, 2 and 2. (Although, this shouldn't change the result dramatically.)
+ - The number of underlying transistors are not taken into account. Instead, **NOT gate, 2-input AND gate and 2-input OR gate** are treated as basic building blocks with respective costs 1, 2 and 2. (Although, this shouldn't change the result dramatically.)
  - **Delay** of the resulting circuit is not taken under account in the deduplication phase (CSE).
  - **Hazards** in the resulting circuit are not taken into account at any stage.
  - The logic function is solved to the **SOP** form. (The POS form is planned for the future.)
@@ -76,7 +76,7 @@ The program is written in pure C++, without use of any external libraries, which
 Any compiler conforming to the C++17 standard should be able to handle it.
 (Clang will also work because it can be made conforming by using command line flags.)
 
-You can built it in two ways:
+You can build it in two ways:
 
 ### *SCons* Build script
 
@@ -173,7 +173,7 @@ tricky_1 # This name could be skipped. The program would generate one if needed.
 0 1 3 4 7, 10;11 12 ,13 15  # You can mix different separators.
 ```
 
-### Human readable output (long variant)
+### Human-readable output (long variant)
 
 This is the default output format of the program.
 It's intended to visualize the solution in form of Karnaugh maps (unless they are too big) as well as show steps to build it out of logic gates in a way that is readable by a human.
@@ -238,16 +238,16 @@ This is the same as the long variant except it doesn't print functions represent
 
 ([file](tests/tricky_one/--format=human))
 
-### Human readable output (short variant)
+### Human-readable output (short variant)
 
-This is a shorter version of the human readable format.
+This is a shorter version of the human-readable format.
 It is useful when all you need are instruction on how to build the circuit.
 
 It first lists all the inputs that will need to be negated. (NOT gates)
 
 Then it lists products, each of which containing at least 2 inputs, negated inputs or outputs of other products. (AND gates)
 
-Finally, it lists all the sums, in a format similar to the products but they can also use outputs of other sums. (OR gates)
+Finally, it lists all the sums, in a format similar to the products, but they can also use outputs of other sums. (OR gates)
 Sums can be either numbered or named. The named ones are the outputs of the circuit.
 
 ([file](tests/tricky_one/--format=human-short))
@@ -274,7 +274,7 @@ An input for Graphviz (DOT format) that shows how to build the circuit using log
 
 ### Reduced graph
 
-This is similar to the normal graph but its heavily altered to reduce the number of nodes.
+This is similar to the normal graph, but it's heavily altered to reduce the number of nodes.
 The notation is more complicated and it would be harder to read if the reduction of node number wasn't helping even more.
 (Similarly to `graph`, with the flag `--verbose-graph`, it shows a complete equation in each node.)
 
