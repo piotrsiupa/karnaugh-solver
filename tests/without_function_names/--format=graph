@@ -12,17 +12,17 @@ digraph without_function_names
 	subgraph negated_inputs
 	{
 		node [shape=diamond];
-		ni0 [label="!a"];
+		ni0 [label="¬a"];
 		i0 -> ni0;
-		ni1 [label="!b"];
+		ni1 [label="¬b"];
 		i1 -> ni1;
 	}
 	subgraph products
 	{
 		node [shape=ellipse];
-		s0 [label="&&\n[0]"];
+		s0 [label="∧\n[0]"];
 		ni0, ni1 -> s0;
-		s1 [label="&&\n[1]"];
+		s1 [label="∧\n[1]"];
 		i2, s0 -> s1;
 	}
 	subgraph final_sums

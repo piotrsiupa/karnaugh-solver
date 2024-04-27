@@ -5,7 +5,7 @@ goal:
 0 T
 
 solution:
-<True>
+⊤
 
 Gate cost: NOTs = 0, ANDs = 0, ORs = 0
 
@@ -17,7 +17,7 @@ goal:
 0 F
 
 solution:
-<False>
+⊥
 
 Gate cost: NOTs = 0, ANDs = 0, ORs = 0
 
@@ -33,7 +33,7 @@ best fit:
 0 F
 
 solution:
-<False>
+⊥
 
 Gate cost: NOTs = 0, ANDs = 0, ORs = 0
 

@@ -4,6 +4,90 @@
 #include "utils.hh"
 
 
+void Implicant::printHumanBool(std::ostream &o, const bool value) const
+{
+	switch (options::outputOperators.getValue())
+	{
+	case options::OutputOperators::FORMAL:
+		o << (value ? u8"\u22A4" : u8"\u22A5");
+		break;
+	case options::OutputOperators::ASCII:
+		o << (value ? 'T' : 'F');
+		break;
+	case options::OutputOperators::PROGRAMMING:
+		o << (value ? "true" : "false");
+		break;
+	case options::OutputOperators::NAMES:
+		o << (value ? "TRUE" : "FALSE");
+		break;
+	default:
+		break;
+	}
+}
+
+void Implicant::printHumanNot(std::ostream &o) const
+{
+	switch (options::outputOperators.getValue())
+	{
+	case options::OutputOperators::FORMAL:
+		o << u8"\u00AC";
+		break;
+	case options::OutputOperators::ASCII:
+		o << '~';
+		break;
+	case options::OutputOperators::PROGRAMMING:
+		o << '!';
+		break;
+	case options::OutputOperators::NAMES:
+		o << "NOT ";
+		break;
+	default:
+		break;
+	}
+}
+
+void Implicant::printHumanAnd(std::ostream &o) const
+{
+	switch (options::outputOperators.getValue())
+	{
+	case options::OutputOperators::FORMAL:
+		o << u8" \u2227 ";
+		break;
+	case options::OutputOperators::ASCII:
+		o << " /\\ ";
+		break;
+	case options::OutputOperators::PROGRAMMING:
+		o << " && ";
+		break;
+	case options::OutputOperators::NAMES:
+		o << " AND ";
+		break;
+	default:
+		break;
+	}
+}
+
+void Implicant::printGraphAnd(std::ostream &o) const
+{
+	switch (options::outputOperators.getValue())
+	{
+	case options::OutputOperators::FORMAL:
+		o << u8" \u2227 ";
+		break;
+	case options::OutputOperators::ASCII:
+		o << " /\\\\ ";
+		break;
+	case options::OutputOperators::PROGRAMMING:
+		o << " && ";
+		break;
+	case options::OutputOperators::NAMES:
+		o << " AND ";
+		break;
+	default:
+		break;
+	}
+}
+
 bool Implicant::operator<(const Implicant &other) const
 {
 	if (this->bitCount != other.bitCount)
@@ -59,10 +143,7 @@ void Implicant::printHuman(std::ostream &o, const bool parentheses) const
 {
 	if (bitCount == 0)
 	{
-		if (isError())
-			o << "<False>";
-		else
-			o << "<True>";
+		printHumanBool(o, !isError());
 		return;
 	}
 	const bool needsParentheses = parentheses && bitCount != 1;
@@ -72,9 +153,32 @@ void Implicant::printHuman(std::ostream &o, const bool parentheses) const
 	for (const auto &[bitIndex, negated] : splitBits())
 	{
 		if (!first)
-			o << " && ";
+			printHumanAnd(o);
 		if (negated)
-			o << '!';
+			printHumanNot(o);
+		::inputNames.printHumanName(o, bitIndex);
+	}
+	if (needsParentheses)
+		o << ')';
+}
+
+void Implicant::printGraph(std::ostream &o, const bool parentheses) const
+{
+	if (bitCount == 0)
+	{
+		printHumanBool(o, !isError());
+		return;
+	}
+	const bool needsParentheses = parentheses && bitCount != 1;
+	if (needsParentheses)
+		o << '(';
+	First first;
+	for (const auto &[bitIndex, negated] : splitBits())
+	{
+		if (!first)
+			printGraphAnd(o);
+		if (negated)
+			printGraphNot(o);
 		::inputNames.printHumanName(o, bitIndex);
 	}
 	if (needsParentheses)
@@ -184,46 +288,7 @@ void Implicant::printMath(std::ostream &o, const bool parentheses) const
 {
 	if (bitCount == 0)
 	{
-		if (isError())
-		{
-			switch (options::outputFormat.getValue())
-			{
-			case options::OutputFormat::MATH_FORMAL:
-				o << u8"\u22A5";
-				break;
-			case options::OutputFormat::MATH_ASCII:
-				o << 'F';
-				break;
-			case options::OutputFormat::MATH_PROG:
-				o << "false";
-				break;
-			case options::OutputFormat::MATH_NAMES:
-				o << "FALSE";
-				break;
-			default:
-				break;
-			}
-		}
-		else
-		{
-			switch (options::outputFormat.getValue())
-			{
-			case options::OutputFormat::MATH_FORMAL:
-				o << u8"\u22A4";
-				break;
-			case options::OutputFormat::MATH_ASCII:
-				o << 'T';
-				break;
-			case options::OutputFormat::MATH_PROG:
-				o << "true";
-				break;
-			case options::OutputFormat::MATH_NAMES:
-				o << "TRUE";
-				break;
-			default:
-				break;
-			}
-		}
+		printHumanBool(o, !isError());
 		return;
 	}
 	const bool needsParentheses = parentheses && bitCount != 1;
@@ -233,45 +298,9 @@ void Implicant::printMath(std::ostream &o, const bool parentheses) const
 	for (const auto &[bitIndex, negated] : splitBits())
 	{
 		if (!first)
-		{
-			switch (options::outputFormat.getValue())
-			{
-			case options::OutputFormat::MATH_FORMAL:
-				o << u8" \u2227 ";
-				break;
-			case options::OutputFormat::MATH_ASCII:
-				o << " /\\ ";
-				break;
-			case options::OutputFormat::MATH_PROG:
-				o << " && ";
-				break;
-			case options::OutputFormat::MATH_NAMES:
-				o << " AND ";
-				break;
-			default:
-				break;
-			}
-		}
+			printHumanAnd(o);
 		if (negated)
-		{
-			switch (options::outputFormat.getValue())
-			{
-			case options::OutputFormat::MATH_FORMAL:
-				o << u8"\u00AC";
-				break;
-			case options::OutputFormat::MATH_ASCII:
-				o << '~';
-				break;
-			case options::OutputFormat::MATH_PROG:
-				o << '!';
-				break;
-			case options::OutputFormat::MATH_NAMES:
-				o << "NOT ";
-				break;
-			default:
-				break;
-			}
-		}
+			printHumanNot(o);
 		::inputNames.printMathName(o, bitIndex);
 	}
 	if (needsParentheses)

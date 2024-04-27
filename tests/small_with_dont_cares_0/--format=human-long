@@ -15,7 +15,7 @@ best fit:
 10 F  F  F  F
 
 solution:
-!a && d
+¬a ∧ d
 
 Gate cost: NOTs = 1, ANDs = 1, ORs = 0
 
@@ -24,7 +24,7 @@ Gate cost: NOTs = 1, ANDs = 1, ORs = 0
 
 Negated inputs: a
 Products:
-	[0] = !a && d
+	[0] = ¬a ∧ d
 Sums:
 	"short with don't cares 0" = [0]
 

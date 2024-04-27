@@ -11,6 +11,10 @@
 
 class Solution final : public GateCost, public std::vector<Implicant>
 {
+	void printGraphNot(std::ostream &o) const;
+	void printHumanOr(std::ostream &o, const bool spaces) const;
+	void printGraphAnd(std::ostream &o) const;
+	void printGraphOr(std::ostream &o, const bool spaces) const;
 	void printGraphNegatedInputs(std::ostream &o, const std::size_t functionNum) const;
 	static void printGraphParentBit(std::ostream &o, const std::size_t functionNum, const Implicant::splitBit_t &splitBit, const std::size_t i);
 	[[nodiscard]] std::size_t printGraphProducts(std::ostream &o, const std::size_t functionNum, std::size_t idShift) const;

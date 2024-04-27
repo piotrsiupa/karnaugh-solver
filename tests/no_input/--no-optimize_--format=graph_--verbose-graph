@@ -11,7 +11,7 @@ digraph no_input
 		subgraph sum
 		{
 			node [shape=rectangle, style=filled];
-			f0 [label="always_true = <True>"];
+			f0 [label="always_true = ⊤"];
 			true -> f0;
 		}
 	}
@@ -20,7 +20,7 @@ digraph no_input
 		subgraph sum
 		{
 			node [shape=rectangle, style=filled];
-			f1 [label="always_false = <False>"];
+			f1 [label="always_false = ⊥"];
 			false -> f1;
 		}
 	}
@@ -29,7 +29,7 @@ digraph no_input
 		subgraph sum
 		{
 			node [shape=rectangle, style=filled];
-			f2 [label="dont_care = <False>"];
+			f2 [label="dont_care = ⊥"];
 			false -> f2;
 		}
 	}

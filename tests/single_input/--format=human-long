@@ -6,7 +6,7 @@ goal:
 1 T
 
 solution:
-<True>
+⊤
 
 Gate cost: NOTs = 0, ANDs = 0, ORs = 0
 
@@ -32,7 +32,7 @@ goal:
 1 F
 
 solution:
-!the_only_input
+¬the_only_input
 
 Gate cost: NOTs = 1, ANDs = 0, ORs = 0
 
@@ -45,7 +45,7 @@ goal:
 1 F
 
 solution:
-<False>
+⊥
 
 Gate cost: NOTs = 0, ANDs = 0, ORs = 0
 
@@ -55,9 +55,9 @@ Gate cost: NOTs = 0, ANDs = 0, ORs = 0
 Negated inputs: the_only_input
 Products:
 Sums:
-	"true" = <True>
+	"true" = ⊤
 	"pass_though" = the_only_input
-	"negate" = !the_only_input
-	"false" = <False>
+	"negate" = ¬the_only_input
+	"false" = ⊥
 
 Gate cost: NOTs = 1, ANDs = 0, ORs = 0

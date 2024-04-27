@@ -1,0 +1,141 @@
+digraph hard_to_print
+{
+	subgraph function_0
+	{
+		subgraph sum
+		{
+			node [shape=rectangle, style=filled];
+			f0 [label="none = FALSE"];
+		}
+	}
+	subgraph function_1
+	{
+		subgraph sum
+		{
+			node [shape=rectangle, style=filled];
+			f1 [label="all = TRUE"];
+		}
+	}
+	subgraph function_2
+	{
+		subgraph sum
+		{
+			node [shape=rectangle, style=filled];
+			f2 [label="some = NOT q AND NOT x"];
+		}
+	}
+	subgraph function_3
+	{
+		subgraph sum
+		{
+			node [shape=rectangle, style=filled];
+			f3 [label="even_less = NOT q AND NOT x AND NOT y"];
+		}
+	}
+	subgraph function_4
+	{
+		subgraph products
+		{
+			node [shape=ellipse];
+			f4_s1 [label="[0] = NOT q AND NOT x AND NOT y"];
+		}
+		subgraph sum
+		{
+			node [shape=rectangle, style=filled];
+			f4 [label="OR\nmore_than_less = NOT z OR (NOT q AND NOT x AND NOT y)"];
+			f4_s1 -> f4;
+		}
+	}
+	subgraph function_5
+	{
+		subgraph sum
+		{
+			node [shape=rectangle, style=filled];
+			f5 [label="none_again = FALSE"];
+		}
+	}
+	subgraph function_6
+	{
+		subgraph sum
+		{
+			node [shape=rectangle, style=filled];
+			f6 [label="all_again = TRUE"];
+		}
+	}
+	subgraph function_7
+	{
+		subgraph sum
+		{
+			node [shape=rectangle, style=filled];
+			f7 [label="some_again = NOT q AND NOT x"];
+		}
+	}
+	subgraph function_8
+	{
+		subgraph products
+		{
+			node [shape=ellipse];
+			f8_s1 [label="[1] = NOT q AND NOT x AND NOT y"];
+		}
+		subgraph sum
+		{
+			node [shape=rectangle, style=filled];
+			f8 [label="OR\nmore_than_less_again = NOT z OR (NOT q AND NOT x AND NOT y)"];
+			f8_s1 -> f8;
+		}
+	}
+	subgraph function_9
+	{
+		subgraph sum
+		{
+			node [shape=rectangle, style=filled];
+			f9 [label="half = NOT z"];
+		}
+	}
+	subgraph function_10
+	{
+		subgraph sum
+		{
+			node [shape=rectangle, style=filled];
+			f10 [label="some_the_third_time = NOT q AND NOT x"];
+		}
+	}
+	subgraph function_11
+	{
+		subgraph products
+		{
+			node [shape=ellipse];
+			f11_s1 [label="[2] = NOT q AND NOT x AND NOT y"];
+		}
+		subgraph sum
+		{
+			node [shape=rectangle, style=filled];
+			f11 [label="OR\nmore_than_less_the_third_time = NOT z OR (NOT q AND NOT x AND NOT y)"];
+			f11_s1 -> f11;
+		}
+	}
+	subgraph function_12
+	{
+		subgraph sum
+		{
+			node [shape=rectangle, style=filled];
+			f12 [label="most = q OR y"];
+		}
+	}
+	subgraph function_13
+	{
+		subgraph sum
+		{
+			node [shape=rectangle, style=filled];
+			f13 [label="even_more = q OR NOT x OR y"];
+		}
+	}
+	subgraph function_14
+	{
+		subgraph sum
+		{
+			node [shape=rectangle, style=filled];
+			f14 [label="half_again = NOT z"];
+		}
+	}
+}

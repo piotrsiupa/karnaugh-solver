@@ -3,7 +3,7 @@
 The Karnaugh map is too big to be displayed.
 
 solution:
-(A && B && C) || (F && H && K && L) || (G && J && K && L) || (A && E && H && I && K && L) || (B && D && E && J && K && L) || (C && D && E && H && I && J && K && L)
+(A ∧ B ∧ C) ∨ (F ∧ H ∧ K ∧ L) ∨ (G ∧ J ∧ K ∧ L) ∨ (A ∧ E ∧ H ∧ I ∧ K ∧ L) ∨ (B ∧ D ∧ E ∧ J ∧ K ∧ L) ∨ (C ∧ D ∧ E ∧ H ∧ I ∧ J ∧ K ∧ L)
 
 Gate cost: NOTs = 0, ANDs = 25, ORs = 5
 
@@ -12,18 +12,18 @@ Gate cost: NOTs = 0, ANDs = 25, ORs = 5
 
 Negated inputs: <none>
 Products:
-	[0] = K && L
-	[1] = J && [0]
-	[2] = H && [0]
-	[3] = E && I && [2]
-	[4] = D && E && [1]
-	[5] = C && [4] && [3]
-	[6] = G && [1]
-	[7] = B && [4]
-	[8] = F && [2]
-	[9] = A && [3]
-	[10] = A && B && C
+	[0] = K ∧ L
+	[1] = J ∧ [0]
+	[2] = H ∧ [0]
+	[3] = E ∧ I ∧ [2]
+	[4] = D ∧ E ∧ [1]
+	[5] = C ∧ [4] ∧ [3]
+	[6] = G ∧ [1]
+	[7] = B ∧ [4]
+	[8] = F ∧ [2]
+	[9] = A ∧ [3]
+	[10] = A ∧ B ∧ C
 Sums:
-	"f0" = [5] || [6] || [7] || [8] || [9] || [10]
+	"f0" = [5] ∨ [6] ∨ [7] ∨ [8] ∨ [9] ∨ [10]
 
 Gate cost: NOTs = 0, ANDs = 15, ORs = 5

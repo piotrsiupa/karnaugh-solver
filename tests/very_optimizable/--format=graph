@@ -12,57 +12,57 @@ digraph very_optimizable
 	subgraph negated_inputs
 	{
 		node [shape=diamond];
-		ni0 [label="!a"];
+		ni0 [label="¬a"];
 		i0 -> ni0;
-		ni1 [label="!b"];
+		ni1 [label="¬b"];
 		i1 -> ni1;
-		ni2 [label="!c"];
+		ni2 [label="¬c"];
 		i2 -> ni2;
-		ni3 [label="!d"];
+		ni3 [label="¬d"];
 		i3 -> ni3;
 	}
 	subgraph products
 	{
 		node [shape=ellipse];
-		s0 [label="&&\n[0]"];
+		s0 [label="∧\n[0]"];
 		i0, i1, i2, i3 -> s0;
-		s1 [label="&&\n[1]"];
+		s1 [label="∧\n[1]"];
 		ni2, i3 -> s1;
-		s2 [label="&&\n[2]"];
+		s2 [label="∧\n[2]"];
 		ni0, i1 -> s2;
-		s3 [label="&&\n[3]"];
+		s3 [label="∧\n[3]"];
 		s2, s1 -> s3;
-		s4 [label="&&\n[4]"];
+		s4 [label="∧\n[4]"];
 		i2, ni3 -> s4;
-		s5 [label="&&\n[5]"];
+		s5 [label="∧\n[5]"];
 		s2, s4 -> s5;
-		s6 [label="&&\n[6]"];
+		s6 [label="∧\n[6]"];
 		i0, ni1 -> s6;
-		s7 [label="&&\n[7]"];
+		s7 [label="∧\n[7]"];
 		s1, s6 -> s7;
-		s8 [label="&&\n[8]"];
+		s8 [label="∧\n[8]"];
 		s4, s6 -> s8;
-		s9 [label="&&\n[9]"];
+		s9 [label="∧\n[9]"];
 		ni0, ni1, ni2, ni3 -> s9;
 	}
 	subgraph sums
 	{
 		node [shape=rectangle];
-		s10 [label="||\n[10]"];
+		s10 [label="∨\n[10]"];
 		s5, s7 -> s10;
-		s11 [label="||\n[11]"];
+		s11 [label="∨\n[11]"];
 		s3, s10 -> s11;
 	}
 	subgraph final_sums
 	{
 		node [shape=rectangle, style=filled];
-		f0 [label="||\nfirst"];
+		f0 [label="∨\nfirst"];
 		s8, s11 -> f0;
-		f1 [label="||\nsecond"];
+		f1 [label="∨\nsecond"];
 		s0, s11 -> f1;
 		f2 [label="third"];
 		s11 -> f2;
-		f3 [label="||\nfourth"];
+		f3 [label="∨\nfourth"];
 		s9, s10 -> f3;
 	}
 }

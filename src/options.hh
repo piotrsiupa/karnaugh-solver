@@ -19,11 +19,16 @@ namespace options
 		VERILOG,
 		VHDL,
 		CPP,
-		MATH_FORMAL,
-		MATH_ASCII,
-		MATH_PROG,
-		MATH_NAMES,
+		MATHEMATICAL,
 		GATE_COSTS,
+	};
+	
+	enum class OutputOperators
+	{
+		FORMAL,
+		ASCII,
+		PROGRAMMING,
+		NAMES,
 	};
 	
 	extern Flag help;
@@ -34,6 +39,7 @@ namespace options
 	extern Trilean status;
 	
 	extern Mapped<OutputFormat> outputFormat;
+	extern Mapped<OutputOperators> outputOperators;
 	extern Text name;
 	extern Flag verboseGraph;
 	

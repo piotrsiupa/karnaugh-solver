@@ -557,10 +557,7 @@ void Karnaughs::print()
 	case options::OutputFormat::CPP:
 		printCpp();
 		break;
-	case options::OutputFormat::MATH_FORMAL:
-	case options::OutputFormat::MATH_ASCII:
-	case options::OutputFormat::MATH_PROG:
-	case options::OutputFormat::MATH_NAMES:
+	case options::OutputFormat::MATHEMATICAL:
 		printMath();
 		break;
 	case options::OutputFormat::GATE_COSTS:

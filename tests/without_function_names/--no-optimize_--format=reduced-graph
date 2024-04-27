@@ -5,7 +5,7 @@ digraph without_function_names
 		subgraph sum
 		{
 			node [shape=rectangle, style=filled];
-			f0 [label="f0 = !a && d"];
+			f0 [label="f0 = ¬a ∧ d"];
 		}
 	}
 	subgraph function_1
@@ -13,7 +13,7 @@ digraph without_function_names
 		subgraph sum
 		{
 			node [shape=rectangle, style=filled];
-			f1 [label="f1 = !a && !b && c"];
+			f1 [label="f1 = ¬a ∧ ¬b ∧ c"];
 		}
 	}
 }

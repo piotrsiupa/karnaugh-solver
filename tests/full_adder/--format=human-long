@@ -8,7 +8,7 @@ goal:
 10 T F
 
 solution:
-(in0 && in1 && carry_in) || (in0 && !in1 && !carry_in) || (!in0 && in1 && !carry_in) || (!in0 && !in1 && carry_in)
+(in0 ∧ in1 ∧ carry_in) ∨ (in0 ∧ ¬in1 ∧ ¬carry_in) ∨ (¬in0 ∧ in1 ∧ ¬carry_in) ∨ (¬in0 ∧ ¬in1 ∧ carry_in)
 
 Gate cost: NOTs = 6, ANDs = 8, ORs = 3
 
@@ -23,7 +23,7 @@ goal:
 10 F T
 
 solution:
-(in0 && in1) || (in0 && carry_in) || (in1 && carry_in)
+(in0 ∧ in1) ∨ (in0 ∧ carry_in) ∨ (in1 ∧ carry_in)
 
 Gate cost: NOTs = 0, ANDs = 3, ORs = 2
 
@@ -32,15 +32,15 @@ Gate cost: NOTs = 0, ANDs = 3, ORs = 2
 
 Negated inputs: in0, in1, carry_in
 Products:
-	[0] = !in0 && !in1 && carry_in
-	[1] = !in0 && in1 && !carry_in
-	[2] = in0 && !in1 && !carry_in
-	[3] = in1 && carry_in
-	[4] = in0 && carry_in
-	[5] = in0 && in1
-	[6] = in0 && [3]
+	[0] = ¬in0 ∧ ¬in1 ∧ carry_in
+	[1] = ¬in0 ∧ in1 ∧ ¬carry_in
+	[2] = in0 ∧ ¬in1 ∧ ¬carry_in
+	[3] = in1 ∧ carry_in
+	[4] = in0 ∧ carry_in
+	[5] = in0 ∧ in1
+	[6] = in0 ∧ [3]
 Sums:
-	"sum" = [0] || [1] || [2] || [6]
-	"carry_out" = [3] || [4] || [5]
+	"sum" = [0] ∨ [1] ∨ [2] ∨ [6]
+	"carry_out" = [3] ∨ [4] ∨ [5]
 
 Gate cost: NOTs = 3, ANDs = 10, ORs = 5

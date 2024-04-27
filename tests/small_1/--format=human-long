@@ -8,7 +8,7 @@ goal:
 10 F  F  F  F
 
 solution:
-!a && !b && c && !d
+¬a ∧ ¬b ∧ c ∧ ¬d
 
 Gate cost: NOTs = 3, ANDs = 3, ORs = 0
 
@@ -17,7 +17,7 @@ Gate cost: NOTs = 3, ANDs = 3, ORs = 0
 
 Negated inputs: a, b, d
 Products:
-	[0] = !a && !b && c && !d
+	[0] = ¬a ∧ ¬b ∧ c ∧ ¬d
 Sums:
 	"short 1" = [0]
 

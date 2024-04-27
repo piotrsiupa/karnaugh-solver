@@ -6,7 +6,7 @@ goal:
 1 T T
 
 solution:
-<True>
+⊤
 
 Gate cost: NOTs = 0, ANDs = 0, ORs = 0
 
@@ -16,6 +16,6 @@ Gate cost: NOTs = 0, ANDs = 0, ORs = 0
 Negated inputs: <none>
 Products:
 Sums:
-	"f0" = <True>
+	"f0" = ⊤
 
 Gate cost: NOTs = 0, ANDs = 0, ORs = 0

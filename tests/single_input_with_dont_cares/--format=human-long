@@ -11,7 +11,7 @@ best fit:
 1 F
 
 solution:
-<False>
+⊥
 
 Gate cost: NOTs = 0, ANDs = 0, ORs = 0
 
@@ -29,7 +29,7 @@ best fit:
 1 F
 
 solution:
-<False>
+⊥
 
 Gate cost: NOTs = 0, ANDs = 0, ORs = 0
 
@@ -47,7 +47,7 @@ best fit:
 1 F
 
 solution:
-<False>
+⊥
 
 Gate cost: NOTs = 0, ANDs = 0, ORs = 0
 
@@ -65,7 +65,7 @@ best fit:
 1 T
 
 solution:
-<True>
+⊤
 
 Gate cost: NOTs = 0, ANDs = 0, ORs = 0
 
@@ -83,7 +83,7 @@ best fit:
 1 T
 
 solution:
-<True>
+⊤
 
 Gate cost: NOTs = 0, ANDs = 0, ORs = 0
 
@@ -93,10 +93,10 @@ Gate cost: NOTs = 0, ANDs = 0, ORs = 0
 Negated inputs: <none>
 Products:
 Sums:
-	"don't care" = <False>
-	"0 must be F" = <False>
-	"1 must be F" = <False>
-	"0 must be T" = <True>
-	"1 must be T" = <True>
+	"don't care" = ⊥
+	"0 must be F" = ⊥
+	"1 must be F" = ⊥
+	"0 must be T" = ⊤
+	"1 must be T" = ⊤
 
 Gate cost: NOTs = 0, ANDs = 0, ORs = 0

@@ -32,6 +32,12 @@ private:
 	
 	void recalculateBits() { bitCount = static_cast<bits_t>(std::bitset<::maxBits>(trueBits | falseBits).count()); }
 	
+	void printHumanBool(std::ostream &o, const bool value) const;
+	void printHumanNot(std::ostream &o) const;
+	void printGraphNot(std::ostream &o) const { return printHumanNot(o); }
+	void printHumanAnd(std::ostream &o) const;
+	void printGraphAnd(std::ostream &o) const;
+	
 public:
 	explicit Implicant(const Minterm minterm) : trueBits(minterm), falseBits(minterm ^ maxMinterm), bitCount(::bits) {}
 	Implicant(const Implicant &) = default;
@@ -63,6 +69,7 @@ public:
 	static Implicant merge(const Implicant &x, const Implicant &y);
 	
 	void printHuman(std::ostream &o, const bool parentheses) const;
+	void printGraph(std::ostream &o, const bool parentheses) const;
 	void printGraph(std::ostream &o) const;
 	void printVerilog(std::ostream &o, const bool parentheses) const;
 	void printVhdl(std::ostream &o, const bool parentheses) const;

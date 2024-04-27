@@ -1,7 +1,7 @@
 Negated inputs: a, b
 Products:
-	[0] = !a && !b
-	[1] = c && [0]
+	[0] = ¬a ∧ ¬b
+	[1] = c ∧ [0]
 Sums:
 	"f0" = [0]
 	"f1" = [1]

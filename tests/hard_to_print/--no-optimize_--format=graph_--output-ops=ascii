@@ -1,0 +1,283 @@
+digraph hard_to_print
+{
+	subgraph inputs
+	{
+		rank=same;
+		node [shape=invhouse];
+		i0 [label="q"];
+		i1 [label="x"];
+		i2 [label="y"];
+		i3 [label="z"];
+	}
+	subgraph constants
+	{
+		node [shape=octagon, style=dashed];
+		true;
+		false;
+	}
+	subgraph function_0
+	{
+		subgraph sum
+		{
+			node [shape=rectangle, style=filled];
+			f0 [label="none"];
+			false -> f0;
+		}
+	}
+	subgraph function_1
+	{
+		subgraph sum
+		{
+			node [shape=rectangle, style=filled];
+			f1 [label="all"];
+			true -> f1;
+		}
+	}
+	subgraph function_2
+	{
+		subgraph negated_inputs
+		{
+			node [shape=diamond];
+			f2_ni0_0 [label="~q"];
+			i0 -> f2_ni0_0;
+			f2_ni1_0 [label="~x"];
+			i1 -> f2_ni1_0;
+		}
+		subgraph products
+		{
+			node [shape=ellipse];
+			f2_s0 [label="/\\\n[0]"];
+			f2_ni0_0, f2_ni1_0 -> f2_s0;
+		}
+		subgraph sum
+		{
+			node [shape=rectangle, style=filled];
+			f2 [label="some"];
+			f2_s0 -> f2;
+		}
+	}
+	subgraph function_3
+	{
+		subgraph negated_inputs
+		{
+			node [shape=diamond];
+			f3_ni0_0 [label="~q"];
+			i0 -> f3_ni0_0;
+			f3_ni1_0 [label="~x"];
+			i1 -> f3_ni1_0;
+			f3_ni2_0 [label="~y"];
+			i2 -> f3_ni2_0;
+		}
+		subgraph products
+		{
+			node [shape=ellipse];
+			f3_s0 [label="/\\\n[1]"];
+			f3_ni0_0, f3_ni1_0, f3_ni2_0 -> f3_s0;
+		}
+		subgraph sum
+		{
+			node [shape=rectangle, style=filled];
+			f3 [label="even_less"];
+			f3_s0 -> f3;
+		}
+	}
+	subgraph function_4
+	{
+		subgraph negated_inputs
+		{
+			node [shape=diamond];
+			f4_ni0_1 [label="~q"];
+			i0 -> f4_ni0_1;
+			f4_ni1_1 [label="~x"];
+			i1 -> f4_ni1_1;
+			f4_ni2_1 [label="~y"];
+			i2 -> f4_ni2_1;
+			f4_ni3_0 [label="~z"];
+			i3 -> f4_ni3_0;
+		}
+		subgraph products
+		{
+			node [shape=ellipse];
+			f4_s1 [label="/\\\n[2]"];
+			f4_ni0_1, f4_ni1_1, f4_ni2_1 -> f4_s1;
+		}
+		subgraph sum
+		{
+			node [shape=rectangle, style=filled];
+			f4 [label="\\/\nmore_than_less"];
+			f4_ni3_0, f4_s1 -> f4;
+		}
+	}
+	subgraph function_5
+	{
+		subgraph sum
+		{
+			node [shape=rectangle, style=filled];
+			f5 [label="none_again"];
+			false -> f5;
+		}
+	}
+	subgraph function_6
+	{
+		subgraph sum
+		{
+			node [shape=rectangle, style=filled];
+			f6 [label="all_again"];
+			true -> f6;
+		}
+	}
+	subgraph function_7
+	{
+		subgraph negated_inputs
+		{
+			node [shape=diamond];
+			f7_ni0_0 [label="~q"];
+			i0 -> f7_ni0_0;
+			f7_ni1_0 [label="~x"];
+			i1 -> f7_ni1_0;
+		}
+		subgraph products
+		{
+			node [shape=ellipse];
+			f7_s0 [label="/\\\n[3]"];
+			f7_ni0_0, f7_ni1_0 -> f7_s0;
+		}
+		subgraph sum
+		{
+			node [shape=rectangle, style=filled];
+			f7 [label="some_again"];
+			f7_s0 -> f7;
+		}
+	}
+	subgraph function_8
+	{
+		subgraph negated_inputs
+		{
+			node [shape=diamond];
+			f8_ni0_1 [label="~q"];
+			i0 -> f8_ni0_1;
+			f8_ni1_1 [label="~x"];
+			i1 -> f8_ni1_1;
+			f8_ni2_1 [label="~y"];
+			i2 -> f8_ni2_1;
+			f8_ni3_0 [label="~z"];
+			i3 -> f8_ni3_0;
+		}
+		subgraph products
+		{
+			node [shape=ellipse];
+			f8_s1 [label="/\\\n[4]"];
+			f8_ni0_1, f8_ni1_1, f8_ni2_1 -> f8_s1;
+		}
+		subgraph sum
+		{
+			node [shape=rectangle, style=filled];
+			f8 [label="\\/\nmore_than_less_again"];
+			f8_ni3_0, f8_s1 -> f8;
+		}
+	}
+	subgraph function_9
+	{
+		subgraph negated_inputs
+		{
+			node [shape=diamond];
+			f9_ni3_0 [label="~z"];
+			i3 -> f9_ni3_0;
+		}
+		subgraph sum
+		{
+			node [shape=rectangle, style=filled];
+			f9 [label="half"];
+			f9_ni3_0 -> f9;
+		}
+	}
+	subgraph function_10
+	{
+		subgraph negated_inputs
+		{
+			node [shape=diamond];
+			f10_ni0_0 [label="~q"];
+			i0 -> f10_ni0_0;
+			f10_ni1_0 [label="~x"];
+			i1 -> f10_ni1_0;
+		}
+		subgraph products
+		{
+			node [shape=ellipse];
+			f10_s0 [label="/\\\n[5]"];
+			f10_ni0_0, f10_ni1_0 -> f10_s0;
+		}
+		subgraph sum
+		{
+			node [shape=rectangle, style=filled];
+			f10 [label="some_the_third_time"];
+			f10_s0 -> f10;
+		}
+	}
+	subgraph function_11
+	{
+		subgraph negated_inputs
+		{
+			node [shape=diamond];
+			f11_ni0_1 [label="~q"];
+			i0 -> f11_ni0_1;
+			f11_ni1_1 [label="~x"];
+			i1 -> f11_ni1_1;
+			f11_ni2_1 [label="~y"];
+			i2 -> f11_ni2_1;
+			f11_ni3_0 [label="~z"];
+			i3 -> f11_ni3_0;
+		}
+		subgraph products
+		{
+			node [shape=ellipse];
+			f11_s1 [label="/\\\n[6]"];
+			f11_ni0_1, f11_ni1_1, f11_ni2_1 -> f11_s1;
+		}
+		subgraph sum
+		{
+			node [shape=rectangle, style=filled];
+			f11 [label="\\/\nmore_than_less_the_third_time"];
+			f11_ni3_0, f11_s1 -> f11;
+		}
+	}
+	subgraph function_12
+	{
+		subgraph sum
+		{
+			node [shape=rectangle, style=filled];
+			f12 [label="\\/\nmost"];
+			i0, i2 -> f12;
+		}
+	}
+	subgraph function_13
+	{
+		subgraph negated_inputs
+		{
+			node [shape=diamond];
+			f13_ni1_1 [label="~x"];
+			i1 -> f13_ni1_1;
+		}
+		subgraph sum
+		{
+			node [shape=rectangle, style=filled];
+			f13 [label="\\/\neven_more"];
+			i0, f13_ni1_1, i2 -> f13;
+		}
+	}
+	subgraph function_14
+	{
+		subgraph negated_inputs
+		{
+			node [shape=diamond];
+			f14_ni3_0 [label="~z"];
+			i3 -> f14_ni3_0;
+		}
+		subgraph sum
+		{
+			node [shape=rectangle, style=filled];
+			f14 [label="half_again"];
+			f14_ni3_0 -> f14;
+		}
+	}
+}

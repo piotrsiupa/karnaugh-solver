@@ -1,0 +1,22 @@
+Negated inputs: q, x, y, z
+Products:
+	[0] = NOT q AND NOT x
+	[1] = NOT y AND [0]
+Sums:
+	[2] = [1] OR NOT z
+	[3] = y OR q
+	"none" = FALSE
+	"all" = TRUE
+	"some" = [0]
+	"even_less" = [1]
+	"more_than_less" = [2]
+	"none_again" = FALSE
+	"all_again" = TRUE
+	"some_again" = [0]
+	"more_than_less_again" = [2]
+	"half" = NOT z
+	"some_the_third_time" = [0]
+	"more_than_less_the_third_time" = [2]
+	"most" = [3]
+	"even_more" = NOT x OR [3]
+	"half_again" = NOT z
