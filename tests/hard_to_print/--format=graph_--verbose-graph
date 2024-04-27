@@ -12,8 +12,8 @@ digraph hard_to_print
 	subgraph constants
 	{
 		node [shape=octagon, style=dashed];
-		true;
-		false;
+		true [label="⊤"];
+		false [label="⊥"];
 	}
 	subgraph negated_inputs
 	{
