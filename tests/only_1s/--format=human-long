@@ -2,8 +2,8 @@
 
 goal:
   0 1 
-0 T T
-1 T T
+0 1 1
+1 1 1
 
 solution:
 ⊤

@@ -2,10 +2,10 @@
 
 goal:
    0 1 
-00 F T
-01 T F
-11 F T
-10 T F
+00 0 1
+01 1 0
+11 0 1
+10 1 0
 
 solution:
 (in0 ∧ in1 ∧ carry_in) ∨ (in0 ∧ ¬in1 ∧ ¬carry_in) ∨ (¬in0 ∧ in1 ∧ ¬carry_in) ∨ (¬in0 ∧ ¬in1 ∧ carry_in)
@@ -17,10 +17,10 @@ Gate cost: NOTs = 6, ANDs = 8, ORs = 3
 
 goal:
    0 1 
-00 F F
-01 F T
-11 T T
-10 F T
+00 0 0
+01 0 1
+11 1 1
+10 0 1
 
 solution:
 (in0 ∧ in1) ∨ (in0 ∧ carry_in) ∨ (in1 ∧ carry_in)

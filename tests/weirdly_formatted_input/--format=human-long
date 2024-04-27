@@ -2,10 +2,10 @@
 
 goal:
    00 01 11 10 
-00 F  T  T  T
-01 F  T  F  F
-11 F  F  F  F
-10 F  F  F  F
+00 0  1  1  1
+01 0  1  0  0
+11 0  0  0  0
+10 0  0  0  0
 
 solution:
 (¬w ∧ ¬x ∧ y) ∨ (¬w ∧ ¬y ∧ z)

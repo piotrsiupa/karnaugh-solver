@@ -2,17 +2,17 @@
 
 goal:
    00 01 11 10 
-00 F  F  F  F
-01 -  T  -  F
-11 F  -  T  F
-10 F  F  T  -
+00 0  0  0  0
+01 X  1  X  0
+11 0  X  1  0
+10 0  0  1  X
 
 best fit:
    00 01 11 10 
-00 F  F  F  F
-01 F  T  T  F
-11 F  T  T  F
-10 F  F  T  F
+00 0  0  0  0
+01 0  1  1  0
+11 0  1  1  0
+10 0  0  1  0
 
 solution:
 (i1 ∧ i3) ∨ (i0 ∧ i2 ∧ i3)

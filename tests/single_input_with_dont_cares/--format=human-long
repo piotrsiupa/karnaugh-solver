@@ -2,13 +2,13 @@
 
 goal:
    
-0 -
-1 -
+0 X
+1 X
 
 best fit:
    
-0 F
-1 F
+0 0
+1 0
 
 solution:
 ⊥
@@ -20,13 +20,13 @@ Gate cost: NOTs = 0, ANDs = 0, ORs = 0
 
 goal:
    
-0 F
-1 -
+0 0
+1 X
 
 best fit:
    
-0 F
-1 F
+0 0
+1 0
 
 solution:
 ⊥
@@ -38,13 +38,13 @@ Gate cost: NOTs = 0, ANDs = 0, ORs = 0
 
 goal:
    
-0 -
-1 F
+0 X
+1 0
 
 best fit:
    
-0 F
-1 F
+0 0
+1 0
 
 solution:
 ⊥
@@ -56,13 +56,13 @@ Gate cost: NOTs = 0, ANDs = 0, ORs = 0
 
 goal:
    
-0 T
-1 -
+0 1
+1 X
 
 best fit:
    
-0 T
-1 T
+0 1
+1 1
 
 solution:
 ⊤
@@ -74,13 +74,13 @@ Gate cost: NOTs = 0, ANDs = 0, ORs = 0
 
 goal:
    
-0 -
-1 T
+0 X
+1 1
 
 best fit:
    
-0 T
-1 T
+0 1
+1 1
 
 solution:
 ⊤

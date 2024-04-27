@@ -2,7 +2,7 @@
 
 goal:
   
-0 T
+0 1
 
 solution:
 ⊤
@@ -14,7 +14,7 @@ Gate cost: NOTs = 0, ANDs = 0, ORs = 0
 
 goal:
   
-0 F
+0 0
 
 solution:
 ⊥
@@ -26,11 +26,11 @@ Gate cost: NOTs = 0, ANDs = 0, ORs = 0
 
 goal:
   
-0 -
+0 X
 
 best fit:
   
-0 F
+0 0
 
 solution:
 ⊥

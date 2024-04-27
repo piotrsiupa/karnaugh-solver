@@ -2,10 +2,10 @@
 
 goal:
    00 01 11 10 
-00 F  F  F  F
-01 F  F  F  F
-11 F  F  F  F
-10 F  F  F  F
+00 0  0  0  0
+01 0  0  0  0
+11 0  0  0  0
+10 0  0  0  0
 
 solution:
 ⊥
@@ -17,17 +17,17 @@ Gate cost: NOTs = 0, ANDs = 0, ORs = 0
 
 goal:
    00 01 11 10 
-00 -  -  -  -
-01 -  -  T  -
-11 -  -  -  -
-10 -  -  -  -
+00 X  X  X  X
+01 X  X  1  X
+11 X  X  X  X
+10 X  X  X  X
 
 best fit:
    00 01 11 10 
-00 T  T  T  T
-01 T  T  T  T
-11 T  T  T  T
-10 T  T  T  T
+00 1  1  1  1
+01 1  1  1  1
+11 1  1  1  1
+10 1  1  1  1
 
 solution:
 ⊤
@@ -39,10 +39,10 @@ Gate cost: NOTs = 0, ANDs = 0, ORs = 0
 
 goal:
    00 01 11 10 
-00 T  T  T  T
-01 F  F  F  F
-11 F  F  F  F
-10 F  F  F  F
+00 1  1  1  1
+01 0  0  0  0
+11 0  0  0  0
+10 0  0  0  0
 
 solution:
 ¬q ∧ ¬x
@@ -54,10 +54,10 @@ Gate cost: NOTs = 2, ANDs = 1, ORs = 0
 
 goal:
    00 01 11 10 
-00 T  T  F  F
-01 F  F  F  F
-11 F  F  F  F
-10 F  F  F  F
+00 1  1  0  0
+01 0  0  0  0
+11 0  0  0  0
+10 0  0  0  0
 
 solution:
 ¬q ∧ ¬x ∧ ¬y
@@ -69,10 +69,10 @@ Gate cost: NOTs = 3, ANDs = 2, ORs = 0
 
 goal:
    00 01 11 10 
-00 T  T  F  T
-01 T  F  F  T
-11 T  F  F  T
-10 T  F  F  T
+00 1  1  0  1
+01 1  0  0  1
+11 1  0  0  1
+10 1  0  0  1
 
 solution:
 ¬z ∨ (¬q ∧ ¬x ∧ ¬y)
@@ -84,10 +84,10 @@ Gate cost: NOTs = 4, ANDs = 2, ORs = 1
 
 goal:
    00 01 11 10 
-00 F  F  F  F
-01 F  F  F  F
-11 F  F  F  F
-10 F  F  F  F
+00 0  0  0  0
+01 0  0  0  0
+11 0  0  0  0
+10 0  0  0  0
 
 solution:
 ⊥
@@ -99,10 +99,10 @@ Gate cost: NOTs = 0, ANDs = 0, ORs = 0
 
 goal:
    00 01 11 10 
-00 T  T  T  T
-01 T  T  T  T
-11 T  T  T  T
-10 T  T  T  T
+00 1  1  1  1
+01 1  1  1  1
+11 1  1  1  1
+10 1  1  1  1
 
 solution:
 ⊤
@@ -114,10 +114,10 @@ Gate cost: NOTs = 0, ANDs = 0, ORs = 0
 
 goal:
    00 01 11 10 
-00 T  T  T  T
-01 F  F  F  F
-11 F  F  F  F
-10 F  F  F  F
+00 1  1  1  1
+01 0  0  0  0
+11 0  0  0  0
+10 0  0  0  0
 
 solution:
 ¬q ∧ ¬x
@@ -129,10 +129,10 @@ Gate cost: NOTs = 2, ANDs = 1, ORs = 0
 
 goal:
    00 01 11 10 
-00 T  T  F  T
-01 T  F  F  T
-11 T  F  F  T
-10 T  F  F  T
+00 1  1  0  1
+01 1  0  0  1
+11 1  0  0  1
+10 1  0  0  1
 
 solution:
 ¬z ∨ (¬q ∧ ¬x ∧ ¬y)
@@ -144,10 +144,10 @@ Gate cost: NOTs = 4, ANDs = 2, ORs = 1
 
 goal:
    00 01 11 10 
-00 T  F  F  T
-01 T  F  F  T
-11 T  F  F  T
-10 T  F  F  T
+00 1  0  0  1
+01 1  0  0  1
+11 1  0  0  1
+10 1  0  0  1
 
 solution:
 ¬z
@@ -159,10 +159,10 @@ Gate cost: NOTs = 1, ANDs = 0, ORs = 0
 
 goal:
    00 01 11 10 
-00 T  T  T  T
-01 F  F  F  F
-11 F  F  F  F
-10 F  F  F  F
+00 1  1  1  1
+01 0  0  0  0
+11 0  0  0  0
+10 0  0  0  0
 
 solution:
 ¬q ∧ ¬x
@@ -174,10 +174,10 @@ Gate cost: NOTs = 2, ANDs = 1, ORs = 0
 
 goal:
    00 01 11 10 
-00 T  T  F  T
-01 T  F  F  T
-11 T  F  F  T
-10 T  F  F  T
+00 1  1  0  1
+01 1  0  0  1
+11 1  0  0  1
+10 1  0  0  1
 
 solution:
 ¬z ∨ (¬q ∧ ¬x ∧ ¬y)
@@ -189,10 +189,10 @@ Gate cost: NOTs = 4, ANDs = 2, ORs = 1
 
 goal:
    00 01 11 10 
-00 F  F  T  T
-01 F  F  T  T
-11 T  T  T  T
-10 T  T  T  T
+00 0  0  1  1
+01 0  0  1  1
+11 1  1  1  1
+10 1  1  1  1
 
 solution:
 q ∨ y
@@ -204,10 +204,10 @@ Gate cost: NOTs = 0, ANDs = 0, ORs = 1
 
 goal:
    00 01 11 10 
-00 T  T  T  T
-01 F  F  T  T
-11 T  T  T  T
-10 T  T  T  T
+00 1  1  1  1
+01 0  0  1  1
+11 1  1  1  1
+10 1  1  1  1
 
 solution:
 q ∨ ¬x ∨ y
@@ -219,10 +219,10 @@ Gate cost: NOTs = 1, ANDs = 0, ORs = 2
 
 goal:
    00 01 11 10 
-00 T  F  F  T
-01 T  F  F  T
-11 T  F  F  T
-10 T  F  F  T
+00 1  0  0  1
+01 1  0  0  1
+11 1  0  0  1
+10 1  0  0  1
 
 solution:
 ¬z
