@@ -23,6 +23,7 @@ A CLI aplication to minimize big (up to 32 variables) logic functions, that can 
     - [Verilog](#verilog)
     - [VHDL](#vhdl)
     - [Other formats](#other-formats)
+    - [Operator styles](#operator-styles)
 
 
 ## What does this do?
@@ -185,50 +186,57 @@ It's intended to visualize the solution in form of Karnaugh maps (unless they ar
 
 goal:
    00 01 11 10 
-00 T  -  F  -
-01 -  T  F  F
-11 F  T  -  F
-10 F  F  F  F
+00 1  X  0  X
+01 X  1  0  0
+11 0  1  X  0
+10 0  0  0  0
 
 best fit:
    00 01 11 10 
-00 T  T  F  F
-01 T  T  F  F
-11 F  T  T  F
-10 F  F  F  F
+00 1  1  0  0
+01 1  1  0  0
+11 0  1  1  0
+10 0  0  0  0
 
 solution:
-(!a && !c) || (a && b && d)
+(¬a ∧ ¬c) ∨ (a ∧ b ∧ d)
+
+Gate cost: NOTs = 2, ANDs = 3, ORs = 1
+
 
 --- tricky_1 ---
 
 goal:
    00 01 11 10 
-00 -  -  -  F
-01 -  T  -  F
-11 -  -  -  T
-10 F  F  -  -
+00 X  X  X  0
+01 X  1  X  0
+11 X  X  X  1
+10 0  0  X  X
 
 best fit:
    00 01 11 10 
-00 T  T  F  F
-01 T  T  F  F
-11 T  T  T  T
-10 F  F  F  F
+00 1  1  0  0
+01 1  1  0  0
+11 1  1  1  1
+10 0  0  0  0
 
 solution:
-(a && b) || (!a && !c)
+(a ∧ b) ∨ (¬a ∧ ¬c)
+
+Gate cost: NOTs = 2, ANDs = 2, ORs = 1
+
 
 === optimized solution ===
 
 Negated inputs: a, c
 Products:
-	[0] = a && b
-	[1] = d && [0]
-	[2] = !a && !c
+	[0] = a ∧ b
+	[1] = d ∧ [0]
+	[2] = ¬a ∧ ¬c
 Sums:
-	"tricky_0" = [1] || [2]
-	"tricky_1" = [0] || [2]
+	"tricky_0" = [1] ∨ [2]
+	"tricky_1" = [0] ∨ [2]
+
 Gate cost: NOTs = 2, ANDs = 3, ORs = 2
 ```
 
@@ -254,12 +262,12 @@ Sums can be either numbered or named. The named ones are the outputs of the circ
 ```
 Negated inputs: a, c
 Products:
-	[0] = a && b
-	[1] = d && [0]
-	[2] = !a && !c
+	[0] = a ∧ b
+	[1] = d ∧ [0]
+	[2] = ¬a ∧ ¬c
 Sums:
-	"tricky_0" = [1] || [2]
-	"tricky_1" = [0] || [2]
+	"tricky_0" = [1] ∨ [2]
+	"tricky_1" = [0] ∨ [2]
 ```
 
 ### Graph
@@ -289,10 +297,7 @@ This is a minimalistic output format that just prints the functions using the fo
 
 This format cannot be used with common subexpression elimination. (It implies `--no-optimize`.)
 
-It uses Unicode characters for boolean algebra operators, which may interfere with some programs like older terminals.
-To bypass that issue, other variants of this output format are available. They replace the Unicode characters with [ASCII art](tests/tricky_one/--format=math-ascii), [names of operations](tests/tricky_one/--format=math-names) or [programming operators](tests/tricky_one/--format=math-prog).
-
-([file](tests/tricky_one/--format=math-formal))
+([file](tests/tricky_one/--format=mathematical))
 ```
 tricky_0(a, b, c, d) = (¬a ∧ ¬c) ∨ (a ∧ b ∧ d)
 tricky_1(a, b, c, d) = (a ∧ b) ∨ (b ∧ d)
@@ -368,3 +373,22 @@ end behavioural;
 
 It is also possible to export the result as [C++](tests/tricky_one/--format=cpp) but this may produce worse results that just hardcoding a lookup table.
 It may be beneficial in situations when the boolean function is highly susceptible to optimization.
+
+### Operator styles
+
+Some of the formats (like Verilog and VHDL) require specific operators to work.
+Other ones are intended to be read by humans rather than programs so the format can be more customizable.
+
+By default, proper Unicode symbols for formal logic are used. This looks quite good; however, the Unicode characters may interfere with some programs like older terminals.
+You can use command line option to choose one of the following styles:
+ - [formal logic symbols](tests/tricky_one/--format=mathematical_--output-ops=formal),
+ - [ASCII art](tests/tricky_one/--format=mathematical_--output-ops=ascii),
+ - [programming operators](tests/tricky_one/--format=mathematical_--output-ops=programming),
+ - [names of operations](tests/tricky_one/--format=mathematical_--output-ops=names).
+
+|    Style name | T (expr.) | F (expr.) |  Neg. | Conj. |  Disj. | T (table) | F (table) | D-c (table) |
+|--------------:|:---------:|:---------:|:-----:|:-----:|:------:|:---------:|:---------:|:-----------:|
+|      `formal` |    `⊤`    |    `⊥`    |  `¬`  |  `∧`  |  `∨`   |    `1`    |    `0`    |     `X`     |
+|       `ascii` |    `T`    |    `F`    |  `~`  | `/\`  |  `\/`  |    `1`    |    `0`    |     `X`     |
+| `programming` |  `true`   |  `false`  |  `!`  | `&&`  | `\|\|` |    `T`    |    `F`    |     `-`     |
+|       `names` |  `TRUE`   |  `FALSE`  | `NOT` | `AND` |  `OR`  |    `T`    |    `F`    |     `?`     |
