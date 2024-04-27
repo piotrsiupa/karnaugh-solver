@@ -2,16 +2,16 @@
 
 goal:
    
-0 -
-1 -
+0 X
+1 X
 
 best fit:
    
-0 F
-1 F
+0 0
+1 0
 
 solution:
-<False>
+⊥
 
 Gate cost: NOTs = 0, ANDs = 0, ORs = 0
 
@@ -20,16 +20,16 @@ Gate cost: NOTs = 0, ANDs = 0, ORs = 0
 
 goal:
    
-0 F
-1 -
+0 0
+1 X
 
 best fit:
    
-0 F
-1 F
+0 0
+1 0
 
 solution:
-<False>
+⊥
 
 Gate cost: NOTs = 0, ANDs = 0, ORs = 0
 
@@ -38,16 +38,16 @@ Gate cost: NOTs = 0, ANDs = 0, ORs = 0
 
 goal:
    
-0 -
-1 F
+0 X
+1 0
 
 best fit:
    
-0 F
-1 F
+0 0
+1 0
 
 solution:
-<False>
+⊥
 
 Gate cost: NOTs = 0, ANDs = 0, ORs = 0
 
@@ -56,16 +56,16 @@ Gate cost: NOTs = 0, ANDs = 0, ORs = 0
 
 goal:
    
-0 T
-1 -
+0 1
+1 X
 
 best fit:
    
-0 T
-1 T
+0 1
+1 1
 
 solution:
-<True>
+⊤
 
 Gate cost: NOTs = 0, ANDs = 0, ORs = 0
 
@@ -74,16 +74,16 @@ Gate cost: NOTs = 0, ANDs = 0, ORs = 0
 
 goal:
    
-0 -
-1 T
+0 X
+1 1
 
 best fit:
    
-0 T
-1 T
+0 1
+1 1
 
 solution:
-<True>
+⊤
 
 Gate cost: NOTs = 0, ANDs = 0, ORs = 0
 
@@ -93,10 +93,10 @@ Gate cost: NOTs = 0, ANDs = 0, ORs = 0
 Negated inputs: <none>
 Products:
 Sums:
-	"don't care" = <False>
-	"0 must be F" = <False>
-	"1 must be F" = <False>
-	"0 must be T" = <True>
-	"1 must be T" = <True>
+	"don't care" = ⊥
+	"0 must be F" = ⊥
+	"1 must be F" = ⊥
+	"0 must be T" = ⊤
+	"1 must be T" = ⊤
 
 Gate cost: NOTs = 0, ANDs = 0, ORs = 0

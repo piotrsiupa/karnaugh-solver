@@ -1,0 +1,141 @@
+digraph hard_to_print
+{
+	subgraph function_0
+	{
+		subgraph sum
+		{
+			node [shape=rectangle, style=filled];
+			f0 [label="none = F"];
+		}
+	}
+	subgraph function_1
+	{
+		subgraph sum
+		{
+			node [shape=rectangle, style=filled];
+			f1 [label="all = T"];
+		}
+	}
+	subgraph function_2
+	{
+		subgraph sum
+		{
+			node [shape=rectangle, style=filled];
+			f2 [label="some = ~q /\\ ~x"];
+		}
+	}
+	subgraph function_3
+	{
+		subgraph sum
+		{
+			node [shape=rectangle, style=filled];
+			f3 [label="even_less = ~q /\\ ~x /\\ ~y"];
+		}
+	}
+	subgraph function_4
+	{
+		subgraph products
+		{
+			node [shape=ellipse];
+			f4_s1 [label="[0] = ~q /\\ ~x /\\ ~y"];
+		}
+		subgraph sum
+		{
+			node [shape=rectangle, style=filled];
+			f4 [label="\\/\nmore_than_less = ~z \\/ (~q /\\ ~x /\\ ~y)"];
+			f4_s1 -> f4;
+		}
+	}
+	subgraph function_5
+	{
+		subgraph sum
+		{
+			node [shape=rectangle, style=filled];
+			f5 [label="none_again = F"];
+		}
+	}
+	subgraph function_6
+	{
+		subgraph sum
+		{
+			node [shape=rectangle, style=filled];
+			f6 [label="all_again = T"];
+		}
+	}
+	subgraph function_7
+	{
+		subgraph sum
+		{
+			node [shape=rectangle, style=filled];
+			f7 [label="some_again = ~q /\\ ~x"];
+		}
+	}
+	subgraph function_8
+	{
+		subgraph products
+		{
+			node [shape=ellipse];
+			f8_s1 [label="[1] = ~q /\\ ~x /\\ ~y"];
+		}
+		subgraph sum
+		{
+			node [shape=rectangle, style=filled];
+			f8 [label="\\/\nmore_than_less_again = ~z \\/ (~q /\\ ~x /\\ ~y)"];
+			f8_s1 -> f8;
+		}
+	}
+	subgraph function_9
+	{
+		subgraph sum
+		{
+			node [shape=rectangle, style=filled];
+			f9 [label="half = ~z"];
+		}
+	}
+	subgraph function_10
+	{
+		subgraph sum
+		{
+			node [shape=rectangle, style=filled];
+			f10 [label="some_the_third_time = ~q /\\ ~x"];
+		}
+	}
+	subgraph function_11
+	{
+		subgraph products
+		{
+			node [shape=ellipse];
+			f11_s1 [label="[2] = ~q /\\ ~x /\\ ~y"];
+		}
+		subgraph sum
+		{
+			node [shape=rectangle, style=filled];
+			f11 [label="\\/\nmore_than_less_the_third_time = ~z \\/ (~q /\\ ~x /\\ ~y)"];
+			f11_s1 -> f11;
+		}
+	}
+	subgraph function_12
+	{
+		subgraph sum
+		{
+			node [shape=rectangle, style=filled];
+			f12 [label="most = q \\/ y"];
+		}
+	}
+	subgraph function_13
+	{
+		subgraph sum
+		{
+			node [shape=rectangle, style=filled];
+			f13 [label="even_more = q \\/ ~x \\/ y"];
+		}
+	}
+	subgraph function_14
+	{
+		subgraph sum
+		{
+			node [shape=rectangle, style=filled];
+			f14 [label="half_again = ~z"];
+		}
+	}
+}

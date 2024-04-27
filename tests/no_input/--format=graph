@@ -3,8 +3,8 @@ digraph no_input
 	subgraph constants
 	{
 		node [shape=octagon, style=dashed];
-		true;
-		false;
+		true [label="⊤"];
+		false [label="⊥"];
 	}
 	subgraph final_sums
 	{

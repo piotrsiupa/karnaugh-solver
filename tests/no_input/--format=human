@@ -1,20 +1,20 @@
 --- always_true ---
 
-<True>
+⊤
 
 Gate cost: NOTs = 0, ANDs = 0, ORs = 0
 
 
 --- always_false ---
 
-<False>
+⊥
 
 Gate cost: NOTs = 0, ANDs = 0, ORs = 0
 
 
 --- dont_care ---
 
-<False>
+⊥
 
 Gate cost: NOTs = 0, ANDs = 0, ORs = 0
 
@@ -24,8 +24,8 @@ Gate cost: NOTs = 0, ANDs = 0, ORs = 0
 Negated inputs: <none>
 Products:
 Sums:
-	"always_true" = <True>
-	"always_false" = <False>
-	"dont_care" = <False>
+	"always_true" = ⊤
+	"always_false" = ⊥
+	"dont_care" = ⊥
 
 Gate cost: NOTs = 0, ANDs = 0, ORs = 0

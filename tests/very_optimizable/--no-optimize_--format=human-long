@@ -2,13 +2,13 @@
 
 goal:
    00 01 11 10 
-00 F  F  F  F
-01 F  T  F  T
-11 F  F  F  F
-10 F  T  F  T
+00 0  0  0  0
+01 0  1  0  1
+11 0  0  0  0
+10 0  1  0  1
 
 solution:
-(a && !b && c && !d) || (a && !b && !c && d) || (!a && b && c && !d) || (!a && b && !c && d)
+(a ∧ ¬b ∧ c ∧ ¬d) ∨ (a ∧ ¬b ∧ ¬c ∧ d) ∨ (¬a ∧ b ∧ c ∧ ¬d) ∨ (¬a ∧ b ∧ ¬c ∧ d)
 
 Gate cost: NOTs = 8, ANDs = 12, ORs = 3
 
@@ -17,13 +17,13 @@ Gate cost: NOTs = 8, ANDs = 12, ORs = 3
 
 goal:
    00 01 11 10 
-00 F  F  F  F
-01 F  T  F  T
-11 F  F  T  F
-10 F  T  F  F
+00 0  0  0  0
+01 0  1  0  1
+11 0  0  1  0
+10 0  1  0  0
 
 solution:
-(a && b && c && d) || (a && !b && !c && d) || (!a && b && c && !d) || (!a && b && !c && d)
+(a ∧ b ∧ c ∧ d) ∨ (a ∧ ¬b ∧ ¬c ∧ d) ∨ (¬a ∧ b ∧ c ∧ ¬d) ∨ (¬a ∧ b ∧ ¬c ∧ d)
 
 Gate cost: NOTs = 6, ANDs = 12, ORs = 3
 
@@ -32,13 +32,13 @@ Gate cost: NOTs = 6, ANDs = 12, ORs = 3
 
 goal:
    00 01 11 10 
-00 F  F  F  F
-01 F  T  F  T
-11 F  F  F  F
-10 F  T  F  F
+00 0  0  0  0
+01 0  1  0  1
+11 0  0  0  0
+10 0  1  0  0
 
 solution:
-(a && !b && !c && d) || (!a && b && c && !d) || (!a && b && !c && d)
+(a ∧ ¬b ∧ ¬c ∧ d) ∨ (¬a ∧ b ∧ c ∧ ¬d) ∨ (¬a ∧ b ∧ ¬c ∧ d)
 
 Gate cost: NOTs = 6, ANDs = 9, ORs = 2
 
@@ -47,13 +47,13 @@ Gate cost: NOTs = 6, ANDs = 9, ORs = 2
 
 goal:
    00 01 11 10 
-00 T  F  F  F
-01 F  F  F  T
-11 F  F  F  F
-10 F  T  F  F
+00 1  0  0  0
+01 0  0  0  1
+11 0  0  0  0
+10 0  1  0  0
 
 solution:
-(a && !b && !c && d) || (!a && b && c && !d) || (!a && !b && !c && !d)
+(a ∧ ¬b ∧ ¬c ∧ d) ∨ (¬a ∧ b ∧ c ∧ ¬d) ∨ (¬a ∧ ¬b ∧ ¬c ∧ ¬d)
 
 Gate cost: NOTs = 8, ANDs = 9, ORs = 2
 

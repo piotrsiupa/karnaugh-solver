@@ -2,13 +2,13 @@
 
 goal:
    00 01 11 10 
-00 F  F  F  T
-01 F  F  F  F
-11 F  F  F  F
-10 F  F  F  F
+00 0  0  0  1
+01 0  0  0  0
+11 0  0  0  0
+10 0  0  0  0
 
 solution:
-!a && !b && c && !d
+¬a ∧ ¬b ∧ c ∧ ¬d
 
 Gate cost: NOTs = 3, ANDs = 3, ORs = 0
 
@@ -17,7 +17,7 @@ Gate cost: NOTs = 3, ANDs = 3, ORs = 0
 
 Negated inputs: a, b, d
 Products:
-	[0] = !a && !b && c && !d
+	[0] = ¬a ∧ ¬b ∧ c ∧ ¬d
 Sums:
 	"short 1" = [0]
 

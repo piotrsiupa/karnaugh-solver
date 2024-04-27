@@ -2,10 +2,10 @@
 
 goal:
   
-0 T
+0 1
 
 solution:
-<True>
+⊤
 
 Gate cost: NOTs = 0, ANDs = 0, ORs = 0
 
@@ -14,10 +14,10 @@ Gate cost: NOTs = 0, ANDs = 0, ORs = 0
 
 goal:
   
-0 F
+0 0
 
 solution:
-<False>
+⊥
 
 Gate cost: NOTs = 0, ANDs = 0, ORs = 0
 
@@ -26,14 +26,14 @@ Gate cost: NOTs = 0, ANDs = 0, ORs = 0
 
 goal:
   
-0 -
+0 X
 
 best fit:
   
-0 F
+0 0
 
 solution:
-<False>
+⊥
 
 Gate cost: NOTs = 0, ANDs = 0, ORs = 0
 
@@ -43,8 +43,8 @@ Gate cost: NOTs = 0, ANDs = 0, ORs = 0
 Negated inputs: <none>
 Products:
 Sums:
-	"always_true" = <True>
-	"always_false" = <False>
-	"dont_care" = <False>
+	"always_true" = ⊤
+	"always_false" = ⊥
+	"dont_care" = ⊥
 
 Gate cost: NOTs = 0, ANDs = 0, ORs = 0

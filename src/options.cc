@@ -30,11 +30,14 @@ namespace options
 			{"verilog", "verilog", OutputFormat::VERILOG},
 			{"vhdl", "vhdl", OutputFormat::VHDL},
 			{"cpp", "cpp|c\\+\\+|cc|hpp|h\\+\\+|hh", OutputFormat::CPP},
-			{"math-formal", "math(?:ematic(?:s|al)?)?(?:[-_]formal|formal[-_]math(?:ematic(?:s|al)?)?)?|m(?:[-_]?f)?|f[-_]?m", OutputFormat::MATH_FORMAL},
-			{"math-ascii", "math(?:ematic(?:s|al)?)?[-_]ascii|ascii[-_]math(?:ematic(?:s|al)?)?|m[-_]?a|a[-_]?m", OutputFormat::MATH_ASCII},
-			{"math-prog", "math(?:ematic(?:s|al)?)?[-_]prog(?:ram(?:ing)?)?|prog(?:ram(?:ming)?)?[-_]math(?:ematic(?:s|al)?)?|m[-_]?p|p[-_]?m", OutputFormat::MATH_PROG},
-			{"math-names", "math(?:ematic(?:s|al)?)?[-_](?:names?|words?|text)|(?:names?|words?|text)[-_]math(?:ematic(?:s|al)?)?|m[-_]?[nwt]|[nwt][-_]?m", OutputFormat::MATH_NAMES},
+			{"mathematical", "math(?:ematic(?:s|al)?)?|m", OutputFormat::MATHEMATICAL},
 			{"gate-costs", "(?:gates?[-_ ])?(?:costs?|scores?|stat(?:s|istics?)?|infos?)|g[-_ ]?[csi]", OutputFormat::GATE_COSTS},
+		});
+	Mapped<OutputOperators> outputOperators({"output-ops", "output-operators", "ops", "operators"}, 'o', [](){ return OutputOperators::FORMAL; }, {
+			{"formal", "formal|f", OutputOperators::FORMAL},
+			{"ascii", "ascii|a", OutputOperators::ASCII},
+			{"programming", "prog(?:ramm?(?:ing)?)?|p", OutputOperators::PROGRAMMING},
+			{"names", "(?:names?|words?|text)|[nwt]", OutputOperators::NAMES},
 		});
 	Text name({"name", "module-name", "class-name"}, 'n');
 	Flag verboseGraph({"verbose-graph", "expanded-graph", "redundant-graph"}, 'G');
@@ -44,7 +47,7 @@ namespace options
 	std::vector<std::string_view> freeArgs;
 	
 	
-	static const optionList_t allOptions = {&help, &helpOptions, &version, &prompt, &prompt.getNegatedOption(), &status, &status.getNegatedOption(), &outputFormat, &name, &verboseGraph, &skipOptimization};
+	static const optionList_t allOptions = {&help, &helpOptions, &version, &prompt, &prompt.getNegatedOption(), &status, &status.getNegatedOption(), &outputFormat, &outputOperators, &name, &verboseGraph, &skipOptimization};
 	
 	bool parse(const int argc, const char *const *const argv)
 	{

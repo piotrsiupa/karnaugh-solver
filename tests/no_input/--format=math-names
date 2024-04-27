@@ -1,3 +1,0 @@
-always_true() = TRUE
-always_false() = FALSE
-dont_care() = FALSE

@@ -1,4 +1,0 @@
-first(a, b, c, d) = (a && !b && c && !d) || (a && !b && !c && d) || (!a && b && c && !d) || (!a && b && !c && d)
-second(a, b, c, d) = (a && b && c && d) || (a && !b && !c && d) || (!a && b && c && !d) || (!a && b && !c && d)
-third(a, b, c, d) = (a && !b && !c && d) || (!a && b && c && !d) || (!a && b && !c && d)
-fourth(a, b, c, d) = (a && !b && !c && d) || (!a && b && c && !d) || (!a && !b && !c && !d)

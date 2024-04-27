@@ -1,0 +1,30 @@
+--- none ---
+⊥
+--- all ---
+⊤
+--- some ---
+¬q ∧ ¬x
+--- even_less ---
+¬q ∧ ¬x ∧ ¬y
+--- more_than_less ---
+¬z ∨ (¬q ∧ ¬x ∧ ¬y)
+--- none_again ---
+⊥
+--- all_again ---
+⊤
+--- some_again ---
+¬q ∧ ¬x
+--- more_than_less_again ---
+¬z ∨ (¬q ∧ ¬x ∧ ¬y)
+--- half ---
+¬z
+--- some_the_third_time ---
+¬q ∧ ¬x
+--- more_than_less_the_third_time ---
+¬z ∨ (¬q ∧ ¬x ∧ ¬y)
+--- most ---
+q ∨ y
+--- even_more ---
+q ∨ ¬x ∨ y
+--- half_again ---
+¬z

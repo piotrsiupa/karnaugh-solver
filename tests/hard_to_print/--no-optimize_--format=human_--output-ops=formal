@@ -1,0 +1,108 @@
+--- none ---
+
+⊥
+
+Gate cost: NOTs = 0, ANDs = 0, ORs = 0
+
+
+--- all ---
+
+⊤
+
+Gate cost: NOTs = 0, ANDs = 0, ORs = 0
+
+
+--- some ---
+
+¬q ∧ ¬x
+
+Gate cost: NOTs = 2, ANDs = 1, ORs = 0
+
+
+--- even_less ---
+
+¬q ∧ ¬x ∧ ¬y
+
+Gate cost: NOTs = 3, ANDs = 2, ORs = 0
+
+
+--- more_than_less ---
+
+¬z ∨ (¬q ∧ ¬x ∧ ¬y)
+
+Gate cost: NOTs = 4, ANDs = 2, ORs = 1
+
+
+--- none_again ---
+
+⊥
+
+Gate cost: NOTs = 0, ANDs = 0, ORs = 0
+
+
+--- all_again ---
+
+⊤
+
+Gate cost: NOTs = 0, ANDs = 0, ORs = 0
+
+
+--- some_again ---
+
+¬q ∧ ¬x
+
+Gate cost: NOTs = 2, ANDs = 1, ORs = 0
+
+
+--- more_than_less_again ---
+
+¬z ∨ (¬q ∧ ¬x ∧ ¬y)
+
+Gate cost: NOTs = 4, ANDs = 2, ORs = 1
+
+
+--- half ---
+
+¬z
+
+Gate cost: NOTs = 1, ANDs = 0, ORs = 0
+
+
+--- some_the_third_time ---
+
+¬q ∧ ¬x
+
+Gate cost: NOTs = 2, ANDs = 1, ORs = 0
+
+
+--- more_than_less_the_third_time ---
+
+¬z ∨ (¬q ∧ ¬x ∧ ¬y)
+
+Gate cost: NOTs = 4, ANDs = 2, ORs = 1
+
+
+--- most ---
+
+q ∨ y
+
+Gate cost: NOTs = 0, ANDs = 0, ORs = 1
+
+
+--- even_more ---
+
+q ∨ ¬x ∨ y
+
+Gate cost: NOTs = 1, ANDs = 0, ORs = 2
+
+
+--- half_again ---
+
+¬z
+
+Gate cost: NOTs = 1, ANDs = 0, ORs = 0
+
+
+=== summary ===
+
+Gate cost: NOTs = 24, ANDs = 11, ORs = 6

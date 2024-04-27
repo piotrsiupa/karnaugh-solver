@@ -1,13 +1,13 @@
 --- f0 ---
 
-!a && !b
+¬a ∧ ¬b
 
 Gate cost: NOTs = 2, ANDs = 1, ORs = 0
 
 
 --- f1 ---
 
-!a && !b && c
+¬a ∧ ¬b ∧ c
 
 Gate cost: NOTs = 2, ANDs = 2, ORs = 0
 
@@ -16,8 +16,8 @@ Gate cost: NOTs = 2, ANDs = 2, ORs = 0
 
 Negated inputs: a, b
 Products:
-	[0] = !a && !b
-	[1] = c && [0]
+	[0] = ¬a ∧ ¬b
+	[1] = c ∧ [0]
 Sums:
 	"f0" = [0]
 	"f1" = [1]

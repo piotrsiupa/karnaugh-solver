@@ -10,6 +10,115 @@
 #include "utils.hh"
 
 
+void OptimizedSolutions::printHumanAnd(std::ostream &o) const
+{
+	switch (options::outputOperators.getValue())
+	{
+	case options::OutputOperators::FORMAL:
+		o << u8" \u2227 ";
+		break;
+	case options::OutputOperators::ASCII:
+		o << " /\\ ";
+		break;
+	case options::OutputOperators::PROGRAMMING:
+		o << " && ";
+		break;
+	case options::OutputOperators::NAMES:
+		o << " AND ";
+		break;
+	default:
+		break;
+	}
+}
+
+void OptimizedSolutions::printHumanOr(std::ostream &o) const
+{
+	switch (options::outputOperators.getValue())
+	{
+	case options::OutputOperators::FORMAL:
+		o << u8" \u2228 ";
+		break;
+	case options::OutputOperators::ASCII:
+		o << " \\/ ";
+		break;
+	case options::OutputOperators::PROGRAMMING:
+		o << " || ";
+		break;
+	case options::OutputOperators::NAMES:
+		o << " OR ";
+		break;
+	default:
+		break;
+	}
+}
+
+void OptimizedSolutions::printGraphNot(std::ostream &o) const
+{
+	switch (options::outputOperators.getValue())
+	{
+	case options::OutputOperators::FORMAL:
+		o << u8"\u00AC";
+		break;
+	case options::OutputOperators::ASCII:
+		o << '~';
+		break;
+	case options::OutputOperators::PROGRAMMING:
+		o << '!';
+		break;
+	case options::OutputOperators::NAMES:
+		o << "NOT ";
+		break;
+	default:
+		break;
+	}
+}
+
+void OptimizedSolutions::printGraphAnd(std::ostream &o) const
+{
+	switch (options::outputOperators.getValue())
+	{
+	case options::OutputOperators::FORMAL:
+		o << u8"\u2227";
+		break;
+	case options::OutputOperators::ASCII:
+		o << "/\\\\";
+		break;
+	case options::OutputOperators::PROGRAMMING:
+		o << "&&";
+		break;
+	case options::OutputOperators::NAMES:
+		o << "AND";
+		break;
+	default:
+		break;
+	}
+}
+
+void OptimizedSolutions::printGraphOr(std::ostream &o, const bool spaces) const
+{
+	if (spaces)
+		o << ' ';
+	switch (options::outputOperators.getValue())
+	{
+	case options::OutputOperators::FORMAL:
+		o << u8"\u2228";
+		break;
+	case options::OutputOperators::ASCII:
+		o << "\\\\/";
+		break;
+	case options::OutputOperators::PROGRAMMING:
+		o << "||";
+		break;
+	case options::OutputOperators::NAMES:
+		o << "OR";
+		break;
+	default:
+		break;
+	}
+	if (spaces)
+		o << ' ';
+}
+
 Implicant OptimizedSolutions::flattenProduct(const id_t productId) const
 {
 	auto [primeImplicant, ids] = getProduct(productId);
@@ -190,7 +299,8 @@ void OptimizedSolutions::printGraphNegatedInputs(std::ostream &o) const
 	{
 		if ((negatedInputs & (1 << (::bits - i - 1))) != 0)
 		{
-			o << "\t\tni" << i << " [label=\"!";
+			o << "\t\tni" << i << " [label=\"";
+			printGraphNot(o);
 			::inputNames.printGraphName(o, i);
 			o << "\"];\n";
 			o << "\t\ti" << i << " -> ni" << i << ";\n";
@@ -208,7 +318,7 @@ void OptimizedSolutions::printHumanProductBody(std::ostream &o, const id_t produ
 	for (const auto &id : ids)
 	{
 		if (needsAnd)
-			o << " && ";
+			printHumanAnd(o);
 		else
 			needsAnd = true;
 		printHumanId(o, id);
@@ -262,7 +372,7 @@ void OptimizedSolutions::printGraphProductImplicant(std::ostream &o, const id_t 
 		primeImplicant = product.first;
 	}
 	o << " = ";
-	primeImplicant.printHuman(o, false);
+	primeImplicant.printGraph(o, false);
 }
 
 void OptimizedSolutions::printGraphProductParents(std::ostream &o, const id_t productId) const
@@ -292,7 +402,10 @@ void OptimizedSolutions::printGraphProduct(std::ostream &o, const Names &functio
 	o << " [label=\"";
 	const bool hasParents = isFullGraph || !getProduct(productId).second.empty();
 	if (hasParents)
-		o << "&&\\n";
+	{
+		printGraphAnd(o);
+		o << "\\n";
+	}
 	if (functionNum == SIZE_MAX)
 	{
 		printHumanId(o, productId);
@@ -494,7 +607,7 @@ void OptimizedSolutions::printHumanSumBody(std::ostream &o, const id_t sumId) co
 	for (const auto &partId : getSum(sumId))
 	{
 		if (!first)
-			o << " || ";
+			printHumanOr(o);
 		if (!isProduct(partId) || isProductWorthPrinting(partId))
 			printHumanId(o, partId);
 		else
@@ -546,9 +659,12 @@ void OptimizedSolutions::printGraphSumProducts(std::ostream &o, const id_t sumId
 	First first;
 	for (const auto &productId : sum)
 	{
-		o << (first ? " = " : " || ");
+		if (first)
+			o << " = ";
+		else
+			printGraphOr(o, true);
 		if (isVerboseGraph)
-			flattenProduct(productId).printHuman(o, sum.size() != 1);
+			flattenProduct(productId).printGraph(o, sum.size() != 1);
 		else
 			getProduct(productId).first.printHuman(o, false);
 	}
@@ -586,7 +702,10 @@ void OptimizedSolutions::printGraphSum(std::ostream &o, const Names &functionNam
 	o << " [label=\"";
 	const bool hasParents = isFullGraph || std::any_of(sum.cbegin(), sum.cend(), [this](const id_t id){ return !isProduct(id) || isProductWorthPrinting(id); });
 	if (hasParents)
-		o << "||\\n";
+	{
+		printGraphOr(o, false);
+		o << "\\n";
+	}
 	if (functionNum == SIZE_MAX)
 	{
 		printHumanId(o, sumId);
@@ -785,7 +904,10 @@ void OptimizedSolutions::printGraphFinalSum(std::ostream &o, const Names &functi
 	const id_t sumId = finalSums[i];
 	o << "\t\tf" << i << " [label=\"";
 	if (!isSumWorthPrinting(sumId, false) && getSum(sumId).size() > 1)
-		o << "||\\n";
+	{
+		printGraphOr(o, false);
+		o << "\\n";
+	}
 	functionNames.printGraphName(o, i);
 	if (isVerboseGraph)
 		printGraphSumProducts(o, sumId);

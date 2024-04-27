@@ -2,44 +2,44 @@
 
 goal:
      0000 0001 0011 0010 0110 0111 0101 0100 1100 1101 1111 1110 1010 1011 1001 1000 
-0000  -    -    -    -    -    -    -    -    -    -    -    -    -    -    -    -
-0001  -    -    -    -    -    -    -    F    -    -    -    -    -    -    -    -
-0011  -    -    -    F    -    -    -    -    -    -    -    -    -    F    -    -
-0010  -    -    F    -    -    -    -    -    -    -    -    -    -    -    -    -
-0110  -    -    -    -    T    -    -    -    -    -    -    -    -    -    -    -
-0111  -    -    -    -    -    -    F    -    -    T    -    -    -    -    -    -
-0101  -    -    -    -    F    -    -    -    -    F    -    -    -    -    -    -
-0100  -    -    -    -    T    -    F    -    -    T    -    -    -    -    -    -
-1100  -    -    -    -    -    -    -    -    -    -    -    -    -    -    -    -
-1101  -    -    -    -    -    -    -    -    -    -    -    -    -    -    -    -
-1111  -    -    -    -    -    -    -    F    -    -    -    -    -    -    -    -
-1110  -    -    -    -    -    -    -    -    -    -    -    -    -    -    -    -
-1010  -    -    -    -    -    -    -    -    -    -    -    -    -    -    -    -
-1011  -    -    -    F    -    -    -    -    -    -    -    -    -    -    F    -
-1001  -    -    -    -    F    -    -    -    -    -    -    -    -    -    -    -
-1000  -    -    -    -    -    -    -    -    -    -    -    -    -    -    -    -
+0000  X    X    X    X    X    X    X    X    X    X    X    X    X    X    X    X
+0001  X    X    X    X    X    X    X    0    X    X    X    X    X    X    X    X
+0011  X    X    X    0    X    X    X    X    X    X    X    X    X    0    X    X
+0010  X    X    0    X    X    X    X    X    X    X    X    X    X    X    X    X
+0110  X    X    X    X    1    X    X    X    X    X    X    X    X    X    X    X
+0111  X    X    X    X    X    X    0    X    X    1    X    X    X    X    X    X
+0101  X    X    X    X    0    X    X    X    X    0    X    X    X    X    X    X
+0100  X    X    X    X    1    X    0    X    X    1    X    X    X    X    X    X
+1100  X    X    X    X    X    X    X    X    X    X    X    X    X    X    X    X
+1101  X    X    X    X    X    X    X    X    X    X    X    X    X    X    X    X
+1111  X    X    X    X    X    X    X    0    X    X    X    X    X    X    X    X
+1110  X    X    X    X    X    X    X    X    X    X    X    X    X    X    X    X
+1010  X    X    X    X    X    X    X    X    X    X    X    X    X    X    X    X
+1011  X    X    X    0    X    X    X    X    X    X    X    X    X    X    0    X
+1001  X    X    X    X    0    X    X    X    X    X    X    X    X    X    X    X
+1000  X    X    X    X    X    X    X    X    X    X    X    X    X    X    X    X
 
 best fit:
      0000 0001 0011 0010 0110 0111 0101 0100 1100 1101 1111 1110 1010 1011 1001 1000 
-0000  T    F    F    T    T    F    F    T    T    T    T    T    T    T    T    T
-0001  F    F    F    F    F    F    F    F    F    F    F    F    F    F    F    F
-0011  F    F    F    F    F    F    F    F    F    F    F    F    F    F    F    F
-0010  T    F    F    T    T    F    F    T    T    T    T    T    T    T    T    T
-0110  T    F    F    T    T    F    F    T    T    T    T    T    T    T    T    T
-0111  F    F    F    F    F    F    F    F    T    T    T    T    T    T    T    T
-0101  F    F    F    F    F    F    F    F    F    F    F    F    F    F    F    F
-0100  T    F    F    T    T    F    F    T    T    T    T    T    T    T    T    T
-1100  T    F    F    T    T    F    F    T    T    T    T    T    T    T    T    T
-1101  F    F    F    F    F    F    F    F    F    F    F    F    F    F    F    F
-1111  F    F    F    F    F    F    F    F    T    T    T    T    T    T    T    T
-1110  T    F    F    T    T    F    F    T    T    T    T    T    T    T    T    T
-1010  T    F    F    T    T    F    F    T    T    T    T    T    T    T    T    T
-1011  F    F    F    F    F    F    F    F    F    F    F    F    F    F    F    F
-1001  F    F    F    F    F    F    F    F    F    F    F    F    F    F    F    F
-1000  T    F    F    T    T    F    F    T    T    T    T    T    T    T    T    T
+0000  1    0    0    1    1    0    0    1    1    1    1    1    1    1    1    1
+0001  0    0    0    0    0    0    0    0    0    0    0    0    0    0    0    0
+0011  0    0    0    0    0    0    0    0    0    0    0    0    0    0    0    0
+0010  1    0    0    1    1    0    0    1    1    1    1    1    1    1    1    1
+0110  1    0    0    1    1    0    0    1    1    1    1    1    1    1    1    1
+0111  0    0    0    0    0    0    0    0    1    1    1    1    1    1    1    1
+0101  0    0    0    0    0    0    0    0    0    0    0    0    0    0    0    0
+0100  1    0    0    1    1    0    0    1    1    1    1    1    1    1    1    1
+1100  1    0    0    1    1    0    0    1    1    1    1    1    1    1    1    1
+1101  0    0    0    0    0    0    0    0    0    0    0    0    0    0    0    0
+1111  0    0    0    0    0    0    0    0    1    1    1    1    1    1    1    1
+1110  1    0    0    1    1    0    0    1    1    1    1    1    1    1    1    1
+1010  1    0    0    1    1    0    0    1    1    1    1    1    1    1    1    1
+1011  0    0    0    0    0    0    0    0    0    0    0    0    0    0    0    0
+1001  0    0    0    0    0    0    0    0    0    0    0    0    0    0    0    0
+1000  1    0    0    1    1    0    0    1    1    1    1    1    1    1    1    1
 
 solution:
-(!d && e) || (!d && !h) || (b && c && e)
+(¬d ∧ e) ∨ (¬d ∧ ¬h) ∨ (b ∧ c ∧ e)
 
 Gate cost: NOTs = 3, ANDs = 4, ORs = 2
 
@@ -48,10 +48,10 @@ Gate cost: NOTs = 3, ANDs = 4, ORs = 2
 
 Negated inputs: d, h
 Products:
-	[0] = !d && e
-	[1] = b && c && e
-	[2] = !d && !h
+	[0] = ¬d ∧ e
+	[1] = b ∧ c ∧ e
+	[2] = ¬d ∧ ¬h
 Sums:
-	"f0" = [0] || [1] || [2]
+	"f0" = [0] ∨ [1] ∨ [2]
 
 Gate cost: NOTs = 2, ANDs = 4, ORs = 2

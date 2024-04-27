@@ -14,15 +14,15 @@ digraph no_input_names
 		subgraph products
 		{
 			node [shape=ellipse];
-			f0_s0 [label="&&\n[0] = i1 && i3"];
+			f0_s0 [label="∧\n[0] = i1 ∧ i3"];
 			i1, i3 -> f0_s0;
-			f0_s1 [label="&&\n[1] = i0 && i2 && i3"];
+			f0_s1 [label="∧\n[1] = i0 ∧ i2 ∧ i3"];
 			i0, i2, i3 -> f0_s1;
 		}
 		subgraph sum
 		{
 			node [shape=rectangle, style=filled];
-			f0 [label="||\nf0 = (i1 && i3) || (i0 && i2 && i3)"];
+			f0 [label="∨\nf0 = (i1 ∧ i3) ∨ (i0 ∧ i2 ∧ i3)"];
 			f0_s0, f0_s1 -> f0;
 		}
 	}

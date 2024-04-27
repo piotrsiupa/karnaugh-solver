@@ -1,0 +1,80 @@
+digraph hard_to_print
+{
+	subgraph inputs
+	{
+		rank=same;
+		node [shape=invhouse];
+		i0 [label="q"];
+		i1 [label="x"];
+		i2 [label="y"];
+		i3 [label="z"];
+	}
+	subgraph constants
+	{
+		node [shape=octagon, style=dashed];
+		true [label="TRUE"];
+		false [label="FALSE"];
+	}
+	subgraph negated_inputs
+	{
+		node [shape=diamond];
+		ni0 [label="NOT q"];
+		i0 -> ni0;
+		ni1 [label="NOT x"];
+		i1 -> ni1;
+		ni2 [label="NOT y"];
+		i2 -> ni2;
+		ni3 [label="NOT z"];
+		i3 -> ni3;
+	}
+	subgraph products
+	{
+		node [shape=ellipse];
+		s0 [label="AND\n[0] = NOT q AND NOT x"];
+		ni0, ni1 -> s0;
+		s1 [label="AND\n[1] = NOT q AND NOT x AND NOT y"];
+		ni2, s0 -> s1;
+	}
+	subgraph sums
+	{
+		node [shape=rectangle];
+		s2 [label="OR\n[2] = (NOT q AND NOT x AND NOT y) OR NOT z"];
+		s1, ni3 -> s2;
+		s3 [label="OR\n[3] = y OR q"];
+		i2, i0 -> s3;
+	}
+	subgraph final_sums
+	{
+		node [shape=rectangle, style=filled];
+		f0 [label="none = FALSE"];
+		false -> f0;
+		f1 [label="all = TRUE"];
+		true -> f1;
+		f2 [label="some = NOT q AND NOT x"];
+		s0 -> f2;
+		f3 [label="even_less = NOT q AND NOT x AND NOT y"];
+		s1 -> f3;
+		f4 [label="more_than_less = (NOT q AND NOT x AND NOT y) OR NOT z"];
+		s2 -> f4;
+		f5 [label="none_again = FALSE"];
+		false -> f5;
+		f6 [label="all_again = TRUE"];
+		true -> f6;
+		f7 [label="some_again = NOT q AND NOT x"];
+		s0 -> f7;
+		f8 [label="more_than_less_again = (NOT q AND NOT x AND NOT y) OR NOT z"];
+		s2 -> f8;
+		f9 [label="half = NOT z"];
+		ni3 -> f9;
+		f10 [label="some_the_third_time = NOT q AND NOT x"];
+		s0 -> f10;
+		f11 [label="more_than_less_the_third_time = (NOT q AND NOT x AND NOT y) OR NOT z"];
+		s2 -> f11;
+		f12 [label="most = y OR q"];
+		s3 -> f12;
+		f13 [label="OR\neven_more = NOT x OR y OR q"];
+		ni1, s3 -> f13;
+		f14 [label="half_again = NOT z"];
+		ni3 -> f14;
+	}
+}

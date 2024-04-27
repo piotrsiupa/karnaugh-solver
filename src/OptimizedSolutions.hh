@@ -40,6 +40,11 @@ private:
 	bool isWorthPrintingOnGraph(const id_t id, const bool isFullGraph) const { return isProduct(id) ? isProductWorthPrintingOnGraph(id, isFullGraph) : isSumWorthPrintingOnGraph(id, isFullGraph); }
 	void generateHumanIds() const;
 	void generateGraphIds() const;
+	void printHumanAnd(std::ostream &o) const;
+	void printHumanOr(std::ostream &o) const;
+	void printGraphNot(std::ostream &o) const;
+	void printGraphAnd(std::ostream &o) const;
+	void printGraphOr(std::ostream &o, const bool spaces) const;
 	std::pair<std::size_t, std::size_t> generateNormalizedIds() const;
 	void printVerilogImmediates(std::ostream &o, const std::size_t immediateProductCount, const std::size_t immediateSumCount) const;
 	void printVhdlImmediates(std::ostream &o, const std::size_t immediateProductCount, const std::size_t immediateSumCount) const;

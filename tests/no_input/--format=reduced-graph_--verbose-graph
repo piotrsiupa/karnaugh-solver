@@ -3,7 +3,7 @@ digraph no_input
 	subgraph products
 	{
 		node [shape=ellipse];
-		s0 [label="always_true = <True>", style=filled];
-		s1 [label="always_false, dont_care = <False>", style=filled];
+		s0 [label="always_true = ⊤", style=filled];
+		s1 [label="always_false, dont_care = ⊥", style=filled];
 	}
 }

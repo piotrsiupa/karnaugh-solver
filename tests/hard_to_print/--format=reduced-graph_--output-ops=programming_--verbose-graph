@@ -1,0 +1,22 @@
+digraph hard_to_print
+{
+	subgraph products
+	{
+		node [shape=ellipse];
+		s0 [label="none, none_again = false", style=filled];
+		s1 [label="all, all_again = true", style=filled];
+		s2 [label="some, some_again, some_the_third_time = !q && !x", style=filled];
+		s3 [label="&&\neven_less = !q && !x && !y", style=filled];
+		s2 -> s3;
+		s4 [label="half, half_again = !z", style=filled];
+	}
+	subgraph sums
+	{
+		node [shape=rectangle];
+		s5 [label="||\nmore_than_less, more_than_less_again, more_than_less_the_third_time = (!q && !x && !y) || !z", style=filled];
+		s3 -> s5;
+		s6 [label="most = y || q", style=filled];
+		s7 [label="||\neven_more = !x || y || q", style=filled];
+		s6 -> s7;
+	}
+}

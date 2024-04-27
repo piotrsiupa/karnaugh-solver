@@ -6,6 +6,98 @@
 #include "utils.hh"
 
 
+void Solution::printGraphNot(std::ostream &o) const
+{
+	switch (options::outputOperators.getValue())
+	{
+	case options::OutputOperators::FORMAL:
+		o << u8"\u00AC";
+		break;
+	case options::OutputOperators::ASCII:
+		o << '~';
+		break;
+	case options::OutputOperators::PROGRAMMING:
+		o << '!';
+		break;
+	case options::OutputOperators::NAMES:
+		o << "NOT ";
+		break;
+	default:
+		break;
+	}
+}
+
+void Solution::printHumanOr(std::ostream &o, const bool spaces) const
+{
+	if (spaces)
+		o << ' ';
+	switch (options::outputOperators.getValue())
+	{
+	case options::OutputOperators::FORMAL:
+		o << u8"\u2228";
+		break;
+	case options::OutputOperators::ASCII:
+		o << "\\/";
+		break;
+	case options::OutputOperators::PROGRAMMING:
+		o << "||";
+		break;
+	case options::OutputOperators::NAMES:
+		o << "OR";
+		break;
+	default:
+		break;
+	}
+	if (spaces)
+		o << ' ';
+}
+
+void Solution::printGraphAnd(std::ostream &o) const
+{
+	switch (options::outputOperators.getValue())
+	{
+	case options::OutputOperators::FORMAL:
+		o << u8"\u2227";
+		break;
+	case options::OutputOperators::ASCII:
+		o << "/\\\\";
+		break;
+	case options::OutputOperators::PROGRAMMING:
+		o << "&&";
+		break;
+	case options::OutputOperators::NAMES:
+		o << "AND";
+		break;
+	default:
+		break;
+	}
+}
+
+void Solution::printGraphOr(std::ostream &o, const bool spaces) const
+{
+	if (spaces)
+		o << ' ';
+	switch (options::outputOperators.getValue())
+	{
+	case options::OutputOperators::FORMAL:
+		o << u8"\u2228";
+		break;
+	case options::OutputOperators::ASCII:
+		o << "\\\\/";
+		break;
+	case options::OutputOperators::PROGRAMMING:
+		o << "||";
+		break;
+	case options::OutputOperators::NAMES:
+		o << "OR";
+		break;
+	default:
+		break;
+	}
+	if (spaces)
+		o << ' ';
+}
+
 void Solution::printGraphNegatedInputs(std::ostream &o, const std::size_t functionNum) const
 {
 	std::vector<std::vector<std::size_t>> negatedInputs(::bits);
@@ -25,7 +117,8 @@ void Solution::printGraphNegatedInputs(std::ostream &o, const std::size_t functi
 		{
 			for (const std::size_t j : negatedInputs[i])
 			{
-				o << "\t\t\tf" << functionNum << "_ni" << i << '_' << j << " [label=\"!";
+				o << "\t\t\tf" << functionNum << "_ni" << i << '_' << j << " [label=\"";
+				printGraphNot(o);
 				::inputNames.printGraphName(o, i);
 				o << "\"];\n";
 				o << "\t\t\ti" << i << " -> f" << functionNum << "_ni" << i << '_' << j << ";\n";
@@ -59,12 +152,15 @@ std::size_t Solution::printGraphProducts(std::ostream &o, const std::size_t func
 				continue;
 			o << "\t\t\tf" << functionNum << "_s" << i << " [label=\"";
 			if (isFullGraph)
-				o << "&&\\n";
+			{
+				printGraphAnd(o);
+				o << "\\n";
+			}
 			o << "[" << idShift++ << "]";
 			if (!isFullGraph || isVerbose)
 			{
 				o << " = ";
-				(*this)[i].printHuman(o, false);
+				(*this)[i].printGraph(o, false);
 			}
 			o << "\"];\n";
 			if (isFullGraph)
@@ -95,7 +191,10 @@ void Solution::printGraphSum(std::ostream &o, const std::size_t functionNum, con
 	o << "\t\t\tf" << functionNum << " [label=\"";
 	const bool hasParents = isFullGraph || (size() >= 2 && std::any_of(cbegin(), cend(), [](const Implicant &x){ return x.getBitCount() >= 2; }));
 	if (hasParents && size() >= 2)
-		o << "||\\n";
+	{
+		printGraphOr(o, false);
+		o << "\\n";
+	}
 	o << functionName;
 	if (!isFullGraph || isVerbose)
 	{
@@ -107,8 +206,8 @@ void Solution::printGraphSum(std::ostream &o, const std::size_t functionNum, con
 			if (first)
 				o << " = ";
 			else
-				o << " || ";
-			product.printHuman(o, this->size() != 1);
+				printGraphOr(o, true);
+			product.printGraph(o, this->size() != 1);
 		}
 	}
 	o << "\"];\n";
@@ -167,7 +266,7 @@ void Solution::printHuman(std::ostream &o) const
 		for (const Implicant &implicant : *this)
 		{
 			if (&implicant != &front())
-				o << " || ";
+				printHumanOr(o, true);
 			implicant.printHuman(o, true);
 		}
 	}
@@ -252,25 +351,7 @@ void Solution::printMath(std::ostream &o) const
 		for (const Implicant &implicant : *this)
 		{
 			if (&implicant != &front())
-			{
-				switch (options::outputFormat.getValue())
-				{
-				case options::OutputFormat::MATH_FORMAL:
-					o << u8" \u2228 ";
-					break;
-				case options::OutputFormat::MATH_ASCII:
-					o << " \\/ ";
-					break;
-				case options::OutputFormat::MATH_PROG:
-					o << " || ";
-					break;
-				case options::OutputFormat::MATH_NAMES:
-					o << " OR ";
-					break;
-				default:
-					break;
-				}
-			}
+				printHumanOr(o, true);
 			implicant.printMath(o, true);
 		}
 	}

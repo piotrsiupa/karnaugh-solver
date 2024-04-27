@@ -1,0 +1,15 @@
+none(q, x, y, z) = false
+all(q, x, y, z) = true
+some(q, x, y, z) = !q && !x
+even_less(q, x, y, z) = !q && !x && !y
+more_than_less(q, x, y, z) = !z || (!q && !x && !y)
+none_again(q, x, y, z) = false
+all_again(q, x, y, z) = true
+some_again(q, x, y, z) = !q && !x
+more_than_less_again(q, x, y, z) = !z || (!q && !x && !y)
+half(q, x, y, z) = !z
+some_the_third_time(q, x, y, z) = !q && !x
+more_than_less_the_third_time(q, x, y, z) = !z || (!q && !x && !y)
+most(q, x, y, z) = q || y
+even_more(q, x, y, z) = q || !x || y
+half_again(q, x, y, z) = !z

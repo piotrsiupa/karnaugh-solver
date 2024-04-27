@@ -144,7 +144,7 @@ int main(const int argc, const char *const *const argv)
 	
 	if (!options::parse(argc, argv))
 		return 1;
-	if (options::outputFormat.getValue() == options::OutputFormat::MATH_FORMAL || options::outputFormat.getValue() == options::OutputFormat::MATH_PROG || options::outputFormat.getValue() == options::OutputFormat::MATH_ASCII || options::outputFormat.getValue() == options::OutputFormat::MATH_NAMES)
+	if (options::outputFormat.getValue() == options::OutputFormat::MATHEMATICAL)
 		options::skipOptimization.raise();
 	
 	if (options::helpOptions.isRaised())  // `--help-options` is before `--help` because it should be used when both flags are present.

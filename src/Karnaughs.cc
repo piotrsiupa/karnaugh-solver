@@ -55,9 +55,49 @@ void Karnaughs::printGraphConstants() const
 	std::cout << "\t{\n";
 	std::cout << "\t\tnode [shape=octagon, style=dashed];\n";
 	if (usesTrue)
-		std::cout << "\t\ttrue;\n";
+	{
+		std::cout << "\t\ttrue [label=\"";
+		switch (options::outputOperators.getValue())
+		{
+		case options::OutputOperators::FORMAL:
+			std::cout << u8"\u22A4";
+			break;
+		case options::OutputOperators::ASCII:
+			std::cout << 'T';
+			break;
+		case options::OutputOperators::PROGRAMMING:
+			std::cout << "true";
+			break;
+		case options::OutputOperators::NAMES:
+			std::cout << "TRUE";
+			break;
+		default:
+			break;
+		}
+		std::cout << "\"];\n";
+	}
 	if (usesFalse)
-		std::cout << "\t\tfalse;\n";
+	{
+		std::cout << "\t\tfalse [label=\"";
+		switch (options::outputOperators.getValue())
+		{
+		case options::OutputOperators::FORMAL:
+			std::cout << u8"\u22A5";
+			break;
+		case options::OutputOperators::ASCII:
+			std::cout << 'F';
+			break;
+		case options::OutputOperators::PROGRAMMING:
+			std::cout << "false";
+			break;
+		case options::OutputOperators::NAMES:
+			std::cout << "FALSE";
+			break;
+		default:
+			break;
+		}
+		std::cout << "\"];\n";
+	}
 	std::cout << "\t}\n";
 }
 
@@ -557,10 +597,7 @@ void Karnaughs::print()
 	case options::OutputFormat::CPP:
 		printCpp();
 		break;
-	case options::OutputFormat::MATH_FORMAL:
-	case options::OutputFormat::MATH_ASCII:
-	case options::OutputFormat::MATH_PROG:
-	case options::OutputFormat::MATH_NAMES:
+	case options::OutputFormat::MATHEMATICAL:
 		printMath();
 		break;
 	case options::OutputFormat::GATE_COSTS:

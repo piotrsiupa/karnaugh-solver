@@ -1,2 +1,0 @@
-f0(a, b, c, d) = NOT a AND d
-f1(a, b, c, d) = NOT a AND NOT b AND c

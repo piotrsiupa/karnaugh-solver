@@ -2,16 +2,16 @@
 
 goal:
   0 1 
-0 - T
-1 - -
+0 X 1
+1 X X
 
 best fit:
   0 1 
-0 T T
-1 T T
+0 1 1
+1 1 1
 
 solution:
-<True>
+⊤
 
 Gate cost: NOTs = 0, ANDs = 0, ORs = 0
 
@@ -21,6 +21,6 @@ Gate cost: NOTs = 0, ANDs = 0, ORs = 0
 Negated inputs: <none>
 Products:
 Sums:
-	"f0" = <True>
+	"f0" = ⊤
 
 Gate cost: NOTs = 0, ANDs = 0, ORs = 0

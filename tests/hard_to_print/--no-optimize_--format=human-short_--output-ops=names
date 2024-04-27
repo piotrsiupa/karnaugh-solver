@@ -1,0 +1,30 @@
+--- none ---
+FALSE
+--- all ---
+TRUE
+--- some ---
+NOT q AND NOT x
+--- even_less ---
+NOT q AND NOT x AND NOT y
+--- more_than_less ---
+NOT z OR (NOT q AND NOT x AND NOT y)
+--- none_again ---
+FALSE
+--- all_again ---
+TRUE
+--- some_again ---
+NOT q AND NOT x
+--- more_than_less_again ---
+NOT z OR (NOT q AND NOT x AND NOT y)
+--- half ---
+NOT z
+--- some_the_third_time ---
+NOT q AND NOT x
+--- more_than_less_the_third_time ---
+NOT z OR (NOT q AND NOT x AND NOT y)
+--- most ---
+q OR y
+--- even_more ---
+q OR NOT x OR y
+--- half_again ---
+NOT z

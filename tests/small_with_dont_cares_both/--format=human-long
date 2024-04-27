@@ -2,20 +2,20 @@
 
 goal:
    00 01 11 10 
-00 -  T  T  -
-01 F  -  -  F
-11 F  F  F  F
-10 F  F  F  F
+00 X  1  1  X
+01 0  X  X  0
+11 0  0  0  0
+10 0  0  0  0
 
 best fit:
    00 01 11 10 
-00 T  T  T  T
-01 F  F  F  F
-11 F  F  F  F
-10 F  F  F  F
+00 1  1  1  1
+01 0  0  0  0
+11 0  0  0  0
+10 0  0  0  0
 
 solution:
-!a && !b
+¬a ∧ ¬b
 
 Gate cost: NOTs = 2, ANDs = 1, ORs = 0
 
@@ -24,20 +24,20 @@ Gate cost: NOTs = 2, ANDs = 1, ORs = 0
 
 goal:
    00 01 11 10 
-00 F  F  -  T
-01 F  F  F  -
-11 F  F  F  F
-10 F  F  F  F
+00 0  0  X  1
+01 0  0  0  X
+11 0  0  0  0
+10 0  0  0  0
 
 best fit:
    00 01 11 10 
-00 F  F  T  T
-01 F  F  F  F
-11 F  F  F  F
-10 F  F  F  F
+00 0  0  1  1
+01 0  0  0  0
+11 0  0  0  0
+10 0  0  0  0
 
 solution:
-!a && !b && c
+¬a ∧ ¬b ∧ c
 
 Gate cost: NOTs = 2, ANDs = 2, ORs = 0
 
@@ -46,8 +46,8 @@ Gate cost: NOTs = 2, ANDs = 2, ORs = 0
 
 Negated inputs: a, b
 Products:
-	[0] = !a && !b
-	[1] = c && [0]
+	[0] = ¬a ∧ ¬b
+	[1] = c ∧ [0]
 Sums:
 	"short with don't cares 0" = [0]
 	"short with don't cares 1" = [1]

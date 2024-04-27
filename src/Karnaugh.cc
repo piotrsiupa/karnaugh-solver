@@ -60,7 +60,19 @@ void Karnaugh::prettyPrintTable(const Minterms &target, const Minterms &allowed)
 				for (int i = 0; i != hBits; ++i)
 					std::cout << ' ';
 			const Minterm minterm = (x << hBits) | y;
-			std::cout << (target.find(minterm) != target.cend() ? 'T' : (allowed.find(minterm) != allowed.cend() ? '-' : 'F'));
+			switch (options::outputOperators.getValue())
+			{
+			case options::OutputOperators::FORMAL:
+			case options::OutputOperators::ASCII:
+				std::cout << (target.find(minterm) != target.cend() ? '1' : (allowed.find(minterm) != allowed.cend() ? 'X' : '0'));
+				break;
+			case options::OutputOperators::PROGRAMMING:
+				std::cout << (target.find(minterm) != target.cend() ? 'T' : (allowed.find(minterm) != allowed.cend() ? '-' : 'F'));
+				break;
+			case options::OutputOperators::NAMES:
+				std::cout << (target.find(minterm) != target.cend() ? 'T' : (allowed.find(minterm) != allowed.cend() ? '?' : 'F'));
+				break;
+			}
 		}
 		std::cout << '\n';
 	}
