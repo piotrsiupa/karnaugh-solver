@@ -150,6 +150,8 @@ You can find more "examples" in the directory [`tests`](tests).
 
 ### Input
 
+This is an example of an input that defines 2 functions with 4 arguments.
+
 Each part was formatted a little differently to show various styles allowed by the parser.
 (If you want, you can even use mix and match them in a single line.)
 
@@ -157,12 +159,12 @@ Each part was formatted a little differently to show various styles allowed by t
 ```
 # Notice various ways of separating the values.
 # (This is a comment btw; it will be ignored.)
-a, b, c, d
+a, b, c, d  # Arguments - they are shared by all the functions.
 
 # Solvers tend to get a solution for this one along the lines of a'b'd' + bc'd,
 # instead of the optimal one: a'c' + abd. (1 less AND and 2 less NOTs)
- tricky_0    # You can also have whitespaces and other weird characters in these names but this breaks generated code.
-  0; 5; 13  # Leading and training white characters are ignored. 
+ tricky_0    # You can also have whitespaces and other weird characters in these function but this breaks generated code.
+  0; 5; 13  # Leading and trailing white characters are ignored. 
 1; 2; 4; 15
 
 # Solvers tend to not be biased against using NOT gates which often results in
@@ -172,6 +174,18 @@ a, b, c, d
 tricky_1 # This name could be skipped. The program would generate one if needed.
 5 14
 0 1 3 4 7, 10;11 12 ,13 15  # You can mix different separators.
+```
+
+The input above is equivalent to the one below.
+
+```
+a, b, c, d
+tricky_0
+0, 5, 13
+1, 2, 4, 15
+tricky_1
+5, 14
+0, 1, 3, 4, 7, 10, 11, 12, 13, 15
 ```
 
 ### Human-readable output (long variant)
@@ -381,10 +395,10 @@ Other ones are intended to be read by humans rather than programs so the format 
 
 By default, proper Unicode symbols for formal logic are used. This looks quite good; however, the Unicode characters may interfere with some programs like older terminals.
 You can use command line option to choose one of the following styles:
- - [formal logic symbols](tests/tricky_one/--format=mathematical_--output-ops=formal),
- - [ASCII art](tests/tricky_one/--format=mathematical_--output-ops=ascii),
- - [programming operators](tests/tricky_one/--format=mathematical_--output-ops=programming),
- - [names of operations](tests/tricky_one/--format=mathematical_--output-ops=names).
+ - formal logic symbols ([example](tests/tricky_one/--format=human-long_--output-ops=formal)),
+ - ASCII art ([example](tests/tricky_one/--format=human-long_--output-ops=ascii)),
+ - programming operators ([example](tests/tricky_one/--format=human-long_--output-ops=programming)),
+ - names of operations ([example](tests/tricky_one/--format=human-long_--output-ops=names)).
 
 |    Style name | T (expr.) | F (expr.) |  Neg. | Conj. |  Disj. | T (table) | F (table) | D-c (table) |
 |--------------:|:---------:|:---------:|:-----:|:-----:|:------:|:---------:|:---------:|:-----------:|

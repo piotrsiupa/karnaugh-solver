@@ -1,12 +1,12 @@
 # This test (only slightly modified) is used as the example in `README.md` and `--help`.
 # Notice various ways of separating the values.
 # (This is a comment btw; it will be ignored.)
-a, b, c, d
+a, b, c, d  # Arguments - they are shared by all the functions.
 
 # Solvers tend to get a solution for this one along the lines of a'b'd' + bc'd,
 # instead of the optimal one: a'c' + abd. (1 less AND and 2 less NOTs)
- tricky_0    # You can also have whitespaces and other weird characters in these names but this breaks generated code.
-  0; 5; 13  # Leading and training white characters are ignored. 
+ tricky_0    # You can also have whitespaces and other weird characters in function names but this breaks generated code.
+  0; 5; 13  # Leading and trailing white characters are ignored. 
 1; 2; 4; 15
 
 # Solvers tend to not be biased against using NOT gates which often results in
