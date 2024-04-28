@@ -16,6 +16,9 @@ public:
 };
 
 
+// Permutation is a list of indexes describing order of a colllection.
+// Applying the permutation will move each element `i` of the collection to the position `permutation[i]`.
+// Applying permutation to itself will produce the same result as `std::iota(perm.begin(), perm.end())`.
 using permutation_t = std::vector<std::size_t>;
 
 template<std::ranges::random_access_range R, class Comp = std::ranges::less, class Proj = std::identity>
@@ -31,6 +34,9 @@ template<std::ranges::random_access_range R, class Comp = std::ranges::less, cla
 	return permutation;
 }
 
+// Inverted permutation is a permutation that will restore the permuted collection to its original order.
+// You can also think about it as indexes of from where an element should be moved to the current position.
+// Inverted inverted permutation is equal to the original permutation.
 [[nodiscard]] inline permutation_t invertPermutation(const permutation_t &permutation)
 {
 	permutation_t inversePermutation(permutation.size());

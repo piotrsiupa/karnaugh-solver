@@ -18,6 +18,7 @@ static void verifyPermutationFunctions()
 {
 	const permutation_t ordering = {10, 6, 3, 2, 0, 5, 8, 14, 1, 9, 4, 7, 13, 15, 11, 12};
 	assert(makeSortingPermutation(ordering) == invertPermutation(ordering));
+	assert(invertPermutation(invertPermutation(ordering)) == ordering);
 	permutation_t values = ordering;
 	applyInversePermutation(values, ordering);
 	for (std::size_t i = 0; i != values.size(); ++i)
