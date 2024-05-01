@@ -1,6 +1,7 @@
 #pragma once
 
 #include <bit>
+#include <cassert>
 #include <cstddef>
 #include <ostream>
 #include <set>
@@ -95,11 +96,11 @@ private:
 	finalPrimeImplicants_t extractCommonProductParts(const solutions_t &solutions, Progress &progress);
 	void extractCommonSumParts(const solutions_t &solutions, const finalPrimeImplicants_t &finalPrimeImplicants, Progress &progress);
 	
-	static id_t makeProductId(const std::size_t index) { return index; }
-	id_t makeSumId(const std::size_t index) const { return index + products.size(); }
-	bool isProduct(const id_t id) const { return id < products.size(); }
-	const product_t& getProduct(const id_t id) const { return products[id]; }
-	const sum_t& getSum(const id_t id) const { return sums[id - products.size()]; }
+	id_t makeProductId(const std::size_t index) const { assert(index < products.size()); return index; }
+	id_t makeSumId(const std::size_t index) const { assert(index < sums.size()); return index + products.size(); }
+	bool isProduct(const id_t id) const { assert(id < products.size() + sums.size()); return id < products.size(); }
+	const product_t& getProduct(const id_t id) const { assert(isProduct(id)); return products[id]; }
+	const sum_t& getSum(const id_t id) const { assert(!isProduct(id)); return sums[id - products.size()]; }
 	
 #ifndef NDEBUG
 	using normalizedSolution_t = std::set<Implicant>;

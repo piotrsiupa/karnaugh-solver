@@ -17,6 +17,7 @@ typename SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::Result SetOptimizer<SET,
 	sets_t newSets = makeSets();
 	const finalSets_t finalSets = makeFinalSets(std::move(oldSets), newSets);
 	substractSubsets(newSets, subsetSelections);
+	assert(newSets.size() == subsetSelections.size());
 	return {newSets, finalSets, subsetSelections};
 }
 
@@ -101,6 +102,8 @@ void SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::makeGraph(const sets_t &oldS
 		makeFullGraph(oldSets);
 	else
 		makeDummyGraph(oldSets, progress);
+	assert(endNodes.size() <= oldSets.size());
+	assert(graph.size() >= endNodes.size());
 }
 
 template<typename SET, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
@@ -430,6 +433,7 @@ std::pair<typename SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::subsetSelectio
 	
 	usageCounts_t usageCounts(graph.size(), SIZE_MAX);
 	
+	assert(subsetSelections.size() == usageCounts.size());
 	return {subsetSelections, usageCounts};
 }
 
