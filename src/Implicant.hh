@@ -76,7 +76,7 @@ public:
 	void removeFromMinterms(Minterms &minterms) const;
 	
 	static inline Implicant findBiggestInUnion(const Implicant &x, const Implicant &y);
-	[[nodiscard]] bool contains(const Implicant &other) const { return (this->mask & other.mask) == this->mask && (this->mask & other.bits) == this->bits; }
+	[[nodiscard]] bool contains(const Implicant &other) const { return (this->mask & other.mask) == other.mask && (other.mask & this->bits) == other.bits; }
 	
 	[[nodiscard]] const_iterator begin() const { if (empty() && bits != 0) [[unlikely]] return {}; else return {bits, mask}; }
 	[[nodiscard]] constexpr const_iterator end() const { return {}; }
