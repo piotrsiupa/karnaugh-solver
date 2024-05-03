@@ -3,11 +3,17 @@
 #include <iostream>
 
 
+static constexpr std::string_view internalName = "karnaugh";
+std::string_view getInternalName() { return internalName; }
+
+static constexpr std::string_view fullName = "Karnaugh Map Solver";
+std::string_view getFullName() { return fullName; }
+
 static constexpr std::string_view versionNumber = "0.3.2";
-std::string_view getVersionNumber()
-{
-	return versionNumber;
-}
+std::string_view getVersionNumber() { return versionNumber; }
+
+static constexpr std::string_view author = "Piotr Siupa";
+std::string_view getAuthor() { return author; }
 
 void printShortHelp()
 {
@@ -15,7 +21,7 @@ void printShortHelp()
 			"This program performs a logic function minimization of a function described as\na list of minterms and don't-cares to a SOP form and after that it performs\na common subexpression elimination.\n"
 			"It searches for a solution that uses a minimal number of logic gates.\n"
 			"\n"
-			"Usage:\tkarnaugh [OPTIONS...] [--] [INPUT_FILE]\n"
+			"Usage:\t" << internalName << " [OPTIONS...] [--] [INPUT_FILE]\n"
 			"Options:\n"
 			" general:\n"
 			"    -h, --help\t\t- Print full help text, including lists of option\n\t\t\t  arguments and description of the input format.\n"
@@ -91,8 +97,8 @@ void printHelp()
 void printVersion()
 {
 	std::cout <<
-			"karnaugh (Karnaugh Map Solver) version " << versionNumber << "\n"
-			"Author: Piotr Siupa\n"
+			internalName << " (" << fullName << ") version " << versionNumber << "\n"
+			"Author: " << author << "\n"
 #ifndef NDEBUG
 			"This is a development build which contains additional assertions. This may slow down the execution.\n"
 #endif
