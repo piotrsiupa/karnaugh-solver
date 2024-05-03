@@ -38,7 +38,13 @@ namespace options
 	extern Trilean prompt;
 	extern Trilean status;
 	
-	extern Mapped<OutputFormat> outputFormat;
+	class MappedOutputFormats : public Mapped<OutputFormat>
+	{
+	public:
+		using Mapped<OutputFormat>::Mapped;
+		[[nodiscard]] bool supportsOperatorStyles() const;
+	};
+	extern MappedOutputFormats outputFormat;
 	extern Mapped<OutputOperators> outputOperators;
 	extern Text name;
 	extern Flag verboseGraph;
