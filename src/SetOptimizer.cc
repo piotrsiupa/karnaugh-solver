@@ -132,7 +132,9 @@ void SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::switchToParentNodesIfAllowed
 				substractSet(missingElementsWithParentInstead, graph[subSubNode].first);
 				if (missingElementsWithParentInstead == correctMissingElements)
 				{
+					assert(usageCounts[subsetSelection[targetSubsetIndex]] != 0);
 					--usageCounts[subsetSelection[targetSubsetIndex]];
+					assert(usageCounts[subSubNode] != SIZE_MAX);
 					++usageCounts[subSubNode];
 					subsetSelection[targetSubsetIndex] = subSubNode;
 					changed = true;
@@ -144,38 +146,112 @@ void SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::switchToParentNodesIfAllowed
 			}
 		}
 		if (changed)
-			std::ranges::sort(subsetSelection);
-	}
-}
-
-template<typename SET, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
-void SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::removeSingleUseNonFinalNodes(subsetSelections_t &subsetSelections, usageCounts_t &usageCounts) const
-{
-	for (std::size_t nodeIndex = 0; nodeIndex != subsetSelections.size(); ++nodeIndex)
-	{
-		if (usageCounts[nodeIndex] == 0)
-			continue;
-		subsetSelection_t &subsetSelection = subsetSelections[nodeIndex];
-		for (std::size_t subsetIndex = 0; subsetIndex != subsetSelection.size();)
 		{
-			const std::size_t subset = subsetSelection[subsetIndex];
-			if (usageCounts[subset] == 1)
-			{
-				subsetSelection.erase(subsetSelection.begin() + subsetIndex);
-				usageCounts[subset] = 0;
-				subsetSelection.insert(subsetSelection.end(), subsetSelections[subset].cbegin(), subsetSelections[subset].cend());
-				continue;
-			}
-			++subsetIndex;
+			assert(!subsetSelection.empty());
+			std::ranges::sort(subsetSelection);
+			std::size_t prev = subsetSelection.front();
+			for (auto iter = std::ranges::next(subsetSelection.cbegin()); iter != subsetSelection.cend(); ++iter)
+				if (*iter == prev)
+					--usageCounts[*iter];
+				else
+					prev = *iter;
+			const auto [eraseBegin, eraseEnd] = std::ranges::unique(subsetSelection);
+			subsetSelection.erase(eraseBegin, eraseEnd);
 		}
 	}
 }
 
 template<typename SET, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
-void SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::removeRedundantNodes(subsetSelections_t &subsetSelections, usageCounts_t &usageCounts) const
+void SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::removeUnusedNodes(subsetSelections_t &subsetSelections, usageCounts_t &usageCounts)
+{
+	std::size_t moveTarget = SIZE_MAX;
+	for (std::size_t i = graph.size(); i --> 0;)
+	{
+		if (usageCounts[i] == 0)
+		{
+			moveTarget = i;
+			for (const std::size_t subnode : subsetSelections[i])
+				--usageCounts[subnode];
+		}
+	}
+	if (moveTarget == SIZE_MAX)
+		return;
+	
+	std::vector<std::size_t> indexMap(graph.size());
+	std::size_t i;
+	for (i = 0; i != moveTarget; ++i)
+		indexMap[i] = i;
+	for (++i; i != graph.size(); ++i)
+	{
+		if (usageCounts[i] != 0)
+		{
+			graph[moveTarget] = std::move(graph[i]);
+			subsetSelections[moveTarget] = std::move(subsetSelections[i]);
+			usageCounts[moveTarget] = std::move(usageCounts[i]);
+			indexMap[i] = moveTarget;
+			++moveTarget;
+		}
+	}
+	graph.resize(moveTarget);
+	subsetSelections.resize(moveTarget);
+	usageCounts.resize(moveTarget);
+	
+	for (std::vector<std::size_t> &x : subsetSelections)
+		for (std::size_t &subset : x)
+			subset = indexMap[subset];
+	
+	endNodes_t newEndNodes;
+	for (const std::size_t &oldEndNode : endNodes)
+		newEndNodes.insert(indexMap[oldEndNode]);
+	endNodes = std::move(newEndNodes);
+}
+
+template<typename SET, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
+void SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::removeSingleUseNonFinalNodes(subsetSelections_t &subsetSelections, usageCounts_t &usageCounts) const
+{
+	for (std::size_t i = 0; i != subsetSelections.size(); ++i)
+	{
+		if (usageCounts[i] == 0)
+			continue;
+		subsetSelection_t &subsetSelection = subsetSelections[i];
+		bool changed = false;
+		for (std::size_t j = 0; j != subsetSelection.size();)
+		{
+			const std::size_t subset = subsetSelection[j];
+			if (usageCounts[subset] == 1)
+			{
+				subsetSelection.erase(std::ranges::next(subsetSelection.begin(), j));
+				subsetSelection.insert(subsetSelection.end(), subsetSelections[subset].cbegin(), subsetSelections[subset].cend());
+				usageCounts[subset] = 0;
+				subsetSelections[subset].clear();
+				changed = true;
+				continue;
+			}
+			++j;
+		}
+		if (changed && !subsetSelection.empty())
+		{
+			std::ranges::sort(subsetSelection);
+			std::size_t prev = subsetSelection.front();
+			for (auto iter = std::ranges::next(subsetSelection.cbegin()); iter != subsetSelection.cend(); ++iter)
+				if (*iter == prev)
+					--usageCounts[*iter];
+				else
+					prev = *iter;
+			const auto [eraseBegin, eraseEnd] = std::ranges::unique(subsetSelection);
+			subsetSelection.erase(eraseBegin, eraseEnd);
+		}
+	}
+}
+
+template<typename SET, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
+void SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::removeRedundantNodes(subsetSelections_t &subsetSelections, usageCounts_t &usageCounts)
 {
 	switchToParentNodesIfAllowed(subsetSelections, usageCounts);
+	removeUnusedNodes(subsetSelections, usageCounts);
 	removeSingleUseNonFinalNodes(subsetSelections, usageCounts);
+	removeUnusedNodes(subsetSelections, usageCounts);
+	assert(graph.size() == subsetSelections.size() && subsetSelections.size() == usageCounts.size());
 }
 
 template<typename SET, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
@@ -259,7 +335,7 @@ bool SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::chooseNextSubsetsForBruteFor
 }
 
 template<typename SET, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
-std::pair<typename SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::subsetSelections_t, typename SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::usageCounts_t> SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::processGraph_bruteForce(Progress &progress) const
+typename SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::subsetSelections_t SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::processGraph_bruteForce(Progress &progress)
 {
 	subsetSelections_t subsetSelectionIndexes(graph.size()), bestSubsetSelections(graph.size());
 	usageCounts_t usageCounts(graph.size()), bestUsageCounts(graph.size());
@@ -291,7 +367,7 @@ std::pair<typename SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::subsetSelectio
 	
 	removeRedundantNodes(bestSubsetSelections, bestUsageCounts);
 	
-	return {bestSubsetSelections, bestUsageCounts};
+	return bestSubsetSelections;
 }
 
 template<typename SET, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
@@ -336,7 +412,7 @@ void SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::cleanupResultOfExhaustive(su
 }
 
 template<typename SET, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
-std::pair<typename SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::subsetSelections_t, typename SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::usageCounts_t> SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::processGraph_exhaustive(Progress &progress) const
+typename SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::subsetSelections_t SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::processGraph_exhaustive(Progress &progress)
 {
 	auto progressStep = progress.makeCountingStepHelper(std::pow(Progress::completion_t(2), graph.size() - endNodes.size()));
 	
@@ -376,11 +452,11 @@ std::pair<typename SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::subsetSelectio
 	cleanupResultOfExhaustive(bestSubsetSelections, bestUsageCounts);
 	removeRedundantNodes(bestSubsetSelections, bestUsageCounts);
 	
-	return {bestSubsetSelections, bestUsageCounts};
+	return bestSubsetSelections;
 }
 
 template<typename SET, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
-std::pair<typename SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::subsetSelections_t, typename SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::usageCounts_t> SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::processGraph_cursory(Progress &progress) const
+typename SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::subsetSelections_t SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::processGraph_cursory(Progress &progress)
 {
 	progress.substep(0.0);
 	
@@ -419,11 +495,11 @@ std::pair<typename SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::subsetSelectio
 	}
 	removeRedundantNodes(subsetSelections, usageCounts);
 	
-	return {subsetSelections, usageCounts};
+	return subsetSelections;
 }
 
 template<typename SET, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
-std::pair<typename SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::subsetSelections_t, typename SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::usageCounts_t> SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::processGraph_greedy(Progress &progress)
+typename SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::subsetSelections_t SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::processGraph_greedy(Progress &progress)
 {
 	progress.substep(0.0);
 	
@@ -431,14 +507,11 @@ std::pair<typename SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::subsetSelectio
 	for (std::size_t i = 0; i != graph.size(); ++i)
 		subsetSelections[i] = graph[i].second;
 	
-	usageCounts_t usageCounts(graph.size(), SIZE_MAX);
-	
-	assert(subsetSelections.size() == usageCounts.size());
-	return {subsetSelections, usageCounts};
+	return subsetSelections;
 }
 
 template<typename SET, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
-std::pair<typename SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::subsetSelections_t, typename SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::usageCounts_t> SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::processGraph(Progress &progress)
+typename SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::subsetSelections_t SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::processGraph(Progress &progress)
 {
 	switch (options::optimizationHeuristics.getValue())
 	{
@@ -453,53 +526,14 @@ std::pair<typename SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::subsetSelectio
 	}
 	
 	// unreachable
-	return {{}, {}};
+	return {};
 }
 
 template<typename SET, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
 typename SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::subsetSelections_t SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::findBestSubsets(const sets_t &oldSets, Progress &progress)
 {
 	makeGraph(oldSets, progress);
-	auto [subsetSelections, usageCounts] = processGraph(progress);
-	removeUnusedSubsets(subsetSelections, usageCounts);
-	return subsetSelections;
-}
-
-template<typename SET, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
-void SetOptimizer<SET, VALUE_ID, FINDER_CONTAINER>::removeUnusedSubsets(subsetSelections_t &subsetSelections, usageCounts_t &usageCounts)
-{
-	std::size_t i = 0;
-	for (i = 0; i != graph.size(); ++i)
-		if (usageCounts[i] == 0)
-			break;
-	if (i == graph.size())
-		return;
-	
-	std::vector<std::size_t> indexMap(graph.size());
-	std::size_t current;
-	for (current = 0; current != i; ++current)
-		indexMap[current] = current;
-	for (++i; i != graph.size(); ++i)
-	{
-		if (usageCounts[i] != 0)
-		{
-			graph[current] = std::move(graph[i]);
-			subsetSelections[current] = std::move(subsetSelections[i]);
-			indexMap[i] = current;
-			++current;
-		}
-	}
-	graph.erase(graph.begin() + current, graph.end());
-	subsetSelections.resize(current);
-	
-	for (std::vector<std::size_t> &x : subsetSelections)
-		for (std::size_t &subset : x)
-			subset = indexMap[subset];
-	
-	endNodes_t newEndNodes;
-	for (const std::size_t &oldEndNode : endNodes)
-		newEndNodes.insert(indexMap[oldEndNode]);
-	endNodes = std::move(newEndNodes);
+	return processGraph(progress);
 }
 
 template<typename SET, typename VALUE_ID, template<typename> class FINDER_CONTAINER>

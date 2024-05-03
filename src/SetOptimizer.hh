@@ -59,26 +59,25 @@ private:
 	void makeGraph(const sets_t &oldSets, Progress &progress);
 	
 	void switchToParentNodesIfAllowed(subsetSelections_t &subsetSelections, usageCounts_t &usageCounts) const;
+	void removeUnusedNodes(subsetSelections_t &subsetSelections, usageCounts_t &usageCounts);
 	void removeSingleUseNonFinalNodes(subsetSelections_t &subsetSelections, usageCounts_t &usageCounts) const;
-	void removeRedundantNodes(subsetSelections_t &subsetSelections, usageCounts_t &usageCounts) const;
+	void removeRedundantNodes(subsetSelections_t &subsetSelections, usageCounts_t &usageCounts);
 	
 	static std::pair<Progress::completion_t, Progress::completion_t> estimateBruteForceCompletion(const subsetSelection_t &subsetSelection, const possibleSubsets_t &possibleSubsets);
 	Progress::completion_t estimateBruteForceCompletion(const subsetSelections_t &subsetSelections, const usageCounts_t &usageCounts) const;
 	bool chooseNextSubsetsForBruteForce(subsetSelections_t &subsetSelections, usageCounts_t &usageCounts) const;
-	std::pair<subsetSelections_t, usageCounts_t> processGraph_bruteForce(Progress &progress) const;
+	subsetSelections_t processGraph_bruteForce(Progress &progress);
 	
 	bool chooseNextSubsetsForExhaustive(usageCounts_t &usageCounts) const;
 	void cleanupResultOfExhaustive(subsetSelections_t &subsetSelections, usageCounts_t &usageCounts) const;
-	std::pair<subsetSelections_t, usageCounts_t> processGraph_exhaustive(Progress &progress) const;
+	subsetSelections_t processGraph_exhaustive(Progress &progress);
 	
-	std::pair<subsetSelections_t, usageCounts_t> processGraph_cursory(Progress &progress) const;
+	subsetSelections_t processGraph_cursory(Progress &progress);
 	
-	std::pair<subsetSelections_t, usageCounts_t> processGraph_greedy(Progress &progress);
+	subsetSelections_t processGraph_greedy(Progress &progress);
 	
-	std::pair<subsetSelections_t, usageCounts_t> processGraph(Progress &progress);
+	subsetSelections_t processGraph(Progress &progress);
 	subsetSelections_t findBestSubsets(const sets_t &oldSets, Progress &progress);
-	
-	void removeUnusedSubsets(subsetSelections_t &subsetSelections, usageCounts_t &usageCounts);
 	
 	sets_t makeSets() const;
 	

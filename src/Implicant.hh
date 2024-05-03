@@ -45,6 +45,7 @@ public:
 		const_iterator& operator++() { unmaskedPart = (unmaskedPart - inversedMask) & inversedMask; if (unmaskedPart == 0) [[unlikely]] end = true; return *this; }
 	};
 	
+	constexpr Implicant() : bits(0), mask(0) {}
 	constexpr Implicant(const mask_t bits, const mask_t mask) : bits(bits), mask(mask) {}
 	explicit Implicant(const Minterm minterm) : bits(minterm), mask(maxMinterm) {}
 	constexpr Implicant(const Implicant &) = default;
