@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <functional>
 #include <optional>
 #include <regex>
@@ -109,8 +110,12 @@ namespace options
 		[[nodiscard]] bool needsArgument() const final { return true; }
 		[[nodiscard]] bool parse(std::string_view argument) final;
 		
+		void resetValue() { value = SIZE_MAX; }
 		void setValue(const std::size_t newValue) { this->value = newValue; }
 		[[nodiscard]] std::size_t getValue() const { return value; }
+		[[nodiscard]] std::string_view getChoiceName(const std::size_t i) const { return variants[i].officialName; }
+		[[nodiscard]] std::string_view getChoiceName() const { return isSet() ? getChoiceName(value) : "<default>"; }
+		[[nodiscard]] bool isSet() const { return value != SIZE_MAX; }
 	};
 	
 	template<typename T>
@@ -139,8 +144,11 @@ namespace options
 		[[nodiscard]] bool needsArgument() const final { return choice.needsArgument(); }
 		[[nodiscard]] bool parse(std::string_view argument) final { return choice.parse(argument); }
 		
-		void resetValue() { choice.setValue(SIZE_MAX); }
-		[[nodiscard]] T getValue() const { const std::size_t i = choice.getValue(); return i == SIZE_MAX ? getDefault() : values[i]; }
+		void resetValue() { choice.resetValue(); }
+		[[nodiscard]] T getValue() const { return choice.isSet() ? values[choice.getValue()] : getDefault(); }
+		[[nodiscard]] std::string_view getMappedName(const T value) const { return choice.getChoiceName(std::distance(values.cbegin(), std::find(values.cbegin(), values.cend(), value))); }
+		[[nodiscard]] std::string_view getMappedName() const { return getMappedName(getValue()); }
+		[[nodiscard]] bool isSet() const { return choice.isSet(); }
 	};
 	
 	class Text : public Option

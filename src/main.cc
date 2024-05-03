@@ -146,6 +146,25 @@ int main(const int argc, const char *const *const argv)
 		return 1;
 	if (options::outputFormat.getValue() == options::OutputFormat::MATHEMATICAL)
 		options::skipOptimization.raise();
+	if (options::outputOperators.isSet())
+	{
+		switch (options::outputFormat.getValue())
+		{
+		case options::OutputFormat::HUMAN_LONG:
+		case options::OutputFormat::HUMAN:
+		case options::OutputFormat::HUMAN_SHORT:
+		case options::OutputFormat::GRAPH:
+		case options::OutputFormat::REDUCED_GRAPH:
+		case options::OutputFormat::MATHEMATICAL:
+			break;
+		case options::OutputFormat::VERILOG:
+		case options::OutputFormat::VHDL:
+		case options::OutputFormat::CPP:
+		case options::OutputFormat::GATE_COSTS:
+			std::cerr << "Style of operators cannot be specified for the output format \"" << options::outputFormat.getMappedName() << "\"!\n";
+			return 1;
+		}
+	}
 	
 	if (options::helpOptions.isRaised())  // `--help-options` is before `--help` because it should be used when both flags are present.
 	{
