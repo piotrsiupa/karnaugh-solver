@@ -132,11 +132,13 @@ namespace options
 		{
 			const int argc;
 			const char *const *const argv;
-			const optionList_t &allOptions;
+			const optionList_t allOptions;
 			freeArgs_t &freeArgs;
 			int i;
 			
-			Parser(const int argc, const char *const *const argv, const optionList_t &allOptions, freeArgs_t &freeArgs) : argc(argc), argv(argv), allOptions(allOptions), freeArgs(freeArgs) {}
+			[[nodiscard]] static optionList_t expandOptions(const optionList_t &options);
+			
+			Parser(const int argc, const char *const *const argv, const optionList_t &allOptions, freeArgs_t &freeArgs) : argc(argc), argv(argv), allOptions(expandOptions(allOptions)), freeArgs(freeArgs) {}
 			
 			[[nodiscard]] bool parseShortOption(const char *&shortName, Option &option);
 			[[nodiscard]] bool parseShortOption(const char *&shortName);
@@ -149,6 +151,20 @@ namespace options
 		public:
 			[[nodiscard]] static bool parse(const int argc, const char *const *const argv, const optionList_t &allOptions, freeArgs_t &freeArgs) { return Parser(argc, argv, allOptions, freeArgs).parse(); }
 		};
+		
+		optionList_t Parser::expandOptions(const optionList_t &options)
+		{
+			optionList_t newOptionList;
+			for (Option *option : options)
+			{
+				while (option != nullptr)
+				{
+					newOptionList.push_back(option);
+					option = option->getSubOption();
+				}
+			}
+			return newOptionList;
+		}
 		
 		bool Parser::parseShortOption(const char *&shortName, Option &option)
 		{

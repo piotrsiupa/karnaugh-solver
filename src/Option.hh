@@ -26,6 +26,8 @@ namespace options
 		[[nodiscard]] const std::vector<std::string_view>& getLongNames() const { return longNames; }
 		[[nodiscard]] char getShortName() const { return shortName; }
 		
+		[[nodiscard]] virtual Option* getSubOption() { return nullptr; }
+		
 		[[nodiscard]] virtual bool needsArgument() const = 0;
 		[[nodiscard]] virtual bool parse(std::string_view argument) = 0;
 		[[nodiscard]] virtual bool isSet() const = 0;
@@ -82,7 +84,7 @@ namespace options
 	public:
 		Trilean(std::vector<std::string_view> &&longNames, const char shortName, const getDefault_t getDefault);
 		
-		[[nodiscard]] Option& getNegatedOption() { return negated; }
+		[[nodiscard]] Negated* getSubOption() final { return &negated; }
 		
 		[[nodiscard]] bool needsArgument() const final { return false; }
 		[[nodiscard]] bool parse(std::string_view argument) final;

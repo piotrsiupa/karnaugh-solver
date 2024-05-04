@@ -54,6 +54,8 @@ namespace options
 	extern std::vector<std::string_view> freeArgs;
 	
 	
+	extern const optionList_t allOptions;
+	
 	[[nodiscard]] bool parse(const int argc, const char *const *const argv);
 	
 }
