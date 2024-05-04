@@ -42,6 +42,7 @@ namespace options
 		return false;
 	}
 	
+	Trilean outputBanner({"banner", "output-banner", "comment", "output-comment", "header", "output-header"}, 'b', [](){ return true; });
 	MappedOutputFormats outputFormat({"format", "output-format", "notation", "output-notation"}, 'f', [](){ return OutputFormat::HUMAN_LONG; }, {
 			{"human-long", "human(?:[-_]readable)?[-_](?:long|big)|(?:long|big)[-_]human(?:[-_]readable)?|h[-_]?(?:r[-_]?)?l|l[-_]?h(?:[-_]?r)?|full|default", OutputFormat::HUMAN_LONG},
 			{"human", "human(?:[-_]readable)?(?:[-_](?:medium|middle))?|(?:(?:medium|middle)[-_])?human(?:[-_]readable)?|h(?:[-_]?r)?(?:[-_]?m)?|(?:m[-_]?)?h(?:[-_]?r)?|medium|middle|shorter", OutputFormat::HUMAN},
@@ -68,7 +69,7 @@ namespace options
 	std::vector<std::string_view> freeArgs;
 	
 	
-	static const optionList_t allOptions = {&help, &helpOptions, &version, &prompt, &prompt.getNegatedOption(), &status, &status.getNegatedOption(), &outputFormat, &outputOperators, &name, &verboseGraph, &skipOptimization};
+	const optionList_t allOptions = {&help, &helpOptions, &version, &prompt, &status, &outputBanner, &outputFormat, &outputOperators, &name, &verboseGraph, &skipOptimization};
 	
 	bool parse(const int argc, const char *const *const argv)
 	{

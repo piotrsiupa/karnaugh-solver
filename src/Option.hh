@@ -26,9 +26,14 @@ namespace options
 		[[nodiscard]] const std::vector<std::string_view>& getLongNames() const { return longNames; }
 		[[nodiscard]] char getShortName() const { return shortName; }
 		
+		[[nodiscard]] virtual Option* getSubOption() { return nullptr; }
+		
 		[[nodiscard]] virtual bool needsArgument() const = 0;
 		[[nodiscard]] virtual bool parse(std::string_view argument) = 0;
+		[[nodiscard]] virtual bool isSet() const = 0;
+		[[nodiscard]] virtual std::string compose() const = 0;  // It isn't guaranteed to work if `isSet()` is `false`.
 	};
+	inline std::string Option::compose() const { return "--" + std::string(getLongNames().front()); }
 	
 	class NoArgOption : public Option
 	{
@@ -38,6 +43,7 @@ namespace options
 		[[nodiscard]] bool needsArgument() const final { return false; }
 		[[nodiscard]] bool parse(std::string_view argument) final;
 		[[nodiscard]] virtual bool parse() = 0;
+		[[nodiscard]] std::string compose() const final { return Option::compose(); }
 	};
 	
 	class Flag : public NoArgOption
@@ -48,6 +54,7 @@ namespace options
 		using NoArgOption::NoArgOption;
 		
 		[[nodiscard]] bool parse() final { raised = true; return true; }
+		[[nodiscard]] bool isSet() const final { return raised; }
 		
 		void raise() { raised = true; }
 		[[nodiscard]] bool isRaised() const { return raised; }
@@ -71,19 +78,22 @@ namespace options
 		public:
 			Negated(std::vector<std::string_view> &&longNames, const char shortName, Trilean &trilean) : NoArgOption(std::move(longNames), shortName), trilean(trilean) {}
 			[[nodiscard]] bool parse() final { trilean.undecided = false; trilean.value = false; return true; }
+			[[nodiscard]] bool isSet() const final { return false; }
 		} negated;
 		
 	public:
 		Trilean(std::vector<std::string_view> &&longNames, const char shortName, const getDefault_t getDefault);
 		
-		[[nodiscard]] Option& getNegatedOption() { return negated; }
+		[[nodiscard]] Negated* getSubOption() final { return &negated; }
 		
 		[[nodiscard]] bool needsArgument() const final { return false; }
 		[[nodiscard]] bool parse(std::string_view argument) final;
+		[[nodiscard]] bool isSet() const final { return !undecided; }
+		[[nodiscard]] std::string compose() const final { return getValue() ? Option::compose() : negated.compose(); }
 		
 		void setValue(const bool newValue) { undecided = false; value = newValue; }
 		void resetValue() { undecided = true; }
-		[[nodiscard]] bool getValue() { if (undecided) { value = getDefault(); undecided = false; } return value; }
+		[[nodiscard]] bool getValue() const { return undecided ? getDefault() : value; }
 	};
 	
 	class Choice : public Option
@@ -109,13 +119,14 @@ namespace options
 		
 		[[nodiscard]] bool needsArgument() const final { return true; }
 		[[nodiscard]] bool parse(std::string_view argument) final;
+		[[nodiscard]] bool isSet() const final { return value != SIZE_MAX; }
+		[[nodiscard]] std::string compose() const final { return Option::compose() + '=' + std::string(getChoiceName()); }
 		
 		void resetValue() { value = SIZE_MAX; }
 		void setValue(const std::size_t newValue) { this->value = newValue; }
 		[[nodiscard]] std::size_t getValue() const { return value; }
 		[[nodiscard]] std::string_view getChoiceName(const std::size_t i) const { return variants[i].officialName; }
 		[[nodiscard]] std::string_view getChoiceName() const { return isSet() ? getChoiceName(value) : "<default>"; }
-		[[nodiscard]] bool isSet() const { return value != SIZE_MAX; }
 	};
 	
 	template<typename T>
@@ -143,12 +154,13 @@ namespace options
 		
 		[[nodiscard]] bool needsArgument() const final { return choice.needsArgument(); }
 		[[nodiscard]] bool parse(std::string_view argument) final { return choice.parse(argument); }
+		[[nodiscard]] bool isSet() const final { return choice.isSet(); }
+		[[nodiscard]] std::string compose() const final { return choice.compose(); }
 		
 		void resetValue() { choice.resetValue(); }
 		[[nodiscard]] T getValue() const { return choice.isSet() ? values[choice.getValue()] : getDefault(); }
 		[[nodiscard]] std::string_view getMappedName(const T value) const { return choice.getChoiceName(std::distance(values.cbegin(), std::find(values.cbegin(), values.cend(), value))); }
 		[[nodiscard]] std::string_view getMappedName() const { return getMappedName(getValue()); }
-		[[nodiscard]] bool isSet() const { return choice.isSet(); }
 	};
 	
 	class Text : public Option
@@ -160,6 +172,8 @@ namespace options
 		
 		[[nodiscard]] bool needsArgument() const final { return true; }
 		[[nodiscard]] bool parse(std::string_view argument) final { value = argument; return true; }
+		[[nodiscard]] bool isSet() const final { return static_cast<bool>(value); }
+		[[nodiscard]] std::string compose() const final { return Option::compose() + '=' + *value; }
 		
 		void setValue(const std::string &newValue) { value = newValue; }
 		void setValue(std::string &&newValue) { value = std::move(newValue); }

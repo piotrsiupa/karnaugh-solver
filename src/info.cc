@@ -3,11 +3,17 @@
 #include <iostream>
 
 
+static constexpr std::string_view internalName = "karnaugh";
+std::string_view getInternalName() { return internalName; }
+
+static constexpr std::string_view fullName = "Karnaugh Map Solver";
+std::string_view getFullName() { return fullName; }
+
 static constexpr std::string_view versionNumber = "0.3.2";
-std::string_view getVersionNumber()
-{
-	return versionNumber;
-}
+std::string_view getVersionNumber() { return versionNumber; }
+
+static constexpr std::string_view author = "Piotr Siupa";
+std::string_view getAuthor() { return author; }
 
 void printShortHelp()
 {
@@ -15,7 +21,7 @@ void printShortHelp()
 			"This program performs a logic function minimization of a function described as\na list of minterms and don't-cares to a SOP form and after that it performs\na common subexpression elimination.\n"
 			"It searches for a solution that uses a minimal number of logic gates.\n"
 			"\n"
-			"Usage:\tkarnaugh [OPTIONS...] [--] [INPUT_FILE]\n"
+			"Usage:\t" << internalName << " [OPTIONS...] [--] [INPUT_FILE]\n"
 			"Options:\n"
 			" general:\n"
 			"    -h, --help\t\t- Print full help text, including lists of option\n\t\t\t  arguments and description of the input format.\n"
@@ -27,6 +33,8 @@ void printShortHelp()
 			"    -s, --status[=X]\t- Set whether things like the current operation,\n\t\t\t  progress bar, ET, ETA and so on are shown.\n\t\t\t  Valid values are \"always\", \"never\" and \"default\".\n\t\t\t  (No value means \"always\".) By default, they are shown\n\t\t\t  only when the stderr is a TTY.\n"
 			"    -S, --no-status\t- Same as `--status=never`.\n"
 			" output:\n"
+			"    -b, --banner\t- Enable printing a line with version info and a list of\n\t\t\t  options on top of the output. (Enabled default.)\n\t\t\t  (It's useful for reproducing errors.)\n"
+			"    -B, --no-banner\t- Disable the `--banner`.\n"
 			"    -f, --format=X\t- Set the output format. (See \"Output formats\".)\n\t\t\t  (Mathematical formats imply `--no-optimize`.)\n"
 			"    -o, --output-ops=X\t- Set style of operators to be used in output (if the\n\t\t\t  output format allows this). (See \"Output operators\".)\n"
 			"    -n, --name=X\t- Set module name for Verilog output or entity name for\n\t\t\t  VHDL output or class name for C++ output.\n\t\t\t  (By default, the name of the input file is used,\n\t\t\t  or \"Karnaugh\" if input is read from stdin.)\n"
@@ -91,8 +99,8 @@ void printHelp()
 void printVersion()
 {
 	std::cout <<
-			"karnaugh (Karnaugh Map Solver) version " << versionNumber << "\n"
-			"Author: Piotr Siupa\n"
+			internalName << " (" << fullName << ") version " << versionNumber << "\n"
+			"Author: " << author << "\n"
 #ifndef NDEBUG
 			"This is a development build which contains additional assertions. This may slow down the execution.\n"
 #endif

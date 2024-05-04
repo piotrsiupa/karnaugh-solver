@@ -40,7 +40,7 @@ def run_test(test_name: str, program: Path, input_file: Path, output_file: Path,
     options = output_file.name.split('_')
     if show_all:
         print(f'Running "{test_name}" ({" ".join(options)})...', end=' ', flush=True)
-    process = subprocess.Popen(['./' + str(program), '--no-status', '--name', test_name] + options + [input_file],
+    process = subprocess.Popen(['./' + str(program), '--no-status', '--no-banner', '--name', test_name] + options + [input_file],
                                stdout=subprocess.PIPE)
     elapsed_time, stdoutdata = time_process(process)
     if process.returncode != 0:

@@ -5,10 +5,25 @@
 #include <iostream>
 #include <limits>
 
+#include "info.hh"
 #include "options.hh"
 #include "Progress.hh"
 #include "utils.hh"
 
+
+void Karnaughs::printBanner()
+{
+	std::cout << "Generated with " << getFullName() << " v" << getVersionNumber() << " by " << getAuthor();
+	if (std::any_of(options::allOptions.cbegin(), options::allOptions.cend(), [](const options::Option *const option){ return option->isSet(); }))
+	{
+		std::cout << " (with options:";
+		for (const options::Option *const option : options::allOptions)
+			if (option->isSet())
+				std::cout << ' ' << option->compose();
+		std::cout << ')';
+	}
+	std::cout << "\n\n";
+}
 
 void Karnaughs::printGraphInputs() const
 {
@@ -369,6 +384,8 @@ void Karnaughs::solve()
 
 void Karnaughs::printHuman()
 {
+	if (options::outputBanner.getValue())
+		printBanner();
 	const bool bestSolutionsVisible = options::skipOptimization.isRaised() || options::outputFormat.getValue() != options::OutputFormat::HUMAN_SHORT;
 	if (bestSolutionsVisible)
 	{
@@ -398,6 +415,11 @@ void Karnaughs::printHuman()
 
 void Karnaughs::printGraph()
 {
+	if (options::outputBanner.getValue())
+	{
+		std::cout << "// ";
+		printBanner();
+	}
 	std::cout << "digraph " << getName() << '\n';
 	std::cout << "{\n";
 	if (options::outputFormat.getValue() == options::OutputFormat::GRAPH)
@@ -411,6 +433,11 @@ void Karnaughs::printGraph()
 
 void Karnaughs::printVerilog()
 {
+	if (options::outputBanner.getValue())
+	{
+		std::cout << "// ";
+		printBanner();
+	}
 	std::cout << "module " << getName() << " (\n";
 	if (!::inputNames.isEmpty())
 	{
@@ -436,6 +463,11 @@ void Karnaughs::printVerilog()
 
 void Karnaughs::printVhdl()
 {
+	if (options::outputBanner.getValue())
+	{
+		std::cout << "-- ";
+		printBanner();
+	}
 	std::cout << "library IEEE;\n"
 			"use IEEE.std_logic_1164.all;\n";
 	std::cout << '\n';
@@ -476,6 +508,11 @@ void Karnaughs::printVhdl()
 
 void Karnaughs::printCpp()
 {
+	if (options::outputBanner.getValue())
+	{
+		std::cout << "// ";
+		printBanner();
+	}
 	const Names functionNames = gatherFunctionNames();
 	if (!::inputNames.areNamesUsedInCode() || !functionNames.areNamesUsedInCode())
 		std::cout << "#include <array>\n"
@@ -550,6 +587,8 @@ void Karnaughs::printCpp()
 
 void Karnaughs::printMath()
 {
+	if (options::outputBanner.getValue())
+		printBanner();
 	const Names functionNames = gatherFunctionNames();
 	for (std::size_t i = 0; i != karnaughs.size(); ++i)
 	{
@@ -564,6 +603,8 @@ void Karnaughs::printMath()
 
 void Karnaughs::printGateCost()
 {
+	if (options::outputBanner.getValue())
+		printBanner();
 	for (const Solution &bestSolution : bestSolutions)
 		bestSolution.printGateCost(std::cout, true);
 	std::cout << "=== summary ===\n";
