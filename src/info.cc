@@ -33,6 +33,8 @@ void printShortHelp()
 			"    -s, --status[=X]\t- Set whether things like the current operation,\n\t\t\t  progress bar, ET, ETA and so on are shown.\n\t\t\t  Valid values are \"always\", \"never\" and \"default\".\n\t\t\t  (No value means \"always\".) By default, they are shown\n\t\t\t  only when the stderr is a TTY.\n"
 			"    -S, --no-status\t- Same as `--status=never`.\n"
 			" output:\n"
+			"    -b, --banner\t- Enable printing a line with version info and a list of\n\t\t\t  options on top of the output. (Enabled default.)\n\t\t\t  (It's useful for reproducing errors.)\n"
+			"    -B, --no-banner\t- Disable the `--banner`.\n"
 			"    -f, --format=X\t- Set the output format. (See \"Output formats\".)\n\t\t\t  (Mathematical formats imply `--no-optimize`.)\n"
 			"    -o, --output-ops=X\t- Set style of operators to be used in output (if the\n\t\t\t  output format allows this). (See \"Output operators\".)\n"
 			"    -n, --name=X\t- Set module name for Verilog output or entity name for\n\t\t\t  VHDL output or class name for C++ output.\n\t\t\t  (By default, the name of the input file is used,\n\t\t\t  or \"Karnaugh\" if input is read from stdin.)\n"

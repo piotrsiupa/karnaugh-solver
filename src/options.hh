@@ -38,6 +38,7 @@ namespace options
 	extern Trilean prompt;
 	extern Trilean status;
 	
+	extern Trilean outputBanner;
 	class MappedOutputFormats : public Mapped<OutputFormat>
 	{
 	public:

@@ -22,6 +22,7 @@ class Karnaughs
 	Solutions bestSolutions;
 	OptimizedSolutions optimizedSolutions;
 	
+	static void printBanner();
 	[[nodiscard]] bool shouldFunctionNamesBeUsed() const;
 	Names gatherFunctionNames() const;
 	void printGraphInputs() const;
