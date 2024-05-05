@@ -144,8 +144,6 @@ int main(const int argc, const char *const *const argv)
 	
 	if (!options::parse(argc, argv))
 		return 1;
-	if (options::outputFormat.getValue() == options::OutputFormat::MATHEMATICAL)
-		options::skipOptimization.raise();
 	if (options::outputOperators.isSet() && !options::outputFormat.supportsOperatorStyles())
 	{
 		std::cerr << "Style of operators cannot be specified for the output format \"" << options::outputFormat.getMappedName() << "\"!\n";

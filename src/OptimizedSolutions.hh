@@ -36,10 +36,12 @@ private:
 	
 	Implicant flattenProduct(const id_t productId) const;
 	std::vector<id_t> flattenSum(const id_t sumId) const;
+	std::size_t getIdUseCount(const id_t id) const { return std::accumulate(products.cbegin(), products.cend(), 0, [id](const std::size_t &acc, const product_t &product){ return acc + std::count(product.second.cbegin(), product.second.cend(), id); }) + std::accumulate(sums.cbegin(), sums.cend(), 0, [id](const std::size_t &acc, const sum_t &sum){ return acc + std::count(sum.cbegin(), sum.cend(), id); }); }
 	bool isWorthPrinting(const id_t id, const bool simpleFinalSums) const { return isProduct(id) ? isProductWorthPrinting(id) : isSumWorthPrinting(id, simpleFinalSums); }
 	bool isWorthPrintingOnGraph(const id_t id, const bool isFullGraph) const { return isProduct(id) ? isProductWorthPrintingOnGraph(id, isFullGraph) : isSumWorthPrintingOnGraph(id, isFullGraph); }
 	void generateHumanIds() const;
 	void generateGraphIds() const;
+	std::pair<std::size_t, std::size_t> generateMathIds() const;
 	void printHumanAnd(std::ostream &o) const;
 	void printHumanOr(std::ostream &o) const;
 	void printGraphNot(std::ostream &o) const;
@@ -54,6 +56,8 @@ private:
 	void printVerilogId(std::ostream &o, const id_t id) const;
 	void printVhdlId(std::ostream &o, const id_t id) const;
 	void printCppId(std::ostream &o, const id_t id) const;
+	void printMathArgs(std::ostream &o, const id_t id) const;
+	void printMathId(std::ostream &o, const id_t id) const;
 	void printHumanNegatedInputs(std::ostream &o) const;
 	void printGraphNegatedInputs(std::ostream &o) const;
 	bool isProductWorthPrinting(const id_t productId) const { const product_t &product = getProduct(productId); return product.first.getBitCount() >= 2 || !product.second.empty(); }
@@ -75,6 +79,10 @@ private:
 	void printCppProductBody(std::ostream &o, const id_t productId) const;
 	void printCppProduct(std::ostream &o, const id_t productId) const;
 	void printCppProducts(std::ostream &o) const;
+	bool isProductWorthPrintingForMath(const id_t productId) const { return isProductWorthPrinting(productId) && getIdUseCount(productId) >= 2; }
+	void printMathProductBody(std::ostream &o, const id_t productId, const bool parentheses) const;
+	void printMathProduct(std::ostream &o, const id_t productId) const;
+	void printMathProducts(std::ostream &o) const;
 	bool isSumWorthPrinting(const id_t sumId, const bool simpleFinalSums) const;
 	void printHumanSumBody(std::ostream &o, const id_t sumId) const;
 	void printHumanSum(std::ostream &o, const id_t sumId) const;
@@ -94,12 +102,17 @@ private:
 	void printCppSumBody(std::ostream &o, const id_t sumId) const;
 	void printCppSum(std::ostream &o, const id_t sumId) const;
 	void printCppSums(std::ostream &o) const;
+	bool isSumWorthPrintingForMath(const id_t sumId) const { return isSumWorthPrinting(sumId, false) && (getIdUseCount(sumId) + std::count(finalSums.cbegin(), finalSums.cend(), sumId) >= 2); }
+	void printMathSumBody(std::ostream &o, const id_t sumId) const;
+	void printMathSum(std::ostream &o, const id_t sumId) const;
+	void printMathSums(std::ostream &o) const;
 	void printHumanFinalSums(std::ostream &o, const Names &functionNames) const;
 	void printGraphFinalSum(std::ostream &o, const Names &functionNames, const std::size_t i) const;
 	void printGraphFinalSums(std::ostream &o, const Names &functionNames) const;
 	void printVerilogFinalSums(std::ostream &o, const Names &functionNames) const;
 	void printVhdlFinalSums(std::ostream &o, const Names &functionNames) const;
 	void printCppFinalSums(std::ostream &o, const Names &functionNames) const;
+	void printMathFinalSums(std::ostream &o, const Names &functionNames) const;
 	
 	void createNegatedInputs(const solutions_t &solutions);
 	finalPrimeImplicants_t extractCommonProductParts(const solutions_t &solutions, Progress &progress);
@@ -133,4 +146,5 @@ public:
 	void printVerilog(std::ostream &o, const Names &functionNames) const;
 	void printVhdl(std::ostream &o, const Names &functionNames) const;
 	void printCpp(std::ostream &o, const Names &functionNames) const;
+	void printMath(std::ostream &o, const Names &functionNames) const;
 };

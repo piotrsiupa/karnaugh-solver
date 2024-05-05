@@ -309,12 +309,15 @@ The notation is more complicated and it would be harder to read if the reduction
 
 This is a minimalistic output format that just prints the functions using the formal mathematical notation.
 
-This format cannot be used with common subexpression elimination. (It implies `--no-optimize`.)
-
 ([file](tests/tricky_one/--format=mathematical))
 ```
-tricky_0(a, b, c, d) = (¬a ∧ ¬c) ∨ (a ∧ b ∧ d)
-tricky_1(a, b, c, d) = (a ∧ b) ∨ (b ∧ d)
+Let:
+p1(a, b) = a ∧ b
+p2(a, c) = ¬a ∧ ¬c
+
+Then:
+tricky_0(a, b, c, d) = (d ∧ p1(a, b)) ∨ p2(a, c)
+tricky_1(a, b, c, d) = p1(a, b) ∨ p2(a, c)
 ```
 
 ### Verilog

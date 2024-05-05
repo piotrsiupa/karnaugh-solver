@@ -39,6 +39,8 @@ class Karnaughs
 	void printVhdlOptimizedSolution(const Names &functionNames) const;
 	void printCppBestSolutions(const Names &functionNames) const;
 	void printCppOptimizedSolution(const Names &functionNames) const;
+	void printMathBestSolutions(const Names &functionNames) const;
+	void printMathOptimizedSolution(const Names &functionNames) const;
 	[[nodiscard]] static std::string getName();
 	[[nodiscard]] bool areInputsUsed() const;
 	

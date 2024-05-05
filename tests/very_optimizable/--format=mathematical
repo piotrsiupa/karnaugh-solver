@@ -1,4 +1,13 @@
-first(a, b, c, d) = (a ∧ ¬b ∧ c ∧ ¬d) ∨ (a ∧ ¬b ∧ ¬c ∧ d) ∨ (¬a ∧ b ∧ c ∧ ¬d) ∨ (¬a ∧ b ∧ ¬c ∧ d)
-second(a, b, c, d) = (a ∧ b ∧ c ∧ d) ∨ (a ∧ ¬b ∧ ¬c ∧ d) ∨ (¬a ∧ b ∧ c ∧ ¬d) ∨ (¬a ∧ b ∧ ¬c ∧ d)
-third(a, b, c, d) = (a ∧ ¬b ∧ ¬c ∧ d) ∨ (¬a ∧ b ∧ c ∧ ¬d) ∨ (¬a ∧ b ∧ ¬c ∧ d)
-fourth(a, b, c, d) = (a ∧ ¬b ∧ ¬c ∧ d) ∨ (¬a ∧ b ∧ c ∧ ¬d) ∨ (¬a ∧ ¬b ∧ ¬c ∧ ¬d)
+Let:
+p1(c, d) = ¬c ∧ d
+p2(a, b) = ¬a ∧ b
+p3(c, d) = c ∧ ¬d
+p4(a, b) = a ∧ ¬b
+s1(a, b, c, d) = (p2(a, b) ∧ p3(c, d)) ∨ (p1(c, d) ∧ p4(a, b))
+s2(a, b, c, d) = (p2(a, b) ∧ p1(c, d)) ∨ s1(a, b, c, d)
+
+Then:
+first(a, b, c, d) = (p3(c, d) ∧ p4(a, b)) ∨ s2(a, b, c, d)
+second(a, b, c, d) = (a ∧ b ∧ c ∧ d) ∨ s2(a, b, c, d)
+third(a, b, c, d) = s2(a, b, c, d)
+fourth(a, b, c, d) = (¬a ∧ ¬b ∧ ¬c ∧ ¬d) ∨ s1(a, b, c, d)

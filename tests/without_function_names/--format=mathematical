@@ -1,2 +1,6 @@
-f0(a, b, c, d) = ¬a ∧ d
-f1(a, b, c, d) = ¬a ∧ ¬b ∧ c
+Let:
+p1(a, b) = ¬a ∧ ¬b
+
+Then:
+f0(a, b, c, d) = p1(a, b)
+f1(a, b, c, d) = c ∧ p1(a, b)

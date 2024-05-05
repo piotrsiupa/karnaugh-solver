@@ -242,6 +242,24 @@ void Karnaughs::printCppOptimizedSolution(const Names &functionNames) const
 	optimizedSolutions.printCpp(std::cout, functionNames);
 }
 
+void Karnaughs::printMathBestSolutions(const Names &functionNames) const
+{
+	for (std::size_t i = 0; i != karnaughs.size(); ++i)
+	{
+		functionNames.printMathName(std::cout, i);
+		std::cout << '(';
+		::inputNames.printMathNames(std::cout);
+		std::cout << ") = ";
+		karnaughs[i].printMathSolution(bestSolutions[i]);
+		std::cout << "\n";
+	}
+}
+
+void Karnaughs::printMathOptimizedSolution(const Names &functionNames) const
+{
+	optimizedSolutions.printMath(std::cout, functionNames);
+}
+
 std::string Karnaughs::getName()
 {
 	if (options::name.getValue())
@@ -590,15 +608,10 @@ void Karnaughs::printMath()
 	if (options::outputBanner.getValue())
 		printBanner();
 	const Names functionNames = gatherFunctionNames();
-	for (std::size_t i = 0; i != karnaughs.size(); ++i)
-	{
-		functionNames.printMathName(std::cout, i);
-		std::cout << '(';
-		::inputNames.printMathNames(std::cout);
-		std::cout << ") = ";
-		karnaughs[i].printMathSolution(bestSolutions[i]);
-		std::cout << "\n";
-	}
+	if (options::skipOptimization.isRaised())
+		printMathBestSolutions(functionNames);
+	else
+		printMathOptimizedSolution(functionNames);
 }
 
 void Karnaughs::printGateCost()
