@@ -45,11 +45,11 @@ SetOptimizerForSums::gateCount_t SetOptimizerForSums::countGates(const subsetSel
 		if (usageCounts[i] == 0)
 			continue;
 		gates += subsetSelections[i].size();
-		std::set<std::size_t> reducedSet = graph[i].first;
+		std::set<std::size_t> reducedSet = graph[i].set;
 		for (const std::size_t &subset : subsetSelections[i])
 		{
 			std::set<std::size_t> setDifference;
-			std::ranges::set_difference(reducedSet, graph[subset].first, std::inserter(setDifference, setDifference.end()));
+			std::ranges::set_difference(reducedSet, graph[subset].set, std::inserter(setDifference, setDifference.end()));
 			reducedSet = std::move(setDifference);
 		}
 		gates += reducedSet.size();

@@ -80,9 +80,9 @@ SetOptimizerForProducts::gateCount_t SetOptimizerForProducts::countGates(const s
 		if (usageCounts[i] == 0)
 			continue;
 		gates += subsetSelections[i].size();
-		Implicant reducedProduct = graph[i].first;
+		Implicant reducedProduct = graph[i].set;
 		for (const std::size_t &subset : subsetSelections[i])
-			reducedProduct.substract(graph[subset].first);
+			reducedProduct.substract(graph[subset].set);
 		gates += reducedProduct.size();
 		if (subsetSelections[i].size() != 0 || !reducedProduct.empty())
 			--gates;

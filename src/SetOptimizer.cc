@@ -37,8 +37,8 @@ void SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::makeGreedyGraph
 	graph.reserve(oldSets.size());
 	for (const set_t &oldSet : oldSets)
 		graph.emplace_back(oldSet, possibleSubsets_t{});
-	std::ranges::sort(graph, [](const graphNode_t &x, const graphNode_t &y){ return lessForSorting(x.first, y.first); });
-	const auto [first, last] = std::ranges::unique(graph, {}, [](const graphNode_t &graphNode){ return graphNode.first; });
+	std::ranges::sort(graph, [](const graphNode_t &x, const graphNode_t &y){ return lessForSorting(x.set, y.set); });
+	const auto [first, last] = std::ranges::unique(graph, {}, [](const graphNode_t &graphNode){ return graphNode.set; });
 	graph.erase(first, last);
 	for (std::size_t i = 0; i != graph.size(); ++i)
 		endNodes.insert(endNodes.end(), i);
@@ -49,26 +49,26 @@ void SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::makeGreedyGraph
 	{
 		progress.substep(estimateCompletion);
 		
-		set_t remainingElements = graph[i].first;
-		for (std::size_t j : graph[i].second)
-			substractSet(remainingElements, graph[j].first);
+		set_t remainingElements = graph[i].set;
+		for (std::size_t j : graph[i].possibleSubsets)
+			substractSet(remainingElements, graph[j].set);
 		for (std::size_t j = i + 1; j != graph.size(); ++j)
 		{
-			const set_t otherSet = graph[j].first;
+			const set_t otherSet = graph[j].set;
 			set_t commonElements = getSetIntersection(remainingElements, otherSet);
 			if (isSubsetWorthy(commonElements))
 			{
 				substractSet(remainingElements, commonElements);
 				if (commonElements == otherSet)  // The other set doesn't need to be checked because they are unique and sorted by size.
 				{
-					graph[i].second.push_back(j);
+					graph[i].possibleSubsets.push_back(j);
 					continue;
 				}
-				const typename graph_t::const_iterator insertionPoint = std::lower_bound(graph.cbegin(), graph.cend(), commonElements, [](const graphNode_t &node, const set_t &newSet){ return lessForSorting(node.first, newSet); });
+				const typename graph_t::const_iterator insertionPoint = std::lower_bound(graph.cbegin(), graph.cend(), commonElements, [](const graphNode_t &node, const set_t &newSet){ return lessForSorting(node.set, newSet); });
 				const std::size_t newElemIndex = std::ranges::distance(graph.cbegin(), insertionPoint);
-				if (insertionPoint != graph.cend() && insertionPoint->first == commonElements)
+				if (insertionPoint != graph.cend() && insertionPoint->set == commonElements)
 				{
-					graph[i].second.push_back(newElemIndex);
+					graph[i].possibleSubsets.push_back(newElemIndex);
 					continue;
 				}
 				graph.emplace(insertionPoint, std::move(commonElements), possibleSubsets_t{});
@@ -81,16 +81,16 @@ void SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::makeGreedyGraph
 					endNodes.erase(endNode);
 				}
 				for (auto &graphElement : graph)
-					std::ranges::for_each(graphElement.second, [newElemIndex](std::size_t &x){ if (x >= newElemIndex) ++x; });
-				graph[i].second.push_back(newElemIndex);
-				graph[j].second.push_back(newElemIndex);
+					std::ranges::for_each(graphElement.possibleSubsets, [newElemIndex](std::size_t &x){ if (x >= newElemIndex) ++x; });
+				graph[i].possibleSubsets.push_back(newElemIndex);
+				graph[j].possibleSubsets.push_back(newElemIndex);
 			}
 		}
 	}
 	
 	std::ranges::reverse(graph);
 	for (auto &graphElement : graph)
-		std::ranges::for_each(graphElement.second, [difference = graph.size() - 1](std::size_t &x){ x = difference - x; });
+		std::ranges::for_each(graphElement.possibleSubsets, [difference = graph.size() - 1](std::size_t &x){ x = difference - x; });
 	std::set<std::size_t> newEndNodes;
 	std::ranges::transform(endNodes, std::inserter(newEndNodes, newEndNodes.end()), [difference = graph.size() - 1](const std::size_t endNode){ return difference - endNode; });
 	endNodes = std::move(newEndNodes);
@@ -109,7 +109,7 @@ void SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::makeRoughGraph(
 	
 	const std::size_t maxSetSize = std::ranges::max(oldSets, std::ranges::less(), [](const set_t &set)->std::size_t{ return set.size(); }).size();
 	const Progress::calcStepCompletion_t calcStepCompletion = [maxSetSize, graph = std::as_const(graph)](){
-		return static_cast<Progress::completion_t>(graph.back().first.size()) / static_cast<Progress::completion_t>(maxSetSize);
+		return static_cast<Progress::completion_t>(graph.back().set.size()) / static_cast<Progress::completion_t>(maxSetSize);
 	};
 	
 	while (startIndex != endIndex)
@@ -119,17 +119,17 @@ void SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::makeRoughGraph(
 			for (setElement = nextElements[i]; setElement != allSetElements.cend(); ++setElement)
 			{
 				progress.substep(calcStepCompletion);
-				set_t newSet = addSetElement(graph[i].first, *setElement);
+				set_t newSet = addSetElement(graph[i].set, *setElement);
 				if (newSet.empty())
 					continue;
 				graphNode_t &graphNode = graph.emplace_back(std::move(newSet), possibleSubsets_t{});
 				bool isUsed = false, isEndNode = false;
 				for (std::size_t i = 0; i != oldSets.size(); ++i)
 				{
-					if (setContainsSet(oldSets[i], graphNode.first))
+					if (setContainsSet(oldSets[i], graphNode.set))
 					{
 						isUsed = true;
-						if (oldSets[i].size() == graphNode.first.size())
+						if (oldSets[i].size() == graphNode.set.size())
 							isEndNode = true;
 					}
 				}
@@ -144,13 +144,13 @@ void SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::makeRoughGraph(
 				for (auto subsetElement = allSetElements.cbegin(); subsetElement != nextElement; ++subsetElement)
 				{
 					const set_t parentDiff = addSetElement(set_t(), *subsetElement);
-					if (!setContainsSet(graphNode.first, parentDiff))
+					if (!setContainsSet(graphNode.set, parentDiff))
 						continue;
-					set_t subsetParent = graphNode.first;
+					set_t subsetParent = graphNode.set;
 					substractSet(subsetParent, parentDiff);
-					const auto foundParent = std::ranges::find(std::ranges::next(graph.cbegin(), startIndex), std::ranges::next(graph.cbegin(), endIndex), subsetParent, [](const graphNode_t &graphNode){ return graphNode.first; });
+					const auto foundParent = std::ranges::find(std::ranges::next(graph.cbegin(), startIndex), std::ranges::next(graph.cbegin(), endIndex), subsetParent, [](const graphNode_t &graphNode){ return graphNode.set; });
 					assert(foundParent != std::ranges::next(graph.begin(), endIndex));
-					graphNode.second.push_back(std::ranges::distance(graph.cbegin(), foundParent));
+					graphNode.possibleSubsets.push_back(std::ranges::distance(graph.cbegin(), foundParent));
 				}
 			}
 		}
@@ -165,17 +165,17 @@ void SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::makeRoughGraph(
 	indexShifts[0] = 1;
 	for (std::size_t i = 1; i != graph.size(); ++i)
 	{
-		nodesToRemove[i] = !isSubsetWorthy(graph[i].first) && !endNodes.contains(i);
+		nodesToRemove[i] = !isSubsetWorthy(graph[i].set) && !endNodes.contains(i);
 		indexShifts[i] = nodesToRemove[i] ? indexShifts[i - 1] + 1 : indexShifts[i - 1];
 	}
 	graph.erase(removeIfIndex(graph, [&nodesToRemove = std::as_const(nodesToRemove)](const std::size_t i){ return nodesToRemove[i]; }), graph.cend());
 	for (graphNode_t &graphNode : graph)
 	{
-		for (auto iter = graphNode.second.begin(); iter != graphNode.second.end();)
+		for (auto iter = graphNode.possibleSubsets.begin(); iter != graphNode.possibleSubsets.end();)
 		{
 			if (nodesToRemove[*iter])
 			{
-				iter = graphNode.second.erase(iter);
+				iter = graphNode.possibleSubsets.erase(iter);
 			}
 			else
 			{
@@ -224,17 +224,17 @@ void SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::switchToParentN
 		{
 			if (subsetSelections[subsetSelection[targetSubsetIndex]].empty())  // There is no parents to switch to.
 				continue;
-			set_t missingElementsWithoutTarget = graph[nodeIndex].first;
+			set_t missingElementsWithoutTarget = graph[nodeIndex].set;
 			for (std::size_t i = 0; i != subsetSelection.size(); ++i)
 				if (i != targetSubsetIndex)
-					substractSet(missingElementsWithoutTarget, graph[subsetSelection[i]].first);
+					substractSet(missingElementsWithoutTarget, graph[subsetSelection[i]].set);
 			set_t correctMissingElements = missingElementsWithoutTarget;
-			substractSet(correctMissingElements, graph[subsetSelection[targetSubsetIndex]].first);
+			substractSet(correctMissingElements, graph[subsetSelection[targetSubsetIndex]].set);
 			repeat_subnode_index:
 			for (std::size_t subSubNode : subsetSelections[subsetSelection[targetSubsetIndex]])
 			{
 				set_t missingElementsWithParentInstead = missingElementsWithoutTarget;
-				substractSet(missingElementsWithParentInstead, graph[subSubNode].first);
+				substractSet(missingElementsWithParentInstead, graph[subSubNode].set);
 				if (missingElementsWithParentInstead == correctMissingElements)
 				{
 					assert(usageCounts[subsetSelection[targetSubsetIndex]] != 0);
@@ -386,7 +386,7 @@ Progress::completion_t SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER
 	{
 		if (usageCounts[i] == 0)
 			continue;
-		const auto [partialStepCompletion, partialCompletion] = estimateBruteForceCompletion(subsetSelections[i], graph[i].second);
+		const auto [partialStepCompletion, partialCompletion] = estimateBruteForceCompletion(subsetSelections[i], graph[i].possibleSubsets);
 		completion *= partialStepCompletion;
 		completion += partialCompletion;
 	}
@@ -402,7 +402,7 @@ bool SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::chooseNextSubse
 	{
 		if (usageCounts[i] == 0)
 			continue;
-		const possibleSubsets_t &possibleSubsets = graph[i].second;
+		const possibleSubsets_t &possibleSubsets = graph[i].possibleSubsets;
 		if (possibleSubsets.empty())
 			continue;
 		subsetSelection_t &subsetSelectionIndex = subsetSelectionsIndexes[i];
@@ -456,7 +456,7 @@ typename SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::subsetSelec
 		{
 			subsetSelections[i].reserve(subsetSelectionIndexes[i].size());
 			for (const std::size_t &subsetIndex : subsetSelectionIndexes[i])
-				subsetSelections[i].push_back(graph[i].second[subsetIndex]);
+				subsetSelections[i].push_back(graph[i].possibleSubsets[subsetIndex]);
 		}
 		
 		const gateCount_t gates = countGates(subsetSelections, usageCounts);
@@ -537,7 +537,7 @@ typename SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::subsetSelec
 		{
 			subsetSelection_t &subsetSelection = subsetSelections[i];
 			subsetSelection.clear();
-			for (const std::size_t &possibleSubset : graph[i].second)
+			for (const std::size_t &possibleSubset : graph[i].possibleSubsets)
 				if (usageCounts[possibleSubset] != 0)
 					subsetSelection.push_back(possibleSubset);
 		}
@@ -569,7 +569,7 @@ typename SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::subsetSelec
 	usageCounts_t usageCounts(graph.size());
 	for (std::size_t i = 0; i != subsetSelections.size(); ++i)
 	{
-		subsetSelections[i] = graph[i].second;
+		subsetSelections[i] = graph[i].possibleSubsets;
 		for (std::size_t subset : subsetSelections[i])
 			++usageCounts[subset];
 	}
@@ -579,16 +579,16 @@ typename SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::subsetSelec
 	for (std::size_t i = 0; i != subsetSelections.size(); ++i)
 	{
 		subsetSelection_t &subsetSelection = subsetSelections[i];
-		set_t correctMissingElements = graph[i].first;
+		set_t correctMissingElements = graph[i].set;
 		for (const std::size_t subset : subsetSelection)
-			substractSet(correctMissingElements, graph[subset].first);
+			substractSet(correctMissingElements, graph[subset].set);
 		std::fill(subsetsToRemove.begin(), subsetsToRemove.end(), false);
 		for (const std::size_t j : makeSortingPermutation(subsetSelection, std::ranges::less{}, [&subsetSelections](const std::size_t subset){ return subsetSelections[subset].size(); }))
 		{
-			set_t missingElementsWithoutSubset = graph[i].first;
+			set_t missingElementsWithoutSubset = graph[i].set;
 			for (std::size_t k = 0; k != subsetSelection.size(); ++k)
 				if (k != j && !subsetsToRemove[subsetSelection[k]])
-					substractSet(missingElementsWithoutSubset, graph[subsetSelection[k]].first);
+					substractSet(missingElementsWithoutSubset, graph[subsetSelection[k]].set);
 			if (missingElementsWithoutSubset == correctMissingElements)
 			{
 				--usageCounts[subsetSelection[j]];
@@ -610,7 +610,7 @@ typename SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::subsetSelec
 	
 	subsetSelections_t subsetSelections(graph.size());
 	for (std::size_t i = 0; i != graph.size(); ++i)
-		subsetSelections[i] = graph[i].second;
+		subsetSelections[i] = graph[i].possibleSubsets;
 	
 	return subsetSelections;
 }
@@ -624,8 +624,8 @@ typename SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::subsetSelec
 	subsetSelections_t subsetSelections(graph.size());
 	for (std::size_t i = 0; i != graph.size(); ++i)
 	{
-		subsetSelections[i] = graph[i].second;
-		for (const std::size_t &subset : graph[i].second)
+		subsetSelections[i] = graph[i].possibleSubsets;
+		for (const std::size_t &subset : graph[i].possibleSubsets)
 			++usageCounts[subset];
 	}
 	for (const std::size_t &endNode : endNodes)
@@ -670,7 +670,7 @@ typename SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::sets_t SetO
 	sets_t sets;
 	sets.reserve(graph.size());
 	for (const auto &graphNode : graph)
-		sets.push_back(graphNode.first);
+		sets.push_back(graphNode.set);
 	return sets;
 }
 

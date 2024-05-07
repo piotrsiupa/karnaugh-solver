@@ -20,7 +20,7 @@ protected:
 	using setElement_t = SET_ELEMENT;
 	using SubsetFinder = SubsetGraph<valueId_t, FINDER_CONTAINER>;
 	using possibleSubsets_t = std::vector<std::size_t>;
-	using graphNode_t = std::pair<set_t, possibleSubsets_t>;
+	using graphNode_t = struct { set_t set; possibleSubsets_t possibleSubsets; };
 	using graph_t = std::vector<graphNode_t>;
 	using endNodes_t = std::set<std::size_t>;
 	using gateCount_t = std::size_t;
