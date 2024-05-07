@@ -60,6 +60,18 @@ void SetOptimizerForProducts::makeGraph(const SubsetFinder::setHierarchy_t &setH
 	}
 }
 
+std::vector<SetOptimizerForProducts::setElement_t> SetOptimizerForProducts::getAllSetElements(const sets_t &) const
+{
+	std::vector<setElement_t> allSetElements;
+	allSetElements.reserve(::bits * 2);
+	for (bits_t bit = 0; bit != ::bits; ++bit)
+	{
+		allSetElements.emplace_back(bit, false);
+		allSetElements.emplace_back(bit, true);
+	}
+	return allSetElements;
+}
+
 SetOptimizerForProducts::gateCount_t SetOptimizerForProducts::countGates(const subsetSelections_t &subsetSelections, const usageCounts_t &usageCounts) const
 {
 	gateCount_t gates = 0;

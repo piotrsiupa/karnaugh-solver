@@ -26,6 +26,17 @@ void SetOptimizerForSums::makeGraph(const SubsetFinder::setHierarchy_t &setHiera
 	}
 }
 
+std::vector<SetOptimizerForSums::setElement_t> SetOptimizerForSums::getAllSetElements(const sets_t &oldSets) const
+{
+	set_t allSetElementsSet;
+	for (const set_t &set : oldSets)
+		allSetElementsSet.insert(set.cbegin(), set.cend());
+	std::vector<SetOptimizerForSums::setElement_t> allSetElements;
+	allSetElements.reserve(allSetElementsSet.size());
+	std::ranges::copy(allSetElementsSet, std::back_inserter(allSetElements));
+	return allSetElements;
+}
+
 SetOptimizerForSums::gateCount_t SetOptimizerForSums::countGates(const subsetSelections_t &subsetSelections, const usageCounts_t &usageCounts) const
 {
 	gateCount_t gates = 0;

@@ -17,7 +17,8 @@ class Implicant
 public:
 	using mask_t = std::uint32_t;
 	static_assert(sizeof(mask_t) * CHAR_BIT >= ::maxBits);
-	using splitBits_t = std::vector<std::pair<bits_t, bool>>;
+	using splitBit_t = std::pair<bits_t, bool>;
+	using splitBits_t = std::vector<splitBit_t>;
 	
 	static constexpr Implicant all() { return {0, 0}; }
 	static constexpr Implicant none() { return {~mask_t(0), 0}; }
@@ -68,7 +69,13 @@ public:
 	void substract(const Implicant &other) { this->bits &= ~other.bits; this->mask &= ~other.mask; }
 	void intersect(const Implicant &other) { const Minterm intersection = other.mask & ~(this->bits ^ other.bits); this->bits &= intersection; this->mask &= intersection; }
 	void setBit(const bits_t bit, const bool value) { const mask_t bitMask = 1 << (::bits - bit - 1); if (value) bits |= bitMask; mask |= bitMask; }
+	void setBit(const splitBit_t &splitBit) { return setBit(splitBit.first, splitBit.second); }
 	void unsetBit(const bits_t bit) { const mask_t bitMask = ~(1 << (::bits - bit - 1)); bits &= bitMask; mask &= bitMask; }
+	[[nodiscard]] bool hasBit(const bits_t bit) const { return (this->mask & (1 << (::bits - bit - 1))) != 0; }
+	[[nodiscard]] bool hasBit(const bits_t bit, const bool value) const { return hasBit(bit) && ((this->bits & (1 << (::bits - bit - 1))) != 0) == value; }
+	[[nodiscard]] bool hasBit(const splitBit_t &splitBit) const { return hasBit(splitBit.first, splitBit.second); }
+	[[nodiscard]] bool hasOppositeBit(const bits_t bit, const bool value) const { return hasBit(bit, !value); }
+	[[nodiscard]] bool hasOppositeBit(const splitBit_t &splitBit) const { return hasOppositeBit(splitBit.first, splitBit.second); }
 	void applyMask(const mask_t maskToApply) { bits &= maskToApply; mask &= maskToApply; }
 	
 	[[nodiscard]] bool isAnyInMinterms(const Minterms &minterms) const;

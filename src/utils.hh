@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cassert>
 #include <cstddef>
+#include <functional>
 #include <numeric>
 #include <vector>
 
@@ -72,6 +73,24 @@ template<typename T>
 void applyPermutation(std::vector<T> &data, const permutation_t &permutation)
 {
 	return applyInversePermutation(data, invertPermutation(permutation));
+}
+
+
+template<typename T>
+std::vector<T>::const_iterator removeIfIndex(std::vector<T> &v, const std::function<bool(std::size_t)> &p)
+{
+	std::size_t i;
+	for (i = 0; i != v.size(); ++i)
+	{
+		if (p(i))
+		{
+			for (std::size_t j = i; ++j != v.size();)
+				if (!p(j))
+					v[i++] = std::move(v[j]);
+			break;
+		}
+	}
+	return std::ranges::next(v.cbegin(), i);
 }
 
 

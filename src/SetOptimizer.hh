@@ -9,7 +9,7 @@
 #include "SubsetGraph.hh"
 
 
-template<typename SET, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
+template<typename SET, typename SET_ELEMENT, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
 class SetOptimizer
 {
 public:
@@ -17,6 +17,7 @@ public:
 	
 protected:
 	using valueId_t = VALUE_ID;
+	using setElement_t = SET_ELEMENT;
 	using SubsetFinder = SubsetGraph<valueId_t, FINDER_CONTAINER>;
 	using possibleSubsets_t = std::vector<std::size_t>;
 	using graphNode_t = std::pair<set_t, possibleSubsets_t>;
@@ -47,15 +48,19 @@ protected:
 	
 	virtual typename SubsetFinder::sets_t convertSets(const sets_t &sets) const = 0;
 	virtual void makeGraph(const typename SubsetFinder::setHierarchy_t &setHierarchy) = 0;
+	virtual std::vector<setElement_t> getAllSetElements(const sets_t &oldSets) const = 0;
+	virtual set_t addSetElement(const set_t &set, const setElement_t &setElement) const = 0;
 	virtual gateCount_t countGates(const subsetSelections_t &subsetSelections, const usageCounts_t &usageCounts) const = 0;
 	virtual void substractSubsets(sets_t &sets, const subsetSelections_t &subsetSelections) = 0;
 	virtual void substractSet(set_t &set, const set_t &otherSet) const = 0;
+	virtual bool setContainsSet(const set_t &x, const set_t &y) const = 0;
 	virtual set_t getSetIntersection(const set_t &set0, const set_t &set1) const = 0;
 	virtual bool isSubsetWorthy(const set_t &subset) const = 0;
 	
 private:
 	void makeFullGraph(const sets_t &oldSets);
-	void makeDummyGraph(const sets_t &oldSets, Progress &progress);
+	void makeGreedyGraph(const sets_t &oldSets, Progress &progress);
+	void makeRoughGraph(const sets_t &oldSets, Progress &progress);
 	void makeGraph(const sets_t &oldSets, Progress &progress);
 	
 	void switchToParentNodesIfAllowed(subsetSelections_t &subsetSelections, usageCounts_t &usageCounts) const;
@@ -75,6 +80,8 @@ private:
 	subsetSelections_t processGraph_cursory(Progress &progress);
 	
 	subsetSelections_t processGraph_greedy(Progress &progress);
+	
+	subsetSelections_t processGraph_rough(Progress &progress);
 	
 	subsetSelections_t processGraph(Progress &progress);
 	subsetSelections_t findBestSubsets(const sets_t &oldSets, Progress &progress);

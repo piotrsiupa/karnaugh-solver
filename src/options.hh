@@ -204,6 +204,7 @@ namespace options
 		EXHAUSTIVE,
 		CURSORY,
 		GREEDY,
+		ROUGH,
 	};
 	extern Mapped<OptimizationHeuristic> optimizationHeuristics;
 	

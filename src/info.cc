@@ -97,6 +97,7 @@ void printHelp()
 						"(See the option `--max-solutions`.)\n"
 			"\tgreedy\t- It just takes the first available solution for each minterm.\n\t\t  "
 						"It's extremely fast and it takes very little memory but the\n\t\t  final solution is worse than for the other heuristics.\n"
+			"\trough\t- Currently rather useless because it's slower than `greedy` and\n\t\t  it gives worse results. (WIP)\n"
 			"\n"
 			"\n"
 			"Common subexpression elimination heuristics:\n"
