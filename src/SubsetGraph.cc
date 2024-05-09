@@ -226,8 +226,7 @@ void SubsetGraph<VALUE_T, CONTAINER>::sort()
 	for (const auto &index : sortOrder)
 	{
 		sorted.push_back(std::move(grouped[index]));
-		for (std::size_t &subset : sorted.back().subsets)
-			subset = reverseSortOrder[subset];
+		permuteIndexes(sorted.back().subsets, reverseSortOrder);
 	}
 	grouped = std::move(sorted);
 }

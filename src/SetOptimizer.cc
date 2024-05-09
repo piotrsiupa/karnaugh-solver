@@ -103,34 +103,33 @@ void SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::makeRoughGraph(
 	
 	graph.emplace_back(set_t(), possibleSubsets_t{});
 	std::vector<typename decltype(allSetElements)::const_iterator> nextElements{allSetElements.cbegin()};
-	std::size_t startIndex = 0, endIndex = 1;
+	std::size_t prevLevelStart = 0, prevLevelEnd = 1;
 	std::size_t i;
-	typename decltype(allSetElements)::const_iterator setElement;
 	
 	const std::size_t maxSetSize = std::ranges::max(oldSets, std::ranges::less(), [](const set_t &set)->std::size_t{ return set.size(); }).size();
 	const Progress::calcStepCompletion_t calcStepCompletion = [maxSetSize, graph = std::as_const(graph)](){
 		return static_cast<Progress::completion_t>(graph.back().set.size()) / static_cast<Progress::completion_t>(maxSetSize);
 	};
 	
-	while (startIndex != endIndex)
+	while (prevLevelStart != prevLevelEnd)
 	{
-		for (i = startIndex; i != endIndex; ++i)
+		for (i = prevLevelStart; i != prevLevelEnd; ++i)
 		{
-			for (setElement = nextElements[i]; setElement != allSetElements.cend(); ++setElement)
+			for (auto elementToInsert = nextElements[i]; elementToInsert != allSetElements.cend(); ++elementToInsert)
 			{
 				progress.substep(calcStepCompletion);
-				set_t newSet = addSetElement(graph[i].set, *setElement);
+				set_t newSet = addSetElement(graph[i].set, *elementToInsert);
 				if (newSet.empty())
 					continue;
 				graphNode_t &graphNode = graph.emplace_back(std::move(newSet), possibleSubsets_t{});
-				bool isUsed = false, isEndNode = false;
+				bool isUsed = false;
 				for (std::size_t i = 0; i != oldSets.size(); ++i)
 				{
 					if (setContainsSet(oldSets[i], graphNode.set))
 					{
 						isUsed = true;
 						if (oldSets[i].size() == graphNode.set.size())
-							isEndNode = true;
+							endNodes.insert(graph.size() - 1);
 					}
 				}
 				if (!isUsed)
@@ -138,9 +137,7 @@ void SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::makeRoughGraph(
 					graph.pop_back();
 					continue;
 				}
-				if (isEndNode)
-					endNodes.insert(graph.size() - 1);
-				const auto &nextElement = nextElements.emplace_back(std::ranges::next(setElement));
+				const auto &nextElement = nextElements.emplace_back(std::ranges::next(elementToInsert));
 				for (auto subsetElement = allSetElements.cbegin(); subsetElement != nextElement; ++subsetElement)
 				{
 					const set_t parentDiff = addSetElement(set_t(), *subsetElement);
@@ -148,46 +145,21 @@ void SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::makeRoughGraph(
 						continue;
 					set_t subsetParent = graphNode.set;
 					substractSet(subsetParent, parentDiff);
-					const auto foundParent = std::ranges::find(std::ranges::next(graph.cbegin(), startIndex), std::ranges::next(graph.cbegin(), endIndex), subsetParent, [](const graphNode_t &graphNode){ return graphNode.set; });
-					assert(foundParent != std::ranges::next(graph.begin(), endIndex));
+					const auto foundParent = std::ranges::find(std::ranges::next(graph.cbegin(), prevLevelStart), std::ranges::next(graph.cbegin(), prevLevelEnd), subsetParent, [](const graphNode_t &graphNode){ return graphNode.set; });
+					assert(foundParent != std::ranges::next(graph.begin(), prevLevelEnd));
 					graphNode.possibleSubsets.push_back(std::ranges::distance(graph.cbegin(), foundParent));
 				}
 			}
 		}
-		startIndex = endIndex;
-		endIndex = graph.size();
+		prevLevelStart = prevLevelEnd;
+		prevLevelEnd = graph.size();
 	}
 	
-	assert(graph.size() >= 1);
-	std::vector<bool> nodesToRemove(graph.size());
-	std::vector<std::size_t> indexShifts(graph.size());
-	nodesToRemove[0] = true;
-	indexShifts[0] = 1;
-	for (std::size_t i = 1; i != graph.size(); ++i)
-	{
-		nodesToRemove[i] = !isSubsetWorthy(graph[i].set) && !endNodes.contains(i);
-		indexShifts[i] = nodesToRemove[i] ? indexShifts[i - 1] + 1 : indexShifts[i - 1];
-	}
-	graph.erase(removeIfIndex(graph, [&nodesToRemove = std::as_const(nodesToRemove)](const std::size_t i){ return nodesToRemove[i]; }), graph.cend());
+	const permutation_t newIndexes = makeRemovingPermutationByIndex(graph, [this](const std::size_t i){ return !isSubsetWorthy(graph[i].set) && !endNodes.contains(i); });
+	removeByPermutation(graph, newIndexes);
 	for (graphNode_t &graphNode : graph)
-	{
-		for (auto iter = graphNode.possibleSubsets.begin(); iter != graphNode.possibleSubsets.end();)
-		{
-			if (nodesToRemove[*iter])
-			{
-				iter = graphNode.possibleSubsets.erase(iter);
-			}
-			else
-			{
-				*iter -= indexShifts[*iter];
-				++iter;
-			}
-		}
-	}
-	endNodes_t newEndNodes;
-	for (const std::size_t &endNode : endNodes)
-		newEndNodes.insert(endNode - indexShifts[endNode]);
-	endNodes = newEndNodes;
+		removeAndPermuteIndexes(graphNode.possibleSubsets, newIndexes);
+	permuteIndexes(endNodes, newIndexes);
 }
 
 template<typename SET, typename SET_ELEMENT, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
