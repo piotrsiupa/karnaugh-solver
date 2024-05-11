@@ -13,12 +13,12 @@ def parse_args() -> tuple[Path, Path, bool]:
     parser = argparse.ArgumentParser(
             prog='run.py',
             description='This script runs all the tests and checks whether they pass.')
-    parser.add_argument('program')
+    parser.add_argument('PROGRAM', help='path to the karnaugh executable')
     parser.add_argument('-v', '--verbose', action='store_true', help='show all tests even when they pass')
     parser.add_argument('-d', '--diff', action='store_true', help='show diff between expected and real outputs')
     parser.add_argument('-r', '--regenerate', action='store_true', help='save the results instead of checking them')
     args = parser.parse_args()
-    return Path(args.program), args.verbose, args.diff, args.regenerate
+    return Path(args.PROGRAM), args.verbose, args.diff, args.regenerate
 
 
 def find_test_dirs(test_dir: Path) -> list[str]:

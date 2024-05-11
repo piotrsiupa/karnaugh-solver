@@ -21,3 +21,10 @@ You can run it with the option `--help` if you're interested in learning more.
 
 It's a simple script for generating random inputs for the program.
 You can run it with the option `--help` if you're interested in learning more.
+
+
+# `tests/find-failing-example.py`
+
+It runs the program with variety of inputs, trying to find the smallest one for which it crashes.
+It's intended to find the smallest offending example when the program crashes, for easier debugging.
+You can run it with the option `--help` if you're interested in learning more.

@@ -4,3 +4,4 @@
 *.pdb
 /karnaugh
 /karnaugh.exe
+/tests/failing_example
