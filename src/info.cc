@@ -49,6 +49,9 @@ void printShortHelp()
 			"    -O, --no-optimize\t- Skip the common subexpression elimination optimization\n\t\t\t  and show only a raw solution for each function.\n"
 			"    -e, --cse-heuristic\t- Set heuristic for eliminating common subexpressions.\n\t\t\t  "
 						"(See \"Common subexpression elimination heuristics\".)\n"
+			"    -d, --rough-depth=X\t- Set maximum sub-node size considered by the rough\n\t\t\t  heuristic. "
+						"`0` means no limit. "
+						"(Default depends on\n\t\t\t  the data size.)\n"
 		;
 }
 

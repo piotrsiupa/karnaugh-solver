@@ -207,6 +207,7 @@ namespace options
 		ROUGH,
 	};
 	extern Mapped<OptimizationHeuristic> optimizationHeuristics;
+	extern Number<std::size_t> maxRoughDepth;
 	
 	extern std::vector<std::string_view> freeArgs;
 	

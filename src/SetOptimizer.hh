@@ -59,8 +59,12 @@ protected:
 	
 private:
 	void makeFullGraph(const sets_t &oldSets);
+	
 	void makeGreedyGraph(const sets_t &oldSets, Progress &progress);
+	
+	static std::size_t getMaxRoughDepth();
 	void makeRoughGraph(const sets_t &oldSets, Progress &progress);
+	
 	void makeGraph(const sets_t &oldSets, Progress &progress);
 	
 	void switchToParentNodesIfAllowed(subsetSelections_t &subsetSelections, usageCounts_t &usageCounts) const;

@@ -221,6 +221,7 @@ namespace options
 			{"greedy", "g(?:reedy?)?", OptimizationHeuristic::GREEDY},
 			{"rough", "r(?:ough)?|f(?:ast)?", OptimizationHeuristic::ROUGH},
 		}, OptimizationHeuristic::BRUTE_FORCE);
+	Number<std::size_t> maxRoughDepth("rough-depth", "(?:m(?:ax?)?[-_ ])?r(?:ou(?:gh)?)?(?:[-_ ]h(?:eur(?:is(?:t(?:ics?)?)?)?)?)?[-_ ](?:d(?:ep(?:ths?)?)?|(?:n(?:o(?:d(?:es?)?)?)?|s(?:ub?)?-?(?:n(?:o(?:d(?:es?)?)?)?|g(?:r(?:a(?:phs?)?)?)?|s(?:ets?)?))[-_ ]s(?:iz(?:es?)?)?)|m?rh?(?:d|(?:n|s[ngs]s)s)", 'd', 0, SIZE_MAX - 1, SIZE_MAX);
 	
 	std::vector<std::string_view> freeArgs;
 	
@@ -260,7 +261,7 @@ namespace options
 					&outputFormat, &name,
 					&primeImplicantsHeuristic, &greedyImplicantAdjustments,
 					&solutionsHeuristics, &solutionsLimit,
-					&skipOptimization, &optimizationHeuristics,
+					&skipOptimization, &optimizationHeuristics, &maxRoughDepth,
 				};
 		bool Parser::allOptionsRegexReady = false;
 		std::regex Parser::allOptionsRegex;

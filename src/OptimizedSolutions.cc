@@ -911,6 +911,8 @@ void OptimizedSolutions::validate(const solutions_t &solutions, Progress &progre
 {
 	assert(solutions.size() == finalSums.size());
 	
+	assert(getCost(false) <= std::accumulate(solutions.cbegin(), solutions.cend(), std::size_t(0), [](std::size_t acc, const Solution *const sol){ return acc + sol->getCost(false); }));
+	
 	const auto infoGuard = progress.addInfo("validating");
 	progress.step();
 	auto progressStep = progress.makeCountingStepHelper(static_cast<Progress::completion_t>(solutions.size()));

@@ -7,6 +7,7 @@
 #include <numeric>
 #include <ranges>
 
+#include "Implicant.hh"
 #include "options.hh"
 #include "utils.hh"
 
@@ -97,27 +98,52 @@ void SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::makeGreedyGraph
 }
 
 template<typename SET, typename SET_ELEMENT, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
+std::size_t SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::getMaxRoughDepth()
+{
+	switch (options::maxRoughDepth.getValue())
+	{
+	case 0:
+		return SIZE_MAX;
+	case SIZE_MAX:
+		return 3;
+	default:
+		return options::maxRoughDepth.getValue();
+	}
+}
+
+template<typename SET, typename SET_ELEMENT, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
 void SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::makeRoughGraph(const sets_t &oldSets, Progress &progress)
 {
 	const std::vector<setElement_t> allSetElements = getAllSetElements(oldSets);
 	
 	graph.emplace_back(set_t(), possibleSubsets_t{});
+	if (std::ranges::find(oldSets, set_t()) != oldSets.cend()) [[unlikely]]
+		endNodes.insert(0);
 	std::vector<typename decltype(allSetElements)::const_iterator> nextElements{allSetElements.cbegin()};
+	if constexpr (std::is_same_v<SET, Implicant>)
+	{
+		if (const auto foundSet = std::ranges::find(oldSets, Implicant::none()); foundSet != oldSets.cend()) [[unlikely]]
+		{
+			graph.emplace_back(*foundSet, possibleSubsets_t{});
+			endNodes.insert(1);
+			nextElements.push_back(allSetElements.cbegin());
+		}
+	}
 	std::size_t prevLevelStart = 0, prevLevelEnd = 1;
 	std::size_t i;
 	
-	const std::size_t maxSetSize = std::ranges::max(oldSets, std::ranges::less(), [](const set_t &set)->std::size_t{ return set.size(); }).size();
+	const std::size_t maxSetSize = std::min(getMaxRoughDepth(), static_cast<std::size_t>(std::ranges::max(oldSets, std::ranges::less(), [](const set_t &set)->std::size_t{ return set.size(); }).size()));
 	const Progress::calcStepCompletion_t calcStepCompletion = [maxSetSize, graph = std::as_const(graph)](){
 		return static_cast<Progress::completion_t>(graph.back().set.size()) / static_cast<Progress::completion_t>(maxSetSize);
 	};
 	
-	while (prevLevelStart != prevLevelEnd)
+	while (prevLevelStart != prevLevelEnd && graph.back().set.size() != maxSetSize)
 	{
+		progress.substep(calcStepCompletion);
 		for (i = prevLevelStart; i != prevLevelEnd; ++i)
 		{
 			for (auto elementToInsert = nextElements[i]; elementToInsert != allSetElements.cend(); ++elementToInsert)
 			{
-				progress.substep(calcStepCompletion);
 				set_t newSet = addSetElement(graph[i].set, *elementToInsert);
 				if (newSet.empty())
 					continue;
@@ -138,21 +164,42 @@ void SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::makeRoughGraph(
 					continue;
 				}
 				const auto &nextElement = nextElements.emplace_back(std::ranges::next(elementToInsert));
-				for (auto subsetElement = allSetElements.cbegin(); subsetElement != nextElement; ++subsetElement)
+				if (prevLevelStart != 0) [[likely]]
 				{
-					const set_t parentDiff = addSetElement(set_t(), *subsetElement);
-					if (!setContainsSet(graphNode.set, parentDiff))
-						continue;
-					set_t subsetParent = graphNode.set;
-					substractSet(subsetParent, parentDiff);
-					const auto foundParent = std::ranges::find(std::ranges::next(graph.cbegin(), prevLevelStart), std::ranges::next(graph.cbegin(), prevLevelEnd), subsetParent, [](const graphNode_t &graphNode){ return graphNode.set; });
-					assert(foundParent != std::ranges::next(graph.begin(), prevLevelEnd));
-					graphNode.possibleSubsets.push_back(std::ranges::distance(graph.cbegin(), foundParent));
+					for (auto subsetElement = allSetElements.cbegin(); subsetElement != nextElement; ++subsetElement)
+					{
+						const set_t parentDiff = addSetElement(set_t(), *subsetElement);
+						if (!setContainsSet(graphNode.set, parentDiff))
+							continue;
+						set_t subsetParent = graphNode.set;
+						substractSet(subsetParent, parentDiff);
+						const auto foundParent = std::ranges::find(std::ranges::next(graph.cbegin(), prevLevelStart), std::ranges::next(graph.cbegin(), prevLevelEnd), subsetParent, [](const graphNode_t &graphNode){ return graphNode.set; });
+						assert(foundParent != std::ranges::next(graph.begin(), prevLevelEnd));
+						graphNode.possibleSubsets.push_back(std::ranges::distance(graph.cbegin(), foundParent));
+					}
 				}
 			}
 		}
 		prevLevelStart = prevLevelEnd;
+		if constexpr (std::is_same_v<SET, Implicant>)
+			if (prevLevelStart == 1 && graph.size() > 1 && graph[1].set.size() == 0) [[unlikely]]
+				prevLevelStart = 2;
 		prevLevelEnd = graph.size();
+	}
+	sets_t remainingSets;
+	std::ranges::copy_if(oldSets, std::back_inserter(remainingSets), [maxSetSize](const set_t &set){ return set.size() > maxSetSize; });
+	std::ranges::sort(remainingSets);
+	for (set_t &remainingSet : remainingSets)
+	{
+		if (remainingSet != graph.back().set)
+		{
+			endNodes.insert(graph.size());
+			graph.emplace_back(std::move(remainingSet), possibleSubsets_t{});
+			if (prevLevelStart != 0)
+				for (std::size_t i = prevLevelStart; i != prevLevelEnd; ++i)
+					if (setContainsSet(graph.back().set, graph[i].set))
+						graph.back().possibleSubsets.push_back(i);
+		}
 	}
 	
 	const permutation_t newIndexes = makeRemovingPermutationByIndex(graph, [this](const std::size_t i){ return !isSubsetWorthy(graph[i].set) && !endNodes.contains(i); });
@@ -601,7 +648,7 @@ typename SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::subsetSelec
 			++usageCounts[subset];
 	}
 	for (const std::size_t &endNode : endNodes)
-		usageCounts[endNode] = SIZE_MAX;
+		++usageCounts[endNode];
 	
 	removeRedundantNodes(subsetSelections, usageCounts);
 	
@@ -663,8 +710,6 @@ typename SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::finalSets_t
 	return finalSets;
 }
 
-
-#include "Implicant.hh"
 
 template class SetOptimizer<Implicant, Implicant::splitBit_t, std::int_fast8_t, std::vector>;
 template class SetOptimizer<std::set<std::size_t>, std::size_t, std::size_t, std::set>;
