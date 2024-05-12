@@ -68,8 +68,9 @@ private:
 	void makeGraph(const sets_t &oldSets, Progress &progress);
 	
 	void switchToParentNodesIfAllowed(subsetSelections_t &subsetSelections, usageCounts_t &usageCounts) const;
-	void removeUnusedNodes(subsetSelections_t &subsetSelections, usageCounts_t &usageCounts);
 	void removeSingleUseNonFinalNodes(subsetSelections_t &subsetSelections, usageCounts_t &usageCounts) const;
+	void removeUnusedNodes(subsetSelections_t &subsetSelections, usageCounts_t &usageCounts);
+	void removeUnnecessaryParents(subsetSelections_t &subsetSelections, usageCounts_t &usageCounts) const;
 	void removeRedundantNodes(subsetSelections_t &subsetSelections, usageCounts_t &usageCounts);
 	
 	static std::pair<Progress::completion_t, Progress::completion_t> estimateBruteForceCompletion(const subsetSelection_t &subsetSelection, const possibleSubsets_t &possibleSubsets);

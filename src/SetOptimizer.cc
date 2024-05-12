@@ -286,6 +286,74 @@ void SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::switchToParentN
 }
 
 template<typename SET, typename SET_ELEMENT, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
+void SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::removeSingleUseNonFinalNodes(subsetSelections_t &subsetSelections, usageCounts_t &usageCounts) const
+{
+	for (std::size_t i = 0; i != subsetSelections.size(); ++i)
+	{
+		if (usageCounts[i] == 0)
+			continue;
+		subsetSelection_t &subsetSelection = subsetSelections[i];
+		bool changed = false;
+		for (std::size_t j = 0; j != subsetSelection.size();)
+		{
+			const std::size_t subset = subsetSelection[j];
+			if (usageCounts[subset] == 1)
+			{
+				subsetSelection.erase(std::ranges::next(subsetSelection.begin(), j));
+				subsetSelection.insert(subsetSelection.end(), subsetSelections[subset].cbegin(), subsetSelections[subset].cend());
+				usageCounts[subset] = 0;
+				subsetSelections[subset].clear();
+				changed = true;
+				continue;
+			}
+			++j;
+		}
+		if (changed && !subsetSelection.empty())
+		{
+			std::ranges::sort(subsetSelection);
+			std::size_t prev = subsetSelection.front();
+			for (auto iter = std::ranges::next(subsetSelection.cbegin()); iter != subsetSelection.cend(); ++iter)
+				if (*iter == prev)
+					--usageCounts[*iter];
+				else
+					prev = *iter;
+			const auto [eraseBegin, eraseEnd] = std::ranges::unique(subsetSelection);
+			subsetSelection.erase(eraseBegin, eraseEnd);
+		}
+	}
+}
+
+template<typename SET, typename SET_ELEMENT, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
+void SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::removeUnnecessaryParents(subsetSelections_t &subsetSelections, usageCounts_t &usageCounts) const
+{
+	for (std::size_t nodeIndex = 0; nodeIndex != subsetSelections.size(); ++nodeIndex)
+	{
+		if (usageCounts[nodeIndex] == 0)
+			continue;
+		subsetSelection_t &subsetSelection = subsetSelections[nodeIndex];
+		set_t missingElements = graph[nodeIndex].set;
+		for (std::size_t i = 0; i != subsetSelection.size(); ++i)
+			substractSet(missingElements, graph[subsetSelection[i]].set);
+		for (std::size_t targetSubsetIndex = 0; targetSubsetIndex != subsetSelection.size();)
+		{
+			set_t newMissingElements = graph[nodeIndex].set;
+			for (std::size_t i = 0; i != subsetSelection.size(); ++i)
+				if (i != targetSubsetIndex)
+					substractSet(newMissingElements, graph[subsetSelection[i]].set);
+			if (newMissingElements.size() - missingElements.size() <= 1)
+			{
+				--usageCounts[subsetSelection[targetSubsetIndex]];
+				subsetSelection.erase(std::ranges::next(subsetSelection.begin(), targetSubsetIndex));
+			}
+			else
+			{
+				++targetSubsetIndex;
+			}
+		}
+	}
+}
+
+template<typename SET, typename SET_ELEMENT, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
 void SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::removeUnusedNodes(subsetSelections_t &subsetSelections, usageCounts_t &usageCounts)
 {
 	std::size_t moveTarget = SIZE_MAX;
@@ -331,49 +399,12 @@ void SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::removeUnusedNod
 }
 
 template<typename SET, typename SET_ELEMENT, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
-void SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::removeSingleUseNonFinalNodes(subsetSelections_t &subsetSelections, usageCounts_t &usageCounts) const
-{
-	for (std::size_t i = 0; i != subsetSelections.size(); ++i)
-	{
-		if (usageCounts[i] == 0)
-			continue;
-		subsetSelection_t &subsetSelection = subsetSelections[i];
-		bool changed = false;
-		for (std::size_t j = 0; j != subsetSelection.size();)
-		{
-			const std::size_t subset = subsetSelection[j];
-			if (usageCounts[subset] == 1)
-			{
-				subsetSelection.erase(std::ranges::next(subsetSelection.begin(), j));
-				subsetSelection.insert(subsetSelection.end(), subsetSelections[subset].cbegin(), subsetSelections[subset].cend());
-				usageCounts[subset] = 0;
-				subsetSelections[subset].clear();
-				changed = true;
-				continue;
-			}
-			++j;
-		}
-		if (changed && !subsetSelection.empty())
-		{
-			std::ranges::sort(subsetSelection);
-			std::size_t prev = subsetSelection.front();
-			for (auto iter = std::ranges::next(subsetSelection.cbegin()); iter != subsetSelection.cend(); ++iter)
-				if (*iter == prev)
-					--usageCounts[*iter];
-				else
-					prev = *iter;
-			const auto [eraseBegin, eraseEnd] = std::ranges::unique(subsetSelection);
-			subsetSelection.erase(eraseBegin, eraseEnd);
-		}
-	}
-}
-
-template<typename SET, typename SET_ELEMENT, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
 void SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::removeRedundantNodes(subsetSelections_t &subsetSelections, usageCounts_t &usageCounts)
 {
 	switchToParentNodesIfAllowed(subsetSelections, usageCounts);
 	removeUnusedNodes(subsetSelections, usageCounts);
 	removeSingleUseNonFinalNodes(subsetSelections, usageCounts);
+	removeUnnecessaryParents(subsetSelections, usageCounts);
 	removeUnusedNodes(subsetSelections, usageCounts);
 	assert(graph.size() == subsetSelections.size() && subsetSelections.size() == usageCounts.size());
 }
