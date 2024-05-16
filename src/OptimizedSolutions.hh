@@ -23,7 +23,7 @@ public:
 private:
 	using id_t = std::size_t;
 	using ids_t = std::vector<id_t>;
-	using product_t = std::pair<Implicant, ids_t>;
+	using product_t = struct { Implicant implicant; ids_t subProducts; };
 	using sum_t = ids_t;
 	using finalPrimeImplicants_t = std::vector<std::size_t>;
 	
@@ -36,7 +36,7 @@ private:
 	
 	Implicant flattenProduct(const id_t productId) const;
 	std::vector<id_t> flattenSum(const id_t sumId) const;
-	std::size_t getIdUseCount(const id_t id) const { return std::accumulate(products.cbegin(), products.cend(), 0, [id](const std::size_t &acc, const product_t &product){ return acc + std::count(product.second.cbegin(), product.second.cend(), id); }) + std::accumulate(sums.cbegin(), sums.cend(), 0, [id](const std::size_t &acc, const sum_t &sum){ return acc + std::count(sum.cbegin(), sum.cend(), id); }); }
+	std::size_t getIdUseCount(const id_t id) const { return std::accumulate(products.cbegin(), products.cend(), 0, [id](const std::size_t &acc, const product_t &product){ return acc + std::count(product.subProducts.cbegin(), product.subProducts.cend(), id); }) + std::accumulate(sums.cbegin(), sums.cend(), 0, [id](const std::size_t &acc, const sum_t &sum){ return acc + std::count(sum.cbegin(), sum.cend(), id); }); }
 	bool isWorthPrinting(const id_t id, const bool simpleFinalSums) const { return isProduct(id) ? isProductWorthPrinting(id) : isSumWorthPrinting(id, simpleFinalSums); }
 	bool isWorthPrintingOnGraph(const id_t id, const bool isFullGraph) const { return isProduct(id) ? isProductWorthPrintingOnGraph(id, isFullGraph) : isSumWorthPrintingOnGraph(id, isFullGraph); }
 	void generateHumanIds() const;
@@ -60,7 +60,7 @@ private:
 	void printMathId(std::ostream &o, const id_t id) const;
 	void printHumanNegatedInputs(std::ostream &o) const;
 	void printGraphNegatedInputs(std::ostream &o) const;
-	bool isProductWorthPrinting(const id_t productId) const { const product_t &product = getProduct(productId); return product.first.getBitCount() >= 2 || !product.second.empty(); }
+	bool isProductWorthPrinting(const id_t productId) const { const product_t &product = getProduct(productId); return product.implicant.getBitCount() >= 2 || !product.subProducts.empty(); }
 	void printHumanProductBody(std::ostream &o, const id_t productId) const;
 	void printHumanProduct(std::ostream &o, const id_t productId) const;
 	void printHumanProducts(std::ostream &o) const;

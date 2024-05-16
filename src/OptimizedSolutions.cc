@@ -126,8 +126,8 @@ Implicant OptimizedSolutions::flattenProduct(const id_t productId) const
 	{
 		const product_t &product = getProduct(ids.back());
 		ids.pop_back();
-		primeImplicant |= product.first;
-		ids.insert(ids.end(), product.second.cbegin(), product.second.cend());
+		primeImplicant |= product.implicant;
+		ids.insert(ids.end(), product.subProducts.cbegin(), product.subProducts.cend());
 	}
 	return primeImplicant;
 }
@@ -428,9 +428,9 @@ void OptimizedSolutions::printGraphProductImplicant(std::ostream &o, const id_t 
 	else
 	{
 		const product_t &product = getProduct(productId);
-		if (product.first.getBitCount() == 0 && !product.second.empty())
+		if (product.implicant.getBitCount() == 0 && !product.subProducts.empty())
 			return;
-		primeImplicant = product.first;
+		primeImplicant = product.implicant;
 	}
 	o << " = ";
 	primeImplicant.printGraph(o, false);
@@ -461,7 +461,7 @@ void OptimizedSolutions::printGraphProduct(std::ostream &o, const Names &functio
 	o << "\t\t";
 	printGraphId(o, productId);
 	o << " [label=\"";
-	const bool hasParents = isFullGraph || !getProduct(productId).second.empty();
+	const bool hasParents = isFullGraph || !getProduct(productId).subProducts.empty();
 	if (hasParents)
 	{
 		printGraphAnd(o);
@@ -701,7 +701,7 @@ void OptimizedSolutions::printHumanSumBody(std::ostream &o, const id_t sumId) co
 		if (!isProduct(partId) || isProductWorthPrinting(partId))
 			printHumanId(o, partId);
 		else
-			getProduct(partId).first.printHuman(o, false);
+			getProduct(partId).implicant.printHuman(o, false);
 	}
 }
 
@@ -756,7 +756,7 @@ void OptimizedSolutions::printGraphSumProducts(std::ostream &o, const id_t sumId
 		if (isVerboseGraph)
 			flattenProduct(productId).printGraph(o, sum.size() != 1);
 		else
-			getProduct(productId).first.printHuman(o, false);
+			getProduct(productId).implicant.printHuman(o, false);
 	}
 }
 
@@ -776,7 +776,7 @@ void OptimizedSolutions::printGraphSumParents(std::ostream &o, const id_t sumId)
 		{
 			if (!first)
 				o << ", ";
-			getProduct(partId).first.printGraph(o);
+			getProduct(partId).implicant.printGraph(o);
 		}
 	}
 }
@@ -859,7 +859,7 @@ void OptimizedSolutions::printVerilogSumBody(std::ostream &o, const id_t sumId) 
 		if (!isProduct(partId) || isProductWorthPrinting(partId))
 			printVerilogId(o, partId);
 		else
-			getProduct(partId).first.printVerilog(o, false);
+			getProduct(partId).implicant.printVerilog(o, false);
 	}
 }
 
@@ -897,7 +897,7 @@ void OptimizedSolutions::printVhdlSumBody(std::ostream &o, const id_t sumId) con
 		if (!isProduct(partId) || isProductWorthPrinting(partId))
 			printVhdlId(o, partId);
 		else
-			getProduct(partId).first.printVhdl(o, false);
+			getProduct(partId).implicant.printVhdl(o, false);
 	}
 }
 
@@ -933,7 +933,7 @@ void OptimizedSolutions::printCppSumBody(std::ostream &o, const id_t sumId) cons
 		if (!isProduct(partId) || isProductWorthPrinting(partId))
 			printCppId(o, partId);
 		else
-			getProduct(partId).first.printCpp(o, false);
+			getProduct(partId).implicant.printCpp(o, false);
 	}
 }
 
@@ -1150,7 +1150,7 @@ OptimizedSolutions::finalPrimeImplicants_t OptimizedSolutions::extractCommonProd
 	
 	products.reserve(subsetSelections.size());
 	for (std::size_t i = 0; i != subsetSelections.size(); ++i)
-		products.emplace_back(newPrimeImplicants[i], subsetSelections[i]);
+		products.push_back(product_t{newPrimeImplicants[i], subsetSelections[i]});
 	
 	return finalPrimeImplicants;
 }
@@ -1208,9 +1208,9 @@ OptimizedSolutions::normalizedSolution_t OptimizedSolutions::normalizeSolution(c
 	if (rootProductIds.size() == 1)
 	{
 		const product_t &product = getProduct(rootProductIds.front());
-		if (product.first.getBitCount() == 0 && product.second.empty())
+		if (product.implicant.getBitCount() == 0 && product.subProducts.empty())
 		{
-			normalizedSolution.insert(product.first);
+			normalizedSolution.insert(product.implicant);
 			return normalizedSolution;
 		}
 	}
@@ -1221,10 +1221,10 @@ OptimizedSolutions::normalizedSolution_t OptimizedSolutions::normalizeSolution(c
 		while (!idsToProcess.empty())
 		{
 			const product_t &product = getProduct(idsToProcess.back());
-			assert(product.first.getBitCount() != 0 || (product.first == Implicant::all() && !product.second.empty()));
+			assert(product.implicant.getBitCount() != 0 || (product.implicant == Implicant::all() && !product.subProducts.empty()));
 			idsToProcess.pop_back();
-			resultingProduct |= product.first;
-			idsToProcess.insert(idsToProcess.end(), product.second.cbegin(), product.second.cend());
+			resultingProduct |= product.implicant;
+			idsToProcess.insert(idsToProcess.end(), product.subProducts.cbegin(), product.subProducts.cend());
 		}
 		normalizedSolution.insert(std::move(resultingProduct));
 	}
@@ -1270,9 +1270,9 @@ std::pair<bool, bool> OptimizedSolutions::checkForUsedConstants() const
 		if (!isProduct(productId))
 			continue;
 		const product_t &product = getProduct(productId);
-		if (product.first.getBitCount() != 0)
+		if (product.implicant.getBitCount() != 0)
 			continue;
-		if (product.first.isError())
+		if (product.implicant.isError())
 			usesFalse = true;
 		else
 			usesTrue = true;
