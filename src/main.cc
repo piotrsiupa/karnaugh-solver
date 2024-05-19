@@ -134,7 +134,7 @@ static bool processInput(IstreamUniquePtr istream)
 	if (!loadInput(std::move(istream), karnaughs))
 		return false;
 	karnaughs.solve();
-	karnaughs.print();
+	karnaughs.print(std::cout);
 	return true;
 }
 
