@@ -15,7 +15,7 @@
 
 static bool parseInputBits(Input &input)
 {
-	if (options::prompt.getValue())
+	if (options::prompt)
 		std::cerr << "Enter a list of input variables or their count:\n";
 	if (input.hasError())
 		return false;
@@ -150,17 +150,17 @@ int main(const int argc, const char *const *const argv)
 		return 1;
 	}
 	
-	if (options::helpOptions.isRaised())  // `--help-options` is before `--help` because it should be used when both flags are present.
+	if (options::helpOptions)  // `--help-options` is before `--help` because it should be used when both flags are present.
 	{
 		printShortHelp();
 		return 0;
 	}
-	else if (options::help.isRaised())
+	else if (options::help)
 	{
 		printHelp();
 		return 0;
 	}
-	else if (options::version.isRaised())
+	else if (options::version)
 	{
 		printVersion();
 		return 0;

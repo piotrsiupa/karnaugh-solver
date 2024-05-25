@@ -209,7 +209,7 @@ Progress::Progress(const Stage stage, const char processName[], const steps_t al
 	processName(processName),
 	allSteps(allSteps),
 	relatedSteps(relatedSteps),
-	visible(visible && options::status.getValue())
+	visible(visible && options::status)
 {
 	if (progress != nullptr)
 		throw std::runtime_error("There cannot be two object of class \"Progress\" existing at the same time!");

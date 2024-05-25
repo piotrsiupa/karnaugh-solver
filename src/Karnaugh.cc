@@ -77,7 +77,7 @@ void Karnaugh::validate(const Solutions &solutions) const
 bool Karnaugh::loadData(Input &input)
 {
 	const std::string progressName = "Loading function \"" + functionName + '"';
-	Progress progress(Progress::Stage::LOADING, progressName.c_str(), 5, false, !options::prompt.getValue());
+	Progress progress(Progress::Stage::LOADING, progressName.c_str(), 5, false, !options::prompt);
 	
 	if (input.hasError(&progress))
 		return false;
@@ -85,7 +85,7 @@ bool Karnaugh::loadData(Input &input)
 	if (nameIsCustom)
 		functionName = input.popLine();
 	
-	if (nameIsCustom && options::prompt.getValue())
+	if (nameIsCustom && options::prompt)
 		std::cerr << "Enter a list of minterms of the function \"" << functionName << "\":\n";
 	if (input.hasError(&progress))
 		return false;
@@ -97,7 +97,7 @@ bool Karnaugh::loadData(Input &input)
 	if (!loadMinterms(targetMinterms, input, progress))
 		return false;
 	
-	if (options::prompt.getValue())
+	if (options::prompt)
 	{
 		std::cerr << "Enter a list of don't-cares of the function";
 		if (nameIsCustom)

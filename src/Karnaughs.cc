@@ -30,7 +30,7 @@ bool Karnaughs::loadData(Input &input)
 {
 	while (true)
 	{
-		if (options::prompt.getValue())
+		if (options::prompt)
 			std::cerr << "Either end the input or enter a name of the next function (optional) or a list of its minterms:\n";
 		if (input.hasError())
 			return false;
@@ -97,7 +97,7 @@ void Karnaughs::findBestOptimizedSolutions(const solutionses_t &solutionses)
 	bestSolutions.resize(solutionses.size());
 	std::size_t bestGateScore = SIZE_MAX;
 	Progress::steps_t steps = 1;
-	if (options::status.getValue())
+	if (options::status)
 		for (const Solutions &solutions : solutionses)
 			steps *= solutions.size();
 #ifdef NDEBUG
@@ -135,7 +135,7 @@ void Karnaughs::findBestOptimizedSolutions(const solutionses_t &solutionses)
 
 void Karnaughs::findBestSolutions(const solutionses_t &solutionses)
 {
-	if (options::skipOptimization.isRaised())
+	if (options::skipOptimization)
 		findBestNonOptimizedSolutions(solutionses);
 	else
 		findBestOptimizedSolutions(solutionses);
@@ -150,6 +150,6 @@ void Karnaughs::solve()
 void Karnaughs::print(std::ostream &o)
 {
 	const Names functionNames = gatherFunctionNames();
-	OutputComposer composer(functionNames, karnaughs, bestSolutions, options::skipOptimization.isRaised() ? nullptr : &optimizedSolutions, o);
+	OutputComposer composer(functionNames, karnaughs, bestSolutions, options::skipOptimization ? nullptr : &optimizedSolutions, o);
 	composer.compose();
 }

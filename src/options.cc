@@ -23,7 +23,7 @@ namespace options
 	
 	bool MappedOutputFormats::supportsOperatorStyles() const
 	{
-		switch (getValue())
+		switch (get())
 		{
 		case OutputFormat::HUMAN_LONG:
 		case OutputFormat::HUMAN:

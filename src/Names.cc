@@ -8,7 +8,7 @@ void Names::printName(std::ostream &o, const std::size_t i) const
 {
 	if (!useInCode)
 	{
-		switch (options::outputFormat.getValue())
+		switch (options::outputFormat)
 		{
 		case options::OutputFormat::VERILOG:
 			o << replacementName << '[' << i << ']';
@@ -23,7 +23,7 @@ void Names::printName(std::ostream &o, const std::size_t i) const
 			break;
 		}
 	}
-	if (options::outputFormat.getValue() == options::OutputFormat::CPP) [[unlikely]]
+	if (options::outputFormat == options::OutputFormat::CPP)
 		o << replacementName << '.';
 	printPlainName(o, i);
 }
@@ -32,7 +32,7 @@ void Names::printNames(std::ostream &o) const
 {
 	if (useInCode)
 	{
-		if (options::outputFormat.getValue() == options::OutputFormat::VERILOG)
+		if (options::outputFormat == options::OutputFormat::VERILOG)
 		{
 			o << joinStrings(names, "", " ", ",");
 			return;
@@ -40,7 +40,7 @@ void Names::printNames(std::ostream &o) const
 	}
 	else
 	{
-		switch (options::outputFormat.getValue())
+		switch (options::outputFormat)
 		{
 		case options::OutputFormat::VERILOG:
 			o << " [" << (names.size() - 1) << ":0] " << replacementName << ',';
@@ -58,7 +58,7 @@ void Names::printNames(std::ostream &o) const
 void Names::printType(std::ostream &o) const
 {
 	
-	switch (options::outputFormat.getValue())
+	switch (options::outputFormat)
 	{
 	case options::OutputFormat::VHDL:
 		if (useInCode)
