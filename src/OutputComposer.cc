@@ -7,22 +7,26 @@
 #include "options.hh"
 
 
+using OF = options::OutputFormat;
+using OO = options::OutputOperators;
+
+
 bool OutputComposer::isHuman()
 {
-	const options::OutputFormat outputFormat = options::outputFormat;
-	return outputFormat == options::OutputFormat::HUMAN_SHORT || outputFormat == options::OutputFormat::HUMAN || outputFormat == options::OutputFormat::HUMAN_LONG;
+	const OF outputFormat = options::outputFormat;
+	return outputFormat == OF::HUMAN_SHORT || outputFormat == OF::HUMAN || outputFormat == OF::HUMAN_LONG;
 }
 
 bool OutputComposer::isGraph()
 {
-	const options::OutputFormat outputFormat = options::outputFormat;
-	return outputFormat == options::OutputFormat::GRAPH || outputFormat == options::OutputFormat::REDUCED_GRAPH;
+	const OF outputFormat = options::outputFormat;
+	return outputFormat == OF::GRAPH || outputFormat == OF::REDUCED_GRAPH;
 }
 
 bool OutputComposer::isHumanReadable()
 {
-	const options::OutputFormat outputFormat = options::outputFormat;
-	return isHuman() || isGraph() || outputFormat == options::OutputFormat::MATHEMATICAL || outputFormat == options::OutputFormat::GATE_COSTS;
+	const OF outputFormat = options::outputFormat;
+	return isHuman() || isGraph() || outputFormat == OF::MATHEMATICAL || outputFormat == OF::GATE_COSTS;
 }
 
 std::pair<bool, bool> OutputComposer::checkForUsedConstants(const Solution &solution) const
@@ -73,9 +77,9 @@ bool OutputComposer::isOptimizedProductWorthPrinting(const OptimizedSolutions::i
 	const bool isWorthPrintingInGeneral = isOptimizedProductWorthPrintingInGeneral(productId);
 	switch (options::outputFormat)
 	{
-	case options::OutputFormat::REDUCED_GRAPH:
+	case OF::REDUCED_GRAPH:
 		return isWorthPrintingInGeneral || optimizedSolutions->findProductEndNode(productId) != SIZE_MAX;
-	case options::OutputFormat::MATHEMATICAL:
+	case OF::MATHEMATICAL:
 		return isWorthPrintingInGeneral && optimizedSolutions->getIdUseCount(productId) >= 2;
 	default:
 		return isWorthPrintingInGeneral;
@@ -104,9 +108,9 @@ bool OutputComposer::isOptimizedSumWorthPrinting(const OptimizedSolutions::id_t 
 {
 	switch (options::outputFormat)
 	{
-	case options::OutputFormat::REDUCED_GRAPH:
+	case OF::REDUCED_GRAPH:
 		return optimizedSolutions->getSum(sumId).size() != 1;
-	case options::OutputFormat::MATHEMATICAL:
+	case OF::MATHEMATICAL:
 		return isOptimizedSumWorthPrintingInGeneral(sumId) && (optimizedSolutions->getIdUseCount(sumId) + std::count(optimizedSolutions->getFinalSums().cbegin(), optimizedSolutions->getFinalSums().cend(), sumId) >= 2);
 	default:
 		return isOptimizedSumWorthPrintingInGeneral(sumId);
@@ -146,37 +150,37 @@ void OutputComposer::printNormalizedId(const OptimizedSolutions::id_t id, const 
 		goto human;
 	switch (options::outputFormat)
 	{
-	case options::OutputFormat::HUMAN_SHORT:
-	case options::OutputFormat::HUMAN:
-	case options::OutputFormat::HUMAN_LONG:
+	case OF::HUMAN_SHORT:
+	case OF::HUMAN:
+	case OF::HUMAN_LONG:
 		human:
 		o << '[' << normalizedOptimizedIds[id] << ']';
 		break;
-	case options::OutputFormat::GRAPH:
-	case options::OutputFormat::REDUCED_GRAPH:
+	case OF::GRAPH:
+	case OF::REDUCED_GRAPH:
 		o << 's' << normalizedOptimizedIds[id];
 		break;
-	case options::OutputFormat::VERILOG:
-	case options::OutputFormat::CPP:
+	case OF::VERILOG:
+	case OF::CPP:
 		if (optimizedSolutions->isProduct(id))
 			o << "prods[" << normalizedOptimizedIds[id] << ']';
 		else
 			o << "sums[" << normalizedOptimizedIds[id] << ']';
 		break;
-	case options::OutputFormat::VHDL:
+	case OF::VHDL:
 		if (optimizedSolutions->isProduct(id))
 			o << "prods(" << normalizedOptimizedIds[id] << ')';
 		else
 			o << "sums(" << normalizedOptimizedIds[id] << ')';
 		break;
-	case options::OutputFormat::MATHEMATICAL:
+	case OF::MATHEMATICAL:
 		if (optimizedSolutions->isProduct(id))
 			o << 'p' << (normalizedOptimizedIds[id] + 1);
 		else
 			o << 's' << (normalizedOptimizedIds[id] + 1);
 		printOptimizedMathArgs(id);
 		break;
-	case options::OutputFormat::GATE_COSTS:
+	case OF::GATE_COSTS:
 		// not expected to be needed
 		break;
 	}
@@ -186,19 +190,19 @@ void OutputComposer::printBanner() const
 {
 	switch (options::outputFormat)
 	{
-	case options::OutputFormat::HUMAN_LONG:
-	case options::OutputFormat::HUMAN:
-	case options::OutputFormat::HUMAN_SHORT:
-	case options::OutputFormat::MATHEMATICAL:
-	case options::OutputFormat::GATE_COSTS:
+	case OF::HUMAN_LONG:
+	case OF::HUMAN:
+	case OF::HUMAN_SHORT:
+	case OF::MATHEMATICAL:
+	case OF::GATE_COSTS:
 		break;
-	case options::OutputFormat::GRAPH:
-	case options::OutputFormat::REDUCED_GRAPH:
-	case options::OutputFormat::VERILOG:
-	case options::OutputFormat::CPP:
+	case OF::GRAPH:
+	case OF::REDUCED_GRAPH:
+	case OF::VERILOG:
+	case OF::CPP:
 		o << "// ";
 		break;
-	case options::OutputFormat::VHDL:
+	case OF::VHDL:
 		o << "-- ";
 		break;
 	}
@@ -222,12 +226,12 @@ void OutputComposer::printShortBool(const Trilean value) const
 	case Trilean::Value::FALSE:
 		switch (options::outputOperators)
 		{
-		case options::OutputOperators::FORMAL:
-		case options::OutputOperators::ASCII:
+		case OO::FORMAL:
+		case OO::ASCII:
 			o << '0';
 			break;
-		case options::OutputOperators::PROGRAMMING:
-		case options::OutputOperators::NAMES:
+		case OO::PROGRAMMING:
+		case OO::NAMES:
 			o << 'F';
 			break;
 		}
@@ -235,12 +239,12 @@ void OutputComposer::printShortBool(const Trilean value) const
 	case Trilean::Value::TRUE:
 		switch (options::outputOperators)
 		{
-		case options::OutputOperators::FORMAL:
-		case options::OutputOperators::ASCII:
+		case OO::FORMAL:
+		case OO::ASCII:
 			o << '1';
 			break;
-		case options::OutputOperators::PROGRAMMING:
-		case options::OutputOperators::NAMES:
+		case OO::PROGRAMMING:
+		case OO::NAMES:
 			o << 'T';
 			break;
 		}
@@ -248,14 +252,14 @@ void OutputComposer::printShortBool(const Trilean value) const
 	case Trilean::Value::UNDEFINED:
 		switch (options::outputOperators)
 		{
-		case options::OutputOperators::FORMAL:
-		case options::OutputOperators::ASCII:
+		case OO::FORMAL:
+		case OO::ASCII:
 			o << 'X';
 			break;
-		case options::OutputOperators::PROGRAMMING:
+		case OO::PROGRAMMING:
 			o << '-';
 			break;
-		case options::OutputOperators::NAMES:
+		case OO::NAMES:
 			o << '?';
 			break;
 		}
@@ -269,29 +273,29 @@ void OutputComposer::printBool(const bool value, const bool strictlyForCode) con
 		goto programming;
 	switch (options::outputFormat)
 	{
-	case options::OutputFormat::VERILOG:
+	case OF::VERILOG:
 		o << (value ? '1' : '0');
 		break;
-	case options::OutputFormat::VHDL:
+	case OF::VHDL:
 		o << (value ? "'1'" : "'0'");
 		break;
-	case options::OutputFormat::CPP:
+	case OF::CPP:
 		o << (value ? "true" : "false");
 		break;
 	default:
 		switch (options::outputOperators)
 		{
-		case options::OutputOperators::FORMAL:
+		case OO::FORMAL:
 			o << (value ? u8"\u22A4" : u8"\u22A5");
 			break;
-		case options::OutputOperators::ASCII:
+		case OO::ASCII:
 			o << (value ? 'T' : 'F');
 			break;
-		case options::OutputOperators::PROGRAMMING:
+		case OO::PROGRAMMING:
 			programming:
 			o << (value ? "true" : "false");
 			break;
-		case options::OutputOperators::NAMES:
+		case OO::NAMES:
 			o << (value ? "TRUE" : "FALSE");
 			break;
 		default:
@@ -305,26 +309,26 @@ void OutputComposer::printNot() const
 {
 	switch (options::outputFormat)
 	{
-	case options::OutputFormat::VERILOG:
-	case options::OutputFormat::CPP:
+	case OF::VERILOG:
+	case OF::CPP:
 		o << '!';
 		break;
-	case options::OutputFormat::VHDL:
+	case OF::VHDL:
 		o << "not ";
 		break;
 	default:
 		switch (options::outputOperators)
 		{
-		case options::OutputOperators::FORMAL:
+		case OO::FORMAL:
 			o << u8"\u00AC";
 			break;
-		case options::OutputOperators::ASCII:
+		case OO::ASCII:
 			o << '~';
 			break;
-		case options::OutputOperators::PROGRAMMING:
+		case OO::PROGRAMMING:
 			o << '!';
 			break;
-		case options::OutputOperators::NAMES:
+		case OO::NAMES:
 			o << "NOT ";
 			break;
 		default:
@@ -339,31 +343,31 @@ void OutputComposer::printAnd(const bool spaces) const
 		o << ' ';
 	switch (options::outputFormat)
 	{
-	case options::OutputFormat::VERILOG:
+	case OF::VERILOG:
 		o << '&';
 		break;
-	case options::OutputFormat::VHDL:
+	case OF::VHDL:
 		o << "and";
 		break;
-	case options::OutputFormat::CPP:
+	case OF::CPP:
 		o << "&&";
 		break;
 	default:
 		switch (options::outputOperators)
 		{
-		case options::OutputOperators::FORMAL:
+		case OO::FORMAL:
 			o << u8"\u2227";
 			break;
-		case options::OutputOperators::ASCII:
-			if (options::outputFormat == options::OutputFormat::GRAPH || options::outputFormat == options::OutputFormat::REDUCED_GRAPH)
+		case OO::ASCII:
+			if (options::outputFormat == OF::GRAPH || options::outputFormat == OF::REDUCED_GRAPH)
 				o << "/\\\\";
 			else
 				o << "/\\";
 			break;
-		case options::OutputOperators::PROGRAMMING:
+		case OO::PROGRAMMING:
 			o << "&&";
 			break;
-		case options::OutputOperators::NAMES:
+		case OO::NAMES:
 			o << "AND";
 			break;
 		default:
@@ -380,31 +384,31 @@ void OutputComposer::printOr(const bool spaces) const
 		o << ' ';
 	switch (options::outputFormat)
 	{
-	case options::OutputFormat::VERILOG:
+	case OF::VERILOG:
 		o << '|';
 		break;
-	case options::OutputFormat::VHDL:
+	case OF::VHDL:
 		o << "or";
 		break;
-	case options::OutputFormat::CPP:
+	case OF::CPP:
 		o << "||";
 		break;
 	default:
 		switch (options::outputOperators)
 		{
-		case options::OutputOperators::FORMAL:
+		case OO::FORMAL:
 			o << u8"\u2228";
 			break;
-		case options::OutputOperators::ASCII:
-			if (options::outputFormat == options::OutputFormat::GRAPH || options::outputFormat == options::OutputFormat::REDUCED_GRAPH)
+		case OO::ASCII:
+			if (options::outputFormat == OF::GRAPH || options::outputFormat == OF::REDUCED_GRAPH)
 				o << "\\\\/";
 			else
 				o << "\\/";
 			break;
-		case options::OutputOperators::PROGRAMMING:
+		case OO::PROGRAMMING:
 			o << "||";
 			break;
-		case options::OutputOperators::NAMES:
+		case OO::NAMES:
 			o << "OR";
 			break;
 		default:
@@ -583,7 +587,7 @@ std::size_t OutputComposer::printGraphProducts(const Solution &solution, const s
 {
 	if (std::any_of(solution.cbegin(), solution.cend(), [](const Implicant &x){ return x.getBitCount() >= 2; }))
 	{
-		const bool isFullGraph = options::outputFormat == options::OutputFormat::GRAPH;
+		const bool isFullGraph = options::outputFormat == OF::GRAPH;
 		const bool isVerbose = options::verboseGraph;
 		o << "\t\tsubgraph products\n";
 		o << "\t\t{\n";
@@ -625,7 +629,7 @@ std::size_t OutputComposer::printGraphProducts(const Solution &solution, const s
 
 void OutputComposer::printGraphSum(const Solution &solution, const std::size_t functionNum) const
 {
-	const bool isFullGraph = options::outputFormat == options::OutputFormat::GRAPH;
+	const bool isFullGraph = options::outputFormat == OF::GRAPH;
 	const bool isVerbose = options::verboseGraph;
 	o << "\t\tsubgraph sum\n";
 	o << "\t\t{\n";
@@ -687,7 +691,7 @@ std::size_t OutputComposer::printSolution(const std::size_t i, std::size_t idShi
 	
 	if (isGraph())
 	{
-		const bool isFullGraph = options::outputFormat == options::OutputFormat::GRAPH;
+		const bool isFullGraph = options::outputFormat == OF::GRAPH;
 		if (isFullGraph)
 			printGraphNegatedInputs(solution, i);
 		if (isFullGraph || solution.size() >= 2)
@@ -695,7 +699,7 @@ std::size_t OutputComposer::printSolution(const std::size_t i, std::size_t idShi
 		printGraphSum(solution, i);
 		return idShift;
 	}
-	else if (options::outputFormat == options::OutputFormat::GATE_COSTS)
+	else if (options::outputFormat == OF::GATE_COSTS)
 	{
 		printGateCost(solution, true);
 		return 0;
@@ -704,7 +708,7 @@ std::size_t OutputComposer::printSolution(const std::size_t i, std::size_t idShi
 	if (isHuman())
 	{
 		const Karnaugh &karnaugh = karnaughs[i];
-		if (options::outputFormat == options::OutputFormat::HUMAN_LONG)
+		if (options::outputFormat == OF::HUMAN_LONG)
 		{
 			if (::bits <= 8)
 			{
@@ -743,7 +747,7 @@ std::size_t OutputComposer::printSolution(const std::size_t i, std::size_t idShi
 	if (isHuman())
 	{
 		o << '\n';
-		if (options::outputFormat != options::OutputFormat::HUMAN_SHORT)
+		if (options::outputFormat != OF::HUMAN_SHORT)
 		{
 			o << '\n';
 			printGateCost(solution, false);
@@ -757,7 +761,7 @@ void OutputComposer::printSolutions() const
 {
 	switch (options::outputFormat)
 	{
-	case options::OutputFormat::VHDL:
+	case OF::VHDL:
 		o << "begin\n" << "\t\n";
 		break;
 	default:
@@ -766,14 +770,14 @@ void OutputComposer::printSolutions() const
 	
 	if (karnaughs.empty())
 	{
-		if (options::outputFormat == options::OutputFormat::CPP)
+		if (options::outputFormat == OF::CPP)
 			o << "\treturn {};\n";
 	}
 	else
 	{
 		switch (options::outputFormat)
 		{
-		case options::OutputFormat::CPP:
+		case OF::CPP:
 			o << "\toutput_t o = {};\n";
 			break;
 		default:
@@ -786,52 +790,52 @@ void OutputComposer::printSolutions() const
 		{
 			switch (options::outputFormat)
 			{
-			case options::OutputFormat::HUMAN_LONG:
-			case options::OutputFormat::HUMAN:
+			case OF::HUMAN_LONG:
+			case OF::HUMAN:
 				if (!first)
 					o << '\n' << '\n';
 				[[fallthrough]];
-			case options::OutputFormat::HUMAN_SHORT:
+			case OF::HUMAN_SHORT:
 				o << "--- ";
 				break;
-			case options::OutputFormat::GRAPH:
-			case options::OutputFormat::REDUCED_GRAPH:
+			case OF::GRAPH:
+			case OF::REDUCED_GRAPH:
 				o << "\tsubgraph function_" << i << '\n';
 				o << "\t{\n";
 				break;
-			case options::OutputFormat::VERILOG:
+			case OF::VERILOG:
 				o << "\tassign ";
 				break;
-			case options::OutputFormat::VHDL:
-			case options::OutputFormat::CPP:
+			case OF::VHDL:
+			case OF::CPP:
 				o << '\t';
 				break;
 			default:
 				break;
 			}
 			
-			if (!isGraph() && options::outputFormat != options::OutputFormat::GATE_COSTS)
+			if (!isGraph() && options::outputFormat != OF::GATE_COSTS)
 				functionNames.printName(o, i);
 			
 			switch (options::outputFormat)
 			{
-			case options::OutputFormat::HUMAN_LONG:
-			case options::OutputFormat::HUMAN:
-			case options::OutputFormat::HUMAN_SHORT:
+			case OF::HUMAN_LONG:
+			case OF::HUMAN:
+			case OF::HUMAN_SHORT:
 				o << " ---\n";
-				if (options::outputFormat != options::OutputFormat::HUMAN_SHORT)
+				if (options::outputFormat != OF::HUMAN_SHORT)
 					o << '\n';
 				break;
-			case options::OutputFormat::MATHEMATICAL:
+			case OF::MATHEMATICAL:
 				o << '(';
 				::inputNames.printNames(o);
 				o << ')';
 				[[fallthrough]];
-			case options::OutputFormat::VERILOG:
-			case options::OutputFormat::CPP:
+			case OF::VERILOG:
+			case OF::CPP:
 				o << " = ";
 				break;
-			case options::OutputFormat::VHDL:
+			case OF::VHDL:
 				o << " <= ";
 				break;
 			default:
@@ -842,16 +846,16 @@ void OutputComposer::printSolutions() const
 			
 			switch (options::outputFormat)
 			{
-			case options::OutputFormat::GRAPH:
-			case options::OutputFormat::REDUCED_GRAPH:
+			case OF::GRAPH:
+			case OF::REDUCED_GRAPH:
 				o << "\t}\n";
 				break;
-			case options::OutputFormat::VERILOG:
-			case options::OutputFormat::VHDL:
-			case options::OutputFormat::CPP:
+			case OF::VERILOG:
+			case OF::VHDL:
+			case OF::CPP:
 				o << ";\n";
 				break;
-			case options::OutputFormat::MATHEMATICAL:
+			case OF::MATHEMATICAL:
 				o << '\n';
 				break;
 			default:
@@ -861,11 +865,11 @@ void OutputComposer::printSolutions() const
 		
 		switch (options::outputFormat)
 		{
-		case options::OutputFormat::VERILOG:
-		case options::OutputFormat::VHDL:
+		case OF::VERILOG:
+		case OF::VHDL:
 			o << "\t\n";
 			break;
-		case options::OutputFormat::CPP:
+		case OF::CPP:
 			o << "\treturn o;\n";
 			break;
 		default:
@@ -880,13 +884,13 @@ void OutputComposer::printOptimizedImmediates(const std::size_t immediateProduct
 	{
 		switch (options::outputFormat)
 		{
-		case options::OutputFormat::VERILOG:
+		case OF::VERILOG:
 			o << "\t// Internal signals\n";
 			break;
-		case options::OutputFormat::VHDL:
+		case OF::VHDL:
 			o << "\t-- Internal signals\n";
 			break;
-		case options::OutputFormat::CPP:
+		case OF::CPP:
 			o << "\t// Intermediary values\n";
 			break;
 		default:
@@ -896,13 +900,13 @@ void OutputComposer::printOptimizedImmediates(const std::size_t immediateProduct
 		{
 			switch (options::outputFormat)
 			{
-			case options::OutputFormat::VERILOG:
+			case OF::VERILOG:
 				o << "\twire [" << (immediateProductCount - 1) << ":0] prods;\n";
 				break;
-			case options::OutputFormat::VHDL:
+			case OF::VHDL:
 				o << "\tsignal prods : std_logic_vector(" << (immediateProductCount - 1) << " downto 0);\n";
 				break;
-			case options::OutputFormat::CPP:
+			case OF::CPP:
 				o << "\tbool prods[" << immediateProductCount << "] = {};\n";
 				break;
 			default:
@@ -913,13 +917,13 @@ void OutputComposer::printOptimizedImmediates(const std::size_t immediateProduct
 		{
 			switch (options::outputFormat)
 			{
-			case options::OutputFormat::VERILOG:
+			case OF::VERILOG:
 				o << "\twire [" << (immediateSumCount - 1) << ":0] sums;\n";
 				break;
-			case options::OutputFormat::VHDL:
+			case OF::VHDL:
 				o << "\tsignal sums : std_logic_vector(" << (immediateSumCount - 1) << " downto 0);\n";
 				break;
-			case options::OutputFormat::CPP:
+			case OF::CPP:
 				o << "\tbool sums[" << immediateSumCount << "] = {};\n";
 				break;
 			default:
@@ -967,13 +971,13 @@ void OutputComposer::printOptimizedNegatedInputs() const
 		return;
 	switch (options::outputFormat)
 	{
-	case options::OutputFormat::HUMAN_SHORT:
-	case options::OutputFormat::HUMAN:
-	case options::OutputFormat::HUMAN_LONG:
+	case OF::HUMAN_SHORT:
+	case OF::HUMAN:
+	case OF::HUMAN_LONG:
 		o << "Negated inputs:";
 		break;
-	case options::OutputFormat::GRAPH:
-	case options::OutputFormat::REDUCED_GRAPH:
+	case OF::GRAPH:
+	case OF::REDUCED_GRAPH:
 		o << "\tsubgraph negated_inputs\n";
 		o << "\t{\n";
 		o << "\t\tnode [shape=diamond];\n";
@@ -990,9 +994,9 @@ void OutputComposer::printOptimizedNegatedInputs() const
 			{
 				switch (options::outputFormat)
 				{
-				case options::OutputFormat::HUMAN_SHORT:
-				case options::OutputFormat::HUMAN:
-				case options::OutputFormat::HUMAN_LONG:
+				case OF::HUMAN_SHORT:
+				case OF::HUMAN:
+				case OF::HUMAN_LONG:
 					o << ',';
 					break;
 				default:
@@ -1001,13 +1005,13 @@ void OutputComposer::printOptimizedNegatedInputs() const
 			}
 			switch (options::outputFormat)
 			{
-			case options::OutputFormat::HUMAN_SHORT:
-			case options::OutputFormat::HUMAN:
-			case options::OutputFormat::HUMAN_LONG:
+			case OF::HUMAN_SHORT:
+			case OF::HUMAN:
+			case OF::HUMAN_LONG:
 				o << ' ';
 				break;
-			case options::OutputFormat::GRAPH:
-			case options::OutputFormat::REDUCED_GRAPH:
+			case OF::GRAPH:
+			case OF::REDUCED_GRAPH:
 				o << "\t\tni" << i << " [label=\"";
 				printNot();
 				break;
@@ -1017,8 +1021,8 @@ void OutputComposer::printOptimizedNegatedInputs() const
 			::inputNames.printName(o, i);
 			switch (options::outputFormat)
 			{
-			case options::OutputFormat::GRAPH:
-			case options::OutputFormat::REDUCED_GRAPH:
+			case OF::GRAPH:
+			case OF::REDUCED_GRAPH:
 				o << "\"];\n";
 				o << "\t\ti" << i << " -> ni" << i << ";\n";
 				break;
@@ -1031,9 +1035,9 @@ void OutputComposer::printOptimizedNegatedInputs() const
 	{
 		switch (options::outputFormat)
 		{
-		case options::OutputFormat::HUMAN_SHORT:
-		case options::OutputFormat::HUMAN:
-		case options::OutputFormat::HUMAN_LONG:
+		case OF::HUMAN_SHORT:
+		case OF::HUMAN:
+		case OF::HUMAN_LONG:
 			o << " <none>";
 			break;
 		default:
@@ -1042,13 +1046,13 @@ void OutputComposer::printOptimizedNegatedInputs() const
 	}
 	switch (options::outputFormat)
 	{
-	case options::OutputFormat::HUMAN_SHORT:
-	case options::OutputFormat::HUMAN:
-	case options::OutputFormat::HUMAN_LONG:
+	case OF::HUMAN_SHORT:
+	case OF::HUMAN:
+	case OF::HUMAN_LONG:
 		o << '\n';
 		break;
-	case options::OutputFormat::GRAPH:
-	case options::OutputFormat::REDUCED_GRAPH:
+	case OF::GRAPH:
+	case OF::REDUCED_GRAPH:
 		o << "\t}\n";
 		break;
 	default:
@@ -1098,7 +1102,7 @@ void OutputComposer::printOptimizedGraphProductImplicant(const OptimizedSolution
 
 std::size_t OutputComposer::printOptimizedGraphProductLabel(const OptimizedSolutions::id_t productId, std::size_t functionNum) const
 {
-	const bool isFullGraph = options::outputFormat == options::OutputFormat::GRAPH;
+	const bool isFullGraph = options::outputFormat == OF::GRAPH;
 	const bool isVerboseGraph = options::verboseGraph;
 	const bool hasParents = isFullGraph || !optimizedSolutions->getProduct(productId).subProducts.empty();
 	if (hasParents)
@@ -1129,7 +1133,7 @@ std::size_t OutputComposer::printOptimizedGraphProductLabel(const OptimizedSolut
 
 void OutputComposer::printOptimizedGraphProductParents(const OptimizedSolutions::id_t productId) const
 {
-	const bool isFullGraph = options::outputFormat == options::OutputFormat::GRAPH;
+	const bool isFullGraph = options::outputFormat == OF::GRAPH;
 	const auto &[primeImplicant, ids] = optimizedSolutions->getProduct(productId);
 	bool needsComma = isFullGraph && primeImplicant != Implicant::all();
 	if (needsComma || ids.empty())
@@ -1148,21 +1152,21 @@ void OutputComposer::printOptimizedProduct(const OptimizedSolutions::id_t produc
 {
 	switch (options::outputFormat)
 	{
-	case options::OutputFormat::HUMAN_SHORT:
-	case options::OutputFormat::HUMAN:
-	case options::OutputFormat::HUMAN_LONG:
-	case options::OutputFormat::VHDL:
-	case options::OutputFormat::CPP:
+	case OF::HUMAN_SHORT:
+	case OF::HUMAN:
+	case OF::HUMAN_LONG:
+	case OF::VHDL:
+	case OF::CPP:
 		o << '\t';
 		break;
-	case options::OutputFormat::GRAPH:
-	case options::OutputFormat::REDUCED_GRAPH:
+	case OF::GRAPH:
+	case OF::REDUCED_GRAPH:
 		o << "\t\t";
 		break;
-	case options::OutputFormat::VERILOG:
+	case OF::VERILOG:
 		o << "\tassign ";
 		break;
-	case options::OutputFormat::MATHEMATICAL:
+	case OF::MATHEMATICAL:
 		break;
 	default:
 		break;
@@ -1172,19 +1176,19 @@ void OutputComposer::printOptimizedProduct(const OptimizedSolutions::id_t produc
 	
 	switch (options::outputFormat)
 	{
-	case options::OutputFormat::HUMAN_SHORT:
-	case options::OutputFormat::HUMAN:
-	case options::OutputFormat::HUMAN_LONG:
-	case options::OutputFormat::VERILOG:
-	case options::OutputFormat::CPP:
-	case options::OutputFormat::MATHEMATICAL:
+	case OF::HUMAN_SHORT:
+	case OF::HUMAN:
+	case OF::HUMAN_LONG:
+	case OF::VERILOG:
+	case OF::CPP:
+	case OF::MATHEMATICAL:
 		o << " = ";
 		break;
-	case options::OutputFormat::GRAPH:
-	case options::OutputFormat::REDUCED_GRAPH:
+	case OF::GRAPH:
+	case OF::REDUCED_GRAPH:
 		o << " [label=\"";
 		break;
-	case options::OutputFormat::VHDL:
+	case OF::VHDL:
 		o << " <= ";
 		break;
 	default:
@@ -1198,7 +1202,7 @@ void OutputComposer::printOptimizedProduct(const OptimizedSolutions::id_t produc
 	}
 	else
 	{
-		const bool isFullGraph = options::outputFormat == options::OutputFormat::GRAPH;
+		const bool isFullGraph = options::outputFormat == OF::GRAPH;
 		const bool hasParents = isFullGraph || !optimizedSolutions->getProduct(productId).subProducts.empty();
 		std::size_t functionNum = isFullGraph ? SIZE_MAX : optimizedSolutions->findProductEndNode(productId);
 		functionNum = printOptimizedGraphProductLabel(productId, functionNum);
@@ -1218,17 +1222,17 @@ void OutputComposer::printOptimizedProduct(const OptimizedSolutions::id_t produc
 	
 	switch (options::outputFormat)
 	{
-	case options::OutputFormat::HUMAN_SHORT:
-	case options::OutputFormat::HUMAN:
-	case options::OutputFormat::HUMAN_LONG:
-	case options::OutputFormat::MATHEMATICAL:
+	case OF::HUMAN_SHORT:
+	case OF::HUMAN:
+	case OF::HUMAN_LONG:
+	case OF::MATHEMATICAL:
 		o << '\n';
 		break;
-	case options::OutputFormat::GRAPH:
-	case options::OutputFormat::REDUCED_GRAPH:
-	case options::OutputFormat::VERILOG:
-	case options::OutputFormat::VHDL:
-	case options::OutputFormat::CPP:
+	case OF::GRAPH:
+	case OF::REDUCED_GRAPH:
+	case OF::VERILOG:
+	case OF::VHDL:
+	case OF::CPP:
 		o << ";\n";
 		break;
 	default:
@@ -1249,19 +1253,19 @@ void OutputComposer::printOptimizedProducts() const
 		{
 			switch (options::outputFormat)
 			{
-			case options::OutputFormat::GRAPH:
-			case options::OutputFormat::REDUCED_GRAPH:
+			case OF::GRAPH:
+			case OF::REDUCED_GRAPH:
 				o << "\tsubgraph products\n";
 				o << "\t{\n";
 				o << "\t\tnode [shape=ellipse];\n";
 				break;
-			case options::OutputFormat::VERILOG:
+			case OF::VERILOG:
 				o << "\t// Products\n";
 				break;
-			case options::OutputFormat::VHDL:
+			case OF::VHDL:
 				o << "\t\n\t-- Products\n";
 				break;
-			case options::OutputFormat::CPP:
+			case OF::CPP:
 				o << "\t// Products\n";
 				break;
 			default:
@@ -1274,12 +1278,12 @@ void OutputComposer::printOptimizedProducts() const
 	{
 		switch (options::outputFormat)
 		{
-		case options::OutputFormat::GRAPH:
-		case options::OutputFormat::REDUCED_GRAPH:
+		case OF::GRAPH:
+		case OF::REDUCED_GRAPH:
 			o << "\t}\n";
 			break;
-		case options::OutputFormat::VERILOG:
-		case options::OutputFormat::CPP:
+		case OF::VERILOG:
+		case OF::CPP:
 			o << "\t\n";
 			break;
 		default:
@@ -1299,14 +1303,14 @@ void OutputComposer::printOptimizedSumBody(const OptimizedSolutions::id_t sumId)
 		if (!optimizedSolutions->isProduct(partId) || isOptimizedProductWorthPrinting(partId))
 			printNormalizedId(partId);
 		else
-			printOptimizedProductBody(partId, options::outputFormat == options::OutputFormat::MATHEMATICAL && sum.size() != 1);
+			printOptimizedProductBody(partId, options::outputFormat == OF::MATHEMATICAL && sum.size() != 1);
 	}
 }
 
 std::size_t OutputComposer::printOptimizedGraphSumLabel(const OptimizedSolutions::id_t sumId, std::size_t functionNum) const
 {
 	const OptimizedSolutions::sum_t &sum = optimizedSolutions->getSum(sumId);
-	const bool isFullGraph = options::outputFormat == options::OutputFormat::GRAPH;
+	const bool isFullGraph = options::outputFormat == OF::GRAPH;
 	const bool isVerboseGraph = options::verboseGraph;
 	const bool hasParents = isFullGraph || std::any_of(sum.cbegin(), sum.cend(), [this](const OptimizedSolutions::id_t id){ return !optimizedSolutions->isProduct(id) || isOptimizedProductWorthPrintingInGeneral(id); });
 	if (hasParents)
@@ -1364,7 +1368,7 @@ void OutputComposer::printOptimizedGraphSumProducts(const OptimizedSolutions::id
 
 void OutputComposer::printOptimizedGraphSumParents(const OptimizedSolutions::id_t sumId) const
 {
-	const bool isFullGraph = options::outputFormat == options::OutputFormat::GRAPH;
+	const bool isFullGraph = options::outputFormat == OF::GRAPH;
 	First first;
 	for (const auto &partId : optimizedSolutions->getSum(sumId))
 	{
@@ -1387,21 +1391,21 @@ void OutputComposer::printOptimizedSum(const OptimizedSolutions::id_t sumId) con
 {
 	switch (options::outputFormat)
 	{
-	case options::OutputFormat::HUMAN_SHORT:
-	case options::OutputFormat::HUMAN:
-	case options::OutputFormat::HUMAN_LONG:
-	case options::OutputFormat::VHDL:
-	case options::OutputFormat::CPP:
+	case OF::HUMAN_SHORT:
+	case OF::HUMAN:
+	case OF::HUMAN_LONG:
+	case OF::VHDL:
+	case OF::CPP:
 		o << '\t';
 		break;
-	case options::OutputFormat::GRAPH:
-	case options::OutputFormat::REDUCED_GRAPH:
+	case OF::GRAPH:
+	case OF::REDUCED_GRAPH:
 		o << "\t\t";
 		break;
-	case options::OutputFormat::VERILOG:
+	case OF::VERILOG:
 		o << "\tassign ";
 		break;
-	case options::OutputFormat::MATHEMATICAL:
+	case OF::MATHEMATICAL:
 	default:
 		break;
 	}
@@ -1410,19 +1414,19 @@ void OutputComposer::printOptimizedSum(const OptimizedSolutions::id_t sumId) con
 	
 	switch (options::outputFormat)
 	{
-	case options::OutputFormat::HUMAN_SHORT:
-	case options::OutputFormat::HUMAN:
-	case options::OutputFormat::HUMAN_LONG:
-	case options::OutputFormat::VERILOG:
-	case options::OutputFormat::CPP:
-	case options::OutputFormat::MATHEMATICAL:
+	case OF::HUMAN_SHORT:
+	case OF::HUMAN:
+	case OF::HUMAN_LONG:
+	case OF::VERILOG:
+	case OF::CPP:
+	case OF::MATHEMATICAL:
 		o << " = ";
 		break;
-	case options::OutputFormat::GRAPH:
-	case options::OutputFormat::REDUCED_GRAPH:
+	case OF::GRAPH:
+	case OF::REDUCED_GRAPH:
 		o << " [label=\"";
 		break;
-	case options::OutputFormat::VHDL:
+	case OF::VHDL:
 		o << " <= ";
 		break;
 	default:
@@ -1436,7 +1440,7 @@ void OutputComposer::printOptimizedSum(const OptimizedSolutions::id_t sumId) con
 	else
 	{
 		const OptimizedSolutions::sum_t &sum = optimizedSolutions->getSum(sumId);
-		const bool isFullGraph = options::outputFormat == options::OutputFormat::GRAPH;
+		const bool isFullGraph = options::outputFormat == OF::GRAPH;
 		const bool hasParents = isFullGraph || std::any_of(sum.cbegin(), sum.cend(), [this](const OptimizedSolutions::id_t id){ return !optimizedSolutions->isProduct(id) || isOptimizedProductWorthPrintingInGeneral(id); });
 		std::size_t functionNum = isFullGraph ? SIZE_MAX : optimizedSolutions->findSumEndNode(sumId);
 		functionNum = printOptimizedGraphSumLabel(sumId, functionNum);
@@ -1456,17 +1460,17 @@ void OutputComposer::printOptimizedSum(const OptimizedSolutions::id_t sumId) con
 	
 	switch (options::outputFormat)
 	{
-	case options::OutputFormat::HUMAN_SHORT:
-	case options::OutputFormat::HUMAN:
-	case options::OutputFormat::HUMAN_LONG:
-	case options::OutputFormat::MATHEMATICAL:
+	case OF::HUMAN_SHORT:
+	case OF::HUMAN:
+	case OF::HUMAN_LONG:
+	case OF::MATHEMATICAL:
 		o << '\n';
 		break;
-	case options::OutputFormat::GRAPH:
-	case options::OutputFormat::REDUCED_GRAPH:
-	case options::OutputFormat::VERILOG:
-	case options::OutputFormat::VHDL:
-	case options::OutputFormat::CPP:
+	case OF::GRAPH:
+	case OF::REDUCED_GRAPH:
+	case OF::VERILOG:
+	case OF::VHDL:
+	case OF::CPP:
 		o << ";\n";
 		break;
 	default:
@@ -1488,24 +1492,24 @@ void OutputComposer::printOptimizedSums() const
 		{
 			switch (options::outputFormat)
 			{
-			case options::OutputFormat::HUMAN_SHORT:
-			case options::OutputFormat::HUMAN:
-			case options::OutputFormat::HUMAN_LONG:
+			case OF::HUMAN_SHORT:
+			case OF::HUMAN:
+			case OF::HUMAN_LONG:
 				break;
-			case options::OutputFormat::GRAPH:
-			case options::OutputFormat::REDUCED_GRAPH:
+			case OF::GRAPH:
+			case OF::REDUCED_GRAPH:
 				o << "\tsubgraph sums\n";
 				o << "\t{\n";
 				o << "\t\tnode [shape=rectangle];\n";
 				break;
-			case options::OutputFormat::VERILOG:
-			case options::OutputFormat::CPP:
+			case OF::VERILOG:
+			case OF::CPP:
 				o << "\t// Sums\n";
 				break;
-			case options::OutputFormat::VHDL:
+			case OF::VHDL:
 				o << "\t\n\t-- Sums\n";
 				break;
-			case options::OutputFormat::MATHEMATICAL:
+			case OF::MATHEMATICAL:
 			default:
 				break;
 			}
@@ -1517,20 +1521,20 @@ void OutputComposer::printOptimizedSums() const
 	{
 		switch (options::outputFormat)
 		{
-		case options::OutputFormat::HUMAN_SHORT:
-		case options::OutputFormat::HUMAN:
-		case options::OutputFormat::HUMAN_LONG:
+		case OF::HUMAN_SHORT:
+		case OF::HUMAN:
+		case OF::HUMAN_LONG:
 			break;
-		case options::OutputFormat::GRAPH:
-		case options::OutputFormat::REDUCED_GRAPH:
+		case OF::GRAPH:
+		case OF::REDUCED_GRAPH:
 			o << "\t}\n";
 			break;
-		case options::OutputFormat::VERILOG:
-		case options::OutputFormat::CPP:
+		case OF::VERILOG:
+		case OF::CPP:
 			o << "\t\n";
 			break;
-		case options::OutputFormat::VHDL:
-		case options::OutputFormat::MATHEMATICAL:
+		case OF::VHDL:
+		case OF::MATHEMATICAL:
 		default:
 			break;
 		}
@@ -1555,55 +1559,55 @@ void OutputComposer::printOptimizedFinalSums() const
 {
 	switch (options::outputFormat)
 	{
-	case options::OutputFormat::HUMAN_SHORT:
-	case options::OutputFormat::HUMAN:
-	case options::OutputFormat::HUMAN_LONG:
+	case OF::HUMAN_SHORT:
+	case OF::HUMAN:
+	case OF::HUMAN_LONG:
 		break;
-	case options::OutputFormat::GRAPH:
-	case options::OutputFormat::REDUCED_GRAPH:
+	case OF::GRAPH:
+	case OF::REDUCED_GRAPH:
 		break;
-	case options::OutputFormat::VERILOG:
+	case OF::VERILOG:
 		break;
-	case options::OutputFormat::VHDL:
+	case OF::VHDL:
 		break;
-	case options::OutputFormat::CPP:
+	case OF::CPP:
 		o << "\t// Results\n";
 		break;
-	case options::OutputFormat::MATHEMATICAL:
+	case OF::MATHEMATICAL:
 	default:
 		break;
 	}
 	
 	if (optimizedSolutions->getFinalSums().empty() && !isHuman())
 	{
-		if (options::outputFormat == options::OutputFormat::CPP)
+		if (options::outputFormat == OF::CPP)
 			o << "\treturn {};\n";
 		return;
 	}
 	
 	switch (options::outputFormat)
 	{
-	case options::OutputFormat::HUMAN_SHORT:
-	case options::OutputFormat::HUMAN:
-	case options::OutputFormat::HUMAN_LONG:
+	case OF::HUMAN_SHORT:
+	case OF::HUMAN:
+	case OF::HUMAN_LONG:
 		break;
-	case options::OutputFormat::GRAPH:
-	case options::OutputFormat::REDUCED_GRAPH:
+	case OF::GRAPH:
+	case OF::REDUCED_GRAPH:
 		o << "\tsubgraph final_sums\n";
 		o << "\t{\n";
 		o << "\t\tnode [shape=rectangle, style=filled];\n";
 		break;
-	case options::OutputFormat::VERILOG:
+	case OF::VERILOG:
 		o << "\t// Results\n";
 		break;
-	case options::OutputFormat::VHDL:
+	case OF::VHDL:
 		o << "\t\n";
 		o << "\t-- Results\n";
 		break;
-	case options::OutputFormat::CPP:
+	case OF::CPP:
 		o << "\toutput_t o = {};\n";
 		break;
-	case options::OutputFormat::MATHEMATICAL:
+	case OF::MATHEMATICAL:
 	default:
 		break;
 	}
@@ -1612,26 +1616,26 @@ void OutputComposer::printOptimizedFinalSums() const
 	{
 		switch (options::outputFormat)
 		{
-		case options::OutputFormat::HUMAN_SHORT:
-		case options::OutputFormat::HUMAN:
-		case options::OutputFormat::HUMAN_LONG:
+		case OF::HUMAN_SHORT:
+		case OF::HUMAN:
+		case OF::HUMAN_LONG:
 			o << "\t\"";
 			break;
-		case options::OutputFormat::GRAPH:
-		case options::OutputFormat::REDUCED_GRAPH:
+		case OF::GRAPH:
+		case OF::REDUCED_GRAPH:
 			o << "\t\tf" << i << " [label=\"";
 			printOptimizedGraphFinalSumLabel(i);
 			o << "\"];\n";
 			o << "\t\t";
 			break;
-		case options::OutputFormat::VERILOG:
+		case OF::VERILOG:
 			o << "\tassign ";
 			break;
-		case options::OutputFormat::VHDL:
-		case options::OutputFormat::CPP:
+		case OF::VHDL:
+		case OF::CPP:
 			o << '\t';
 			break;
-		case options::OutputFormat::MATHEMATICAL:
+		case OF::MATHEMATICAL:
 		default:
 			break;
 		}
@@ -1641,22 +1645,22 @@ void OutputComposer::printOptimizedFinalSums() const
 		
 		switch (options::outputFormat)
 		{
-		case options::OutputFormat::HUMAN_SHORT:
-		case options::OutputFormat::HUMAN:
-		case options::OutputFormat::HUMAN_LONG:
+		case OF::HUMAN_SHORT:
+		case OF::HUMAN:
+		case OF::HUMAN_LONG:
 			o << "\" = ";
 			break;
-		case options::OutputFormat::GRAPH:
-		case options::OutputFormat::REDUCED_GRAPH:
+		case OF::GRAPH:
+		case OF::REDUCED_GRAPH:
 			break;
-		case options::OutputFormat::VERILOG:
-		case options::OutputFormat::CPP:
+		case OF::VERILOG:
+		case OF::CPP:
 			o << " = ";
 			break;
-		case options::OutputFormat::VHDL:
+		case OF::VHDL:
 			o << " <= ";
 			break;
-		case options::OutputFormat::MATHEMATICAL:
+		case OF::MATHEMATICAL:
 			o << '(';
 			::inputNames.printNames(o);
 			o << ") = ";
@@ -1675,19 +1679,19 @@ void OutputComposer::printOptimizedFinalSums() const
 		
 		switch (options::outputFormat)
 		{
-		case options::OutputFormat::HUMAN_SHORT:
-		case options::OutputFormat::HUMAN:
-		case options::OutputFormat::HUMAN_LONG:
-		case options::OutputFormat::MATHEMATICAL:
+		case OF::HUMAN_SHORT:
+		case OF::HUMAN:
+		case OF::HUMAN_LONG:
+		case OF::MATHEMATICAL:
 			o << '\n';
 			break;
-		case options::OutputFormat::GRAPH:
-		case options::OutputFormat::REDUCED_GRAPH:
+		case OF::GRAPH:
+		case OF::REDUCED_GRAPH:
 			o << " -> f" << i << ";\n";
 			break;
-		case options::OutputFormat::VERILOG:
-		case options::OutputFormat::VHDL:
-		case options::OutputFormat::CPP:
+		case OF::VERILOG:
+		case OF::VHDL:
+		case OF::CPP:
 			o << ";\n";
 			break;
 		default:
@@ -1697,23 +1701,23 @@ void OutputComposer::printOptimizedFinalSums() const
 	
 	switch (options::outputFormat)
 	{
-	case options::OutputFormat::HUMAN_SHORT:
-	case options::OutputFormat::HUMAN:
-	case options::OutputFormat::HUMAN_LONG:
+	case OF::HUMAN_SHORT:
+	case OF::HUMAN:
+	case OF::HUMAN_LONG:
 		break;
-	case options::OutputFormat::GRAPH:
-	case options::OutputFormat::REDUCED_GRAPH:
+	case OF::GRAPH:
+	case OF::REDUCED_GRAPH:
 		o << "\t}\n";
 		break;
-	case options::OutputFormat::VERILOG:
+	case OF::VERILOG:
 		o << "\t\n";
 		break;
-	case options::OutputFormat::VHDL:
+	case OF::VHDL:
 		break;
-	case options::OutputFormat::CPP:
+	case OF::CPP:
 		o << "\treturn o;\n";
 		break;
-	case options::OutputFormat::MATHEMATICAL:
+	case OF::MATHEMATICAL:
 	default:
 		break;
 	}
@@ -1722,28 +1726,28 @@ void OutputComposer::printOptimizedFinalSums() const
 void OutputComposer::printOptimizedSolution()
 {
 	const auto [immediateProductCount, immediateSumCount] = generateOptimizedNormalizedIds();
-	if (isHuman() || options::outputFormat == options::OutputFormat::GRAPH)
+	if (isHuman() || options::outputFormat == OF::GRAPH)
 		printOptimizedNegatedInputs();
 	if (!isHumanReadable())
 		printOptimizedImmediates(immediateProductCount, immediateSumCount);
 	
 	switch (options::outputFormat)
 	{
-	case options::OutputFormat::HUMAN_SHORT:
-	case options::OutputFormat::HUMAN:
-	case options::OutputFormat::HUMAN_LONG:
+	case OF::HUMAN_SHORT:
+	case OF::HUMAN:
+	case OF::HUMAN_LONG:
 		break;
-	case options::OutputFormat::GRAPH:
-	case options::OutputFormat::REDUCED_GRAPH:
+	case OF::GRAPH:
+	case OF::REDUCED_GRAPH:
 		break;
-	case options::OutputFormat::VERILOG:
+	case OF::VERILOG:
 		break;
-	case options::OutputFormat::VHDL:
+	case OF::VHDL:
 		o << "begin\n";
 		break;
-	case options::OutputFormat::CPP:
+	case OF::CPP:
 		break;
-	case options::OutputFormat::MATHEMATICAL:
+	case OF::MATHEMATICAL:
 		if (immediateProductCount != 0 || immediateSumCount != 0)
 			o << "Let:\n";
 		break;
@@ -1756,20 +1760,20 @@ void OutputComposer::printOptimizedSolution()
 	
 	switch (options::outputFormat)
 	{
-	case options::OutputFormat::HUMAN_SHORT:
-	case options::OutputFormat::HUMAN:
-	case options::OutputFormat::HUMAN_LONG:
+	case OF::HUMAN_SHORT:
+	case OF::HUMAN:
+	case OF::HUMAN_LONG:
 		break;
-	case options::OutputFormat::GRAPH:
-	case options::OutputFormat::REDUCED_GRAPH:
+	case OF::GRAPH:
+	case OF::REDUCED_GRAPH:
 		break;
-	case options::OutputFormat::VERILOG:
+	case OF::VERILOG:
 		break;
-	case options::OutputFormat::VHDL:
+	case OF::VHDL:
 		break;
-	case options::OutputFormat::CPP:
+	case OF::CPP:
 		break;
-	case options::OutputFormat::MATHEMATICAL:
+	case OF::MATHEMATICAL:
 		if (immediateProductCount != 0 || immediateSumCount != 0)
 			o << "\nThen:\n";
 		break;
@@ -1777,9 +1781,9 @@ void OutputComposer::printOptimizedSolution()
 		break;
 	}
 	
-	if (options::outputFormat != options::OutputFormat::REDUCED_GRAPH)
+	if (options::outputFormat != OF::REDUCED_GRAPH)
 		printOptimizedFinalSums();
-	if (options::outputFormat == options::OutputFormat::HUMAN || options::outputFormat == options::OutputFormat::HUMAN_LONG)
+	if (options::outputFormat == OF::HUMAN || options::outputFormat == OF::HUMAN_LONG)
 	{
 		o << '\n';
 		printGateCost(*optimizedSolutions, false);
@@ -1787,21 +1791,21 @@ void OutputComposer::printOptimizedSolution()
 	
 	switch (options::outputFormat)
 	{
-	case options::OutputFormat::HUMAN_SHORT:
-	case options::OutputFormat::HUMAN:
-	case options::OutputFormat::HUMAN_LONG:
+	case OF::HUMAN_SHORT:
+	case OF::HUMAN:
+	case OF::HUMAN_LONG:
 		break;
-	case options::OutputFormat::GRAPH:
-	case options::OutputFormat::REDUCED_GRAPH:
+	case OF::GRAPH:
+	case OF::REDUCED_GRAPH:
 		break;
-	case options::OutputFormat::VERILOG:
+	case OF::VERILOG:
 		break;
-	case options::OutputFormat::VHDL:
+	case OF::VHDL:
 		o << "\t\n";
 		break;
-	case options::OutputFormat::CPP:
+	case OF::CPP:
 		break;
-	case options::OutputFormat::MATHEMATICAL:
+	case OF::MATHEMATICAL:
 	default:
 		break;
 	}
@@ -1855,11 +1859,11 @@ void OutputComposer::printGraphRoots() const
 
 void OutputComposer::printHuman()
 {
-	const bool solutionsVisible = options::skipOptimization || options::outputFormat != options::OutputFormat::HUMAN_SHORT;
+	const bool solutionsVisible = options::skipOptimization || options::outputFormat != OF::HUMAN_SHORT;
 	if (solutionsVisible)
 	{
 		printSolutions();
-		if (options::outputFormat != options::OutputFormat::HUMAN_SHORT)
+		if (options::outputFormat != OF::HUMAN_SHORT)
 		{
 			if (solutions.size() != 1 && options::skipOptimization)
 			{
@@ -1871,7 +1875,7 @@ void OutputComposer::printHuman()
 	}
 	if (!options::skipOptimization)
 	{
-		if (options::outputFormat != options::OutputFormat::HUMAN_SHORT)
+		if (options::outputFormat != OF::HUMAN_SHORT)
 		{
 			if (!solutions.empty())
 				o << "\n\n";
@@ -1886,7 +1890,7 @@ void OutputComposer::printGraph()
 {
 	o << "digraph " << getName() << '\n';
 	o << "{\n";
-	if (options::outputFormat == options::OutputFormat::GRAPH)
+	if (options::outputFormat == OF::GRAPH)
 		printGraphRoots();
 	if (options::skipOptimization)
 		printSolutions();
@@ -2067,28 +2071,28 @@ void OutputComposer::compose()
 	
 	switch (options::outputFormat)
 	{
-	case options::OutputFormat::HUMAN_LONG:
-	case options::OutputFormat::HUMAN:
-	case options::OutputFormat::HUMAN_SHORT:
+	case OF::HUMAN_LONG:
+	case OF::HUMAN:
+	case OF::HUMAN_SHORT:
 		printHuman();
 		break;
-	case options::OutputFormat::GRAPH:
-	case options::OutputFormat::REDUCED_GRAPH:
+	case OF::GRAPH:
+	case OF::REDUCED_GRAPH:
 		printGraph();
 		break;
-	case options::OutputFormat::VERILOG:
+	case OF::VERILOG:
 		printVerilog();
 		break;
-	case options::OutputFormat::VHDL:
+	case OF::VHDL:
 		printVhdl();
 		break;
-	case options::OutputFormat::CPP:
+	case OF::CPP:
 		printCpp();
 		break;
-	case options::OutputFormat::MATHEMATICAL:
+	case OF::MATHEMATICAL:
 		printMath();
 		break;
-	case options::OutputFormat::GATE_COSTS:
+	case OF::GATE_COSTS:
 		printGateCost();
 		break;
 	}
