@@ -150,6 +150,6 @@ void Karnaughs::solve()
 void Karnaughs::print(std::ostream &o)
 {
 	const Names functionNames = gatherFunctionNames();
-	OutputComposer composer(functionNames, karnaughs, bestSolutions, options::skipOptimization.isRaised() ? nullptr : &optimizedSolutions);
-	composer.compose(o);
+	OutputComposer composer(functionNames, karnaughs, bestSolutions, options::skipOptimization.isRaised() ? nullptr : &optimizedSolutions, o);
+	composer.compose();
 }
