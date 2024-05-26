@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "GateCost.hh"
+#include "IndentedOStream.hh"
 #include "Karnaugh.hh"
 #include "Names.hh"
 #include "OptimizedSolutions.hh"
@@ -22,7 +23,7 @@ class OutputComposer
 	const std::vector<Karnaugh> &karnaughs;
 	const Solutions &solutions;
 	const OptimizedSolutions *const optimizedSolutions;
-	std::ostream &o;
+	mutable IndentedOStream o;
 	
 	[[nodiscard]] static inline bool isHuman();
 	[[nodiscard]] static inline bool isGraph();
