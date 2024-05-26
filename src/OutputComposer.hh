@@ -43,13 +43,16 @@ class OutputComposer
 	std::pair<std::size_t, std::size_t> generateOptimizedNormalizedIds();
 	void printNormalizedId(const OptimizedSolutions::id_t id, const bool useHumanAnyway = false) const;
 	
-	void printBanner() const;
-	
+	void printCommentStart() const;
+	void printAssignmentStart() const;
+	void printAssignmentOp() const;
 	void printShortBool(const Trilean value) const;
 	void printBool(const bool value, const bool strictlyForCode = false) const;
 	void printNot() const;
 	void printAnd(const bool spaces) const;
 	void printOr(const bool spaces) const;
+	
+	void printBanner() const;
 	
 	static grayCode_t makeGrayCode(const bits_t bitCount);
 	void printBits(const Minterm minterm, const bits_t bitCount) const;

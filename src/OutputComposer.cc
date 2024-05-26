@@ -186,15 +186,13 @@ void OutputComposer::printNormalizedId(const OptimizedSolutions::id_t id, const 
 	}
 }
 
-void OutputComposer::printBanner() const
+void OutputComposer::printCommentStart() const
 {
 	switch (options::outputFormat)
 	{
-	case OF::HUMAN_LONG:
-	case OF::HUMAN:
 	case OF::HUMAN_SHORT:
-	case OF::MATHEMATICAL:
-	case OF::GATE_COSTS:
+	case OF::HUMAN:
+	case OF::HUMAN_LONG:
 		break;
 	case OF::GRAPH:
 	case OF::REDUCED_GRAPH:
@@ -205,18 +203,54 @@ void OutputComposer::printBanner() const
 	case OF::VHDL:
 		o << "-- ";
 		break;
+	case OF::MATHEMATICAL:
+	case OF::GATE_COSTS:
+		break;
 	}
-	
-	o << "Generated with " << getFullName() << " v" << getVersionNumber() << " by " << getAuthor();
-	if (std::any_of(options::allOptions.cbegin(), options::allOptions.cend(), [](const options::Option *const option){ return option->isSet(); }))
+}
+
+void OutputComposer::printAssignmentStart() const
+{
+	switch (options::outputFormat)
 	{
-		o << " (with options:";
-		for (const options::Option *const option : options::allOptions)
-			if (option->isSet())
-				o << ' ' << option->compose();
-		o << ')';
+	case OF::HUMAN_SHORT:
+	case OF::HUMAN:
+	case OF::HUMAN_LONG:
+	case OF::GRAPH:
+	case OF::REDUCED_GRAPH:
+		break;
+	case OF::VERILOG:
+		o << "assign ";
+		break;
+	case OF::VHDL:
+	case OF::CPP:
+	case OF::MATHEMATICAL:
+	case OF::GATE_COSTS:
+		break;
 	}
-	o << "\n\n";
+}
+
+void OutputComposer::printAssignmentOp() const
+{
+	switch (options::outputFormat)
+	{
+	case OF::HUMAN_SHORT:
+	case OF::HUMAN:
+	case OF::HUMAN_LONG:
+	case OF::VERILOG:
+	case OF::CPP:
+	case OF::MATHEMATICAL:
+		o << " = ";
+		break;
+	case OF::GRAPH:
+	case OF::REDUCED_GRAPH:
+		break;
+	case OF::VHDL:
+		o << " <= ";
+		break;
+	case OF::GATE_COSTS:
+		break;
+	}
 }
 
 void OutputComposer::printShortBool(const Trilean value) const
@@ -417,6 +451,21 @@ void OutputComposer::printOr(const bool spaces) const
 	}
 	if (spaces)
 		o << ' ';
+}
+
+void OutputComposer::printBanner() const
+{
+	printCommentStart();
+	o << "Generated with " << getFullName() << " v" << getVersionNumber() << " by " << getAuthor();
+	if (std::any_of(options::allOptions.cbegin(), options::allOptions.cend(), [](const options::Option *const option){ return option->isSet(); }))
+	{
+		o << " (with options:";
+		for (const options::Option *const option : options::allOptions)
+			if (option->isSet())
+				o << ' ' << option->compose();
+		o << ')';
+	}
+	o << "\n\n";
 }
 
 OutputComposer::grayCode_t OutputComposer::makeGrayCode(const bits_t bitCount)
@@ -804,11 +853,10 @@ void OutputComposer::printSolutions() const
 				o << "\t{\n";
 				break;
 			case OF::VERILOG:
-				o << "\tassign ";
-				break;
 			case OF::VHDL:
 			case OF::CPP:
 				o << '\t';
+				printAssignmentStart();
 				break;
 			default:
 				break;
@@ -833,10 +881,8 @@ void OutputComposer::printSolutions() const
 				[[fallthrough]];
 			case OF::VERILOG:
 			case OF::CPP:
-				o << " = ";
-				break;
 			case OF::VHDL:
-				o << " <= ";
+				printAssignmentOp();
 				break;
 			default:
 				break;
@@ -882,16 +928,16 @@ void OutputComposer::printOptimizedImmediates(const std::size_t immediateProduct
 {
 	if (immediateProductCount != 0 || immediateSumCount != 0)
 	{
+		o << '\t';
+		printCommentStart();
 		switch (options::outputFormat)
 		{
 		case OF::VERILOG:
-			o << "\t// Internal signals\n";
-			break;
 		case OF::VHDL:
-			o << "\t-- Internal signals\n";
+			o << "Internal signals\n";
 			break;
 		case OF::CPP:
-			o << "\t// Intermediary values\n";
+			o << "Intermediary values\n";
 			break;
 		default:
 			break;
@@ -991,18 +1037,8 @@ void OutputComposer::printOptimizedNegatedInputs() const
 		if ((optimizedSolutions->getNegatedInputs() & (1 << (::bits - i - 1))) != 0)
 		{
 			if (!first)
-			{
-				switch (options::outputFormat)
-				{
-				case OF::HUMAN_SHORT:
-				case OF::HUMAN:
-				case OF::HUMAN_LONG:
+				if (isHuman())
 					o << ',';
-					break;
-				default:
-					break;
-				}
-			}
 			switch (options::outputFormat)
 			{
 			case OF::HUMAN_SHORT:
@@ -1019,31 +1055,16 @@ void OutputComposer::printOptimizedNegatedInputs() const
 				break;
 			}
 			::inputNames.printName(o, i);
-			switch (options::outputFormat)
+			if (isGraph())
 			{
-			case OF::GRAPH:
-			case OF::REDUCED_GRAPH:
 				o << "\"];\n";
 				o << "\t\ti" << i << " -> ni" << i << ";\n";
-				break;
-			default:
-				break;
 			}
 		}
 	}
 	if (first)
-	{
-		switch (options::outputFormat)
-		{
-		case OF::HUMAN_SHORT:
-		case OF::HUMAN:
-		case OF::HUMAN_LONG:
+		if (isHuman())
 			o << " <none>";
-			break;
-		default:
-			break;
-		}
-	}
 	switch (options::outputFormat)
 	{
 	case OF::HUMAN_SHORT:
@@ -1180,21 +1201,18 @@ void OutputComposer::printOptimizedProduct(const OptimizedSolutions::id_t produc
 	case OF::HUMAN:
 	case OF::HUMAN_LONG:
 	case OF::VERILOG:
+	case OF::VHDL:
 	case OF::CPP:
 	case OF::MATHEMATICAL:
-		o << " = ";
+		printAssignmentOp();
 		break;
 	case OF::GRAPH:
 	case OF::REDUCED_GRAPH:
 		o << " [label=\"";
 		break;
-	case OF::VHDL:
-		o << " <= ";
-		break;
 	default:
 		break;
 	}
-	
 	
 	if (!isGraph())
 	{
@@ -1259,14 +1277,14 @@ void OutputComposer::printOptimizedProducts() const
 				o << "\t{\n";
 				o << "\t\tnode [shape=ellipse];\n";
 				break;
-			case OF::VERILOG:
-				o << "\t// Products\n";
-				break;
 			case OF::VHDL:
-				o << "\t\n\t-- Products\n";
-				break;
+				o << "\t\n";
+				[[fallthrough]];
+			case OF::VERILOG:
 			case OF::CPP:
-				o << "\t// Products\n";
+				o << '\t';
+				printCommentStart();
+				o << "Products\n";
 				break;
 			default:
 				break;
@@ -1418,16 +1436,14 @@ void OutputComposer::printOptimizedSum(const OptimizedSolutions::id_t sumId) con
 	case OF::HUMAN:
 	case OF::HUMAN_LONG:
 	case OF::VERILOG:
+	case OF::VHDL:
 	case OF::CPP:
 	case OF::MATHEMATICAL:
-		o << " = ";
+		printAssignmentOp();
 		break;
 	case OF::GRAPH:
 	case OF::REDUCED_GRAPH:
 		o << " [label=\"";
-		break;
-	case OF::VHDL:
-		o << " <= ";
 		break;
 	default:
 		break;
@@ -1464,18 +1480,18 @@ void OutputComposer::printOptimizedSum(const OptimizedSolutions::id_t sumId) con
 	case OF::HUMAN:
 	case OF::HUMAN_LONG:
 	case OF::MATHEMATICAL:
-		o << '\n';
 		break;
 	case OF::GRAPH:
 	case OF::REDUCED_GRAPH:
 	case OF::VERILOG:
 	case OF::VHDL:
 	case OF::CPP:
-		o << ";\n";
+		o << ';';
 		break;
 	default:
 		break;
 	}
+	o << '\n';
 }
 
 void OutputComposer::printOptimizedSums() const
@@ -1502,12 +1518,14 @@ void OutputComposer::printOptimizedSums() const
 				o << "\t{\n";
 				o << "\t\tnode [shape=rectangle];\n";
 				break;
+			case OF::VHDL:
+				o << "\t\n";
+				[[fallthrough]];
 			case OF::VERILOG:
 			case OF::CPP:
-				o << "\t// Sums\n";
-				break;
-			case OF::VHDL:
-				o << "\t\n\t-- Sums\n";
+				o << '\t';
+				printCommentStart();
+				o << "Sums\n";
 				break;
 			case OF::MATHEMATICAL:
 			default:
@@ -1571,7 +1589,9 @@ void OutputComposer::printOptimizedFinalSums() const
 	case OF::VHDL:
 		break;
 	case OF::CPP:
-		o << "\t// Results\n";
+		o << '\t';
+		printCommentStart();
+		o << "Results\n";
 		break;
 	case OF::MATHEMATICAL:
 	default:
@@ -1597,12 +1617,13 @@ void OutputComposer::printOptimizedFinalSums() const
 		o << "\t{\n";
 		o << "\t\tnode [shape=rectangle, style=filled];\n";
 		break;
-	case OF::VERILOG:
-		o << "\t// Results\n";
-		break;
 	case OF::VHDL:
 		o << "\t\n";
-		o << "\t-- Results\n";
+		[[fallthrough]];
+	case OF::VERILOG:
+		o << '\t';
+		printCommentStart();
+		o << "Results\n";
 		break;
 	case OF::CPP:
 		o << "\toutput_t o = {};\n";
@@ -1645,25 +1666,23 @@ void OutputComposer::printOptimizedFinalSums() const
 		
 		switch (options::outputFormat)
 		{
-		case OF::HUMAN_SHORT:
-		case OF::HUMAN:
-		case OF::HUMAN_LONG:
-			o << "\" = ";
-			break;
-		case OF::GRAPH:
-		case OF::REDUCED_GRAPH:
-			break;
-		case OF::VERILOG:
-		case OF::CPP:
-			o << " = ";
-			break;
-		case OF::VHDL:
-			o << " <= ";
-			break;
 		case OF::MATHEMATICAL:
 			o << '(';
 			::inputNames.printNames(o);
-			o << ") = ";
+			o << ")";
+			[[fallthrough]];
+		case OF::HUMAN_SHORT:
+		case OF::HUMAN:
+		case OF::HUMAN_LONG:
+		case OF::VERILOG:
+		case OF::VHDL:
+		case OF::CPP:
+			if (isHuman())
+				o << '"';
+			printAssignmentOp();
+			break;
+		case OF::GRAPH:
+		case OF::REDUCED_GRAPH:
 			break;
 		default:
 			break;
@@ -1683,20 +1702,20 @@ void OutputComposer::printOptimizedFinalSums() const
 		case OF::HUMAN:
 		case OF::HUMAN_LONG:
 		case OF::MATHEMATICAL:
-			o << '\n';
 			break;
 		case OF::GRAPH:
 		case OF::REDUCED_GRAPH:
-			o << " -> f" << i << ";\n";
-			break;
+			o << " -> f" << i;
+			[[fallthrough]];
 		case OF::VERILOG:
 		case OF::VHDL:
 		case OF::CPP:
-			o << ";\n";
+			o << ';';
 			break;
 		default:
 			break;
 		}
+		o << '\n';
 	}
 	
 	switch (options::outputFormat)
