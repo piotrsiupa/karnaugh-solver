@@ -46,43 +46,43 @@ class OutputComposer
 	// `printChoiceSpecific` is a generic implementation that works with any sorted list of numbers. The remaining ones are 6 variants for `options::OutputFormat`.
 	// Each of them has 2 versions: one that takes output format as an argument and one that uses `options::outputFormat`.
 	// (See the template parameters to check what formats / groups of formats they handle.)
-	// So e.g. `printFormatSpecific(NEXT, ';', []{ ... });` will print `;` form `VERILOG` and `VHDL`, and it will run the lambda for `CPP`.
-	// `printFormatSpecific(BLANK, " }");` will do nothing for "human" formats and print ` }` for graph formats.
-	// (It an undefined behavior when the current format is not on the list.)
+	// So e.g. `printFormatSpecific(NEXT, ';', []{ ... });` will print `;` for `CPP` and `VERILOG`, and it will run the lambda for `VHDL`.
+	// `printFormatSpecific(BLANK, " }");` will do nothing for graph formats and print ` }` for "human" formats.
+	// (It is an undefined behavior when the current format is not on the list.)
 	enum { BLANK };
 	static constexpr std::nullptr_t NEXT = nullptr;
 	template<typename ENUM, ENUM ...CHOICES, typename ...VALUES>
 	inline void printChoiceSpecific(const ENUM choice, const VALUES &...values) const;
-	template<typename HUMAN_LONG, typename HUMAN, typename HUMAN_SHORT, typename GRAPH, typename REDUCED_GRAPH, typename VERILOG, typename VHDL, typename CPP, typename MATHEMATICAL, typename GATE_COST>
-	inline void printFormatSpecific(const options::OutputFormat format, HUMAN_LONG humanLong, HUMAN human, HUMAN_SHORT humanShort, GRAPH graph, REDUCED_GRAPH reducedGraph, VERILOG verilog, VHDL vhdl, CPP cpp, MATHEMATICAL mathematical, GATE_COST gateCost) const;
-	template<typename HUMAN_LONG, typename HUMAN, typename HUMAN_SHORT, typename GRAPH, typename REDUCED_GRAPH, typename VERILOG, typename VHDL, typename CPP, typename MATHEMATICAL>
-	inline void printFormatSpecific(const options::OutputFormat format, HUMAN_LONG humanLong, HUMAN human, HUMAN_SHORT humanShort, GRAPH graph, REDUCED_GRAPH reducedGraph, VERILOG verilog, VHDL vhdl, CPP cpp, MATHEMATICAL mathematical) const;
-	template<typename HUMAN, typename GRAPH, typename VERILOG, typename VHDL, typename CPP, typename MATHEMATICAL>
-	inline void printFormatSpecific(const options::OutputFormat format, HUMAN human, GRAPH graph, VERILOG verilog, VHDL vhdl, CPP cpp, MATHEMATICAL mathematical) const;
-	template<typename HUMAN, typename GRAPH, typename PROGRAM, typename MATHEMATICAL>
-	inline void printFormatSpecific(const options::OutputFormat format, HUMAN human, GRAPH graph, PROGRAM program, MATHEMATICAL mathematical) const;
-	template<typename VERILOG, typename VHDL, typename CPP>
-	inline void printFormatSpecific(const options::OutputFormat format, VERILOG verilog, VHDL vhdl, CPP cpp) const;
-	template<typename HUMAN, typename GRAPH>
-	inline void printFormatSpecific(const options::OutputFormat format, HUMAN human, GRAPH graph) const;
-	template<typename HUMAN_LONG, typename HUMAN, typename HUMAN_SHORT, typename GRAPH, typename REDUCED_GRAPH, typename VERILOG, typename VHDL, typename CPP, typename MATHEMATICAL, typename GATE_COST>
-	inline std::enable_if_t<!std::is_same_v<HUMAN_LONG, options::MappedOutputFormats>, void>
-	printFormatSpecific(HUMAN_LONG humanLong, HUMAN human, HUMAN_SHORT humanShort, GRAPH graph, REDUCED_GRAPH reducedGraph, VERILOG verilog, VHDL vhdl, CPP cpp, MATHEMATICAL mathematical, GATE_COST gateCost) const;
-	template<typename HUMAN_LONG, typename HUMAN, typename HUMAN_SHORT, typename GRAPH, typename REDUCED_GRAPH, typename VERILOG, typename VHDL, typename CPP, typename MATHEMATICAL>
-	inline std::enable_if_t<!std::is_same_v<HUMAN_LONG, options::MappedOutputFormats>, void>
-	printFormatSpecific(HUMAN_LONG humanLong, HUMAN human, HUMAN_SHORT humanShort, GRAPH graph, REDUCED_GRAPH reducedGraph, VERILOG verilog, VHDL vhdl, CPP cpp, MATHEMATICAL mathematical) const;
-	template<typename HUMAN, typename GRAPH, typename VERILOG, typename VHDL, typename CPP, typename MATHEMATICAL>
-	inline std::enable_if_t<!std::is_same_v<HUMAN, options::MappedOutputFormats>, void>
-	printFormatSpecific(HUMAN human, GRAPH graph, VERILOG verilog, VHDL vhdl, CPP cpp, MATHEMATICAL mathematical) const;
-	template<typename HUMAN, typename GRAPH, typename PROGRAM, typename MATHEMATICAL>
-	inline std::enable_if_t<!std::is_same_v<HUMAN, options::MappedOutputFormats>, void>
-	printFormatSpecific(HUMAN human, GRAPH graph, PROGRAM program, MATHEMATICAL mathematical) const;
-	template<typename VERILOG, typename VHDL, typename CPP>
-	inline std::enable_if_t<!std::is_same_v<VERILOG, options::MappedOutputFormats>, void>
-	printFormatSpecific(VERILOG verilog, VHDL vhdl, CPP cpp) const;
-	template<typename HUMAN, typename GRAPH>
-	inline std::enable_if_t<!std::is_same_v<HUMAN, options::MappedOutputFormats>, void>
-	printFormatSpecific(HUMAN human, GRAPH graph) const;
+	template<typename GRAPH, typename REDUCED_GRAPH, typename MATHEMATICAL, typename GATE_COST, typename HUMAN_LONG, typename HUMAN, typename HUMAN_SHORT, typename CPP, typename VERILOG, typename VHDL>
+	inline void printFormatSpecific(const options::OutputFormat format, GRAPH graph, REDUCED_GRAPH reducedGraph, MATHEMATICAL mathematical, GATE_COST gateCost, HUMAN_LONG humanLong, HUMAN human, HUMAN_SHORT humanShort, CPP cpp, VERILOG verilog, VHDL vhdl) const;
+	template<typename GRAPH, typename MATHEMATICAL, typename GATE_COST, typename HUMAN, typename CPP, typename VERILOG, typename VHDL>
+	inline void printFormatSpecific(const options::OutputFormat format, GRAPH graph, MATHEMATICAL mathematical, GATE_COST gateCost, HUMAN human, CPP cpp, VERILOG verilog, VHDL vhdl) const;
+	template<typename GRAPH, typename MATHEMATICAL, typename HUMAN, typename CPP, typename VERILOG, typename VHDL>
+	inline void printFormatSpecific(const options::OutputFormat format, GRAPH graph, MATHEMATICAL mathematical, HUMAN human, CPP cpp, VERILOG verilog, VHDL vhdl) const;
+	template<typename GRAPH, typename MATHEMATICAL, typename HUMAN, typename PROGRAM>
+	inline void printFormatSpecific(const options::OutputFormat format, GRAPH graph, MATHEMATICAL mathematical, HUMAN human, PROGRAM program) const;
+	template<typename CPP, typename VERILOG, typename VHDL>
+	inline void printFormatSpecific(const options::OutputFormat format, CPP cpp, VERILOG verilog, VHDL vhdl) const;
+	template<typename GRAPH, typename HUMAN>
+	inline void printFormatSpecific(const options::OutputFormat format, GRAPH graph, HUMAN human) const;
+	template<typename GRAPH, typename REDUCED_GRAPH, typename MATHEMATICAL, typename GATE_COST, typename HUMAN_LONG, typename HUMAN, typename HUMAN_SHORT, typename CPP, typename VERILOG, typename VHDL>
+	inline std::enable_if_t<!std::is_same_v<GRAPH, options::MappedOutputFormats>, void>
+	printFormatSpecific(GRAPH graph, REDUCED_GRAPH reducedGraph, MATHEMATICAL mathematical, GATE_COST gateCost, HUMAN_LONG humanLong, HUMAN human, HUMAN_SHORT humanShort, CPP cpp, VERILOG verilog, VHDL vhdl) const;
+	template<typename GRAPH, typename MATHEMATICAL, typename GATE_COST, typename HUMAN, typename CPP, typename VERILOG, typename VHDL>
+	inline std::enable_if_t<!std::is_same_v<GRAPH, options::MappedOutputFormats>, void>
+	printFormatSpecific(GRAPH graph, MATHEMATICAL mathematical, GATE_COST gateCost, HUMAN human, CPP cpp, VERILOG verilog, VHDL vhdl) const;
+	template<typename GRAPH, typename MATHEMATICAL, typename HUMAN, typename CPP, typename VERILOG, typename VHDL>
+	inline std::enable_if_t<!std::is_same_v<GRAPH, options::MappedOutputFormats>, void>
+	printFormatSpecific(GRAPH graph, MATHEMATICAL mathematical, HUMAN human, CPP cpp, VERILOG verilog, VHDL vhdl) const;
+	template<typename GRAPH, typename MATHEMATICAL, typename HUMAN, typename PROGRAM>
+	inline std::enable_if_t<!std::is_same_v<GRAPH, options::MappedOutputFormats>, void>
+	printFormatSpecific(GRAPH graph, MATHEMATICAL mathematical, HUMAN human, PROGRAM program) const;
+	template<typename CPP, typename VERILOG, typename VHDL>
+	inline std::enable_if_t<!std::is_same_v<CPP, options::MappedOutputFormats>, void>
+	printFormatSpecific(CPP cpp, VERILOG verilog, VHDL vhdl) const;
+	template<typename GRAPH, typename HUMAN>
+	inline std::enable_if_t<!std::is_same_v<GRAPH, options::MappedOutputFormats>, void>
+	printFormatSpecific(GRAPH graph, HUMAN human) const;
 	
 	[[nodiscard]] std::pair<bool, bool> checkForUsedConstants(const Solution &solution) const;
 	[[nodiscard]] std::pair<bool, bool> checkForUsedConstants() const;

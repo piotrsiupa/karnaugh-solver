@@ -9,20 +9,22 @@
 namespace options
 {
 	
+	// `OutputComposer` requires this to be a bitmask in this specific order.
 	enum class OutputFormat
 	{
-		HUMAN_LONG = 1<<0,
-		HUMAN = 1<<1,
-		HUMAN_SHORT = 1<<2,
-		GRAPH = 1<<3,
-		REDUCED_GRAPH = 1<<4,
-		VERILOG = 1<<5,
-		VHDL = 1<<6,
+		HUMAN_LONG = 1<<4,
+		HUMAN = 1<<5,
+		HUMAN_SHORT = 1<<6,
+		GRAPH = 1<<0,
+		REDUCED_GRAPH = 1<<1,
+		VERILOG = 1<<8,
+		VHDL = 1<<9,
 		CPP = 1<<7,
-		MATHEMATICAL = 1<<8,
-		GATE_COSTS = 1<<9,
+		MATHEMATICAL = 1<<2,
+		GATE_COSTS = 1<<3,
 	};
 	
+	// `OutputComposer` requires this to be in this specific order.
 	enum class OutputOperators
 	{
 		FORMAL = 0,
