@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstddef>
 #include <ostream>
 #include <string>
 #include <string_view>
@@ -10,6 +11,7 @@
 #include "Karnaugh.hh"
 #include "Names.hh"
 #include "OptimizedSolutions.hh"
+#include "options.hh"
 #include "Solution.hh"
 #include "Solutions.hh"
 #include "utils.hh"
@@ -25,9 +27,62 @@ class OutputComposer
 	const OptimizedSolutions *const optimizedSolutions;
 	mutable IndentedOStream o;
 	
+	// Return `true` when the output format is one of those listed in the template parameters.
+	template<options::OutputFormat ...FORMATS>
+	[[nodiscard]] static inline constexpr bool discriminate(const options::OutputFormat format);
+	template<options::OutputFormat ...FORMATS>
+	[[nodiscard]] static inline bool discriminate();
+	
 	[[nodiscard]] static inline bool isHuman();
 	[[nodiscard]] static inline bool isGraph();
 	[[nodiscard]] static inline bool isHumanReadable();
+	[[nodiscard]] static inline bool isProgramming();
+	
+	// OK, this is quite simple ;-) but maybe some explanation could still be useful.
+	// These functions take lists of strings / lambdas / anything else as arguments.
+	// Such list corresponds to output formats / groups of output formats and are executed or streamed to `o` when the corresponding format is chosen.
+	// (So they works analogous to a `switch` statements. In fact they replace `switch` statements and their purpose is to reduce amount of boiler plate.)
+	// There are also 2 special "keywords": `BLANK` that makes the given position do nothing and `NEXT` that works like `fallthrough` in `switch`.
+	// `printChoiceSpecific` is a generic implementation that works with any sorted list of numbers. The remaining ones are 6 variants for `options::OutputFormat`.
+	// Each of them has 2 versions: one that takes output format as an argument and one that uses `options::outputFormat`.
+	// (See the template parameters to check what formats / groups of formats they handle.)
+	// So e.g. `printFormatSpecific(NEXT, ';', []{ ... });` will print `;` form `VERILOG` and `VHDL`, and it will run the lambda for `CPP`.
+	// `printFormatSpecific(BLANK, " }");` will do nothing for "human" formats and print ` }` for graph formats.
+	// (It an undefined behavior when the current format is not on the list.)
+	enum { BLANK };
+	static constexpr std::nullptr_t NEXT = nullptr;
+	template<typename ENUM, ENUM ...CHOICES, typename ...VALUES>
+	inline void printChoiceSpecific(const ENUM choice, const VALUES &...values) const;
+	template<typename HUMAN_LONG, typename HUMAN, typename HUMAN_SHORT, typename GRAPH, typename REDUCED_GRAPH, typename VERILOG, typename VHDL, typename CPP, typename MATHEMATICAL, typename GATE_COST>
+	inline void printFormatSpecific(const options::OutputFormat format, HUMAN_LONG humanLong, HUMAN human, HUMAN_SHORT humanShort, GRAPH graph, REDUCED_GRAPH reducedGraph, VERILOG verilog, VHDL vhdl, CPP cpp, MATHEMATICAL mathematical, GATE_COST gateCost) const;
+	template<typename HUMAN_LONG, typename HUMAN, typename HUMAN_SHORT, typename GRAPH, typename REDUCED_GRAPH, typename VERILOG, typename VHDL, typename CPP, typename MATHEMATICAL>
+	inline void printFormatSpecific(const options::OutputFormat format, HUMAN_LONG humanLong, HUMAN human, HUMAN_SHORT humanShort, GRAPH graph, REDUCED_GRAPH reducedGraph, VERILOG verilog, VHDL vhdl, CPP cpp, MATHEMATICAL mathematical) const;
+	template<typename HUMAN, typename GRAPH, typename VERILOG, typename VHDL, typename CPP, typename MATHEMATICAL>
+	inline void printFormatSpecific(const options::OutputFormat format, HUMAN human, GRAPH graph, VERILOG verilog, VHDL vhdl, CPP cpp, MATHEMATICAL mathematical) const;
+	template<typename HUMAN, typename GRAPH, typename PROGRAM, typename MATHEMATICAL>
+	inline void printFormatSpecific(const options::OutputFormat format, HUMAN human, GRAPH graph, PROGRAM program, MATHEMATICAL mathematical) const;
+	template<typename VERILOG, typename VHDL, typename CPP>
+	inline void printFormatSpecific(const options::OutputFormat format, VERILOG verilog, VHDL vhdl, CPP cpp) const;
+	template<typename HUMAN, typename GRAPH>
+	inline void printFormatSpecific(const options::OutputFormat format, HUMAN human, GRAPH graph) const;
+	template<typename HUMAN_LONG, typename HUMAN, typename HUMAN_SHORT, typename GRAPH, typename REDUCED_GRAPH, typename VERILOG, typename VHDL, typename CPP, typename MATHEMATICAL, typename GATE_COST>
+	inline std::enable_if_t<!std::is_same_v<HUMAN_LONG, options::MappedOutputFormats>, void>
+	printFormatSpecific(HUMAN_LONG humanLong, HUMAN human, HUMAN_SHORT humanShort, GRAPH graph, REDUCED_GRAPH reducedGraph, VERILOG verilog, VHDL vhdl, CPP cpp, MATHEMATICAL mathematical, GATE_COST gateCost) const;
+	template<typename HUMAN_LONG, typename HUMAN, typename HUMAN_SHORT, typename GRAPH, typename REDUCED_GRAPH, typename VERILOG, typename VHDL, typename CPP, typename MATHEMATICAL>
+	inline std::enable_if_t<!std::is_same_v<HUMAN_LONG, options::MappedOutputFormats>, void>
+	printFormatSpecific(HUMAN_LONG humanLong, HUMAN human, HUMAN_SHORT humanShort, GRAPH graph, REDUCED_GRAPH reducedGraph, VERILOG verilog, VHDL vhdl, CPP cpp, MATHEMATICAL mathematical) const;
+	template<typename HUMAN, typename GRAPH, typename VERILOG, typename VHDL, typename CPP, typename MATHEMATICAL>
+	inline std::enable_if_t<!std::is_same_v<HUMAN, options::MappedOutputFormats>, void>
+	printFormatSpecific(HUMAN human, GRAPH graph, VERILOG verilog, VHDL vhdl, CPP cpp, MATHEMATICAL mathematical) const;
+	template<typename HUMAN, typename GRAPH, typename PROGRAM, typename MATHEMATICAL>
+	inline std::enable_if_t<!std::is_same_v<HUMAN, options::MappedOutputFormats>, void>
+	printFormatSpecific(HUMAN human, GRAPH graph, PROGRAM program, MATHEMATICAL mathematical) const;
+	template<typename VERILOG, typename VHDL, typename CPP>
+	inline std::enable_if_t<!std::is_same_v<VERILOG, options::MappedOutputFormats>, void>
+	printFormatSpecific(VERILOG verilog, VHDL vhdl, CPP cpp) const;
+	template<typename HUMAN, typename GRAPH>
+	inline std::enable_if_t<!std::is_same_v<HUMAN, options::MappedOutputFormats>, void>
+	printFormatSpecific(HUMAN human, GRAPH graph) const;
 	
 	[[nodiscard]] std::pair<bool, bool> checkForUsedConstants(const Solution &solution) const;
 	[[nodiscard]] std::pair<bool, bool> checkForUsedConstants() const;
@@ -48,6 +103,8 @@ class OutputComposer
 	void printAssignmentStart() const;
 	void printAssignmentOp() const;
 	void printShortBool(const Trilean value) const;
+	[[nodiscard]] static inline constexpr options::OutputFormat mapOutputOperators(const options::OutputOperators outputOperators);
+	[[nodiscard]] static inline options::OutputFormat getOperatorsStyle();
 	void printBool(const bool value, const bool strictlyForCode = false) const;
 	void printNot() const;
 	void printAnd(const bool spaces) const;

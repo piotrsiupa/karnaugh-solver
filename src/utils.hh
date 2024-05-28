@@ -7,6 +7,7 @@
 #include <numeric>
 #include <string>
 #include <string_view>
+#include <type_traits>
 #include <vector>
 
 
@@ -78,3 +79,7 @@ template<typename OT, typename IT, class OP>
 	std::transform(in.cbegin(), in.cend(), std::back_inserter(out), op);
 	return out;
 }
+
+
+template<typename T>
+inline constexpr bool is_nullable = std::is_null_pointer_v<T> || std::is_pointer_v<T>;

@@ -2,31 +2,146 @@
 
 #include <filesystem>
 #include <iomanip>
+#include <type_traits>
 
 #include "info.hh"
-#include "options.hh"
 
 
 using OF = options::OutputFormat;
 using OO = options::OutputOperators;
 
 
+template<OF ...FORMATS>
+bool constexpr OutputComposer::discriminate(const options::OutputFormat format)
+{
+	if constexpr (sizeof...(FORMATS) == 1)
+	{
+		return format == (FORMATS, ...);
+	}
+	else
+	{
+		constexpr std::underlying_type_t<OF> mask = (static_cast<std::underlying_type_t<OF>>(FORMATS) | ...);
+		return (static_cast<std::underlying_type_t<OF>>(format) & mask) != 0;
+	}
+}
+
+template<OF ...FORMATS>
+bool OutputComposer::discriminate()
+{
+	return discriminate<FORMATS...>(options::outputFormat);
+}
+
 bool OutputComposer::isHuman()
 {
-	const OF outputFormat = options::outputFormat;
-	return outputFormat == OF::HUMAN_SHORT || outputFormat == OF::HUMAN || outputFormat == OF::HUMAN_LONG;
+	return discriminate<OF::HUMAN_SHORT, OF::HUMAN, OF::HUMAN_LONG>();
 }
 
 bool OutputComposer::isGraph()
 {
-	const OF outputFormat = options::outputFormat;
-	return outputFormat == OF::GRAPH || outputFormat == OF::REDUCED_GRAPH;
+	return discriminate<OF::GRAPH, OF::REDUCED_GRAPH>();
 }
 
 bool OutputComposer::isHumanReadable()
 {
-	const OF outputFormat = options::outputFormat;
-	return isHuman() || isGraph() || outputFormat == OF::MATHEMATICAL || outputFormat == OF::GATE_COSTS;
+	return discriminate<OF::HUMAN_SHORT, OF::HUMAN, OF::HUMAN_LONG, OF::GRAPH, OF::REDUCED_GRAPH, OF::MATHEMATICAL, OF::GATE_COSTS>();
+}
+
+bool OutputComposer::isProgramming()
+{
+	return discriminate<OF::VERILOG, OF::VHDL, OF::CPP>();
+}
+
+template<typename ENUM, ENUM ...CHOICES, typename ...VALUES>
+void OutputComposer::printChoiceSpecific(const ENUM choice, const VALUES &...values) const
+{
+	const bool success = (... || (
+			choice <= CHOICES && [values]{ if constexpr (is_nullable<VALUES>) return values != nullptr; else return true; }()
+				? ([this, values]{
+						if constexpr (std::is_invocable_v<VALUES>)
+							std::invoke(values);
+						else if constexpr (std::is_member_function_pointer_v<VALUES>)
+							std::invoke(values, *this);
+						else if constexpr (!std::is_same_v<VALUES, decltype(BLANK)>)
+							o << values;
+					}(), true)
+				: false
+		));
+	assert(success);
+#ifdef NDEBUG
+	(void) success;
+#endif
+}
+
+template<typename HUMAN_LONG, typename HUMAN, typename HUMAN_SHORT, typename GRAPH, typename REDUCED_GRAPH, typename VERILOG, typename VHDL, typename CPP, typename MATHEMATICAL, typename GATE_COST>
+void OutputComposer::printFormatSpecific(const options::OutputFormat format, HUMAN_LONG humanLong, HUMAN human, HUMAN_SHORT humanShort, GRAPH graph, REDUCED_GRAPH reducedGraph, VERILOG verilog, VHDL vhdl, CPP cpp, MATHEMATICAL mathematical, GATE_COST gateCost) const
+{
+	return printChoiceSpecific<OF, OF::HUMAN_LONG, OF::HUMAN, OF::HUMAN_SHORT, OF::GRAPH, OF::REDUCED_GRAPH, OF::VERILOG, OF::VHDL, OF::CPP, OF::MATHEMATICAL, OF::GATE_COSTS>(format, humanLong, human, humanShort, graph, reducedGraph, verilog, vhdl, cpp, mathematical, gateCost);
+}
+
+template<typename HUMAN_LONG, typename HUMAN, typename HUMAN_SHORT, typename GRAPH, typename REDUCED_GRAPH, typename VERILOG, typename VHDL, typename CPP, typename MATHEMATICAL>
+void OutputComposer::printFormatSpecific(const options::OutputFormat format, HUMAN_LONG humanLong, HUMAN human, HUMAN_SHORT humanShort, GRAPH graph, REDUCED_GRAPH reducedGraph, VERILOG verilog, VHDL vhdl, CPP cpp, MATHEMATICAL mathematical) const
+{
+	return printFormatSpecific(format, humanLong, human, humanShort, graph, reducedGraph, verilog, vhdl, cpp, mathematical, NEXT);
+}
+
+template<typename HUMAN, typename GRAPH, typename VERILOG, typename VHDL, typename CPP, typename MATHEMATICAL>
+void OutputComposer::printFormatSpecific(const options::OutputFormat format, HUMAN human, GRAPH graph, VERILOG verilog, VHDL vhdl, CPP cpp, MATHEMATICAL mathematical) const
+{
+	return printFormatSpecific(format, NEXT, NEXT, human, NEXT, graph, verilog, vhdl, cpp, mathematical);
+}
+
+template<typename HUMAN, typename GRAPH, typename PROGRAM, typename MATHEMATICAL>
+void OutputComposer::printFormatSpecific(const options::OutputFormat format, HUMAN human, GRAPH graph, PROGRAM program, MATHEMATICAL mathematical) const
+{
+	return printFormatSpecific(format, human, graph, NEXT, NEXT, program, mathematical);
+}
+
+template<typename VERILOG, typename VHDL, typename CPP>
+void OutputComposer::printFormatSpecific(const options::OutputFormat format, VERILOG verilog, VHDL vhdl, CPP cpp) const
+{
+	return printFormatSpecific(format, NEXT, NEXT, verilog, vhdl, cpp, NEXT);
+}
+
+template<typename HUMAN, typename GRAPH>
+void OutputComposer::printFormatSpecific(const options::OutputFormat format, HUMAN human, GRAPH graph) const
+{
+	return printFormatSpecific(format, human, graph, NEXT, NEXT, NEXT, NEXT);
+}
+
+template<typename HUMAN_LONG, typename HUMAN, typename HUMAN_SHORT, typename GRAPH, typename REDUCED_GRAPH, typename VERILOG, typename VHDL, typename CPP, typename MATHEMATICAL, typename GATE_COST>
+std::enable_if_t<!std::is_same_v<HUMAN_LONG, options::MappedOutputFormats>, void> OutputComposer::printFormatSpecific(HUMAN_LONG humanLong, HUMAN human, HUMAN_SHORT humanShort, GRAPH graph, REDUCED_GRAPH reducedGraph, VERILOG verilog, VHDL vhdl, CPP cpp, MATHEMATICAL mathematical, GATE_COST gateCost) const
+{
+	return printFormatSpecific(options::outputFormat, humanLong, human, humanShort, graph, reducedGraph, verilog, vhdl, cpp, mathematical, gateCost);
+}
+
+template<typename HUMAN_LONG, typename HUMAN, typename HUMAN_SHORT, typename GRAPH, typename REDUCED_GRAPH, typename VERILOG, typename VHDL, typename CPP, typename MATHEMATICAL>
+std::enable_if_t<!std::is_same_v<HUMAN_LONG, options::MappedOutputFormats>, void> OutputComposer::printFormatSpecific(HUMAN_LONG humanLong, HUMAN human, HUMAN_SHORT humanShort, GRAPH graph, REDUCED_GRAPH reducedGraph, VERILOG verilog, VHDL vhdl, CPP cpp, MATHEMATICAL mathematical) const
+{
+	return printFormatSpecific(options::outputFormat, humanLong, human, humanShort, graph, reducedGraph, verilog, vhdl, cpp, mathematical);
+}
+
+template<typename HUMAN, typename GRAPH, typename VERILOG, typename VHDL, typename CPP, typename MATHEMATICAL>
+std::enable_if_t<!std::is_same_v<HUMAN, options::MappedOutputFormats>, void> OutputComposer::printFormatSpecific(HUMAN human, GRAPH graph, VERILOG verilog, VHDL vhdl, CPP cpp, MATHEMATICAL mathematical) const
+{
+	return printFormatSpecific(options::outputFormat, human, graph, verilog, vhdl, cpp, mathematical);
+}
+
+template<typename HUMAN, typename GRAPH, typename PROGRAM, typename MATHEMATICAL>
+std::enable_if_t<!std::is_same_v<HUMAN, options::MappedOutputFormats>, void> OutputComposer::printFormatSpecific(HUMAN human, GRAPH graph, PROGRAM program, MATHEMATICAL mathematical) const
+{
+	return printFormatSpecific(options::outputFormat, human, graph, program, mathematical);
+}
+
+template<typename VERILOG, typename VHDL, typename CPP>
+std::enable_if_t<!std::is_same_v<VERILOG, options::MappedOutputFormats>, void> OutputComposer::printFormatSpecific(VERILOG verilog, VHDL vhdl, CPP cpp) const
+{
+	return printFormatSpecific(options::outputFormat, verilog, vhdl, cpp);
+}
+
+template<typename HUMAN, typename GRAPH>
+std::enable_if_t<!std::is_same_v<HUMAN, options::MappedOutputFormats>, void> OutputComposer::printFormatSpecific(HUMAN human, GRAPH graph) const
+{
+	return printFormatSpecific(options::outputFormat, human, graph);
 }
 
 std::pair<bool, bool> OutputComposer::checkForUsedConstants(const Solution &solution) const
@@ -146,268 +261,103 @@ std::pair<std::size_t, std::size_t> OutputComposer::generateOptimizedNormalizedI
 
 void OutputComposer::printNormalizedId(const OptimizedSolutions::id_t id, const bool useHumanAnyway) const
 {
-	if (useHumanAnyway)
-		goto human;
-	switch (options::outputFormat)
+	const OF format = useHumanAnyway ? OF::HUMAN : options::outputFormat;
+	if (optimizedSolutions->isProduct(id))
+		printFormatSpecific(format, BLANK, 's', "prods", 'p');
+	else
+		printFormatSpecific(format, BLANK, 's', "sums", 's');
+	printFormatSpecific(format, '[', BLANK, '[', '(', '[', BLANK);
+	if (format != OF::MATHEMATICAL)
 	{
-	case OF::HUMAN_SHORT:
-	case OF::HUMAN:
-	case OF::HUMAN_LONG:
-		human:
-		o << '[' << normalizedOptimizedIds[id] << ']';
-		break;
-	case OF::GRAPH:
-	case OF::REDUCED_GRAPH:
-		o << 's' << normalizedOptimizedIds[id];
-		break;
-	case OF::VERILOG:
-	case OF::CPP:
-		if (optimizedSolutions->isProduct(id))
-			o << "prods[" << normalizedOptimizedIds[id] << ']';
-		else
-			o << "sums[" << normalizedOptimizedIds[id] << ']';
-		break;
-	case OF::VHDL:
-		if (optimizedSolutions->isProduct(id))
-			o << "prods(" << normalizedOptimizedIds[id] << ')';
-		else
-			o << "sums(" << normalizedOptimizedIds[id] << ')';
-		break;
-	case OF::MATHEMATICAL:
-		if (optimizedSolutions->isProduct(id))
-			o << 'p' << (normalizedOptimizedIds[id] + 1);
-		else
-			o << 's' << (normalizedOptimizedIds[id] + 1);
-		printOptimizedMathArgs(id);
-		break;
-	case OF::GATE_COSTS:
-		// not expected to be needed
-		break;
+		o << normalizedOptimizedIds[id];
 	}
+	else
+	{
+		o << (normalizedOptimizedIds[id] + 1);
+		printOptimizedMathArgs(id);
+	}
+	printFormatSpecific(format, ']', BLANK, ']', ')', ']', BLANK);
 }
 
 void OutputComposer::printCommentStart() const
 {
-	switch (options::outputFormat)
-	{
-	case OF::HUMAN_SHORT:
-	case OF::HUMAN:
-	case OF::HUMAN_LONG:
-		break;
-	case OF::GRAPH:
-	case OF::REDUCED_GRAPH:
-	case OF::VERILOG:
-	case OF::CPP:
-		o << "// ";
-		break;
-	case OF::VHDL:
-		o << "-- ";
-		break;
-	case OF::MATHEMATICAL:
-	case OF::GATE_COSTS:
-		break;
-	}
+	printFormatSpecific(BLANK, NEXT, "// ", "-- ", "// ", BLANK);
 }
 
 void OutputComposer::printAssignmentStart() const
 {
-	switch (options::outputFormat)
-	{
-	case OF::HUMAN_SHORT:
-	case OF::HUMAN:
-	case OF::HUMAN_LONG:
-	case OF::GRAPH:
-	case OF::REDUCED_GRAPH:
-		break;
-	case OF::VERILOG:
+	if (discriminate<OF::VERILOG>())
 		o << "assign ";
-		break;
-	case OF::VHDL:
-	case OF::CPP:
-	case OF::MATHEMATICAL:
-	case OF::GATE_COSTS:
-		break;
-	}
 }
 
 void OutputComposer::printAssignmentOp() const
 {
-	switch (options::outputFormat)
-	{
-	case OF::HUMAN_SHORT:
-	case OF::HUMAN:
-	case OF::HUMAN_LONG:
-	case OF::VERILOG:
-	case OF::CPP:
-	case OF::MATHEMATICAL:
-		o << " = ";
-		break;
-	case OF::GRAPH:
-	case OF::REDUCED_GRAPH:
-		break;
-	case OF::VHDL:
-		o << " <= ";
-		break;
-	case OF::GATE_COSTS:
-		break;
-	}
+	printFormatSpecific(" = ", BLANK, " = ", " <= ", NEXT, " = ");
 }
 
 void OutputComposer::printShortBool(const Trilean value) const
 {
+	const auto print = [this](const char formal, const char ascii, const char programming, const char names){ return printChoiceSpecific<OO, OO::FORMAL, OO::ASCII, OO::PROGRAMMING, OO::NAMES>(options::outputOperators, formal, ascii, programming, names); };
 	switch (value.get())
 	{
 	case Trilean::Value::FALSE:
-		switch (options::outputOperators)
-		{
-		case OO::FORMAL:
-		case OO::ASCII:
-			o << '0';
-			break;
-		case OO::PROGRAMMING:
-		case OO::NAMES:
-			o << 'F';
-			break;
-		}
+		print('0', '0', 'F', 'F');
 		break;
 	case Trilean::Value::TRUE:
-		switch (options::outputOperators)
-		{
-		case OO::FORMAL:
-		case OO::ASCII:
-			o << '1';
-			break;
-		case OO::PROGRAMMING:
-		case OO::NAMES:
-			o << 'T';
-			break;
-		}
+		print('1', '1', 'T', 'T');
 		break;
 	case Trilean::Value::UNDEFINED:
-		switch (options::outputOperators)
-		{
-		case OO::FORMAL:
-		case OO::ASCII:
-			o << 'X';
-			break;
-		case OO::PROGRAMMING:
-			o << '-';
-			break;
-		case OO::NAMES:
-			o << '?';
-			break;
-		}
+		print('X', 'X', '-', '?');
 		break;
 	}
+}
+
+constexpr options::OutputFormat OutputComposer::mapOutputOperators(const options::OutputOperators outputOperators)
+{
+	switch (outputOperators)
+	{
+	case OO::FORMAL:
+		return OF::MATHEMATICAL;
+	case OO::ASCII:
+		return OF::GRAPH;
+	case OO::PROGRAMMING:
+		return OF::CPP;
+	case OO::NAMES:
+		return OF::HUMAN;
+	}
+	assert(false);
+	return OF::GATE_COSTS;
+}
+
+options::OutputFormat OutputComposer::getOperatorsStyle()
+{
+	return isProgramming()
+			? options::outputFormat
+			: mapOutputOperators(options::outputOperators);
 }
 
 void OutputComposer::printBool(const bool value, const bool strictlyForCode) const
 {
-	if (strictlyForCode)
-		goto programming;
-	switch (options::outputFormat)
-	{
-	case OF::VERILOG:
-		o << (value ? '1' : '0');
-		break;
-	case OF::VHDL:
-		o << (value ? "'1'" : "'0'");
-		break;
-	case OF::CPP:
-		o << (value ? "true" : "false");
-		break;
-	default:
-		switch (options::outputOperators)
-		{
-		case OO::FORMAL:
-			o << (value ? u8"\u22A4" : u8"\u22A5");
-			break;
-		case OO::ASCII:
-			o << (value ? 'T' : 'F');
-			break;
-		case OO::PROGRAMMING:
-			programming:
-			o << (value ? "true" : "false");
-			break;
-		case OO::NAMES:
-			o << (value ? "TRUE" : "FALSE");
-			break;
-		default:
-			break;
-		}
-		break;
-	}
+	const OF format = strictlyForCode ? OF::CPP : getOperatorsStyle();
+	if (value)
+		printFormatSpecific(format, "TRUE", 'T', '1', "'1'", "true", u8"\u22A4");
+	else
+		printFormatSpecific(format, "FALSE", 'F', '0', "'0'", "false", u8"\u22A5");
 }
 
 void OutputComposer::printNot() const
 {
-	switch (options::outputFormat)
-	{
-	case OF::VERILOG:
-	case OF::CPP:
-		o << '!';
-		break;
-	case OF::VHDL:
-		o << "not ";
-		break;
-	default:
-		switch (options::outputOperators)
-		{
-		case OO::FORMAL:
-			o << u8"\u00AC";
-			break;
-		case OO::ASCII:
-			o << '~';
-			break;
-		case OO::PROGRAMMING:
-			o << '!';
-			break;
-		case OO::NAMES:
-			o << "NOT ";
-			break;
-		default:
-			break;
-		}
-	}
+	printFormatSpecific(getOperatorsStyle(), "NOT ", '~', '!', "not ", '!', u8"\u00AC");
 }
 
 void OutputComposer::printAnd(const bool spaces) const
 {
 	if (spaces)
 		o << ' ';
-	switch (options::outputFormat)
-	{
-	case OF::VERILOG:
-		o << '&';
-		break;
-	case OF::VHDL:
-		o << "and";
-		break;
-	case OF::CPP:
-		o << "&&";
-		break;
-	default:
-		switch (options::outputOperators)
-		{
-		case OO::FORMAL:
-			o << u8"\u2227";
-			break;
-		case OO::ASCII:
-			if (options::outputFormat == OF::GRAPH || options::outputFormat == OF::REDUCED_GRAPH)
-				o << "/\\\\";
-			else
-				o << "/\\";
-			break;
-		case OO::PROGRAMMING:
-			o << "&&";
-			break;
-		case OO::NAMES:
-			o << "AND";
-			break;
-		default:
-			break;
-		}
-	}
+	if (isGraph())
+		printFormatSpecific(getOperatorsStyle(), "AND", "/\\\\", '&', "and", "&&", u8"\u2227");
+	else
+		printFormatSpecific(getOperatorsStyle(), "AND", "/\\", '&', "and", "&&", u8"\u2227");
 	if (spaces)
 		o << ' ';
 }
@@ -416,39 +366,10 @@ void OutputComposer::printOr(const bool spaces) const
 {
 	if (spaces)
 		o << ' ';
-	switch (options::outputFormat)
-	{
-	case OF::VERILOG:
-		o << '|';
-		break;
-	case OF::VHDL:
-		o << "or";
-		break;
-	case OF::CPP:
-		o << "||";
-		break;
-	default:
-		switch (options::outputOperators)
-		{
-		case OO::FORMAL:
-			o << u8"\u2228";
-			break;
-		case OO::ASCII:
-			if (options::outputFormat == OF::GRAPH || options::outputFormat == OF::REDUCED_GRAPH)
-				o << "\\\\/";
-			else
-				o << "\\/";
-			break;
-		case OO::PROGRAMMING:
-			o << "||";
-			break;
-		case OO::NAMES:
-			o << "OR";
-			break;
-		default:
-			break;
-		}
-	}
+	if (isGraph())
+		printFormatSpecific(getOperatorsStyle(), "OR", "\\\\/", '|', "or", "||", u8"\u2228");
+	else
+		printFormatSpecific(getOperatorsStyle(), "OR", "\\/", '|', "or", "||", u8"\u2228");
 	if (spaces)
 		o << ' ';
 }
@@ -813,7 +734,7 @@ std::size_t OutputComposer::printSolution(const std::size_t i, std::size_t idShi
 
 void OutputComposer::printSolutions() const
 {
-	if (options::outputFormat == OF::VHDL)
+	if (discriminate<OF::VHDL>())
 	{
 		o.deindent();
 		o << "begin\n";
@@ -823,165 +744,61 @@ void OutputComposer::printSolutions() const
 	
 	if (karnaughs.empty())
 	{
-		if (options::outputFormat == OF::CPP)
+		if (discriminate<OF::CPP>())
 			o << "return {};\n";
+		return;
 	}
-	else
+	
+	if (discriminate<OF::CPP>())
+		o << "output_t o = {};\n";
+	
+	First first;
+	std::size_t idShift = 0;
+	for (std::size_t i = 0; i != functionNames.size(); ++i)
 	{
-		switch (options::outputFormat)
-		{
-		case OF::CPP:
-			o << "output_t o = {};\n";
-			break;
-		default:
-			break;
-		}
+		if (discriminate<OF::HUMAN_LONG, OF::HUMAN>() && !first)
+			o << "\n\n";
 		
-		First first;
-		std::size_t idShift = 0;
-		for (std::size_t i = 0; i != functionNames.size(); ++i)
-		{
-			switch (options::outputFormat)
-			{
-			case OF::HUMAN_LONG:
-			case OF::HUMAN:
-				if (!first)
-					o << '\n' << '\n';
-				[[fallthrough]];
-			case OF::HUMAN_SHORT:
-				o << "--- ";
-				break;
-			case OF::GRAPH:
-			case OF::REDUCED_GRAPH:
-				o << "subgraph function_" << i << '\n';
-				o << "{\n";
-				o.indent();
-				break;
-			case OF::VERILOG:
-			case OF::VHDL:
-			case OF::CPP:
-				printAssignmentStart();
-				break;
-			default:
-				break;
-			}
-			
-			if (!isGraph() && options::outputFormat != OF::GATE_COSTS)
-				functionNames.printName(o, i);
-			
-			switch (options::outputFormat)
-			{
-			case OF::HUMAN_LONG:
-			case OF::HUMAN:
-			case OF::HUMAN_SHORT:
-				o << " ---\n";
-				if (options::outputFormat != OF::HUMAN_SHORT)
-					o << '\n';
-				break;
-			case OF::MATHEMATICAL:
-				o << '(';
-				::inputNames.printNames(o);
-				o << ')';
-				[[fallthrough]];
-			case OF::VERILOG:
-			case OF::CPP:
-			case OF::VHDL:
-				printAssignmentOp();
-				break;
-			default:
-				break;
-			}
-			
-			idShift = printSolution(i, idShift);
-			
-			switch (options::outputFormat)
-			{
-			case OF::GRAPH:
-			case OF::REDUCED_GRAPH:
-				o.deindent();
-				o << "}\n";
-				break;
-			case OF::VERILOG:
-			case OF::VHDL:
-			case OF::CPP:
-				o << ";\n";
-				break;
-			case OF::MATHEMATICAL:
-				o << '\n';
-				break;
-			default:
-				break;
-			}
-		}
-		
-		switch (options::outputFormat)
-		{
-		case OF::VERILOG:
-		case OF::VHDL:
+		printFormatSpecific("--- ", "subgraph function_", &OutputComposer::printAssignmentStart, BLANK);
+		if (isGraph())
+			o << i;
+		else if (!discriminate<OF::GATE_COSTS>())
+			functionNames.printName(o, i);
+		printFormatSpecific(" ---\n", "\n{\n", &OutputComposer::printAssignmentOp, [this]{ o << '('; ::inputNames.printNames(o); o << ')'; printAssignmentOp(); });
+		if (discriminate<OF::HUMAN_LONG, OF::HUMAN>())
 			o << '\n';
-			break;
-		case OF::CPP:
-			o << "return o;\n";
-			break;
-		default:
-			break;
-		}
+		else if (isGraph())
+			o.indent();
+		
+		idShift = printSolution(i, idShift);
+		
+		if (isGraph())
+			o.deindent();
+		printFormatSpecific(BLANK, "}\n", ";\n", '\n');
 	}
+	
+	if (isProgramming())
+		printFormatSpecific(NEXT, '\n', "return o;\n");
 }
 
 void OutputComposer::printOptimizedImmediates(const std::size_t immediateProductCount, const std::size_t immediateSumCount) const
 {
-	if (immediateProductCount != 0 || immediateSumCount != 0)
-	{
-		printCommentStart();
-		switch (options::outputFormat)
+	if (immediateProductCount + immediateSumCount == 0)
+		return;
+	
+	printCommentStart();
+	printFormatSpecific(NEXT, "Internal signals\n", "Intermediary values\n");
+	const auto printImmediates = [this](const std::string &name, const std::size_t count)
 		{
-		case OF::VERILOG:
-		case OF::VHDL:
-			o << "Internal signals\n";
-			break;
-		case OF::CPP:
-			o << "Intermediary values\n";
-			break;
-		default:
-			break;
-		}
-		if (immediateProductCount != 0)
-		{
-			switch (options::outputFormat)
-			{
-			case OF::VERILOG:
-				o << "wire [" << (immediateProductCount - 1) << ":0] prods;\n";
-				break;
-			case OF::VHDL:
-				o << "signal prods : std_logic_vector(" << (immediateProductCount - 1) << " downto 0);\n";
-				break;
-			case OF::CPP:
-				o << "bool prods[" << immediateProductCount << "] = {};\n";
-				break;
-			default:
-				break;
-			}
-		}
-		if (immediateSumCount != 0)
-		{
-			switch (options::outputFormat)
-			{
-			case OF::VERILOG:
-				o << "wire [" << (immediateSumCount - 1) << ":0] sums;\n";
-				break;
-			case OF::VHDL:
-				o << "signal sums : std_logic_vector(" << (immediateSumCount - 1) << " downto 0);\n";
-				break;
-			case OF::CPP:
-				o << "bool sums[" << immediateSumCount << "] = {};\n";
-				break;
-			default:
-				break;
-			}
-		}
-		o << '\n';
-	}
+			if (count == 0)
+				return;
+			printFormatSpecific("wire [", "signal " + name + " : std_logic_vector(", "bool " + name + '[');
+			o << (discriminate<OF::CPP>() ? count : count - 1);
+			printFormatSpecific(":0] " + name + ";\n", " downto 0);\n", "] = {};\n");
+		};
+	printImmediates("prods", immediateProductCount);
+	printImmediates("sums", immediateSumCount);
+	o << '\n';
 }
 
 void OutputComposer::printOptimizedMathArgs(const OptimizedSolutions::id_t id) const
@@ -1019,46 +836,29 @@ void OutputComposer::printOptimizedNegatedInputs() const
 {
 	if (optimizedSolutions->getNegatedInputs() == 0 && !isHuman())
 		return;
-	switch (options::outputFormat)
-	{
-	case OF::HUMAN_SHORT:
-	case OF::HUMAN:
-	case OF::HUMAN_LONG:
-		o << "Negated inputs:";
-		break;
-	case OF::GRAPH:
-	case OF::REDUCED_GRAPH:
-		o << "subgraph negated_inputs\n";
-		o << "{\n";
-		o.indent();
-		o << "node [shape=diamond];\n";
-		break;
-	default:
-		break;
-	}
+	
+	printFormatSpecific(
+			"Negated inputs:",
+			[this]{
+				o << "subgraph negated_inputs\n{\n";
+				o.indent();
+				o << "node [shape=diamond];\n";
+			}
+		);
 	First first;
 	for (Minterm i = 0; i != ::bits; ++i)
 	{
 		if ((optimizedSolutions->getNegatedInputs() & (1 << (::bits - i - 1))) != 0)
 		{
-			if (!first)
-				if (isHuman())
-					o << ',';
-			switch (options::outputFormat)
-			{
-			case OF::HUMAN_SHORT:
-			case OF::HUMAN:
-			case OF::HUMAN_LONG:
-				o << ' ';
-				break;
-			case OF::GRAPH:
-			case OF::REDUCED_GRAPH:
-				o << "ni" << i << " [label=\"";
-				printNot();
-				break;
-			default:
-				break;
-			}
+			if (isHuman() && !first)
+				o << ',';
+			printFormatSpecific(
+					' ',
+					[this, i]{
+						o << "ni" << i << " [label=\"";
+						printNot();
+					}
+				);
 			::inputNames.printName(o, i);
 			if (isGraph())
 			{
@@ -1067,24 +867,11 @@ void OutputComposer::printOptimizedNegatedInputs() const
 			}
 		}
 	}
-	if (first)
-		if (isHuman())
-			o << " <none>";
-	switch (options::outputFormat)
-	{
-	case OF::HUMAN_SHORT:
-	case OF::HUMAN:
-	case OF::HUMAN_LONG:
-		o << '\n';
-		break;
-	case OF::GRAPH:
-	case OF::REDUCED_GRAPH:
+	if (isHuman() && first)
+		o << " <none>";
+	if (isGraph())
 		o.deindent();
-		o << "}\n";
-		break;
-	default:
-		break;
-	}
+	printFormatSpecific('\n', "}\n");
 }
 
 void OutputComposer::printOptimizedProductBody(const OptimizedSolutions::id_t productId, const bool parentheses) const
@@ -1177,47 +964,9 @@ void OutputComposer::printOptimizedGraphProductParents(const OptimizedSolutions:
 
 void OutputComposer::printOptimizedProduct(const OptimizedSolutions::id_t productId) const
 {
-	switch (options::outputFormat)
-	{
-	case OF::HUMAN_SHORT:
-	case OF::HUMAN:
-	case OF::HUMAN_LONG:
-	case OF::VHDL:
-	case OF::CPP:
-		break;
-	case OF::GRAPH:
-	case OF::REDUCED_GRAPH:
-		break;
-	case OF::VERILOG:
-		o << "assign ";
-		break;
-	case OF::MATHEMATICAL:
-		break;
-	default:
-		break;
-	}
-	
+	printAssignmentStart();
 	printNormalizedId(productId);
-	
-	switch (options::outputFormat)
-	{
-	case OF::HUMAN_SHORT:
-	case OF::HUMAN:
-	case OF::HUMAN_LONG:
-	case OF::VERILOG:
-	case OF::VHDL:
-	case OF::CPP:
-	case OF::MATHEMATICAL:
-		printAssignmentOp();
-		break;
-	case OF::GRAPH:
-	case OF::REDUCED_GRAPH:
-		o << " [label=\"";
-		break;
-	default:
-		break;
-	}
-	
+	printFormatSpecific(&OutputComposer::printAssignmentOp, " [label=\"", NEXT, &OutputComposer::printAssignmentOp);
 	if (!isGraph())
 	{
 		printOptimizedProductBody(productId, false);
@@ -1240,32 +989,13 @@ void OutputComposer::printOptimizedProduct(const OptimizedSolutions::id_t produc
 			printNormalizedId(productId);
 		}
 	}
-	
-	switch (options::outputFormat)
-	{
-	case OF::HUMAN_SHORT:
-	case OF::HUMAN:
-	case OF::HUMAN_LONG:
-	case OF::MATHEMATICAL:
-		o << '\n';
-		break;
-	case OF::GRAPH:
-	case OF::REDUCED_GRAPH:
-	case OF::VERILOG:
-	case OF::VHDL:
-	case OF::CPP:
-		o << ";\n";
-		break;
-	default:
-		break;
-	}
+	printFormatSpecific('\n', NEXT, ";\n", '\n');
 }
 
 void OutputComposer::printOptimizedProducts() const
 {
 	if (isHuman())
 		o << "Products:\n";
-	
 	First first;
 	for (std::size_t i = 0; i != optimizedSolutions->getProductCount(); ++i)
 	{
@@ -1273,55 +1003,23 @@ void OutputComposer::printOptimizedProducts() const
 			continue;
 		if (first)
 		{
-			switch (options::outputFormat)
-			{
-			case OF::HUMAN_SHORT:
-			case OF::HUMAN:
-			case OF::HUMAN_LONG:
-				o.indent();
-				break;
-			case OF::GRAPH:
-			case OF::REDUCED_GRAPH:
-				o << "subgraph products\n";
-				o << "{\n";
-				o.indent();
-				o << "node [shape=ellipse];\n";
-				break;
-			case OF::VHDL:
+			if (discriminate<OF::VHDL>())
 				o << '\n';
-				[[fallthrough]];
-			case OF::VERILOG:
-			case OF::CPP:
+			if (!isHumanReadable())
 				printCommentStart();
-				o << "Products\n";
-				break;
-			default:
-				break;
-			}
+			if (isGraph())
+				o << "subgraph products\n" << "{\n";
+			if (isHuman() || isGraph())
+				o.indent();
+			printFormatSpecific(BLANK, "node [shape=ellipse];\n", "Products\n", BLANK);
 		}
 		printOptimizedProduct(optimizedSolutions->makeProductId(i));
 	}
 	if (!first)
 	{
-		switch (options::outputFormat)
-		{
-		case OF::HUMAN_SHORT:
-		case OF::HUMAN:
-		case OF::HUMAN_LONG:
+		if (isHuman() || isGraph())
 			o.deindent();
-			break;
-		case OF::GRAPH:
-		case OF::REDUCED_GRAPH:
-			o.deindent();
-			o << "}\n";
-			break;
-		case OF::VERILOG:
-		case OF::CPP:
-			o << '\n';
-			break;
-		default:
-			break;
-		}
+		printFormatSpecific(BLANK, "}\n", '\n', BLANK, '\n', BLANK);
 	}
 }
 
@@ -1422,45 +1120,9 @@ void OutputComposer::printOptimizedGraphSumParents(const OptimizedSolutions::id_
 
 void OutputComposer::printOptimizedSum(const OptimizedSolutions::id_t sumId) const
 {
-	switch (options::outputFormat)
-	{
-	case OF::HUMAN_SHORT:
-	case OF::HUMAN:
-	case OF::HUMAN_LONG:
-	case OF::VHDL:
-	case OF::CPP:
-	case OF::GRAPH:
-	case OF::REDUCED_GRAPH:
-		break;
-	case OF::VERILOG:
-		o << "assign ";
-		break;
-	case OF::MATHEMATICAL:
-	default:
-		break;
-	}
-	
+	printAssignmentStart();
 	printNormalizedId(sumId);
-	
-	switch (options::outputFormat)
-	{
-	case OF::HUMAN_SHORT:
-	case OF::HUMAN:
-	case OF::HUMAN_LONG:
-	case OF::VERILOG:
-	case OF::VHDL:
-	case OF::CPP:
-	case OF::MATHEMATICAL:
-		printAssignmentOp();
-		break;
-	case OF::GRAPH:
-	case OF::REDUCED_GRAPH:
-		o << " [label=\"";
-		break;
-	default:
-		break;
-	}
-	
+	printFormatSpecific(&OutputComposer::printAssignmentOp, " [label=\"", NEXT, &OutputComposer::printAssignmentOp);
 	if (!isGraph())
 	{
 		printOptimizedSumBody(sumId);
@@ -1484,24 +1146,7 @@ void OutputComposer::printOptimizedSum(const OptimizedSolutions::id_t sumId) con
 			printNormalizedId(sumId);
 		}
 	}
-	
-	switch (options::outputFormat)
-	{
-	case OF::HUMAN_SHORT:
-	case OF::HUMAN:
-	case OF::HUMAN_LONG:
-	case OF::MATHEMATICAL:
-		break;
-	case OF::GRAPH:
-	case OF::REDUCED_GRAPH:
-	case OF::VERILOG:
-	case OF::VHDL:
-	case OF::CPP:
-		o << ';';
-		break;
-	default:
-		break;
-	}
+	printFormatSpecific(BLANK, NEXT, ';', BLANK);
 	o << '\n';
 }
 
@@ -1509,7 +1154,6 @@ void OutputComposer::printOptimizedSums() const
 {
 	if (isHuman())
 		o << "Sums:\n";
-	
 	First first;
 	for (std::size_t i = 0; i != optimizedSolutions->getSumCount(); ++i)
 	{
@@ -1517,59 +1161,23 @@ void OutputComposer::printOptimizedSums() const
 			continue;
 		if (first)
 		{
-			switch (options::outputFormat)
-			{
-			case OF::HUMAN_SHORT:
-			case OF::HUMAN:
-			case OF::HUMAN_LONG:
-				o.indent();
-				break;
-			case OF::GRAPH:
-			case OF::REDUCED_GRAPH:
-				o << "subgraph sums\n";
-				o << "{\n";
-				o.indent();
-				o << "node [shape=rectangle];\n";
-				break;
-			case OF::VHDL:
+			if (discriminate<OF::VHDL>())
 				o << '\n';
-				[[fallthrough]];
-			case OF::VERILOG:
-			case OF::CPP:
+			if (!isHumanReadable())
 				printCommentStart();
-				o << "Sums\n";
-				break;
-			case OF::MATHEMATICAL:
-			default:
-				break;
-			}
+			if (isGraph())
+				o << "subgraph sums\n" << "{\n";
+			if (isHuman() || isGraph())
+				o.indent();
+			printFormatSpecific(BLANK, "node [shape=rectangle];\n", "Sums\n", BLANK);
 		}
 		printOptimizedSum(optimizedSolutions->makeSumId(i));
 	}
-	
 	if (!first)
 	{
-		switch (options::outputFormat)
-		{
-		case OF::HUMAN_SHORT:
-		case OF::HUMAN:
-		case OF::HUMAN_LONG:
+		if (isHuman() || isGraph())
 			o.deindent();
-			break;
-		case OF::GRAPH:
-		case OF::REDUCED_GRAPH:
-			o.deindent();
-			o << "}\n";
-			break;
-		case OF::VERILOG:
-		case OF::CPP:
-			o << '\n';
-			break;
-		case OF::VHDL:
-		case OF::MATHEMATICAL:
-		default:
-			break;
-		}
+		printFormatSpecific(BLANK, "}\n", '\n', BLANK, '\n', BLANK);
 	}
 }
 
@@ -1589,26 +1197,10 @@ void OutputComposer::printOptimizedGraphFinalSumLabel(const std::size_t i) const
 
 void OutputComposer::printOptimizedFinalSums() const
 {
-	switch (options::outputFormat)
+	if (discriminate<OF::CPP>())
 	{
-	case OF::HUMAN_SHORT:
-	case OF::HUMAN:
-	case OF::HUMAN_LONG:
-		break;
-	case OF::GRAPH:
-	case OF::REDUCED_GRAPH:
-		break;
-	case OF::VERILOG:
-		break;
-	case OF::VHDL:
-		break;
-	case OF::CPP:
 		printCommentStart();
 		o << "Results\n";
-		break;
-	case OF::MATHEMATICAL:
-	default:
-		break;
 	}
 	
 	if (optimizedSolutions->getFinalSums().empty() && !isHuman())
@@ -1618,203 +1210,73 @@ void OutputComposer::printOptimizedFinalSums() const
 		return;
 	}
 	
-	switch (options::outputFormat)
-	{
-	case OF::HUMAN_SHORT:
-	case OF::HUMAN:
-	case OF::HUMAN_LONG:
-		o.indent();
-		break;
-	case OF::GRAPH:
-	case OF::REDUCED_GRAPH:
-		o << "subgraph final_sums\n";
-		o << "{\n";
-		o.indent();
-		o << "node [shape=rectangle, style=filled];\n";
-		break;
-	case OF::VHDL:
+	if (discriminate<OF::VHDL>())
 		o << '\n';
-		[[fallthrough]];
-	case OF::VERILOG:
+	if (discriminate<OF::VHDL, OF::VERILOG>())
 		printCommentStart();
-		o << "Results\n";
-		break;
-	case OF::CPP:
-		o << "output_t o = {};\n";
-		break;
-	case OF::MATHEMATICAL:
-	default:
-		break;
-	}
+	if (isGraph())
+		o << "subgraph final_sums\n" << "{\n";
+	if (isHuman() || isGraph())
+		o.indent();
+	printFormatSpecific(BLANK, "node [shape=rectangle, style=filled];\n", NEXT, "Results\n", "output_t o = {};\n", BLANK);
 	
 	for (std::size_t i = 0; i != optimizedSolutions->getFinalSums().size(); ++i)
 	{
-		switch (options::outputFormat)
-		{
-		case OF::HUMAN_SHORT:
-		case OF::HUMAN:
-		case OF::HUMAN_LONG:
-			o << '"';
-			break;
-		case OF::GRAPH:
-		case OF::REDUCED_GRAPH:
-			o << "f" << i << " [label=\"";
+		printFormatSpecific('"', [this, i]{ o << "f" << i << " [label=\""; }, &OutputComposer::printAssignmentStart, BLANK);
+		
+		if (isGraph())
 			printOptimizedGraphFinalSumLabel(i);
-			o << "\"];\n";
-			break;
-		case OF::VERILOG:
-		case OF::VHDL:
-		case OF::CPP:
-			printAssignmentStart();
-			break;
-		case OF::MATHEMATICAL:
-		default:
-			break;
-		}
-		
-		if (!isGraph())
+		else
 			functionNames.printName(o, i);
-		
-		switch (options::outputFormat)
+		if (isHuman())
+			o << '"';
+		if (discriminate<OF::MATHEMATICAL>())
 		{
-		case OF::MATHEMATICAL:
 			o << '(';
 			::inputNames.printNames(o);
 			o << ")";
-			[[fallthrough]];
-		case OF::HUMAN_SHORT:
-		case OF::HUMAN:
-		case OF::HUMAN_LONG:
-		case OF::VERILOG:
-		case OF::VHDL:
-		case OF::CPP:
-			if (isHuman())
-				o << '"';
-			printAssignmentOp();
-			break;
-		case OF::GRAPH:
-		case OF::REDUCED_GRAPH:
-			break;
-		default:
-			break;
 		}
+		printFormatSpecific(&OutputComposer::printAssignmentOp, "\"];\n", NEXT, &OutputComposer::printAssignmentOp);
 		
 		const OptimizedSolutions::id_t sumId = optimizedSolutions->getFinalSums()[i];
 		if (isOptimizedSumWorthPrinting(sumId))
 			printNormalizedId(sumId);
-		else if (!isGraph())
-			printOptimizedSumBody(sumId);
-		else
+		else if (isGraph())
 			printOptimizedGraphSumParents(sumId);
-		
-		switch (options::outputFormat)
-		{
-		case OF::HUMAN_SHORT:
-		case OF::HUMAN:
-		case OF::HUMAN_LONG:
-		case OF::MATHEMATICAL:
-			break;
-		case OF::GRAPH:
-		case OF::REDUCED_GRAPH:
-			o << " -> f" << i;
-			[[fallthrough]];
-		case OF::VERILOG:
-		case OF::VHDL:
-		case OF::CPP:
-			o << ';';
-			break;
-		default:
-			break;
-		}
+		else
+			printOptimizedSumBody(sumId);
+		printFormatSpecific(BLANK, [this, i]{ o << " -> f" << i << ';'; }, ';', BLANK);
 		o << '\n';
 	}
 	
-	switch (options::outputFormat)
-	{
-	case OF::HUMAN_SHORT:
-	case OF::HUMAN:
-	case OF::HUMAN_LONG:
+	if (isHuman() || isGraph())
 		o.deindent();
-		break;
-	case OF::GRAPH:
-	case OF::REDUCED_GRAPH:
-		o.deindent();
-		o << "}\n";
-		break;
-	case OF::VERILOG:
-		o << '\n';
-		break;
-	case OF::VHDL:
-		break;
-	case OF::CPP:
-		o << "return o;\n";
-		break;
-	case OF::MATHEMATICAL:
-	default:
-		break;
-	}
+	printFormatSpecific(BLANK, "}\n", '\n', BLANK, "return o;\n", BLANK);
 }
 
 void OutputComposer::printOptimizedSolution()
 {
 	const auto [immediateProductCount, immediateSumCount] = generateOptimizedNormalizedIds();
+	
 	if (isHuman() || options::outputFormat == OF::GRAPH)
 		printOptimizedNegatedInputs();
 	if (!isHumanReadable())
 		printOptimizedImmediates(immediateProductCount, immediateSumCount);
 	
-	switch (options::outputFormat)
+	if (discriminate<OF::VHDL>())
 	{
-	case OF::HUMAN_SHORT:
-	case OF::HUMAN:
-	case OF::HUMAN_LONG:
-		break;
-	case OF::GRAPH:
-	case OF::REDUCED_GRAPH:
-		break;
-	case OF::VERILOG:
-		break;
-	case OF::VHDL:
 		o.deindent();
 		o << "begin\n";
 		o.indent();
-		break;
-	case OF::CPP:
-		break;
-	case OF::MATHEMATICAL:
-		if (immediateProductCount != 0 || immediateSumCount != 0)
-			o << "Let:\n";
-		break;
-	default:
-		break;
 	}
 	
+	if (discriminate<OF::MATHEMATICAL>() && immediateProductCount + immediateSumCount != 0)
+		o << "Let:\n";
 	printOptimizedProducts();
 	printOptimizedSums();
 	
-	switch (options::outputFormat)
-	{
-	case OF::HUMAN_SHORT:
-	case OF::HUMAN:
-	case OF::HUMAN_LONG:
-		break;
-	case OF::GRAPH:
-	case OF::REDUCED_GRAPH:
-		break;
-	case OF::VERILOG:
-		break;
-	case OF::VHDL:
-		break;
-	case OF::CPP:
-		break;
-	case OF::MATHEMATICAL:
-		if (immediateProductCount != 0 || immediateSumCount != 0)
-			o << "\nThen:\n";
-		break;
-	default:
-		break;
-	}
-	
+	if (discriminate<OF::MATHEMATICAL>() && immediateProductCount + immediateSumCount != 0)
+		o << "\nThen:\n";
 	if (options::outputFormat != OF::REDUCED_GRAPH)
 		printOptimizedFinalSums();
 	if (options::outputFormat == OF::HUMAN || options::outputFormat == OF::HUMAN_LONG)
@@ -1823,26 +1285,8 @@ void OutputComposer::printOptimizedSolution()
 		printGateCost(*optimizedSolutions, false);
 	}
 	
-	switch (options::outputFormat)
-	{
-	case OF::HUMAN_SHORT:
-	case OF::HUMAN:
-	case OF::HUMAN_LONG:
-		break;
-	case OF::GRAPH:
-	case OF::REDUCED_GRAPH:
-		break;
-	case OF::VERILOG:
-		break;
-	case OF::VHDL:
+	if (discriminate<OF::VHDL>())
 		o << '\n';
-		break;
-	case OF::CPP:
-		break;
-	case OF::MATHEMATICAL:
-	default:
-		break;
-	}
 }
 
 void OutputComposer::printGraphConstants() const

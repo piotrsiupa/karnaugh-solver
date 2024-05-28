@@ -11,24 +11,24 @@ namespace options
 	
 	enum class OutputFormat
 	{
-		HUMAN_LONG,
-		HUMAN,
-		HUMAN_SHORT,
-		GRAPH,
-		REDUCED_GRAPH,
-		VERILOG,
-		VHDL,
-		CPP,
-		MATHEMATICAL,
-		GATE_COSTS,
+		HUMAN_LONG = 1<<0,
+		HUMAN = 1<<1,
+		HUMAN_SHORT = 1<<2,
+		GRAPH = 1<<3,
+		REDUCED_GRAPH = 1<<4,
+		VERILOG = 1<<5,
+		VHDL = 1<<6,
+		CPP = 1<<7,
+		MATHEMATICAL = 1<<8,
+		GATE_COSTS = 1<<9,
 	};
 	
 	enum class OutputOperators
 	{
-		FORMAL,
-		ASCII,
-		PROGRAMMING,
-		NAMES,
+		FORMAL = 0,
+		ASCII = 1,
+		PROGRAMMING = 2,
+		NAMES = 3,
 	};
 	
 	extern Flag help;
