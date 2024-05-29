@@ -12,7 +12,7 @@ using OO = options::OutputOperators;
 
 
 template<OF ...FORMATS>
-bool constexpr OutputComposer::discriminate(const options::OutputFormat format)
+bool constexpr OutputComposer::discriminate(const OF format)
 {
 	if constexpr (sizeof...(FORMATS) == 1)
 	{
@@ -26,27 +26,27 @@ bool constexpr OutputComposer::discriminate(const options::OutputFormat format)
 }
 
 template<OF ...FORMATS>
-bool OutputComposer::discriminate()
+bool OutputComposer::discriminate() const
 {
-	return discriminate<FORMATS...>(options::outputFormat);
+	return discriminate<FORMATS...>(outputFormat);
 }
 
-bool OutputComposer::isHuman()
+bool OutputComposer::isHuman() const
 {
 	return discriminate<OF::HUMAN_SHORT, OF::HUMAN, OF::HUMAN_LONG>();
 }
 
-bool OutputComposer::isGraph()
+bool OutputComposer::isGraph() const
 {
 	return discriminate<OF::GRAPH, OF::REDUCED_GRAPH>();
 }
 
-bool OutputComposer::isHumanReadable()
+bool OutputComposer::isHumanReadable() const
 {
 	return discriminate<OF::HUMAN_SHORT, OF::HUMAN, OF::HUMAN_LONG, OF::GRAPH, OF::REDUCED_GRAPH, OF::MATHEMATICAL, OF::GATE_COSTS>();
 }
 
-bool OutputComposer::isProgramming()
+bool OutputComposer::isProgramming() const
 {
 	return discriminate<OF::VERILOG, OF::VHDL, OF::CPP>();
 }
@@ -73,37 +73,37 @@ void OutputComposer::printChoiceSpecific(const ENUM choice, const VALUES &...val
 }
 
 template<typename GRAPH, typename REDUCED_GRAPH, typename MATHEMATICAL, typename GATE_COST, typename HUMAN_LONG, typename HUMAN, typename HUMAN_SHORT, typename CPP, typename VERILOG, typename VHDL>
-void OutputComposer::printFormatSpecific(const options::OutputFormat format, GRAPH graph, REDUCED_GRAPH reducedGraph, MATHEMATICAL mathematical, GATE_COST gateCost, HUMAN_LONG humanLong, HUMAN human, HUMAN_SHORT humanShort, CPP cpp, VERILOG verilog, VHDL vhdl) const
+void OutputComposer::printFormatSpecific(const OF format, GRAPH graph, REDUCED_GRAPH reducedGraph, MATHEMATICAL mathematical, GATE_COST gateCost, HUMAN_LONG humanLong, HUMAN human, HUMAN_SHORT humanShort, CPP cpp, VERILOG verilog, VHDL vhdl) const
 {
 	return printChoiceSpecific<OF, OF::GRAPH, OF::REDUCED_GRAPH, OF::MATHEMATICAL, OF::GATE_COSTS, OF::HUMAN_LONG, OF::HUMAN, OF::HUMAN_SHORT, OF::CPP, OF::VERILOG, OF::VHDL>(format, graph, reducedGraph, mathematical, gateCost, humanLong, human, humanShort, cpp, verilog, vhdl);
 }
 
 template<typename GRAPH, typename MATHEMATICAL, typename GATE_COST, typename HUMAN, typename CPP, typename VERILOG, typename VHDL>
-void OutputComposer::printFormatSpecific(const options::OutputFormat format, GRAPH graph, MATHEMATICAL mathematical, GATE_COST gateCost, HUMAN human, CPP cpp, VERILOG verilog, VHDL vhdl) const
+void OutputComposer::printFormatSpecific(const OF format, GRAPH graph, MATHEMATICAL mathematical, GATE_COST gateCost, HUMAN human, CPP cpp, VERILOG verilog, VHDL vhdl) const
 {
 	return printFormatSpecific(format, NEXT, graph, mathematical, gateCost, NEXT, NEXT, human, cpp, verilog, vhdl);
 }
 
 template<typename GRAPH, typename MATHEMATICAL, typename HUMAN, typename CPP, typename VERILOG, typename VHDL>
-void OutputComposer::printFormatSpecific(const options::OutputFormat format, GRAPH graph, MATHEMATICAL mathematical, HUMAN human, CPP cpp, VERILOG verilog, VHDL vhdl) const
+void OutputComposer::printFormatSpecific(const OF format, GRAPH graph, MATHEMATICAL mathematical, HUMAN human, CPP cpp, VERILOG verilog, VHDL vhdl) const
 {
 	return printFormatSpecific(format, graph, mathematical, NEXT, human, cpp, verilog, vhdl);
 }
 
 template<typename GRAPH, typename MATHEMATICAL, typename HUMAN, typename PROGRAM>
-void OutputComposer::printFormatSpecific(const options::OutputFormat format, GRAPH graph, MATHEMATICAL mathematical, HUMAN human, PROGRAM program) const
+void OutputComposer::printFormatSpecific(const OF format, GRAPH graph, MATHEMATICAL mathematical, HUMAN human, PROGRAM program) const
 {
 	return printFormatSpecific(format, graph, mathematical, human, NEXT, NEXT, program);
 }
 
 template<typename CPP, typename VERILOG, typename VHDL>
-void OutputComposer::printFormatSpecific(const options::OutputFormat format, CPP cpp, VERILOG verilog, VHDL vhdl) const
+void OutputComposer::printFormatSpecific(const OF format, CPP cpp, VERILOG verilog, VHDL vhdl) const
 {
 	return printFormatSpecific(format, NEXT, NEXT, NEXT, cpp, verilog, vhdl);
 }
 
 template<typename GRAPH, typename HUMAN>
-void OutputComposer::printFormatSpecific(const options::OutputFormat format, GRAPH graph, HUMAN human) const
+void OutputComposer::printFormatSpecific(const OF format, GRAPH graph, HUMAN human) const
 {
 	return printFormatSpecific(format, graph, NEXT, human, NEXT, NEXT, NEXT);
 }
@@ -112,42 +112,42 @@ template<typename GRAPH, typename REDUCED_GRAPH, typename MATHEMATICAL, typename
 std::enable_if_t<!std::is_same_v<GRAPH, options::MappedOutputFormats>, void>
 OutputComposer::printFormatSpecific(GRAPH graph, REDUCED_GRAPH reducedGraph, MATHEMATICAL mathematical, GATE_COST gateCost, HUMAN_LONG humanLong, HUMAN human, HUMAN_SHORT humanShort, CPP cpp, VERILOG verilog, VHDL vhdl) const
 {
-	return printFormatSpecific(options::outputFormat, graph, reducedGraph, mathematical, gateCost, humanLong, human, humanShort, cpp, verilog, vhdl);
+	return printFormatSpecific(outputFormat, graph, reducedGraph, mathematical, gateCost, humanLong, human, humanShort, cpp, verilog, vhdl);
 }
 
 template<typename GRAPH, typename MATHEMATICAL, typename GATE_COSTS, typename HUMAN, typename CPP, typename VERILOG, typename VHDL>
 std::enable_if_t<!std::is_same_v<GRAPH, options::MappedOutputFormats>, void>
 OutputComposer::printFormatSpecific(GRAPH graph, MATHEMATICAL mathematical, GATE_COSTS gateCost, HUMAN human, CPP cpp, VERILOG verilog, VHDL vhdl) const
 {
-	return printFormatSpecific(options::outputFormat, graph, mathematical, gateCost, human, cpp, verilog, vhdl);
+	return printFormatSpecific(outputFormat, graph, mathematical, gateCost, human, cpp, verilog, vhdl);
 }
 
 template<typename GRAPH, typename MATHEMATICAL, typename HUMAN, typename CPP, typename VERILOG, typename VHDL>
 std::enable_if_t<!std::is_same_v<GRAPH, options::MappedOutputFormats>, void>
 OutputComposer::printFormatSpecific(GRAPH graph, MATHEMATICAL mathematical, HUMAN human, CPP cpp, VERILOG verilog, VHDL vhdl) const
 {
-	return printFormatSpecific(options::outputFormat, graph, mathematical, human, cpp, verilog, vhdl);
+	return printFormatSpecific(outputFormat, graph, mathematical, human, cpp, verilog, vhdl);
 }
 
 template<typename GRAPH, typename MATHEMATICAL, typename HUMAN, typename PROGRAM>
 std::enable_if_t<!std::is_same_v<GRAPH, options::MappedOutputFormats>, void>
 OutputComposer::printFormatSpecific(GRAPH graph, MATHEMATICAL mathematical, HUMAN human, PROGRAM program) const
 {
-	return printFormatSpecific(options::outputFormat, graph, mathematical, human, program);
+	return printFormatSpecific(outputFormat, graph, mathematical, human, program);
 }
 
 template<typename CPP, typename VERILOG, typename VHDL>
 std::enable_if_t<!std::is_same_v<CPP, options::MappedOutputFormats>, void>
 OutputComposer::printFormatSpecific(CPP cpp, VERILOG verilog, VHDL vhdl) const
 {
-	return printFormatSpecific(options::outputFormat, cpp, verilog, vhdl);
+	return printFormatSpecific(outputFormat, cpp, verilog, vhdl);
 }
 
 template<typename GRAPH, typename HUMAN>
 std::enable_if_t<!std::is_same_v<GRAPH, options::MappedOutputFormats>, void>
 OutputComposer::printFormatSpecific(GRAPH graph, HUMAN human) const
 {
-	return printFormatSpecific(options::outputFormat, graph, human);
+	return printFormatSpecific(outputFormat, graph, human);
 }
 
 std::pair<bool, bool> OutputComposer::checkForUsedConstants(const Solution &solution) const
@@ -162,7 +162,7 @@ std::pair<bool, bool> OutputComposer::checkForUsedConstants(const Solution &solu
 
 std::pair<bool, bool> OutputComposer::checkForUsedConstants() const
 {
-	if (options::skipOptimization)
+	if (optimizedSolutions == nullptr)
 	{
 		bool anyUsesFalse = false, anyUsesTrue = false;
 		for (const Solution &solution : solutions)
@@ -196,7 +196,7 @@ bool OutputComposer::isOptimizedProductWorthPrintingInGeneral(const OptimizedSol
 bool OutputComposer::isOptimizedProductWorthPrinting(const OptimizedSolutions::id_t productId) const
 {
 	const bool isWorthPrintingInGeneral = isOptimizedProductWorthPrintingInGeneral(productId);
-	switch (options::outputFormat)
+	switch (outputFormat)
 	{
 	case OF::REDUCED_GRAPH:
 		return isWorthPrintingInGeneral || optimizedSolutions->findProductEndNode(productId) != SIZE_MAX;
@@ -227,7 +227,7 @@ bool OutputComposer::isOptimizedSumWorthPrintingInGeneral(const OptimizedSolutio
 
 bool OutputComposer::isOptimizedSumWorthPrinting(const OptimizedSolutions::id_t sumId) const
 {
-	switch (options::outputFormat)
+	switch (outputFormat)
 	{
 	case OF::REDUCED_GRAPH:
 		return optimizedSolutions->getSum(sumId).size() != 1;
@@ -236,16 +236,6 @@ bool OutputComposer::isOptimizedSumWorthPrinting(const OptimizedSolutions::id_t 
 	default:
 		return isOptimizedSumWorthPrintingInGeneral(sumId);
 	}
-}
-
-std::string OutputComposer::getName()
-{
-	if (options::name)
-		return *options::name;
-	else if (::inputFilePath)
-		return std::filesystem::path(*::inputFilePath).stem().string();
-	else
-		return "Karnaugh";
 }
 
 std::pair<std::size_t, std::size_t> OutputComposer::generateOptimizedNormalizedIds()
@@ -267,7 +257,7 @@ std::pair<std::size_t, std::size_t> OutputComposer::generateOptimizedNormalizedI
 
 void OutputComposer::printNormalizedId(const OptimizedSolutions::id_t id, const bool useHumanAnyway) const
 {
-	const OF format = useHumanAnyway ? OF::HUMAN : options::outputFormat;
+	const OF format = useHumanAnyway ? OF::HUMAN : outputFormat;
 	if (optimizedSolutions->isProduct(id))
 		printFormatSpecific(format, 's', 'p', BLANK, "prods");
 	else
@@ -303,7 +293,7 @@ void OutputComposer::printAssignmentOp() const
 
 void OutputComposer::printShortBool(const Trilean value) const
 {
-	const auto print = [this](const char formal, const char ascii, const char programming, const char names){ return printChoiceSpecific<OO, OO::FORMAL, OO::ASCII, OO::PROGRAMMING, OO::NAMES>(options::outputOperators, formal, ascii, programming, names); };
+	const auto print = [this](const char formal, const char ascii, const char programming, const char names){ return printChoiceSpecific<OO, OO::FORMAL, OO::ASCII, OO::PROGRAMMING, OO::NAMES>(outputOperators, formal, ascii, programming, names); };
 	switch (value.get())
 	{
 	case Trilean::Value::FALSE:
@@ -318,7 +308,7 @@ void OutputComposer::printShortBool(const Trilean value) const
 	}
 }
 
-constexpr options::OutputFormat OutputComposer::mapOutputOperators(const options::OutputOperators outputOperators)
+constexpr OF OutputComposer::mapOutputOperators(const OO outputOperators)
 {
 	switch (outputOperators)
 	{
@@ -335,11 +325,11 @@ constexpr options::OutputFormat OutputComposer::mapOutputOperators(const options
 	return OF::GATE_COSTS;
 }
 
-options::OutputFormat OutputComposer::getOperatorsStyle()
+OF OutputComposer::getOperatorsStyle() const
 {
 	return isProgramming()
-			? options::outputFormat
-			: mapOutputOperators(options::outputOperators);
+			? outputFormat
+			: mapOutputOperators(outputOperators);
 }
 
 void OutputComposer::printBool(const bool value, const bool strictlyForCode) const
@@ -566,8 +556,7 @@ std::size_t OutputComposer::printGraphProducts(const Solution &solution, const s
 {
 	if (std::any_of(solution.cbegin(), solution.cend(), [](const Implicant &x){ return x.getBitCount() >= 2; }))
 	{
-		const bool isFullGraph = options::outputFormat == OF::GRAPH;
-		const bool isVerbose = options::verboseGraph;
+		const bool isFullGraph = outputFormat == OF::GRAPH;
 		o << "subgraph products\n";
 		o << "{\n";
 		{
@@ -584,7 +573,7 @@ std::size_t OutputComposer::printGraphProducts(const Solution &solution, const s
 					o << "\\n";
 				}
 				o << "[" << idShift++ << "]";
-				if (!isFullGraph || isVerbose)
+				if (!isFullGraph || isGraphVerbose)
 				{
 					o << " = ";
 					printImplicant(solution[i], false, true);
@@ -610,8 +599,7 @@ std::size_t OutputComposer::printGraphProducts(const Solution &solution, const s
 
 void OutputComposer::printGraphSum(const Solution &solution, const std::size_t functionNum) const
 {
-	const bool isFullGraph = options::outputFormat == OF::GRAPH;
-	const bool isVerbose = options::verboseGraph;
+	const bool isFullGraph = discriminate<OF::GRAPH>();
 	o << "subgraph sum\n";
 	o << "{\n";
 	{
@@ -625,12 +613,12 @@ void OutputComposer::printGraphSum(const Solution &solution, const std::size_t f
 			o << "\\n";
 		}
 		functionNames.printName(o, functionNum);
-		if (!isFullGraph || isVerbose)
+		if (!isFullGraph || isGraphVerbose)
 		{
 			First first;
 			for (const Implicant &product : solution)
 			{
-				if (!isVerbose && solution.size() >= 2 && product.getBitCount() >= 2)
+				if (!isGraphVerbose && solution.size() >= 2 && product.getBitCount() >= 2)
 					continue;
 				if (first)
 					o << " = ";
@@ -675,7 +663,7 @@ std::size_t OutputComposer::printSolution(const std::size_t i, std::size_t idShi
 	
 	if (isGraph())
 	{
-		const bool isFullGraph = options::outputFormat == OF::GRAPH;
+		const bool isFullGraph = discriminate<OF::GRAPH>();
 		if (isFullGraph)
 			printGraphNegatedInputs(solution, i);
 		if (isFullGraph || solution.size() >= 2)
@@ -683,7 +671,7 @@ std::size_t OutputComposer::printSolution(const std::size_t i, std::size_t idShi
 		printGraphSum(solution, i);
 		return idShift;
 	}
-	else if (options::outputFormat == OF::GATE_COSTS)
+	else if (discriminate<OF::GATE_COSTS>())
 	{
 		printGateCost(solution, true);
 		return 0;
@@ -692,7 +680,7 @@ std::size_t OutputComposer::printSolution(const std::size_t i, std::size_t idShi
 	if (isHuman())
 	{
 		const Karnaugh &karnaugh = karnaughs[i];
-		if (options::outputFormat == OF::HUMAN_LONG)
+		if (discriminate<OF::HUMAN_LONG>())
 		{
 			if (::bits <= 8)
 			{
@@ -731,7 +719,7 @@ std::size_t OutputComposer::printSolution(const std::size_t i, std::size_t idShi
 	if (isHuman())
 	{
 		o << '\n';
-		if (options::outputFormat != OF::HUMAN_SHORT)
+		if (!discriminate<OF::HUMAN_SHORT>())
 		{
 			o << '\n';
 			printGateCost(solution, false);
@@ -911,9 +899,8 @@ void OutputComposer::printOptimizedProductBody(const OptimizedSolutions::id_t pr
 
 void OutputComposer::printOptimizedGraphProductImplicant(const OptimizedSolutions::id_t productId) const
 {
-	const bool isVerboseGraph = options::verboseGraph;
 	Implicant primeImplicant = Implicant::error();
-	if (isVerboseGraph)
+	if (isGraphVerbose)
 	{
 		primeImplicant = optimizedSolutions->flattenProduct(productId);
 	}
@@ -930,8 +917,7 @@ void OutputComposer::printOptimizedGraphProductImplicant(const OptimizedSolution
 
 std::size_t OutputComposer::printOptimizedGraphProductLabel(const OptimizedSolutions::id_t productId, std::size_t functionNum) const
 {
-	const bool isFullGraph = options::outputFormat == OF::GRAPH;
-	const bool isVerboseGraph = options::verboseGraph;
+	const bool isFullGraph = discriminate<OF::GRAPH>();
 	const bool hasParents = isFullGraph || !optimizedSolutions->getProduct(productId).subProducts.empty();
 	if (hasParents)
 	{
@@ -954,14 +940,14 @@ std::size_t OutputComposer::printOptimizedGraphProductLabel(const OptimizedSolut
 			functionNum = additionalFunNum;
 		}
 	}
-	if (!isFullGraph || isVerboseGraph)
+	if (!isFullGraph || isGraphVerbose)
 		printOptimizedGraphProductImplicant(productId);
 	return functionNum;
 }
 
 void OutputComposer::printOptimizedGraphProductParents(const OptimizedSolutions::id_t productId) const
 {
-	const bool isFullGraph = options::outputFormat == OF::GRAPH;
+	const bool isFullGraph = discriminate<OF::GRAPH>();
 	const auto &[primeImplicant, ids] = optimizedSolutions->getProduct(productId);
 	bool needsComma = isFullGraph && primeImplicant != Implicant::all();
 	if (needsComma || ids.empty())
@@ -987,7 +973,7 @@ void OutputComposer::printOptimizedProduct(const OptimizedSolutions::id_t produc
 	}
 	else
 	{
-		const bool isFullGraph = options::outputFormat == OF::GRAPH;
+		const bool isFullGraph = discriminate<OF::GRAPH>();
 		const bool hasParents = isFullGraph || !optimizedSolutions->getProduct(productId).subProducts.empty();
 		std::size_t functionNum = isFullGraph ? SIZE_MAX : optimizedSolutions->findProductEndNode(productId);
 		functionNum = printOptimizedGraphProductLabel(productId, functionNum);
@@ -1048,15 +1034,14 @@ void OutputComposer::printOptimizedSumBody(const OptimizedSolutions::id_t sumId)
 		if (!optimizedSolutions->isProduct(partId) || isOptimizedProductWorthPrinting(partId))
 			printNormalizedId(partId);
 		else
-			printOptimizedProductBody(partId, options::outputFormat == OF::MATHEMATICAL && sum.size() != 1);
+			printOptimizedProductBody(partId, discriminate<OF::MATHEMATICAL>() && sum.size() != 1);
 	}
 }
 
 std::size_t OutputComposer::printOptimizedGraphSumLabel(const OptimizedSolutions::id_t sumId, std::size_t functionNum) const
 {
 	const OptimizedSolutions::sum_t &sum = optimizedSolutions->getSum(sumId);
-	const bool isFullGraph = options::outputFormat == OF::GRAPH;
-	const bool isVerboseGraph = options::verboseGraph;
+	const bool isFullGraph = discriminate<OF::GRAPH>();
 	const bool hasParents = isFullGraph || std::any_of(sum.cbegin(), sum.cend(), [this](const OptimizedSolutions::id_t id){ return !optimizedSolutions->isProduct(id) || isOptimizedProductWorthPrintingInGeneral(id); });
 	if (hasParents)
 	{
@@ -1079,16 +1064,15 @@ std::size_t OutputComposer::printOptimizedGraphSumLabel(const OptimizedSolutions
 			functionNum = additionalFunNum;
 		}
 	}
-	if (!isFullGraph || isVerboseGraph)
+	if (!isFullGraph || isGraphVerbose)
 		printOptimizedGraphSumProducts(sumId);
 	return functionNum;
 }
 
 void OutputComposer::printOptimizedGraphSumProducts(const OptimizedSolutions::id_t sumId) const
 {
-	const bool isVerboseGraph = options::verboseGraph;
 	OptimizedSolutions::sum_t sum;
-	if (isVerboseGraph)
+	if (isGraphVerbose)
 	{
 		sum = optimizedSolutions->flattenSum(sumId);
 	}
@@ -1104,7 +1088,7 @@ void OutputComposer::printOptimizedGraphSumProducts(const OptimizedSolutions::id
 			o << " = ";
 		else
 			printOr(true);
-		if (isVerboseGraph)
+		if (isGraphVerbose)
 			printImplicant(optimizedSolutions->flattenProduct(productId), sum.size() != 1, true);
 		else
 			printImplicant(optimizedSolutions->getProduct(productId).implicant, false, true);
@@ -1113,7 +1097,7 @@ void OutputComposer::printOptimizedGraphSumProducts(const OptimizedSolutions::id
 
 void OutputComposer::printOptimizedGraphSumParents(const OptimizedSolutions::id_t sumId) const
 {
-	const bool isFullGraph = options::outputFormat == OF::GRAPH;
+	const bool isFullGraph = discriminate<OF::GRAPH>();
 	First first;
 	for (const auto &partId : optimizedSolutions->getSum(sumId))
 	{
@@ -1144,7 +1128,7 @@ void OutputComposer::printOptimizedSum(const OptimizedSolutions::id_t sumId) con
 	else
 	{
 		const OptimizedSolutions::sum_t &sum = optimizedSolutions->getSum(sumId);
-		const bool isFullGraph = options::outputFormat == OF::GRAPH;
+		const bool isFullGraph = discriminate<OF::GRAPH>();
 		const bool hasParents = isFullGraph || std::any_of(sum.cbegin(), sum.cend(), [this](const OptimizedSolutions::id_t id){ return !optimizedSolutions->isProduct(id) || isOptimizedProductWorthPrintingInGeneral(id); });
 		std::size_t functionNum = isFullGraph ? SIZE_MAX : optimizedSolutions->findSumEndNode(sumId);
 		functionNum = printOptimizedGraphSumLabel(sumId, functionNum);
@@ -1197,7 +1181,6 @@ void OutputComposer::printOptimizedSums() const
 
 void OutputComposer::printOptimizedGraphFinalSumLabel(const std::size_t i) const
 {
-	const bool isVerboseGraph = options::verboseGraph;
 	const OptimizedSolutions::id_t sumId = optimizedSolutions->getFinalSums()[i];
 	if (!isOptimizedSumWorthPrintingInGeneral(sumId) && optimizedSolutions->getSum(sumId).size() > 1)
 	{
@@ -1205,7 +1188,7 @@ void OutputComposer::printOptimizedGraphFinalSumLabel(const std::size_t i) const
 		o << "\\n";
 	}
 	functionNames.printName(o, i);
-	if (isVerboseGraph)
+	if (isGraphVerbose)
 		printOptimizedGraphSumProducts(sumId);
 }
 
@@ -1219,7 +1202,7 @@ void OutputComposer::printOptimizedFinalSums() const
 	
 	if (optimizedSolutions->getFinalSums().empty() && !isHuman())
 	{
-		if (options::outputFormat == OF::CPP)
+		if (discriminate<OF::CPP>())
 			o << "return {};\n";
 		return;
 	}
@@ -1269,7 +1252,7 @@ void OutputComposer::printOptimizedSolution()
 {
 	const auto [immediateProductCount, immediateSumCount] = generateOptimizedNormalizedIds();
 	
-	if (isHuman() || options::outputFormat == OF::GRAPH)
+	if (isHuman() || discriminate<OF::GRAPH>())
 		printOptimizedNegatedInputs();
 	if (!isHumanReadable())
 		printOptimizedImmediates(immediateProductCount, immediateSumCount);
@@ -1288,9 +1271,9 @@ void OutputComposer::printOptimizedSolution()
 	
 	if (discriminate<OF::MATHEMATICAL>() && immediateProductCount + immediateSumCount != 0)
 		o << "\nThen:\n";
-	if (options::outputFormat != OF::REDUCED_GRAPH)
+	if (!discriminate<OF::REDUCED_GRAPH>())
 		printOptimizedFinalSums();
-	if (options::outputFormat == OF::HUMAN || options::outputFormat == OF::HUMAN_LONG)
+	if (discriminate<OF::HUMAN, OF::HUMAN_LONG>())
 	{
 		o << '\n';
 		printGateCost(*optimizedSolutions, false);
@@ -1354,13 +1337,13 @@ void OutputComposer::printGraphRoots() const
 
 void OutputComposer::printHuman()
 {
-	const bool solutionsVisible = options::skipOptimization || options::outputFormat != OF::HUMAN_SHORT;
+	const bool solutionsVisible = optimizedSolutions == nullptr || !discriminate<OF::HUMAN_SHORT>();
 	if (solutionsVisible)
 	{
 		printSolutions();
-		if (options::outputFormat != OF::HUMAN_SHORT)
+		if (!discriminate<OF::HUMAN_SHORT>())
 		{
-			if (solutions.size() != 1 && options::skipOptimization)
+			if (solutions.size() != 1 && optimizedSolutions == nullptr)
 			{
 				if (!solutions.empty())
 					o << "\n\n=== summary ===\n" << '\n';
@@ -1368,9 +1351,9 @@ void OutputComposer::printHuman()
 			}
 		}
 	}
-	if (!options::skipOptimization)
+	if (optimizedSolutions != nullptr)
 	{
-		if (options::outputFormat != OF::HUMAN_SHORT)
+		if (!discriminate<OF::HUMAN_SHORT>())
 		{
 			if (!solutions.empty())
 				o << "\n\n";
@@ -1382,13 +1365,13 @@ void OutputComposer::printHuman()
 
 void OutputComposer::printGraph()
 {
-	o << "digraph " << getName() << '\n';
+	o << "digraph " << name << '\n';
 	o << "{\n";
 	{
 		const auto indentGuard = o.startIndent();
-		if (options::outputFormat == OF::GRAPH)
+		if (discriminate<OF::GRAPH>())
 			printGraphRoots();
-		if (options::skipOptimization)
+		if (optimizedSolutions == nullptr)
 			printSolutions();
 		else
 			printOptimizedSolution();
@@ -1398,7 +1381,7 @@ void OutputComposer::printGraph()
 
 void OutputComposer::printVerilog()
 {
-	o << "module " << getName() << " (\n";
+	o << "module " << name << " (\n";
 	{
 		const auto indentGuard = o.startIndent();
 		if (!::inputNames.empty())
@@ -1418,7 +1401,7 @@ void OutputComposer::printVerilog()
 	{
 		const auto indentGuard = o.startIndent();
 		o << '\n';
-		if (options::skipOptimization)
+		if (optimizedSolutions == nullptr)
 			printSolutions();
 		else
 			printOptimizedSolution();
@@ -1431,7 +1414,7 @@ void OutputComposer::printVhdl()
 	o << "library IEEE;\n"
 			"use IEEE.std_logic_1164.all;\n";
 	o << '\n';
-	o << "entity " << getName() << " is\n";
+	o << "entity " << name << " is\n";
 	if (!::inputNames.empty() || !karnaughs.empty())
 	{
 		const auto indentGuard = o.startIndent();
@@ -1457,12 +1440,12 @@ void OutputComposer::printVhdl()
 		}
 		o << ");\n";
 	}
-	o << "end " << getName() << ";\n";
+	o << "end " << name << ";\n";
 	o << '\n';
-	o << "architecture behavioural of " << getName() << " is\n";
+	o << "architecture behavioural of " << name << " is\n";
 	{
 		const auto indentGuard = o.startIndent();
-		if (options::skipOptimization)
+		if (optimizedSolutions == nullptr)
 			printSolutions();
 		else
 			printOptimizedSolution();
@@ -1475,7 +1458,7 @@ void OutputComposer::printCpp()
 	if (!::inputNames.areNamesUsedInCode() || !functionNames.areNamesUsedInCode())
 		o << "#include <array>\n"
 				"\n";
-	o << "class " << getName() << "\n"
+	o << "class " << name << "\n"
 			"{\n"
 			"public:\n";
 	{
@@ -1537,11 +1520,11 @@ void OutputComposer::printCpp()
 	}
 	o << "};\n";
 	o << '\n';
-	o << "constexpr " << getName() << "::output_t " << getName() << "::calc(const input_t &" << (areInputsUsed() ? "i" : "") << ")\n";
+	o << "constexpr " << name << "::output_t " << name << "::calc(const input_t &" << (areInputsUsed() ? "i" : "") << ")\n";
 	o << "{\n";
 	{
 		const auto indentGuard = o.startIndent();
-		if (options::skipOptimization)
+		if (optimizedSolutions == nullptr)
 			printSolutions();
 		else
 			printOptimizedSolution();
@@ -1551,7 +1534,7 @@ void OutputComposer::printCpp()
 
 void OutputComposer::printMath()
 {
-	if (options::skipOptimization)
+	if (optimizedSolutions == nullptr)
 		printSolutions();
 	else
 		printOptimizedSolution();
@@ -1562,28 +1545,43 @@ void OutputComposer::printGateCost()
 	printSolutions();
 	o << "=== summary ===\n";
 	printGateCost(solutions, true);
-	if (!options::skipOptimization)
+	if (optimizedSolutions != nullptr)
 	{
 		o << "=== optimized solution ===\n";
 		printGateCost(*optimizedSolutions, true);
 	}
 }
 
-OutputComposer::OutputComposer(const Names &functionNames, std::vector<Karnaugh> &karnaughs, const Solutions &solutions, const OptimizedSolutions *const optimizedSolutions, std::ostream &o) :
-	functionNames(functionNames),
+std::string OutputComposer::getStandardName()
+{
+	if (options::name)
+		return *options::name;
+	else if (::inputFilePath)
+		return std::filesystem::path(*::inputFilePath).stem().string();
+	else
+		return "Karnaugh";
+}
+
+OutputComposer::OutputComposer(Names &&functionNames, std::vector<Karnaugh> &karnaughs, const Solutions &solutions, const OptimizedSolutions *const optimizedSolutions) :
+	functionNames(std::move(functionNames)),
 	karnaughs(karnaughs),
 	solutions(solutions),
-	optimizedSolutions(optimizedSolutions),
-	o(o)
+	optimizedSolutions(optimizedSolutions)
 {
 }
 
-void OutputComposer::compose()
+void OutputComposer::print(std::ostream &o, const OF outputFormat, const OO outputOperators, const bool isGraphVerbose, const bool includeBanner, std::string &&name)
 {
-	if (options::outputBanner)
+	this->o = o;
+	this->outputFormat = outputFormat;
+	this->outputOperators = outputOperators;
+	this->isGraphVerbose = isGraphVerbose;
+	this->name = std::move(name);
+	
+	if (includeBanner)
 		printBanner();
 	
-	switch (options::outputFormat)
+	switch (outputFormat)
 	{
 	case OF::HUMAN_LONG:
 	case OF::HUMAN:

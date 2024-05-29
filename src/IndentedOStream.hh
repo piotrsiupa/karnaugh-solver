@@ -9,7 +9,7 @@
 
 class IndentedOStream
 {
-	std::ostream &o;
+	std::ostream *o;
 	std::size_t indentSize = 0;
 	bool newLine = true;
 	
@@ -17,11 +17,13 @@ class IndentedOStream
 	void printText(const std::string_view text);
 	
 public:
-	IndentedOStream(std::ostream &o) : o(o) {}
+	IndentedOStream() : o(nullptr) {}
+	IndentedOStream(std::ostream &o) : o(&o) {}
 	
 	template<typename T>
 	IndentedOStream& operator<<(T x);
-	[[nodiscard]] operator std::ostream&() { insertIndent(); return o; }
+	[[nodiscard]] operator std::ostream&() { insertIndent(); return *o; }
+	IndentedOStream operator=(std::ostream &newO) { o = &newO; return *this; }
 	
 	void indent(const std::size_t x = 1) { assert(SIZE_MAX - indentSize >= x); indentSize += x; }
 	void deindent(const std::size_t x = 1) { assert(indentSize >= x); indentSize -= x; }
@@ -52,7 +54,7 @@ IndentedOStream& IndentedOStream::operator<<(T x)
 	else
 	{
 		insertIndent();
-		o << std::forward<T>(x);
+		*o << std::forward<T>(x);
 		if constexpr (std::is_same_v<T, char>)
 			if (x == '\n')
 				newLine = true;

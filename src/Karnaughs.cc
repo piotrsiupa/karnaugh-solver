@@ -5,7 +5,6 @@
 #include <limits>
 
 #include "options.hh"
-#include "OutputComposer.hh"
 #include "Progress.hh"
 
 
@@ -147,9 +146,7 @@ void Karnaughs::solve()
 	findBestSolutions(solutionses);
 }
 
-void Karnaughs::print(std::ostream &o)
+OutputComposer Karnaughs::makeOutputComposer()
 {
-	const Names functionNames = gatherFunctionNames();
-	OutputComposer composer(functionNames, karnaughs, bestSolutions, options::skipOptimization ? nullptr : &optimizedSolutions, o);
-	composer.compose();
+	return OutputComposer(gatherFunctionNames(), karnaughs, bestSolutions, options::skipOptimization ? nullptr : &optimizedSolutions);
 }

@@ -10,6 +10,7 @@
 #include "Names.hh"
 #include "Karnaugh.hh"
 #include "OptimizedSolutions.hh"
+#include "OutputComposer.hh"
 #include "Solutions.hh"
 
 
@@ -35,5 +36,5 @@ public:
 	[[nodiscard]] bool loadData(Input &input);
 	
 	void solve();
-	void print(std::ostream &o);
+	OutputComposer makeOutputComposer();
 };

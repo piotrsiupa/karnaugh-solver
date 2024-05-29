@@ -21,22 +21,28 @@ class OutputComposer
 {
 	using grayCode_t = std::vector<Minterm>;
 	
-	const Names &functionNames;
+	const Names functionNames;
 	const std::vector<Karnaugh> &karnaughs;
 	const Solutions &solutions;
 	const OptimizedSolutions *const optimizedSolutions;
+	
+	options::OutputFormat outputFormat;
+	options::OutputOperators outputOperators;
+	bool isGraphVerbose;
+	std::string name;
+	
 	mutable IndentedOStream o;
 	
 	// Return `true` when the output format is one of those listed in the template parameters.
 	template<options::OutputFormat ...FORMATS>
 	[[nodiscard]] static inline constexpr bool discriminate(const options::OutputFormat format);
 	template<options::OutputFormat ...FORMATS>
-	[[nodiscard]] static inline bool discriminate();
+	[[nodiscard]] inline bool discriminate() const;
 	
-	[[nodiscard]] static inline bool isHuman();
-	[[nodiscard]] static inline bool isGraph();
-	[[nodiscard]] static inline bool isHumanReadable();
-	[[nodiscard]] static inline bool isProgramming();
+	[[nodiscard]] inline bool isHuman() const;
+	[[nodiscard]] inline bool isGraph() const;
+	[[nodiscard]] inline bool isHumanReadable() const;
+	[[nodiscard]] inline bool isProgramming() const;
 	
 	// OK, this is quite simple ;-) but maybe some explanation could still be useful.
 	// These functions take lists of strings / lambdas / anything else as arguments.
@@ -93,8 +99,6 @@ class OutputComposer
 	[[nodiscard]] bool isOptimizedSumWorthPrintingInGeneral(const OptimizedSolutions::id_t sumId) const;
 	[[nodiscard]] bool isOptimizedSumWorthPrinting(const OptimizedSolutions::id_t sumId) const;
 	
-	[[nodiscard]] static std::string getName();
-	
 	std::vector<OptimizedSolutions::id_t> normalizedOptimizedIds;
 	std::pair<std::size_t, std::size_t> generateOptimizedNormalizedIds();
 	void printNormalizedId(const OptimizedSolutions::id_t id, const bool useHumanAnyway = false) const;
@@ -104,7 +108,7 @@ class OutputComposer
 	void printAssignmentOp() const;
 	void printShortBool(const Trilean value) const;
 	[[nodiscard]] static inline constexpr options::OutputFormat mapOutputOperators(const options::OutputOperators outputOperators);
-	[[nodiscard]] static inline options::OutputFormat getOperatorsStyle();
+	[[nodiscard]] inline options::OutputFormat getOperatorsStyle() const;
 	void printBool(const bool value, const bool strictlyForCode = false) const;
 	void printNot() const;
 	void printAnd(const bool spaces) const;
@@ -167,7 +171,9 @@ class OutputComposer
 	void printGateCost();
 	
 public:
-	OutputComposer(const Names &functionNames, std::vector<Karnaugh> &karnaughs, const Solutions &solutions, const OptimizedSolutions *const optimizedSolutions, std::ostream &o);
+	[[nodiscard]] static std::string getStandardName();
 	
-	void compose();
+	OutputComposer(Names &&functionNames, std::vector<Karnaugh> &karnaughs, const Solutions &solutions, const OptimizedSolutions *const optimizedSolutions);
+	
+	void print(std::ostream &o, const options::OutputFormat outputFormat, const options::OutputOperators outputOperators, const bool isGraphVerbose, const bool includeBanner, std::string &&name);
 };

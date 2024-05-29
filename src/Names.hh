@@ -21,6 +21,7 @@ public:
 	Names() = default;
 	Names(const bool useInCode, names_t &&names, const std::string_view replacementName) : useInCode(useInCode), names(std::move(names)), replacementName(replacementName) {}
 	Names(const Names &) = delete;
+	Names(Names &&) = default;
 	Names& operator=(const Names &) = delete;
 	Names& operator=(Names &&) = default;
 	

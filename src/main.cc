@@ -10,6 +10,7 @@
 #include "Karnaughs.hh"
 #include "non-stdlib-stuff.hh"
 #include "options.hh"
+#include "OutputComposer.hh"
 #include "Progress.hh"
 
 
@@ -134,7 +135,7 @@ static bool processInput(IstreamUniquePtr istream)
 	if (!loadInput(std::move(istream), karnaughs))
 		return false;
 	karnaughs.solve();
-	karnaughs.print(std::cout);
+	karnaughs.makeOutputComposer().print(std::cout, options::outputFormat, options::outputOperators, options::verboseGraph, options::outputBanner, OutputComposer::getStandardName());
 	return true;
 }
 
