@@ -534,20 +534,21 @@ void OutputComposer::printGraphNegatedInputs(const Solution &solution, const std
 	{
 		o << "subgraph negated_inputs\n";
 		o << "{\n";
-		o.indent();
-		o << "node [shape=diamond];\n";
-		for (Minterm i = 0; i != ::bits; ++i)
 		{
-			for (const std::size_t j : negatedInputs[i])
+			const auto indentGuard = o.startIndent();
+			o << "node [shape=diamond];\n";
+			for (Minterm i = 0; i != ::bits; ++i)
 			{
-				o << "f" << functionNum << "_ni" << i << '_' << j << " [label=\"";
-				printNot();
-				::inputNames.printName(o, i);
-				o << "\"];\n";
-				o << "i" << i << " -> f" << functionNum << "_ni" << i << '_' << j << ";\n";
+				for (const std::size_t j : negatedInputs[i])
+				{
+					o << "f" << functionNum << "_ni" << i << '_' << j << " [label=\"";
+					printNot();
+					::inputNames.printName(o, i);
+					o << "\"];\n";
+					o << "i" << i << " -> f" << functionNum << "_ni" << i << '_' << j << ";\n";
+				}
 			}
 		}
-		o.deindent();
 		o << "}\n";
 	}
 }
@@ -569,38 +570,39 @@ std::size_t OutputComposer::printGraphProducts(const Solution &solution, const s
 		const bool isVerbose = options::verboseGraph;
 		o << "subgraph products\n";
 		o << "{\n";
-		o.indent();
-		o << "node [shape=ellipse];\n";
-		for (std::size_t i = 0; i != solution.size(); ++i)
 		{
-			if (solution[i].getBitCount() < 2)
-				continue;
-			o << "f" << functionNum << "_s" << i << " [label=\"";
-			if (isFullGraph)
+			const auto indentGuard = o.startIndent();
+			o << "node [shape=ellipse];\n";
+			for (std::size_t i = 0; i != solution.size(); ++i)
 			{
-				printAnd(false);
-				o << "\\n";
-			}
-			o << "[" << idShift++ << "]";
-			if (!isFullGraph || isVerbose)
-			{
-				o << " = ";
-				printImplicant(solution[i], false, true);
-			}
-			o << "\"];\n";
-			if (isFullGraph)
-			{
-				First first;
-				for (const auto &splitBit : solution[i].splitBits())
+				if (solution[i].getBitCount() < 2)
+					continue;
+				o << "f" << functionNum << "_s" << i << " [label=\"";
+				if (isFullGraph)
 				{
-					if (!first)
-						o << ", ";
-					printGraphParentBit(functionNum, splitBit, i);
+					printAnd(false);
+					o << "\\n";
 				}
-				o << " -> f" << functionNum << "_s" << i << ";\n";
+				o << "[" << idShift++ << "]";
+				if (!isFullGraph || isVerbose)
+				{
+					o << " = ";
+					printImplicant(solution[i], false, true);
+				}
+				o << "\"];\n";
+				if (isFullGraph)
+				{
+					First first;
+					for (const auto &splitBit : solution[i].splitBits())
+					{
+						if (!first)
+							o << ", ";
+						printGraphParentBit(functionNum, splitBit, i);
+					}
+					o << " -> f" << functionNum << "_s" << i << ";\n";
+				}
 			}
 		}
-		o.deindent();
 		o << "}\n";
 	}
 	return idShift;
@@ -612,57 +614,58 @@ void OutputComposer::printGraphSum(const Solution &solution, const std::size_t f
 	const bool isVerbose = options::verboseGraph;
 	o << "subgraph sum\n";
 	o << "{\n";
-	o.indent();
-	o << "node [shape=rectangle, style=filled];\n";
-	o << "f" << functionNum << " [label=\"";
-	const bool hasParents = isFullGraph || (solution.size() >= 2 && std::any_of(solution.cbegin(), solution.cend(), [](const Implicant &x){ return x.getBitCount() >= 2; }));
-	if (hasParents && solution.size() >= 2)
 	{
-		printOr(false);
-		o << "\\n";
-	}
-	functionNames.printName(o, functionNum);
-	if (!isFullGraph || isVerbose)
-	{
-		First first;
-		for (const Implicant &product : solution)
+		const auto indentGuard = o.startIndent();
+		o << "node [shape=rectangle, style=filled];\n";
+		o << "f" << functionNum << " [label=\"";
+		const bool hasParents = isFullGraph || (solution.size() >= 2 && std::any_of(solution.cbegin(), solution.cend(), [](const Implicant &x){ return x.getBitCount() >= 2; }));
+		if (hasParents && solution.size() >= 2)
 		{
-			if (!isVerbose && solution.size() >= 2 && product.getBitCount() >= 2)
-				continue;
-			if (first)
-				o << " = ";
-			else
-				printOr(true);
-			printImplicant(product, solution.size() != 1, true);
+			printOr(false);
+			o << "\\n";
 		}
-	}
-	o << "\"];\n";
-	if (hasParents)
-	{
-		o << "";
-		First first;
-		for (std::size_t i = 0; i != solution.size(); ++i)
+		functionNames.printName(o, functionNum);
+		if (!isFullGraph || isVerbose)
 		{
-			if (!isFullGraph && solution[i].getBitCount() <= 1)
-				continue;
-			if (!first)
-				o << ", ";
-			switch (solution[i].getBitCount())
+			First first;
+			for (const Implicant &product : solution)
 			{
-			case 0:
-				printBool(!solution[i].isError(), true);
-				break;
-			case 1:
-				printGraphParentBit(functionNum, solution[i].splitBits().front(), i);
-				break;
-			default:
-				o << 'f' << functionNum << "_s" << i;
-				break;
+				if (!isVerbose && solution.size() >= 2 && product.getBitCount() >= 2)
+					continue;
+				if (first)
+					o << " = ";
+				else
+					printOr(true);
+				printImplicant(product, solution.size() != 1, true);
 			}
 		}
-		o << " -> f" << functionNum << ";\n";
+		o << "\"];\n";
+		if (hasParents)
+		{
+			o << "";
+			First first;
+			for (std::size_t i = 0; i != solution.size(); ++i)
+			{
+				if (!isFullGraph && solution[i].getBitCount() <= 1)
+					continue;
+				if (!first)
+					o << ", ";
+				switch (solution[i].getBitCount())
+				{
+				case 0:
+					printBool(!solution[i].isError(), true);
+					break;
+				case 1:
+					printGraphParentBit(functionNum, solution[i].splitBits().front(), i);
+					break;
+				default:
+					o << 'f' << functionNum << "_s" << i;
+					break;
+				}
+			}
+			o << " -> f" << functionNum << ";\n";
+		}
 	}
-	o.deindent();
 	o << "}\n";
 }
 
@@ -773,13 +776,15 @@ void OutputComposer::printSolutions() const
 		printFormatSpecific("\n{\n", [this]{ o << '('; ::inputNames.printNames(o); o << ')'; printAssignmentOp(); }, BLANK, " ---\n", NEXT, NEXT, &OutputComposer::printAssignmentOp);
 		if (discriminate<OF::HUMAN_LONG, OF::HUMAN>())
 			o << '\n';
-		else if (isGraph())
-			o.indent();
-		
-		idShift = printSolution(i, idShift);
-		
 		if (isGraph())
-			o.deindent();
+		{
+			const auto indentGuard = o.startIndent();
+			idShift = printSolution(i, idShift);
+		}
+		else
+		{
+			printSolution(i);
+		}
 		printFormatSpecific("}\n", '\n', NEXT, BLANK, NEXT, NEXT, ";\n");
 	}
 	
@@ -843,40 +848,43 @@ void OutputComposer::printOptimizedNegatedInputs() const
 	if (optimizedSolutions->getNegatedInputs() == 0 && !isHuman())
 		return;
 	
-	printFormatSpecific(
-			[this]{
-				o << "subgraph negated_inputs\n{\n";
-				o.indent();
-				o << "node [shape=diamond];\n";
-			},
-			"Negated inputs:"
-		);
-	First first;
-	for (Minterm i = 0; i != ::bits; ++i)
 	{
-		if ((optimizedSolutions->getNegatedInputs() & (1 << (::bits - i - 1))) != 0)
+		auto indentGuard = o.startIndent(0);
+		if (isGraph())
 		{
-			if (isHuman() && !first)
-				o << ',';
-			printFormatSpecific(
-					[this, i]{
-						o << "ni" << i << " [label=\"";
-						printNot();
-					},
-					' '
-				);
-			::inputNames.printName(o, i);
-			if (isGraph())
+			o << "subgraph negated_inputs\n{\n";
+			indentGuard.increase();
+			o << "node [shape=diamond];\n";
+		}
+		else
+		{
+			o << "Negated inputs:";
+		}
+		First first;
+		for (Minterm i = 0; i != ::bits; ++i)
+		{
+			if ((optimizedSolutions->getNegatedInputs() & (1 << (::bits - i - 1))) != 0)
 			{
-				o << "\"];\n";
-				o << "i" << i << " -> ni" << i << ";\n";
+				if (isHuman() && !first)
+					o << ',';
+				printFormatSpecific(
+						[this, i]{
+							o << "ni" << i << " [label=\"";
+							printNot();
+						},
+						' '
+					);
+				::inputNames.printName(o, i);
+				if (isGraph())
+				{
+					o << "\"];\n";
+					o << "i" << i << " -> ni" << i << ";\n";
+				}
 			}
 		}
+		if (isHuman() && first)
+			o << " <none>";
 	}
-	if (isHuman() && first)
-		o << " <none>";
-	if (isGraph())
-		o.deindent();
 	printFormatSpecific("}\n", '\n');
 }
 
@@ -1003,6 +1011,7 @@ void OutputComposer::printOptimizedProducts() const
 	if (isHuman())
 		o << "Products:\n";
 	First first;
+	auto indentGuard = o.startIndent(0);
 	for (std::size_t i = 0; i != optimizedSolutions->getProductCount(); ++i)
 	{
 		if (!isOptimizedProductWorthPrinting(optimizedSolutions->makeProductId(i)))
@@ -1016,15 +1025,14 @@ void OutputComposer::printOptimizedProducts() const
 			if (isGraph())
 				o << "subgraph products\n" << "{\n";
 			if (isHuman() || isGraph())
-				o.indent();
+				indentGuard.increase();
 			printFormatSpecific("node [shape=ellipse];\n", NEXT, BLANK, "Products\n");
 		}
 		printOptimizedProduct(optimizedSolutions->makeProductId(i));
 	}
 	if (!first)
 	{
-		if (isHuman() || isGraph())
-			o.deindent();
+		indentGuard.reset();
 		printFormatSpecific("}\n", NEXT, BLANK, NEXT, '\n', BLANK);
 	}
 }
@@ -1161,6 +1169,7 @@ void OutputComposer::printOptimizedSums() const
 	if (isHuman())
 		o << "Sums:\n";
 	First first;
+	auto indentGuard = o.startIndent(0);
 	for (std::size_t i = 0; i != optimizedSolutions->getSumCount(); ++i)
 	{
 		if (!isOptimizedSumWorthPrinting(optimizedSolutions->makeSumId(i)))
@@ -1174,15 +1183,14 @@ void OutputComposer::printOptimizedSums() const
 			if (isGraph())
 				o << "subgraph sums\n" << "{\n";
 			if (isHuman() || isGraph())
-				o.indent();
+				indentGuard.increase();
 			printFormatSpecific("node [shape=rectangle];\n", NEXT, BLANK, "Sums\n");
 		}
 		printOptimizedSum(optimizedSolutions->makeSumId(i));
 	}
 	if (!first)
 	{
-		if (isHuman() || isGraph())
-			o.deindent();
+		indentGuard.reset();
 		printFormatSpecific("}\n", NEXT, BLANK, NEXT, '\n', BLANK);
 	}
 }
@@ -1222,41 +1230,38 @@ void OutputComposer::printOptimizedFinalSums() const
 		printCommentStart();
 	if (isGraph())
 		o << "subgraph final_sums\n" << "{\n";
-	if (isHuman() || isGraph())
-		o.indent();
-	printFormatSpecific("node [shape=rectangle, style=filled];\n", NEXT, BLANK, "output_t o = {};\n", NEXT, "Results\n");
-	
-	for (std::size_t i = 0; i != optimizedSolutions->getFinalSums().size(); ++i)
 	{
-		printFormatSpecific([this, i]{ o << "f" << i << " [label=\""; }, BLANK, '"', &OutputComposer::printAssignmentStart);
-		
-		if (isGraph())
-			printOptimizedGraphFinalSumLabel(i);
-		else
-			functionNames.printName(o, i);
-		if (isHuman())
-			o << '"';
-		if (discriminate<OF::MATHEMATICAL>())
+		const auto indentGuard = o.startIndent(isHuman() || isGraph() ? 1 : 0);
+		printFormatSpecific("node [shape=rectangle, style=filled];\n", NEXT, BLANK, "output_t o = {};\n", NEXT, "Results\n");
+		for (std::size_t i = 0; i != optimizedSolutions->getFinalSums().size(); ++i)
 		{
-			o << '(';
-			::inputNames.printNames(o);
-			o << ")";
+			printFormatSpecific([this, i]{ o << "f" << i << " [label=\""; }, BLANK, '"', &OutputComposer::printAssignmentStart);
+			
+			if (isGraph())
+				printOptimizedGraphFinalSumLabel(i);
+			else
+				functionNames.printName(o, i);
+			if (isHuman())
+				o << '"';
+			if (discriminate<OF::MATHEMATICAL>())
+			{
+				o << '(';
+				::inputNames.printNames(o);
+				o << ")";
+			}
+			printFormatSpecific("\"];\n", NEXT, NEXT, &OutputComposer::printAssignmentOp);
+			
+			const OptimizedSolutions::id_t sumId = optimizedSolutions->getFinalSums()[i];
+			if (isOptimizedSumWorthPrinting(sumId))
+				printNormalizedId(sumId);
+			else if (isGraph())
+				printOptimizedGraphSumParents(sumId);
+			else
+				printOptimizedSumBody(sumId);
+			printFormatSpecific([this, i]{ o << " -> f" << i << ';'; }, NEXT, BLANK, ';');
+			o << '\n';
 		}
-		printFormatSpecific("\"];\n", NEXT, NEXT, &OutputComposer::printAssignmentOp);
-		
-		const OptimizedSolutions::id_t sumId = optimizedSolutions->getFinalSums()[i];
-		if (isOptimizedSumWorthPrinting(sumId))
-			printNormalizedId(sumId);
-		else if (isGraph())
-			printOptimizedGraphSumParents(sumId);
-		else
-			printOptimizedSumBody(sumId);
-		printFormatSpecific([this, i]{ o << " -> f" << i << ';'; }, NEXT, BLANK, ';');
-		o << '\n';
 	}
-	
-	if (isHuman() || isGraph())
-		o.deindent();
 	printFormatSpecific("}\n", NEXT, BLANK, "return o;\n", '\n', BLANK);
 }
 
@@ -1302,21 +1307,22 @@ void OutputComposer::printGraphConstants() const
 		return;
 	o << "subgraph constants\n";
 	o << "{\n";
-	o.indent();
-	o << "node [shape=octagon, style=dashed];\n";
-	if (usesTrue)
 	{
-		o << "true [label=\"";
-		printBool(true);
-		o << "\"];\n";
+		const auto indentGuard = o.startIndent();
+		o << "node [shape=octagon, style=dashed];\n";
+		if (usesTrue)
+		{
+			o << "true [label=\"";
+			printBool(true);
+			o << "\"];\n";
+		}
+		if (usesFalse)
+		{
+			o << "false [label=\"";
+			printBool(false);
+			o << "\"];\n";
+		}
 	}
-	if (usesFalse)
-	{
-		o << "false [label=\"";
-		printBool(false);
-		o << "\"];\n";
-	}
-	o.deindent();
 	o << "}\n";
 }
 
@@ -1326,16 +1332,17 @@ void OutputComposer::printGraphInputs() const
 		return;
 	o << "subgraph inputs\n";
 	o << "{\n";
-	o.indent();
-	o << "rank=same;\n";
-	o << "node [shape=invhouse];\n";
-	for (Minterm i = 0; i != ::bits; ++i)
 	{
-		o << "i" << i << " [label=\"";
-		::inputNames.printName(o, i);
-		o << "\"];\n";
+		const auto indentGuard = o.startIndent();
+		o << "rank=same;\n";
+		o << "node [shape=invhouse];\n";
+		for (Minterm i = 0; i != ::bits; ++i)
+		{
+			o << "i" << i << " [label=\"";
+			::inputNames.printName(o, i);
+			o << "\"];\n";
+		}
 	}
-	o.deindent();
 	o << "}\n";
 }
 
@@ -1377,42 +1384,45 @@ void OutputComposer::printGraph()
 {
 	o << "digraph " << getName() << '\n';
 	o << "{\n";
-	o.indent();
-	if (options::outputFormat == OF::GRAPH)
-		printGraphRoots();
-	if (options::skipOptimization)
-		printSolutions();
-	else
-		printOptimizedSolution();
-	o.deindent();
+	{
+		const auto indentGuard = o.startIndent();
+		if (options::outputFormat == OF::GRAPH)
+			printGraphRoots();
+		if (options::skipOptimization)
+			printSolutions();
+		else
+			printOptimizedSolution();
+	}
 	o << "}\n";
 }
 
 void OutputComposer::printVerilog()
 {
 	o << "module " << getName() << " (\n";
-	o.indent();
-	if (!::inputNames.empty())
 	{
-		o << "input wire";
-		::inputNames.printNames(o);
-		o << '\n';
+		const auto indentGuard = o.startIndent();
+		if (!::inputNames.empty())
+		{
+			o << "input wire";
+			::inputNames.printNames(o);
+			o << '\n';
+		}
+		if (!karnaughs.empty())
+		{
+			o << "output wire";
+			functionNames.printNames(o);
+			o << '\n';
+		}
 	}
-	if (!karnaughs.empty())
-	{
-		o << "output wire";
-		functionNames.printNames(o);
-		o << '\n';
-	}
-	o.deindent();
 	o << ");\n";
-	o.indent();
-	o << '\n';
-	if (options::skipOptimization)
-		printSolutions();
-	else
-		printOptimizedSolution();
-	o.deindent();
+	{
+		const auto indentGuard = o.startIndent();
+		o << '\n';
+		if (options::skipOptimization)
+			printSolutions();
+		else
+			printOptimizedSolution();
+	}
 	o << "endmodule\n";
 }
 
@@ -1424,38 +1434,39 @@ void OutputComposer::printVhdl()
 	o << "entity " << getName() << " is\n";
 	if (!::inputNames.empty() || !karnaughs.empty())
 	{
-		o.indent();
+		const auto indentGuard = o.startIndent();
 		o << "port(\n";
-		o.indent();
-		if (!::inputNames.empty())
 		{
-			::inputNames.printNames(o);
-			o << " : in ";
-			::inputNames.printType(o);
+			const auto indentGuard = o.startIndent();
+			if (!::inputNames.empty())
+			{
+				::inputNames.printNames(o);
+				o << " : in ";
+				::inputNames.printType(o);
+				if (!karnaughs.empty())
+					o << ';';
+				o << '\n';
+			}
 			if (!karnaughs.empty())
-				o << ';';
-			o << '\n';
+			{
+				functionNames.printNames(o);
+				o << " : out ";
+				functionNames.printType(o);
+				o << '\n';
+			}
 		}
-		if (!karnaughs.empty())
-		{
-			functionNames.printNames(o);
-			o << " : out ";
-			functionNames.printType(o);
-			o << '\n';
-		}
-		o.deindent();
 		o << ");\n";
-		o.deindent();
 	}
 	o << "end " << getName() << ";\n";
 	o << '\n';
 	o << "architecture behavioural of " << getName() << " is\n";
-	o.indent();
-	if (options::skipOptimization)
-		printSolutions();
-	else
-		printOptimizedSolution();
-	o.deindent();
+	{
+		const auto indentGuard = o.startIndent();
+		if (options::skipOptimization)
+			printSolutions();
+		else
+			printOptimizedSolution();
+	}
 	o << "end behavioural;\n";
 }
 
@@ -1467,72 +1478,74 @@ void OutputComposer::printCpp()
 	o << "class " << getName() << "\n"
 			"{\n"
 			"public:\n";
-	o.indent();
-	o << "using input_t = ";
-	::inputNames.printType(o);
-	o << ";\n";
-	o << "using output_t = ";
-	functionNames.printType(o);
-	o << ";\n";
-	o << '\n';
-	o << "[[nodiscard]] constexpr output_t operator()(";
 	{
-		First first;
-		for (std::size_t i = 0; i != ::inputNames.size(); ++i)
+		const auto indentGuard = o.startIndent();
+		o << "using input_t = ";
+		::inputNames.printType(o);
+		o << ";\n";
+		o << "using output_t = ";
+		functionNames.printType(o);
+		o << ";\n";
+		o << '\n';
+		o << "[[nodiscard]] constexpr output_t operator()(";
 		{
-			if (!first)
-				o << ", ";
-			o << "const bool ";
-			::inputNames.printPlainName(o, i);
+			First first;
+			for (std::size_t i = 0; i != ::inputNames.size(); ++i)
+			{
+				if (!first)
+					o << ", ";
+				o << "const bool ";
+				::inputNames.printPlainName(o, i);
+			}
 		}
-	}
-	o << ") const { return (*this)({";
-	{
-		First first;
-		for (std::size_t i = 0; i != ::inputNames.size(); ++i)
+		o << ") const { return (*this)({";
 		{
-			if (!first)
-				o << ", ";
-			::inputNames.printPlainName(o, i);
+			First first;
+			for (std::size_t i = 0; i != ::inputNames.size(); ++i)
+			{
+				if (!first)
+					o << ", ";
+				::inputNames.printPlainName(o, i);
+			}
 		}
-	}
-	o << "}); }\n";
-	o << "[[nodiscard]] constexpr output_t operator()(const input_t &i) const { return calc(i); }\n";
-	o << '\n';
-	o << "[[nodiscard]] static constexpr output_t calc(";
-	{
-		First first;
-		for (std::size_t i = 0; i != ::inputNames.size(); ++i)
+		o << "}); }\n";
+		o << "[[nodiscard]] constexpr output_t operator()(const input_t &i) const { return calc(i); }\n";
+		o << '\n';
+		o << "[[nodiscard]] static constexpr output_t calc(";
 		{
-			if (!first)
-				o << ", ";
-			o << "const bool ";
-			::inputNames.printPlainName(o, i);
+			First first;
+			for (std::size_t i = 0; i != ::inputNames.size(); ++i)
+			{
+				if (!first)
+					o << ", ";
+				o << "const bool ";
+				::inputNames.printPlainName(o, i);
+			}
 		}
-	}
-	o << ") { return calc({";
-	{
-		First first;
-		for (std::size_t i = 0; i != ::inputNames.size(); ++i)
+		o << ") { return calc({";
 		{
-			if (!first)
-				o << ", ";
-			::inputNames.printPlainName(o, i);
+			First first;
+			for (std::size_t i = 0; i != ::inputNames.size(); ++i)
+			{
+				if (!first)
+					o << ", ";
+				::inputNames.printPlainName(o, i);
+			}
 		}
+		o << "}); }\n";
+		o << "[[nodiscard]] static constexpr output_t calc(const input_t &i);\n";
 	}
-	o << "}); }\n";
-	o << "[[nodiscard]] static constexpr output_t calc(const input_t &i);\n";
-	o.deindent();
 	o << "};\n";
 	o << '\n';
 	o << "constexpr " << getName() << "::output_t " << getName() << "::calc(const input_t &" << (areInputsUsed() ? "i" : "") << ")\n";
 	o << "{\n";
-	o.indent();
-	if (options::skipOptimization)
-		printSolutions();
-	else
-		printOptimizedSolution();
-	o.deindent();
+	{
+		const auto indentGuard = o.startIndent();
+		if (options::skipOptimization)
+			printSolutions();
+		else
+			printOptimizedSolution();
+	}
 	o << "}\n";
 }
 

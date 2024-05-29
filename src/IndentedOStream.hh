@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cassert>
 #include <cstddef>
 #include <ostream>
 #include <utility>
@@ -22,8 +23,22 @@ public:
 	IndentedOStream& operator<<(T x);
 	[[nodiscard]] operator std::ostream&() { insertIndent(); return o; }
 	
-	void indent(const std::size_t x = 1) { indentSize += x; }
-	void deindent(const std::size_t x = 1) { indentSize -= x; }
+	void indent(const std::size_t x = 1) { assert(SIZE_MAX - indentSize >= x); indentSize += x; }
+	void deindent(const std::size_t x = 1) { assert(indentSize >= x); indentSize -= x; }
+	class IndentGuard
+	{
+		IndentedOStream &stream;
+		std::size_t size;
+		IndentGuard(IndentedOStream &stream, const std::size_t x) : stream(stream), size(x) { stream.indent(x); }
+		friend class IndentedOStream;
+	public:
+		IndentGuard(const IndentGuard &) = delete;
+		IndentGuard& operator=(const IndentGuard &) = delete;
+		~IndentGuard() { reset(); }
+		void increase(const std::size_t x = 1) { size += x; stream.indent(x); }
+		void reset() { stream.deindent(size); size = 0; }
+	};
+	[[nodiscard]] IndentGuard startIndent(const std::size_t x = 1) { return {*this, x}; }
 };
 
 
