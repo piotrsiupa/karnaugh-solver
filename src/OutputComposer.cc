@@ -14,15 +14,11 @@ using OO = options::OutputOperators;
 template<OF ...FORMATS>
 bool constexpr OutputComposer::discriminate(const OF format)
 {
+	constexpr std::underlying_type_t<OF> mask = (static_cast<std::underlying_type_t<OF>>(FORMATS) | ...);
 	if constexpr (sizeof...(FORMATS) == 1)
-	{
 		return format == (FORMATS, ...);
-	}
 	else
-	{
-		constexpr std::underlying_type_t<OF> mask = (static_cast<std::underlying_type_t<OF>>(FORMATS) | ...);
 		return (static_cast<std::underlying_type_t<OF>>(format) & mask) != 0;
-	}
 }
 
 template<OF ...FORMATS>
@@ -162,21 +158,16 @@ std::pair<bool, bool> OutputComposer::checkForUsedConstants(const Solution &solu
 
 std::pair<bool, bool> OutputComposer::checkForUsedConstants() const
 {
-	if (optimizedSolutions == nullptr)
-	{
-		bool anyUsesFalse = false, anyUsesTrue = false;
-		for (const Solution &solution : solutions)
-		{
-			const auto [usesFalse, usesTrue] = checkForUsedConstants(solution);
-			anyUsesFalse |= usesFalse;
-			anyUsesTrue |= usesTrue;
-		}
-		return {anyUsesFalse, anyUsesTrue};
-	}
-	else
-	{
+	if (optimizedSolutions != nullptr)
 		return optimizedSolutions->checkForUsedConstants();
+	bool anyUsesFalse = false, anyUsesTrue = false;
+	for (const Solution &solution : solutions)
+	{
+		const auto [usesFalse, usesTrue] = checkForUsedConstants(solution);
+		anyUsesFalse |= usesFalse;
+		anyUsesTrue |= usesTrue;
 	}
+	return {anyUsesFalse, anyUsesTrue};
 }
 
 bool OutputComposer::areInputsUsed() const
@@ -209,20 +200,15 @@ bool OutputComposer::isOptimizedProductWorthPrinting(const OptimizedSolutions::i
 
 bool OutputComposer::isOptimizedSumWorthPrintingInGeneral(const OptimizedSolutions::id_t sumId) const
 {
-	if (isHuman() || isGraph())
-	{
-		if (std::count(optimizedSolutions->getFinalSums().cbegin(), optimizedSolutions->getFinalSums().cend(), sumId) >= 2 && optimizedSolutions->getSum(sumId).size() >= 2)
-			return true;
-		for (std::size_t i = 0; i != optimizedSolutions->getSumCount(); ++i)
-			for (const OptimizedSolutions::id_t &id : optimizedSolutions->getSum(optimizedSolutions->makeSumId(i)))
-				if (id == sumId)
-					return true;
-		return false;
-	}
-	else
-	{
+	if (!isHumanReadable())
 		return optimizedSolutions->getSum(sumId).size() >= 2;
-	}
+	if (std::count(optimizedSolutions->getFinalSums().cbegin(), optimizedSolutions->getFinalSums().cend(), sumId) >= 2 && optimizedSolutions->getSum(sumId).size() >= 2)
+		return true;
+	for (std::size_t i = 0; i != optimizedSolutions->getSumCount(); ++i)
+		for (const OptimizedSolutions::id_t &id : optimizedSolutions->getSum(optimizedSolutions->makeSumId(i)))
+			if (id == sumId)
+				return true;
+	return false;
 }
 
 bool OutputComposer::isOptimizedSumWorthPrinting(const OptimizedSolutions::id_t sumId) const
@@ -242,9 +228,7 @@ std::pair<std::size_t, std::size_t> OutputComposer::generateOptimizedNormalizedI
 {
 	const OptimizedSolutions::id_t idCount = optimizedSolutions->getProductCount() + optimizedSolutions->getSumCount();
 	normalizedOptimizedIds.resize(idCount);
-	
-	const bool isSingleCounter = isHuman() || isGraph();
-	
+	const bool isSingleCounter = discriminate<OF::GRAPH, OF::REDUCED_GRAPH, OF::HUMAN_SHORT, OF::HUMAN, OF::HUMAN_LONG>();
 	OptimizedSolutions::id_t currentNormalizedId0 = 0, currentNormalizedId1 = 0;
 	for (OptimizedSolutions::id_t id = 0; id != idCount; ++id)
 	{
@@ -263,15 +247,9 @@ void OutputComposer::printNormalizedId(const OptimizedSolutions::id_t id, const 
 	else
 		printFormatSpecific(format, NEXT, 's', BLANK, "sums");
 	printFormatSpecific(format, NEXT, BLANK, NEXT, NEXT, '[', '(');
-	if (format != OF::MATHEMATICAL)
-	{
-		o << normalizedOptimizedIds[id];
-	}
-	else
-	{
-		o << (normalizedOptimizedIds[id] + 1);
+	o << (normalizedOptimizedIds[id] + (discriminate<OF::MATHEMATICAL>() ? 1 : 0));
+	if (discriminate<OF::MATHEMATICAL>())
 		printOptimizedMathArgs(id);
-	}
 	printFormatSpecific(format, NEXT, BLANK, NEXT, NEXT, ']', ')');
 }
 
