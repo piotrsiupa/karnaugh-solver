@@ -51,8 +51,10 @@ template<typename ENUM, ENUM ...CHOICES, typename ...VALUES>
 void OutputComposer::printChoiceSpecific(const ENUM choice, const VALUES &...values) const
 {
 	const bool success = (... || (
-			choice <= CHOICES && [values]{ if constexpr (is_nullable<VALUES>) return values != nullptr; else return true; }()
+			choice <= CHOICES && [values]{ (void)values; if constexpr (is_nullable<VALUES>) return values != nullptr; else return true; }()
 				? ([this, values]{
+						(void)this;
+						(void)values;
 						if constexpr (std::is_invocable_v<VALUES>)
 							std::invoke(values);
 						else if constexpr (std::is_member_function_pointer_v<VALUES>)
