@@ -350,10 +350,7 @@ void OutputComposer::printAnd(const bool spaces) const
 {
 	if (spaces)
 		o << ' ';
-	if (isGraph())
-		printFormatSpecific(getOperatorsStyle(), "/\\\\", u8"\u2227", "AND", "&&", '&', "and");
-	else
-		printFormatSpecific(getOperatorsStyle(), "/\\", u8"\u2227", "AND", "&&", '&', "and");
+	printFormatSpecific(getOperatorsStyle(), "/\\", u8"\u2227", "AND", "&&", '&', "and");
 	if (spaces)
 		o << ' ';
 }
@@ -362,10 +359,7 @@ void OutputComposer::printOr(const bool spaces) const
 {
 	if (spaces)
 		o << ' ';
-	if (isGraph())
-		printFormatSpecific(getOperatorsStyle(), "\\\\/", u8"\u2228", "OR", "||", '|', "or");
-	else
-		printFormatSpecific(getOperatorsStyle(), "\\/", u8"\u2228", "OR", "||", '|', "or");
+	printFormatSpecific(getOperatorsStyle(), "\\/", u8"\u2228", "OR", "||", '|', "or");
 	if (spaces)
 		o << ' ';
 }
@@ -532,8 +526,11 @@ void OutputComposer::printGraphNegatedInputs(const Solution &solution, const std
 				for (const std::size_t j : negatedInputs[i])
 				{
 					o << "f" << functionNum << "_ni" << i << '_' << j << " [label=\"";
-					printNot();
-					::inputNames.printName(o, i);
+					{
+						const auto sanitizeGuard = o.startSanitize();
+						printNot();
+						::inputNames.printName(o, i);
+					}
 					o << "\"];\n";
 					o << "i" << i << " -> f" << functionNum << "_ni" << i << '_' << j << ";\n";
 				}
@@ -567,16 +564,20 @@ std::size_t OutputComposer::printGraphProducts(const Solution &solution, const s
 				if (solution[i].getBitCount() < 2)
 					continue;
 				o << "f" << functionNum << "_s" << i << " [label=\"";
-				if (isFullGraph)
 				{
-					printAnd(false);
-					o << "\\n";
-				}
-				o << "[" << idShift++ << "]";
-				if (!isFullGraph || isGraphVerbose)
-				{
-					o << " = ";
-					printImplicant(solution[i], false, true);
+					const auto sanitizeGuard = o.startSanitize();
+					if (isFullGraph)
+					{
+						printAnd(false);
+						const auto sanitizeGuard = o.startSanitize(false);
+						o << "\\n";
+					}
+					o << "[" << idShift++ << "]";
+					if (!isFullGraph || isGraphVerbose)
+					{
+						o << " = ";
+						printImplicant(solution[i], false, true);
+					}
 				}
 				o << "\"];\n";
 				if (isFullGraph)
@@ -607,24 +608,28 @@ void OutputComposer::printGraphSum(const Solution &solution, const std::size_t f
 		o << "node [shape=rectangle, style=filled];\n";
 		o << "f" << functionNum << " [label=\"";
 		const bool hasParents = isFullGraph || (solution.size() >= 2 && std::any_of(solution.cbegin(), solution.cend(), [](const Implicant &x){ return x.getBitCount() >= 2; }));
-		if (hasParents && solution.size() >= 2)
 		{
-			printOr(false);
-			o << "\\n";
-		}
-		functionNames.printName(o, functionNum);
-		if (!isFullGraph || isGraphVerbose)
-		{
-			First first;
-			for (const Implicant &product : solution)
+			const auto sanitizeGuard = o.startSanitize();
+			if (hasParents && solution.size() >= 2)
 			{
-				if (!isGraphVerbose && solution.size() >= 2 && product.getBitCount() >= 2)
-					continue;
-				if (first)
-					o << " = ";
-				else
-					printOr(true);
-				printImplicant(product, solution.size() != 1, true);
+				printOr(false);
+				const auto sanitizeGuard = o.startSanitize(false);
+				o << "\\n";
+			}
+			functionNames.printName(o, functionNum);
+			if (!isFullGraph || isGraphVerbose)
+			{
+				First first;
+				for (const Implicant &product : solution)
+				{
+					if (!isGraphVerbose && solution.size() >= 2 && product.getBitCount() >= 2)
+						continue;
+					if (first)
+						o << " = ";
+					else
+						printOr(true);
+					printImplicant(product, solution.size() != 1, true);
+				}
 			}
 		}
 		o << "\"];\n";
@@ -733,9 +738,10 @@ void OutputComposer::printSolutions() const
 {
 	if (discriminate<OF::VHDL>())
 	{
-		o.deindent();
-		o << "begin\n";
-		o.indent();
+		{
+			const auto indentGuard = o.startIndent(-1);
+			o << "begin\n";
+		}
 		o << '\n';
 	}
 	
@@ -837,11 +843,11 @@ void OutputComposer::printOptimizedNegatedInputs() const
 		return;
 	
 	{
-		auto indentGuard = o.startIndent(0);
+		const auto indentGuard = o.startIndent(0);
 		if (isGraph())
 		{
 			o << "subgraph negated_inputs\n{\n";
-			indentGuard.increase();
+			o.indent();
 			o << "node [shape=diamond];\n";
 		}
 		else
@@ -855,14 +861,18 @@ void OutputComposer::printOptimizedNegatedInputs() const
 			{
 				if (isHuman() && !first)
 					o << ',';
-				printFormatSpecific(
-						[this, i]{
-							o << "ni" << i << " [label=\"";
-							printNot();
-						},
-						' '
-					);
-				::inputNames.printName(o, i);
+				{
+					const auto sanitizeGuard = o.startSanitize(false);
+					printFormatSpecific(
+							[this, i]{
+								o << "ni" << i << " [label=\"";
+								o.sanitize(true);
+								printNot();
+							},
+							' '
+						);
+					::inputNames.printName(o, i);
+				}
 				if (isGraph())
 				{
 					o << "\"];\n";
@@ -922,6 +932,7 @@ std::size_t OutputComposer::printOptimizedGraphProductLabel(const OptimizedSolut
 	if (hasParents)
 	{
 		printAnd(false);
+		const auto sanitizeGuard = o.startSanitize(false);
 		o << "\\n";
 	}
 	if (functionNum == SIZE_MAX)
@@ -966,17 +977,21 @@ void OutputComposer::printOptimizedProduct(const OptimizedSolutions::id_t produc
 {
 	printAssignmentStart();
 	printNormalizedId(productId);
-	printFormatSpecific(" [label=\"", NEXT, NEXT, &OutputComposer::printAssignmentOp);
+	printFormatSpecific(BLANK, NEXT, NEXT, &OutputComposer::printAssignmentOp);
 	if (!isGraph())
 	{
 		printOptimizedProductBody(productId, false);
 	}
 	else
 	{
+		o << " [label=\"";
 		const bool isFullGraph = discriminate<OF::GRAPH>();
 		const bool hasParents = isFullGraph || !optimizedSolutions->getProduct(productId).subProducts.empty();
 		std::size_t functionNum = isFullGraph ? SIZE_MAX : optimizedSolutions->findProductEndNode(productId);
-		functionNum = printOptimizedGraphProductLabel(productId, functionNum);
+		{
+			const auto sanitizeGuard = o.startSanitize();
+			functionNum = printOptimizedGraphProductLabel(productId, functionNum);
+		}
 		o << '"';
 		if (functionNum != SIZE_MAX)
 			o << ", style=filled";
@@ -997,7 +1012,7 @@ void OutputComposer::printOptimizedProducts() const
 	if (isHuman())
 		o << "Products:\n";
 	First first;
-	auto indentGuard = o.startIndent(0);
+	const auto indentGuard = o.startIndent(0);
 	for (std::size_t i = 0; i != optimizedSolutions->getProductCount(); ++i)
 	{
 		if (!isOptimizedProductWorthPrinting(optimizedSolutions->makeProductId(i)))
@@ -1011,7 +1026,7 @@ void OutputComposer::printOptimizedProducts() const
 			if (isGraph())
 				o << "subgraph products\n" << "{\n";
 			if (isHuman() || isGraph())
-				indentGuard.increase();
+				o.indent();
 			printFormatSpecific("node [shape=ellipse];\n", NEXT, BLANK, "Products\n");
 		}
 		printOptimizedProduct(optimizedSolutions->makeProductId(i));
@@ -1046,6 +1061,7 @@ std::size_t OutputComposer::printOptimizedGraphSumLabel(const OptimizedSolutions
 	if (hasParents)
 	{
 		printOr(false);
+		const auto sanitizeGuard = o.startSanitize(false);
 		o << "\\n";
 	}
 	if (functionNum == SIZE_MAX)
@@ -1120,18 +1136,22 @@ void OutputComposer::printOptimizedSum(const OptimizedSolutions::id_t sumId) con
 {
 	printAssignmentStart();
 	printNormalizedId(sumId);
-	printFormatSpecific(" [label=\"", NEXT, NEXT, &OutputComposer::printAssignmentOp);
+	printFormatSpecific(BLANK, NEXT, NEXT, &OutputComposer::printAssignmentOp);
 	if (!isGraph())
 	{
 		printOptimizedSumBody(sumId);
 	}
 	else
 	{
+		o << " [label=\"";
 		const OptimizedSolutions::sum_t &sum = optimizedSolutions->getSum(sumId);
 		const bool isFullGraph = discriminate<OF::GRAPH>();
 		const bool hasParents = isFullGraph || std::any_of(sum.cbegin(), sum.cend(), [this](const OptimizedSolutions::id_t id){ return !optimizedSolutions->isProduct(id) || isOptimizedProductWorthPrintingInGeneral(id); });
 		std::size_t functionNum = isFullGraph ? SIZE_MAX : optimizedSolutions->findSumEndNode(sumId);
-		functionNum = printOptimizedGraphSumLabel(sumId, functionNum);
+		{
+			const auto sanitizeGuard = o.startSanitize();
+			functionNum = printOptimizedGraphSumLabel(sumId, functionNum);
+		}
 		o << '"';
 		if (functionNum != SIZE_MAX)
 			o << ", style=filled";
@@ -1153,7 +1173,7 @@ void OutputComposer::printOptimizedSums() const
 	if (isHuman())
 		o << "Sums:\n";
 	First first;
-	auto indentGuard = o.startIndent(0);
+	const auto indentGuard = o.startIndent(0);
 	for (std::size_t i = 0; i != optimizedSolutions->getSumCount(); ++i)
 	{
 		if (!isOptimizedSumWorthPrinting(optimizedSolutions->makeSumId(i)))
@@ -1167,7 +1187,7 @@ void OutputComposer::printOptimizedSums() const
 			if (isGraph())
 				o << "subgraph sums\n" << "{\n";
 			if (isHuman() || isGraph())
-				indentGuard.increase();
+				o.indent();
 			printFormatSpecific("node [shape=rectangle];\n", NEXT, BLANK, "Sums\n");
 		}
 		printOptimizedSum(optimizedSolutions->makeSumId(i));
@@ -1185,6 +1205,7 @@ void OutputComposer::printOptimizedGraphFinalSumLabel(const std::size_t i) const
 	if (!isOptimizedSumWorthPrintingInGeneral(sumId) && optimizedSolutions->getSum(sumId).size() > 1)
 	{
 		printOr(false);
+		const auto sanitizeGuard = o.startSanitize(false);
 		o << "\\n";
 	}
 	functionNames.printName(o, i);
@@ -1218,19 +1239,21 @@ void OutputComposer::printOptimizedFinalSums() const
 		printFormatSpecific("node [shape=rectangle, style=filled];\n", NEXT, BLANK, "output_t o = {};\n", NEXT, "Results\n");
 		for (std::size_t i = 0; i != optimizedSolutions->getFinalSums().size(); ++i)
 		{
-			printFormatSpecific([this, i]{ o << "f" << i << " [label=\""; }, BLANK, '"', &OutputComposer::printAssignmentStart);
-			
-			if (isGraph())
-				printOptimizedGraphFinalSumLabel(i);
-			else
-				functionNames.printName(o, i);
-			if (isHuman())
-				o << '"';
-			if (discriminate<OF::MATHEMATICAL>())
 			{
-				o << '(';
-				::inputNames.printNames(o);
-				o << ")";
+				const auto sanitizeGuard = o.startSanitize(false);
+				printFormatSpecific([this, i]{ o << "f" << i << " [label=\""; o.sanitize(true); }, BLANK, '"', &OutputComposer::printAssignmentStart);
+				if (isGraph())
+					printOptimizedGraphFinalSumLabel(i);
+				else
+					functionNames.printName(o, i);
+				if (isHuman())
+					o << '"';
+				if (discriminate<OF::MATHEMATICAL>())
+				{
+					o << '(';
+					::inputNames.printNames(o);
+					o << ")";
+				}
 			}
 			printFormatSpecific("\"];\n", NEXT, NEXT, &OutputComposer::printAssignmentOp);
 			
@@ -1259,9 +1282,8 @@ void OutputComposer::printOptimizedSolution()
 	
 	if (discriminate<OF::VHDL>())
 	{
-		o.deindent();
+		const auto indentGuard = o.startIndent(-1);
 		o << "begin\n";
-		o.indent();
 	}
 	
 	if (discriminate<OF::MATHEMATICAL>() && immediateProductCount + immediateSumCount != 0)
@@ -1296,13 +1318,19 @@ void OutputComposer::printGraphConstants() const
 		if (usesTrue)
 		{
 			o << "true [label=\"";
-			printBool(true);
+			{
+				const auto sanitizeGuard = o.startSanitize();
+				printBool(true);
+			}
 			o << "\"];\n";
 		}
 		if (usesFalse)
 		{
 			o << "false [label=\"";
-			printBool(false);
+			{
+				const auto sanitizeGuard = o.startSanitize();
+				printBool(false);
+			}
 			o << "\"];\n";
 		}
 	}
@@ -1322,7 +1350,10 @@ void OutputComposer::printGraphInputs() const
 		for (Minterm i = 0; i != ::bits; ++i)
 		{
 			o << "i" << i << " [label=\"";
-			::inputNames.printName(o, i);
+			{
+				const auto sanitizeGuard = o.startSanitize();
+				::inputNames.printName(o, i);
+			}
 			o << "\"];\n";
 		}
 	}
@@ -1572,7 +1603,7 @@ OutputComposer::OutputComposer(Names &&functionNames, std::vector<Karnaugh> &kar
 
 void OutputComposer::print(std::ostream &o, const OF outputFormat, const OO outputOperators, const bool isGraphVerbose, const bool includeBanner, std::string &&name)
 {
-	this->o = o;
+	this->o.setStream(o);
 	this->outputFormat = outputFormat;
 	this->outputOperators = outputOperators;
 	this->isGraphVerbose = isGraphVerbose;

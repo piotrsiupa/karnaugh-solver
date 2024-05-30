@@ -4,7 +4,7 @@
 #include "utils.hh"
 
 
-void Names::printName(std::ostream &o, const std::size_t i) const
+void Names::printName(IndentedOStream &o, const std::size_t i) const
 {
 	if (!useInCode)
 	{
@@ -28,7 +28,7 @@ void Names::printName(std::ostream &o, const std::size_t i) const
 	printPlainName(o, i);
 }
 
-void Names::printNames(std::ostream &o) const
+void Names::printNames(IndentedOStream &o) const
 {
 	if (useInCode)
 	{
@@ -55,7 +55,7 @@ void Names::printNames(std::ostream &o) const
 	o << joinStrings(names);
 }
 
-void Names::printType(std::ostream &o) const
+void Names::printType(IndentedOStream &o) const
 {
 	
 	switch (options::outputFormat)

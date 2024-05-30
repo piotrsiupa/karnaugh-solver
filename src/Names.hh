@@ -1,10 +1,11 @@
 #pragma once
 
 #include <cstddef>
-#include <ostream>
 #include <string>
 #include <string_view>
 #include <vector>
+
+#include "IndentedOStream.hh"
 
 
 class Names
@@ -25,10 +26,10 @@ public:
 	Names& operator=(const Names &) = delete;
 	Names& operator=(Names &&) = default;
 	
-	void printPlainName(std::ostream &o, const std::size_t i) const { o << names[i]; }
-	void printName(std::ostream &o, const std::size_t i) const;
-	void printNames(std::ostream &o) const;
-	void printType(std::ostream &o) const;
+	void printPlainName(IndentedOStream &o, const std::size_t i) const { o << names[i]; }
+	void printName(IndentedOStream &o, const std::size_t i) const;
+	void printNames(IndentedOStream &o) const;
+	void printType(IndentedOStream &o) const;
 	
 	[[nodiscard]] bool empty() const { return names.empty(); }
 	[[nodiscard]] std::size_t size() const { return names.size(); }
