@@ -60,7 +60,7 @@ void OutputComposer::printChoiceSpecific(const ENUM choice, const VALUES &...val
 						if constexpr (std::is_invocable_v<VALUES>)
 							std::invoke(values);
 						else if constexpr (std::is_member_function_pointer_v<VALUES>)
-							std::invoke(values, *this);
+							std::invoke(reinterpret_cast<void (OutputComposer::*)() const>(values), *this);  // Ugly but I'm not going to make a second set of those funciton for non-const `this`.
 						else if constexpr (!std::is_same_v<VALUES, decltype(BLANK)>)
 							o << values;
 					}(), true)
@@ -1611,32 +1611,5 @@ void OutputComposer::print(std::ostream &o, const OF outputFormat, const OO outp
 	
 	if (includeBanner)
 		printBanner();
-	
-	switch (outputFormat)
-	{
-	case OF::HUMAN_LONG:
-	case OF::HUMAN:
-	case OF::HUMAN_SHORT:
-		printHuman();
-		break;
-	case OF::GRAPH:
-	case OF::REDUCED_GRAPH:
-		printGraph();
-		break;
-	case OF::VERILOG:
-		printVerilog();
-		break;
-	case OF::VHDL:
-		printVhdl();
-		break;
-	case OF::CPP:
-		printCpp();
-		break;
-	case OF::MATHEMATICAL:
-		printMath();
-		break;
-	case OF::GATE_COSTS:
-		printGateCost();
-		break;
-	}
+	printFormatSpecific(&OutputComposer::printGraph, &OutputComposer::printMath, static_cast<void (OutputComposer::*)()>(&OutputComposer::printGateCost), &OutputComposer::printHuman, &OutputComposer::printCpp, &OutputComposer::printVerilog, &OutputComposer::printVhdl);
 }
