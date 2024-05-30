@@ -58,6 +58,7 @@ namespace options
 		
 		void raise() { raised = true; }
 		[[nodiscard]] bool isRaised() const { return raised; }
+		[[nodiscard]] operator bool() const { return isRaised(); }
 	};
 	
 	class Trilean : public Option
@@ -89,11 +90,12 @@ namespace options
 		[[nodiscard]] bool needsArgument() const final { return false; }
 		[[nodiscard]] bool parse(std::string_view argument) final;
 		[[nodiscard]] bool isSet() const final { return !undecided; }
-		[[nodiscard]] std::string compose() const final { return getValue() ? Option::compose() : negated.compose(); }
+		[[nodiscard]] std::string compose() const final { return get() ? Option::compose() : negated.compose(); }
 		
 		void setValue(const bool newValue) { undecided = false; value = newValue; }
 		void resetValue() { undecided = true; }
-		[[nodiscard]] bool getValue() const { return undecided ? getDefault() : value; }
+		[[nodiscard]] bool get() const { return undecided ? getDefault() : value; }
+		[[nodiscard]] operator bool() const { return get(); }
 	};
 	
 	class Choice : public Option
@@ -122,9 +124,10 @@ namespace options
 		[[nodiscard]] bool isSet() const final { return value != SIZE_MAX; }
 		[[nodiscard]] std::string compose() const final { return Option::compose() + '=' + std::string(getChoiceName()); }
 		
-		void resetValue() { value = SIZE_MAX; }
-		void setValue(const std::size_t newValue) { this->value = newValue; }
-		[[nodiscard]] std::size_t getValue() const { return value; }
+		void reset() { value = SIZE_MAX; }
+		void set(const std::size_t newValue) { this->value = newValue; }
+		[[nodiscard]] std::size_t get() const { return value; }
+		[[nodiscard]] operator std::size_t() const { return get(); }
 		[[nodiscard]] std::string_view getChoiceName(const std::size_t i) const { return variants[i].officialName; }
 		[[nodiscard]] std::string_view getChoiceName() const { return isSet() ? getChoiceName(value) : "<default>"; }
 	};
@@ -157,10 +160,11 @@ namespace options
 		[[nodiscard]] bool isSet() const final { return choice.isSet(); }
 		[[nodiscard]] std::string compose() const final { return choice.compose(); }
 		
-		void resetValue() { choice.resetValue(); }
-		[[nodiscard]] T getValue() const { return choice.isSet() ? values[choice.getValue()] : getDefault(); }
+		void reset() { choice.reset(); }
+		[[nodiscard]] T get() const { return choice.isSet() ? values[choice] : getDefault(); }
+		[[nodiscard]] operator T() const { return get(); }
 		[[nodiscard]] std::string_view getMappedName(const T value) const { return choice.getChoiceName(std::distance(values.cbegin(), std::find(values.cbegin(), values.cend(), value))); }
-		[[nodiscard]] std::string_view getMappedName() const { return getMappedName(getValue()); }
+		[[nodiscard]] std::string_view getMappedName() const { return getMappedName(get()); }
 	};
 	
 	class Text : public Option
@@ -175,9 +179,13 @@ namespace options
 		[[nodiscard]] bool isSet() const final { return static_cast<bool>(value); }
 		[[nodiscard]] std::string compose() const final { return Option::compose() + '=' + *value; }
 		
-		void setValue(const std::string &newValue) { value = newValue; }
-		void setValue(std::string &&newValue) { value = std::move(newValue); }
-		[[nodiscard]] const std::optional<std::string>& getValue() const { return value; }
+		void set(const std::string &newValue) { value = newValue; }
+		void set(std::string &&newValue) { value = std::move(newValue); }
+		[[nodiscard]] const std::optional<std::string>& get() const { return value; }
+		[[nodiscard]] operator const std::optional<std::string>&() const { return get(); }
+		[[nodiscard]] operator bool() const { return static_cast<bool>(value); }
+		[[nodiscard]] const std::string& operator*() const { return *value; }
+		[[nodiscard]] const std::optional<std::string>& operator->() const { return value; }
 	};
 	
 	

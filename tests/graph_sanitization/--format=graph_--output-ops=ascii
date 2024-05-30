@@ -1,0 +1,39 @@
+digraph graph_sanitization
+{
+	subgraph inputs
+	{
+		rank=same;
+		node [shape=invhouse];
+		i0 [label="a"];
+		i1 [label="b"];
+		i2 [label="c"];
+	}
+	subgraph negated_inputs
+	{
+		node [shape=diamond];
+		ni0 [label="~a"];
+		i0 -> ni0;
+		ni1 [label="~b"];
+		i1 -> ni1;
+		ni2 [label="~c"];
+		i2 -> ni2;
+	}
+	subgraph products
+	{
+		node [shape=ellipse];
+		s0 [label="/\\\n[0]"];
+		i0, i2 -> s0;
+		s1 [label="/\\\n[1]"];
+		ni0, i2 -> s1;
+		s2 [label="/\\\n[2]"];
+		i0, ni1, ni2 -> s2;
+	}
+	subgraph final_sums
+	{
+		node [shape=rectangle, style=filled];
+		f0 [label="\\/\na!@\\$%^&*()m"];
+		s1, s2 -> f0;
+		f1 [label="p/\"/\"::\\\\n->;"];
+		s0 -> f1;
+	}
+}

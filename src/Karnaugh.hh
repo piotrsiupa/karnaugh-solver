@@ -3,30 +3,19 @@
 #include <string>
 #include <vector>
 
-#include "global.hh"
 #include "Input.hh"
-#include "Minterm.hh"
 #include "Minterms.hh"
 #include "Progress.hh"
-#include "Solution.hh"
 #include "Solutions.hh"
 
 
 class Karnaugh
 {
-	using grayCode_t = std::vector<Minterm>;
-	
 	static std::size_t nameCount;
 	
 	bool nameIsCustom = false;
 	std::string functionName;
 	Minterms targetMinterms, allowedMinterms;
-	
-	static grayCode_t makeGrayCode(const bits_t bitCount);
-	static void printBits(const Minterm minterm, const bits_t bitCount);
-	static void prettyPrintTable(const Minterms &target, const Minterms &allowed = {});
-	void prettyPrintTable() const;
-	static void prettyPrintSolution(const Solution &solution);
 	
 	bool loadMinterms(Minterms &minterms, Input &input, Progress &progress) const;
 #ifndef NDEBUG
@@ -40,14 +29,9 @@ public:
 	
 	bool hasCustomName() const { return nameIsCustom; }
 	const std::string& getFunctionName() const { return functionName; }
+	const Minterms& getTargetMinterms() const { return targetMinterms; }
+	const Minterms& getAllowedMinterms() const { return allowedMinterms; }
 	
 	bool loadData(Input &input);
 	Solutions solve() const;
-	
-	void printHumanSolution(const Solution &solution) const;
-	[[nodiscard]] std::size_t printGraphSolution(const Solution &solution, const std::size_t functionNum, const std::size_t idShift) const;
-	void printVerilogSolution(const Solution &solution) const;
-	void printVhdlSolution(const Solution &solution) const;
-	void printCppSolution(const Solution &solution) const;
-	void printMathSolution(const Solution &solution) const;
 };

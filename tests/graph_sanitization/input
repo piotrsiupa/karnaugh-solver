@@ -1,0 +1,11 @@
+# In general, such names are a terrible idea but since it's possible to sanitize them for graph, it's a feature.
+#TODO After improvements to the input parser, variable names should also be made stupid.
+a b c
+
+a!@\$%^&*()m
+1 3 4
+-
+
+p/"/"::\\n->;
+7
+3 5

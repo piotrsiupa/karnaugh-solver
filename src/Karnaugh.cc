@@ -6,94 +6,9 @@
 
 #include "options.hh"
 #include "QuineMcCluskey.hh"
-#include "utils.hh"
 
 
 std::size_t Karnaugh::nameCount = 0;
-
-Karnaugh::grayCode_t Karnaugh::makeGrayCode(const bits_t bitCount)
-{
-	grayCode_t grayCode;
-	grayCode.reserve(static_cast<unsigned>(1u << bitCount));
-	grayCode.push_back(0);
-	if (bitCount != 0)
-	{
-		grayCode.push_back(1);
-		for (bits_t i = 1; i != bitCount; ++i)
-			for (Minterm j = 0; j != unsigned(1) << i; ++j)
-				grayCode.push_back(grayCode[j ^ ((1 << i) - 1)] | (1 << i));
-	}
-	return grayCode;
-}
-
-void Karnaugh::printBits(const Minterm minterm, const bits_t bitCount)
-{
-	for (bits_t i = bitCount; i != 0; --i)
-		std::cout << ((minterm & (1 << (i - 1))) != 0 ? '1' : '0');
-}
-
-void Karnaugh::prettyPrintTable(const Minterms &target, const Minterms &allowed)
-{
-	const bits_t vBits = (::bits + 1) / 2;
-	const bits_t hBits = ::bits / 2;
-	const grayCode_t vGrayCode = makeGrayCode(vBits);
-	const grayCode_t hGrayCode = makeGrayCode(hBits);
-	for (int i = 0; i != vBits; ++i)
-		std::cout << ' ';
-	std::cout << ' ';
-	for (const Minterm y : hGrayCode)
-	{
-		printBits(y, hBits);
-		std::cout << ' ';
-	}
-	std::cout << '\n';
-	for (const Minterm x : vGrayCode)
-	{
-		printBits(x, std::max(bits_t(1), vBits));
-		std::cout << ' ';
-		First first;
-		for (int i = 0; i != (hBits - 1) / 2; ++i)
-			std::cout << ' ';
-		for (const Minterm y : hGrayCode)
-		{
-			if (!first)
-				for (int i = 0; i != hBits; ++i)
-					std::cout << ' ';
-			const Minterm minterm = (x << hBits) | y;
-			switch (options::outputOperators.getValue())
-			{
-			case options::OutputOperators::FORMAL:
-			case options::OutputOperators::ASCII:
-				std::cout << (target.find(minterm) != target.cend() ? '1' : (allowed.find(minterm) != allowed.cend() ? 'X' : '0'));
-				break;
-			case options::OutputOperators::PROGRAMMING:
-				std::cout << (target.find(minterm) != target.cend() ? 'T' : (allowed.find(minterm) != allowed.cend() ? '-' : 'F'));
-				break;
-			case options::OutputOperators::NAMES:
-				std::cout << (target.find(minterm) != target.cend() ? 'T' : (allowed.find(minterm) != allowed.cend() ? '?' : 'F'));
-				break;
-			}
-		}
-		std::cout << '\n';
-	}
-	std::cout << std::endl;
-}
-
-void Karnaugh::prettyPrintTable() const
-{
-	return prettyPrintTable(targetMinterms, allowedMinterms);
-}
-
-void Karnaugh::prettyPrintSolution(const Solution &solution)
-{
-	Minterms minterms;
-	for (const auto &implicant : solution)
-	{
-		const auto newMinterms = implicant.findMinterms();
-		minterms.insert(newMinterms.cbegin(), newMinterms.end());
-	}
-	prettyPrintTable(minterms);
-}
 
 bool Karnaugh::loadMinterms(Minterms &minterms, Input &input, Progress &progress) const
 {
@@ -162,7 +77,7 @@ void Karnaugh::validate(const Solutions &solutions) const
 bool Karnaugh::loadData(Input &input)
 {
 	const std::string progressName = "Loading function \"" + functionName + '"';
-	Progress progress(Progress::Stage::LOADING, progressName.c_str(), 5, false, !options::prompt.getValue());
+	Progress progress(Progress::Stage::LOADING, progressName.c_str(), 5, false, !options::prompt);
 	
 	if (input.hasError(&progress))
 		return false;
@@ -170,7 +85,7 @@ bool Karnaugh::loadData(Input &input)
 	if (nameIsCustom)
 		functionName = input.popLine();
 	
-	if (nameIsCustom && options::prompt.getValue())
+	if (nameIsCustom && options::prompt)
 		std::cerr << "Enter a list of minterms of the function \"" << functionName << "\":\n";
 	if (input.hasError(&progress))
 		return false;
@@ -182,7 +97,7 @@ bool Karnaugh::loadData(Input &input)
 	if (!loadMinterms(targetMinterms, input, progress))
 		return false;
 	
-	if (options::prompt.getValue())
+	if (options::prompt)
 	{
 		std::cerr << "Enter a list of don't-cares of the function";
 		if (nameIsCustom)
@@ -218,57 +133,4 @@ Solutions Karnaugh::solve() const
 	validate(solutions);
 #endif
 	return solutions;
-}
-
-void Karnaugh::printHumanSolution(const Solution &solution) const
-{
-	if (options::outputFormat.getValue() == options::OutputFormat::HUMAN_LONG)
-	{
-		if (::bits <= 8)
-		{
-			std::cout << "goal:\n";
-			prettyPrintTable();
-			
-			if (targetMinterms.size() != allowedMinterms.size())
-			{
-				std::cout << "best fit:\n";
-				prettyPrintSolution(solution);
-			}
-		}
-		else
-		{
-			std::cout << "The Karnaugh map is too big to be displayed.\n\n";
-		}
-		std::cout << "solution:\n";
-	}
-	Solution(solution).sort().printHuman(std::cout);
-}
-
-std::size_t Karnaugh::printGraphSolution(const Solution &solution, const std::size_t functionNum, std::size_t idShift) const
-{
-	std::cout << "\tsubgraph function_" << functionNum << '\n';
-	std::cout << "\t{\n";
-	idShift = Solution(solution).sort().printGraph(std::cout, functionNum, functionName, idShift);
-	std::cout << "\t}\n";
-	return idShift;
-}
-
-void Karnaugh::printVerilogSolution(const Solution &solution) const
-{
-	Solution(solution).sort().printVerilog(std::cout);
-}
-
-void Karnaugh::printVhdlSolution(const Solution &solution) const
-{
-	Solution(solution).sort().printVhdl(std::cout);
-}
-
-void Karnaugh::printCppSolution(const Solution &solution) const
-{
-	Solution(solution).sort().printCpp(std::cout);
-}
-
-void Karnaugh::printMathSolution(const Solution &solution) const
-{
-	Solution(solution).sort().printMath(std::cout);
 }

@@ -1,79 +1,86 @@
 #include "./Names.hh"
 
+#include "options.hh"
 #include "utils.hh"
 
 
-void Names::printVerilogNames(std::ostream &o) const
+void Names::printName(IndentedOStream &o, const std::size_t i) const
 {
-	if (useInCode)
+	if (!useInCode)
 	{
-		for (const std::string &name : names)
-			o << ' ' << name << ',';
+		switch (options::outputFormat)
+		{
+		case options::OutputFormat::VERILOG:
+			o << replacementName << '[' << i << ']';
+			return;
+		case options::OutputFormat::VHDL:
+			o << replacementName << '(' << i << ')';
+			return;
+		case options::OutputFormat::CPP:
+			o << replacementName << '[' << i << ']';
+			return;
+		default:
+			break;
+		}
 	}
-	else
-	{
-		o << " [" << (names.size() - 1) << ":0] " << replacementName << ',';
-	}
+	if (options::outputFormat == options::OutputFormat::CPP)
+		o << replacementName << '.';
+	printPlainName(o, i);
 }
 
-void Names::printVhdlNames(std::ostream &o) const
+void Names::printNames(IndentedOStream &o) const
 {
 	if (useInCode)
 	{
-		First first;
-		for (const std::string &name : names)
+		if (options::outputFormat == options::OutputFormat::VERILOG)
 		{
-			if (!first)
-				o << ", ";
-			o << name;
+			o << joinStrings(names, "", " ", ",");
+			return;
 		}
 	}
 	else
 	{
-		o << replacementName;
-	}
-}
-
-void Names::printVhdlType(std::ostream &o) const
-{
-	if (useInCode)
-		o << "std_logic";
-	else
-		o << "std_logic_vector(" << (names.size() - 1) << " downto 0)";
-}
-
-void Names::printCppType(std::ostream &o) const
-{
-	if (useInCode)
-	{
-		o << "struct { ";
-		if (!names.empty())
+		switch (options::outputFormat)
 		{
-			o << "bool ";
-			First first;
-			for (const std::string &name : names)
-			{
-				if (!first)
-					o << ", ";
-				o << name;
-			}
-			o << "; ";
+		case options::OutputFormat::VERILOG:
+			o << " [" << (names.size() - 1) << ":0] " << replacementName << ',';
+			return;
+		case options::OutputFormat::VHDL:
+			o << replacementName;
+			return;
+		default:
+			break;
 		}
-		o << '}';
 	}
-	else
-	{
-		o << "std::array<bool, " << names.size() << '>';
-	}
+	o << joinStrings(names);
 }
 
-void Names::printMathNames(std::ostream &o) const
+void Names::printType(IndentedOStream &o) const
 {
-	First first;
-	for (const std::string &name : names)
+	
+	switch (options::outputFormat)
 	{
-		if (!first)
-			o << ", ";
-		o << name;
+	case options::OutputFormat::VHDL:
+		if (useInCode)
+			o << "std_logic";
+		else
+			o << "std_logic_vector(" << (names.size() - 1) << " downto 0)";
+		break;
+	case options::OutputFormat::CPP:
+		if (useInCode)
+		{
+			o << "struct {";
+			if (!names.empty())
+				o << " bool " << joinStrings(names) << ';';
+			o << " }";
+		}
+		else
+		{
+			o << "std::array<bool, " << names.size() << '>';
+		}
+		break;
+	default:
+		// unused
+		break;
 	}
 }

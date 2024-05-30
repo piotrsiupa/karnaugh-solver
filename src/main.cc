@@ -10,12 +10,13 @@
 #include "Karnaughs.hh"
 #include "non-stdlib-stuff.hh"
 #include "options.hh"
+#include "OutputComposer.hh"
 #include "Progress.hh"
 
 
 static bool parseInputBits(Input &input)
 {
-	if (options::prompt.getValue())
+	if (options::prompt)
 		std::cerr << "Enter a list of input variables or their count:\n";
 	if (input.hasError())
 		return false;
@@ -134,7 +135,7 @@ static bool processInput(IstreamUniquePtr istream)
 	if (!loadInput(std::move(istream), karnaughs))
 		return false;
 	karnaughs.solve();
-	karnaughs.print();
+	karnaughs.makeOutputComposer().print(std::cout, options::outputFormat, options::outputOperators, options::verboseGraph, options::outputBanner, OutputComposer::getStandardName());
 	return true;
 }
 
@@ -150,17 +151,17 @@ int main(const int argc, const char *const *const argv)
 		return 1;
 	}
 	
-	if (options::helpOptions.isRaised())  // `--help-options` is before `--help` because it should be used when both flags are present.
+	if (options::helpOptions)  // `--help-options` is before `--help` because it should be used when both flags are present.
 	{
 		printShortHelp();
 		return 0;
 	}
-	else if (options::help.isRaised())
+	else if (options::help)
 	{
 		printHelp();
 		return 0;
 	}
-	else if (options::version.isRaised())
+	else if (options::version)
 	{
 		printVersion();
 		return 0;
