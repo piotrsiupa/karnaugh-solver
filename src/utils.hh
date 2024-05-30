@@ -39,8 +39,8 @@ public:
 	Trilean(const Value value) : value(value) {}
 	
 	[[nodiscard]] bool operator==(const Trilean &other) const { return this->value == other.value; }
-	[[nodiscard]] bool operator==(const bool value) const { return this->value == static_cast<Value>(value); }
-	[[nodiscard]] bool operator==(const Value value) const { return this->value == value; }
+	[[nodiscard]] bool operator==(const bool newValue) const { return this->value == static_cast<Value>(newValue); }
+	[[nodiscard]] bool operator==(const Value newValue) const { return this->value == newValue; }
 	
 	[[nodiscard]] Value get() const { return value; }
 	

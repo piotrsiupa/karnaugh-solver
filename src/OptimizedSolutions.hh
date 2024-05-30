@@ -60,7 +60,7 @@ public:
 	
 	[[nodiscard]] std::size_t findProductEndNode(const id_t productId, std::size_t startFunctionNum = 0) const;
 	[[nodiscard]] std::size_t findSumEndNode(const id_t sumId, const std::size_t startFunctionNum = 0) const;
-	[[nodiscard]] std::size_t getIdUseCount(const id_t id) const { return std::accumulate(products.cbegin(), products.cend(), 0, [id](const std::size_t &acc, const product_t &product){ return acc + std::count(product.subProducts.cbegin(), product.subProducts.cend(), id); }) + std::accumulate(sums.cbegin(), sums.cend(), 0, [id](const std::size_t &acc, const sum_t &sum){ return acc + std::count(sum.cbegin(), sum.cend(), id); }); }
+	[[nodiscard]] std::size_t getIdUseCount(const id_t id) const { return std::accumulate(products.cbegin(), products.cend(), std::size_t(0), [id](const std::size_t &acc, const product_t &product){ return acc + std::count(product.subProducts.cbegin(), product.subProducts.cend(), id); }) + std::accumulate(sums.cbegin(), sums.cend(), std::size_t(0), [id](const std::size_t &acc, const sum_t &sum){ return acc + std::count(sum.cbegin(), sum.cend(), id); }); }
 	
 	[[nodiscard]] Implicant flattenProduct(const id_t productId) const;
 	[[nodiscard]] std::vector<id_t> flattenSum(const id_t sumId) const;

@@ -26,8 +26,8 @@ class OutputComposer
 	const Solutions &solutions;
 	const OptimizedSolutions *const optimizedSolutions;
 	
-	options::OutputFormat outputFormat;
-	options::OutputOperators outputOperators;
+	options::OutputFormat format;
+	options::OutputOperators operators;
 	bool isGraphVerbose;
 	std::string name;
 	
@@ -107,7 +107,7 @@ class OutputComposer
 	void printAssignmentStart() const;
 	void printAssignmentOp() const;
 	void printShortBool(const Trilean value) const;
-	[[nodiscard]] static inline constexpr options::OutputFormat mapOutputOperators(const options::OutputOperators outputOperators);
+	[[nodiscard]] static inline constexpr options::OutputFormat mapOutputOperators(const options::OutputOperators operators);
 	[[nodiscard]] inline options::OutputFormat getOperatorsStyle() const;
 	void printBool(const bool value, const bool strictlyForCode = false) const;
 	void printNot() const;
@@ -175,5 +175,5 @@ public:
 	
 	OutputComposer(Names &&functionNames, std::vector<Karnaugh> &karnaughs, const Solutions &solutions, const OptimizedSolutions *const optimizedSolutions);
 	
-	void print(std::ostream &o, const options::OutputFormat outputFormat, const options::OutputOperators outputOperators, const bool isGraphVerbose, const bool includeBanner, std::string &&name);
+	void print(std::ostream &stream, const options::OutputFormat outputFormat, const options::OutputOperators outputOperators, const bool isGraphVerbose, const bool includeBanner, std::string &&generalName);
 };
