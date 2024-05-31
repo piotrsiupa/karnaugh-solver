@@ -112,9 +112,25 @@ std::size_t SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::getMaxRo
 }
 
 template<typename SET, typename SET_ELEMENT, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
+std::size_t SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::getMaxRoughWidth()
+{
+	switch (options::maxRoughWidth.getValue())
+	{
+	case 0:
+		return SIZE_MAX;
+	case SIZE_MAX:
+		return 16;
+	default:
+		return options::maxRoughWidth.getValue();
+	}
+}
+
+template<typename SET, typename SET_ELEMENT, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
 void SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::makeRoughGraph(const sets_t &oldSets, Progress &progress)
 {
-	const std::vector<setElement_t> allSetElements = getAllSetElements(oldSets);
+	std::vector<setElement_t> allSetElements = getAllSetElements(oldSets);
+	if (const std::size_t maxWidth = getMaxRoughWidth(); allSetElements.size() > maxWidth)
+		allSetElements.resize(maxWidth);
 	
 	graph.emplace_back(set_t(), possibleSubsets_t{});
 	if (std::ranges::find(oldSets, set_t()) != oldSets.cend()) [[unlikely]]

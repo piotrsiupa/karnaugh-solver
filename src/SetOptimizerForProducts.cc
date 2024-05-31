@@ -60,15 +60,17 @@ void SetOptimizerForProducts::makeGraph(const SubsetFinder::setHierarchy_t &setH
 	}
 }
 
-std::vector<SetOptimizerForProducts::setElement_t> SetOptimizerForProducts::getAllSetElements(const sets_t &) const
+std::vector<SetOptimizerForProducts::setElement_t> SetOptimizerForProducts::getAllSetElements(const sets_t &oldSets) const
 {
+	std::map<setElement_t, std::size_t> allSetElementsMap;
+	for (const set_t &set : oldSets)
+		for (const Implicant::splitBit_t &bit : set.splitBits())
+			++allSetElementsMap[bit];
 	std::vector<setElement_t> allSetElements;
-	allSetElements.reserve(::bits * 2);
-	for (bits_t bit = 0; bit != ::bits; ++bit)
-	{
-		allSetElements.emplace_back(bit, false);
-		allSetElements.emplace_back(bit, true);
-	}
+	allSetElements.reserve(allSetElementsMap.size());
+	for (const auto &[element, count] : allSetElementsMap)
+		allSetElements.push_back(element);
+	std::ranges::sort(allSetElements, std::less(), [allSetElementsMap = std::as_const(allSetElementsMap)](const setElement_t &x){ return allSetElementsMap.at(x); });
 	return allSetElements;
 }
 

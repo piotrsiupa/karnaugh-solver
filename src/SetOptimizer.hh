@@ -63,6 +63,7 @@ private:
 	void makeGreedyGraph(const sets_t &oldSets, Progress &progress);
 	
 	static std::size_t getMaxRoughDepth();
+	static std::size_t getMaxRoughWidth();
 	void makeRoughGraph(const sets_t &oldSets, Progress &progress);
 	
 	void makeGraph(const sets_t &oldSets, Progress &progress);

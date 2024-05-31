@@ -28,12 +28,15 @@ void SetOptimizerForSums::makeGraph(const SubsetFinder::setHierarchy_t &setHiera
 
 std::vector<SetOptimizerForSums::setElement_t> SetOptimizerForSums::getAllSetElements(const sets_t &oldSets) const
 {
-	set_t allSetElementsSet;
+	std::map<std::size_t, std::size_t> allSetElementsMap;
 	for (const set_t &set : oldSets)
-		allSetElementsSet.insert(set.cbegin(), set.cend());
+		for (const std::size_t element : set)
+			++allSetElementsMap[element];
 	std::vector<SetOptimizerForSums::setElement_t> allSetElements;
-	allSetElements.reserve(allSetElementsSet.size());
-	std::ranges::copy(allSetElementsSet, std::back_inserter(allSetElements));
+	allSetElements.reserve(allSetElementsMap.size());
+	for (const auto [element, count] : allSetElementsMap)
+		allSetElements.push_back(element);
+	std::ranges::sort(allSetElements, std::less(), [allSetElementsMap = std::as_const(allSetElementsMap)](const std::size_t x){ return allSetElementsMap.at(x); });
 	return allSetElements;
 }
 

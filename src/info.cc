@@ -52,6 +52,9 @@ void printShortHelp()
 			"    -d, --rough-depth=X\t- Set maximum sub-node size considered by the rough\n\t\t\t  heuristic. "
 						"`0` means no limit. "
 						"(Default depends on\n\t\t\t  the data size.)\n"
+			"    -w, --rough-width=X\t- Set maximum number of elements used to build\n\t\t\t  sub-nodes considered by the rough heuristic. "
+						"`0` means\n\t\t\t  no limit. "
+						"(Default depends on the data size.)\n"
 		;
 }
 
