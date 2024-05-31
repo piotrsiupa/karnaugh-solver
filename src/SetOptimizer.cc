@@ -131,19 +131,41 @@ void SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::makeRoughGraph(
 	}
 	std::size_t prevLevelStart = 0, prevLevelEnd = 1;
 	std::size_t i;
+	typename decltype(allSetElements)::const_iterator elementToInsert;
 	
 	const std::size_t maxSetSize = std::min(getMaxRoughDepth(), static_cast<std::size_t>(std::ranges::max(oldSets, std::ranges::less(), [](const set_t &set)->std::size_t{ return set.size(); }).size()));
-	const Progress::calcStepCompletion_t calcStepCompletion = [maxSetSize, graph = std::as_const(graph)](){
-		return static_cast<Progress::completion_t>(graph.back().set.size()) / static_cast<Progress::completion_t>(maxSetSize);
-	};
+	const Progress::calcStepCompletion_t calcStepCompletion = [
+			maxSetSize,
+			&graph = std::as_const(graph),
+			&prevLevelStart = std::as_const(prevLevelStart),
+			&prevLevelEnd = std::as_const(prevLevelEnd),
+			&i = std::as_const(i),
+			&allSetElements = std::as_const(allSetElements),
+			&elementToInsert = std::as_const(elementToInsert)
+		](){
+			return	(
+						static_cast<Progress::completion_t>(graph.back().set.size())
+						+ (
+							(
+								static_cast<Progress::completion_t>(i - prevLevelStart)
+								+ (
+									static_cast<Progress::completion_t>(std::ranges::distance(allSetElements.cbegin(), elementToInsert))
+									/ static_cast<Progress::completion_t>(allSetElements.size())
+								)
+							)
+							/ static_cast<Progress::completion_t>(prevLevelEnd - prevLevelStart)
+						)
+					)
+					/ static_cast<Progress::completion_t>(maxSetSize + 1);
+		};
 	
 	while (prevLevelStart != prevLevelEnd && graph.back().set.size() != maxSetSize)
 	{
-		progress.substep(calcStepCompletion);
 		for (i = prevLevelStart; i != prevLevelEnd; ++i)
 		{
-			for (auto elementToInsert = nextElements[i]; elementToInsert != allSetElements.cend(); ++elementToInsert)
+			for (elementToInsert = nextElements[i]; elementToInsert != allSetElements.cend(); ++elementToInsert)
 			{
+				progress.substep(calcStepCompletion);
 				set_t newSet = addSetElement(graph[i].set, *elementToInsert);
 				if (newSet.empty())
 					continue;
