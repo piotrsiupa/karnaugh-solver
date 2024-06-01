@@ -437,9 +437,10 @@ void SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::removeUnusedNod
 }
 
 template<typename SET, typename SET_ELEMENT, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
-void SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::removeRedundantNodes(subsetSelections_t &subsetSelections, usageCounts_t &usageCounts)
+void SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::removeRedundantNodes(subsetSelections_t &subsetSelections, usageCounts_t &usageCounts, const bool switchToParents)
 {
-	switchToParentNodesIfAllowed(subsetSelections, usageCounts);
+	if (switchToParents)
+		switchToParentNodesIfAllowed(subsetSelections, usageCounts);
 	removeUnusedNodes(subsetSelections, usageCounts);
 	removeSingleUseNonFinalNodes(subsetSelections, usageCounts);
 	removeUnnecessaryParents(subsetSelections, usageCounts);
@@ -558,7 +559,7 @@ typename SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::subsetSelec
 			break;
 	}
 	
-	removeRedundantNodes(bestSubsetSelections, bestUsageCounts);
+	removeRedundantNodes(bestSubsetSelections, bestUsageCounts, true);
 	
 	return bestSubsetSelections;
 }
@@ -643,7 +644,7 @@ typename SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::subsetSelec
 	}
 	
 	cleanupResultOfExhaustive(bestSubsetSelections, bestUsageCounts);
-	removeRedundantNodes(bestSubsetSelections, bestUsageCounts);
+	removeRedundantNodes(bestSubsetSelections, bestUsageCounts, true);
 	
 	return bestSubsetSelections;
 }
@@ -686,7 +687,7 @@ typename SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::subsetSelec
 		const auto [eraseBegin, eraseEnd] = std::ranges::remove_if(subsetSelection, [subsetsToRemove](const std::size_t x){ return subsetsToRemove[x]; });
 		subsetSelection.erase(eraseBegin, eraseEnd);
 	}
-	removeRedundantNodes(subsetSelections, usageCounts);
+	removeRedundantNodes(subsetSelections, usageCounts, true);
 	
 	return subsetSelections;
 }
@@ -719,7 +720,7 @@ typename SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::subsetSelec
 	for (const std::size_t &endNode : endNodes)
 		++usageCounts[endNode];
 	
-	removeRedundantNodes(subsetSelections, usageCounts);
+	removeRedundantNodes(subsetSelections, usageCounts, false);
 	
 	return subsetSelections;
 }

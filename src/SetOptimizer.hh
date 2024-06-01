@@ -72,7 +72,7 @@ private:
 	void removeSingleUseNonFinalNodes(subsetSelections_t &subsetSelections, usageCounts_t &usageCounts) const;
 	void removeUnusedNodes(subsetSelections_t &subsetSelections, usageCounts_t &usageCounts);
 	void removeUnnecessaryParents(subsetSelections_t &subsetSelections, usageCounts_t &usageCounts) const;
-	void removeRedundantNodes(subsetSelections_t &subsetSelections, usageCounts_t &usageCounts);
+	void removeRedundantNodes(subsetSelections_t &subsetSelections, usageCounts_t &usageCounts, const bool switchToParents);
 	
 	static std::pair<Progress::completion_t, Progress::completion_t> estimateBruteForceCompletion(const subsetSelection_t &subsetSelection, const possibleSubsets_t &possibleSubsets);
 	Progress::completion_t estimateBruteForceCompletion(const subsetSelections_t &subsetSelections, const usageCounts_t &usageCounts) const;
