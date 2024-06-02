@@ -1,0 +1,7 @@
+Let:
+p1(a, b) = a /\ b
+p2(a, c) = ~a /\ ~c
+
+Then:
+tricky_0(a, b, c, d) = (d /\ p1(a, b)) \/ p2(a, c)
+tricky_1(a, b, c, d) = p1(a, b) \/ p2(a, c)

@@ -1,0 +1,8 @@
+Negated inputs: a, c
+Products:
+  [0] = a /\ b
+  [1] = d /\ [0]
+  [2] = ~a /\ ~c
+Sums:
+  "tricky_0" = [1] \/ [2]
+  "tricky_1" = [0] \/ [2]

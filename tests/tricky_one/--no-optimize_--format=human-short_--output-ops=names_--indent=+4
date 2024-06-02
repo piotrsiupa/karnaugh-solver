@@ -1,0 +1,4 @@
+--- tricky_0 ---
+(NOT a AND NOT c) OR (a AND b AND d)
+--- tricky_1 ---
+(a AND b) OR (b AND d)

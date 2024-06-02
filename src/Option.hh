@@ -215,6 +215,7 @@ namespace options
 	{
 		Number<std::uint_fast8_t> number;
 		std::string indent;
+		bool indentEmpty = true;
 		
 	public:
 		Indent(std::vector<std::string_view> &&longNames, const char shortName) : Option(std::move(longNames), shortName), number({}, '\0', 0, 16, 0), indent("\t") {}
@@ -226,6 +227,8 @@ namespace options
 		
 		[[nodiscard]] const std::string& get() const { return indent; }
 		[[nodiscard]] operator const std::string&() const { return get(); }
+		[[nodiscard]] bool hasIndentOnEmpty() const { return indentEmpty; }
+		[[nodiscard]] operator bool() const { return hasIndentOnEmpty(); }
 	};
 	
 	

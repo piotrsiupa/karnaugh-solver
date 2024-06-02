@@ -37,7 +37,7 @@ void printShortHelp()
 			"    -B, --no-banner\t- Disable the `--banner`.\n"
 			"    -f, --format=X\t- Set the output format. (See \"Output formats\".)\n\t\t\t  (Mathematical formats imply `--no-optimize`.)\n"
 			"    -o, --output-ops=X\t- Set style of operators to be used in output (if the\n\t\t\t  output format allows this). (See \"Output operators\".)\n"
-			"    -I, --indent=X\t- Set number of spaces used to indent output. `0` means\n\t\t\t  \"use tabs\" and it's chosen by default.\n"
+			"    -I, --indent=X\t- Set number of spaces used to indent output. `0` means\n\t\t\t  \"use tabs\" and it's chosen by default. Adding prefix\n\t\t\t  \"-\" to the number turns off indenting empty lines.\n"
 			"    -n, --name=X\t- Set module name for Verilog output or entity name for\n\t\t\t  VHDL output or class name for C++ output.\n\t\t\t  (By default, the name of the input file is used,\n\t\t\t  or \"Karnaugh\" if input is read from stdin.)\n"
 			"    -G, --verbose-graph\t- Show shows all inputs in every node of a graph output,\n\t\t\t  instead only the ones added by that node. (It's more\n\t\t\t  readable but less useful for building the circuit.)\n"
 			" 3rd stage - common subexpression elimination:\n"

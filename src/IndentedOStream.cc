@@ -1,7 +1,5 @@
 #include "./IndentedOStream.hh"
 
-#include "options.hh"
-
 
 void IndentedOStream::insertIndent()
 {
@@ -13,30 +11,30 @@ void IndentedOStream::insertIndent()
 	}
 }
 
-void IndentedOStream::printText(const std::string_view text)
+void IndentedOStream::printText(std::string_view text)
 {
-	std::string_view::size_type i = 0;
-	while (i != text.size())
+	while (!text.empty())
 	{
-		insertIndent();
-		std::string_view::size_type j = text.find_first_of("\n\\\"", i);
-		if (j == std::string_view::npos)
+		std::string_view::size_type n = text.find_first_of("\n\\\"");
+		if (options::indent.hasIndentOnEmpty() || text.front() != '\n')
+			insertIndent();
+		if (n == std::string_view::npos)
 		{
-			*o << text.substr(i);
+			*o << text;
 			break;
 		}
-		else if (text[j] == '\n')
+		else if (text[n] == '\n')
 		{
-			*o << text.substr(i, ++j - i);
+			*o << text.substr(0, ++n);
 			newLine = true;
 		}
 		else
 		{
-			*o << text.substr(i, j - i);
+			*o << text.substr(0, n);
 			if (sanitization)
 				*o << '\\';
-			*o << text[j++];
+			*o << text[n++];
 		}
-		i = j;
+		text.remove_prefix(n);
 	}
 }

@@ -1,0 +1,26 @@
+--- tricky_0 ---
+
+(NOT a AND NOT c) OR (a AND b AND d)
+
+Gate cost: NOTs = 2, ANDs = 3, ORs = 1
+
+
+--- tricky_1 ---
+
+(a AND b) OR (NOT a AND NOT c)
+
+Gate cost: NOTs = 2, ANDs = 2, ORs = 1
+
+
+=== optimized solution ===
+
+Negated inputs: a, c
+Products:
+  [0] = a AND b
+  [1] = d AND [0]
+  [2] = NOT a AND NOT c
+Sums:
+  "tricky_0" = [1] OR [2]
+  "tricky_1" = [0] OR [2]
+
+Gate cost: NOTs = 2, ANDs = 3, ORs = 2

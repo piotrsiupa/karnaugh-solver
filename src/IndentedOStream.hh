@@ -6,6 +6,8 @@
 #include <utility>
 #include <type_traits>
 
+#include "options.hh"
+
 
 class IndentedOStream
 {
@@ -68,13 +70,18 @@ IndentedOStream& IndentedOStream::operator<<(T x)
 	}
 	else
 	{
-		insertIndent();
 		if constexpr (std::is_same_v<T, char>)
 		{
+			if (options::indent.hasIndentOnEmpty() || x != '\n')
+				insertIndent();
 			if (x == '\n')
 				newLine = true;
 			else if (sanitization && (x == '"' || x == '\\'))
 				*o << '\\';
+		}
+		else
+		{
+			insertIndent();
 		}
 		*o << std::forward<T>(x);
 	}

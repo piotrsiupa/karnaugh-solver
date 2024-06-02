@@ -1,0 +1,17 @@
+--- tricky_0 ---
+
+(NOT a AND NOT c) OR (a AND b AND d)
+
+Gate cost: NOTs = 2, ANDs = 3, ORs = 1
+
+
+--- tricky_1 ---
+
+(a AND b) OR (b AND d)
+
+Gate cost: NOTs = 0, ANDs = 2, ORs = 1
+
+
+=== summary ===
+
+Gate cost: NOTs = 2, ANDs = 5, ORs = 2

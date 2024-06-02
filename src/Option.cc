@@ -149,8 +149,13 @@ namespace options
 	
 	template class Number<std::uint_fast8_t>;
 	
-	bool Indent::parse(const std::string_view argument)
+	bool Indent::parse(std::string_view argument)
 	{
+		if (!argument.empty() && (argument.front() == '+' || argument.front() == '-'))
+		{
+			indentEmpty = argument.front() == '+';
+			argument.remove_prefix(1);
+		}
 		if (!number.parse(argument))
 			return false;
 		if (number != 0)

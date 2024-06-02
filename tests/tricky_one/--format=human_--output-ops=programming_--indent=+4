@@ -1,0 +1,26 @@
+--- tricky_0 ---
+
+(!a && !c) || (a && b && d)
+
+Gate cost: NOTs = 2, ANDs = 3, ORs = 1
+
+
+--- tricky_1 ---
+
+(a && b) || (!a && !c)
+
+Gate cost: NOTs = 2, ANDs = 2, ORs = 1
+
+
+=== optimized solution ===
+
+Negated inputs: a, c
+Products:
+    [0] = a && b
+    [1] = d && [0]
+    [2] = !a && !c
+Sums:
+    "tricky_0" = [1] || [2]
+    "tricky_1" = [0] || [2]
+
+Gate cost: NOTs = 2, ANDs = 3, ORs = 2

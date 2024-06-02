@@ -1,0 +1,23 @@
+module tricky_one (
+	input wire a, b, c, d,
+	output wire tricky_0, tricky_1,
+);
+
+	// Internal signals
+	wire [2:0] prods;
+	wire [1:0] sums;
+
+	// Products
+	assign prods[0] = a & b;
+	assign prods[1] = d & prods[0];
+	assign prods[2] = !a & !c;
+
+	// Sums
+	assign sums[0] = prods[1] | prods[2];
+	assign sums[1] = prods[0] | prods[2];
+
+	// Results
+	assign tricky_0 = sums[0];
+	assign tricky_1 = sums[1];
+
+endmodule

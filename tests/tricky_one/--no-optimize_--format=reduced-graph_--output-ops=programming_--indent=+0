@@ -1,0 +1,33 @@
+digraph tricky_one
+{
+	subgraph function_0
+	{
+		subgraph products
+		{
+			node [shape=ellipse];
+			f0_s0 [label="[0] = !a && !c"];
+			f0_s1 [label="[1] = a && b && d"];
+		}
+		subgraph sum
+		{
+			node [shape=rectangle, style=filled];
+			f0 [label="||\ntricky_0"];
+			f0_s0, f0_s1 -> f0;
+		}
+	}
+	subgraph function_1
+	{
+		subgraph products
+		{
+			node [shape=ellipse];
+			f1_s0 [label="[2] = a && b"];
+			f1_s1 [label="[3] = b && d"];
+		}
+		subgraph sum
+		{
+			node [shape=rectangle, style=filled];
+			f1 [label="||\ntricky_1"];
+			f1_s0, f1_s1 -> f1;
+		}
+	}
+}
