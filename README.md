@@ -150,9 +150,21 @@ You can find more "examples" in the directory [`tests`](tests).
 
 ### Input
 
-This is an example of an input that defines 2 functions with 4 arguments.
+This is an example of an input that defines 2 functions (`tricky_0` & `tricky_1`) with 4 arguments (`a`, `b`, `c` & `d`).
 
-Each part was formatted a little differently to show various styles allowed by the parser.
+```
+a, b, c, d
+tricky_0
+0, 5, 13
+1, 2, 4, 15
+tricky_1
+5, 14
+0, 1, 3, 4, 7, 10, 11, 12, 13, 15
+```
+
+The input above is equivalent to the one below.
+
+In this one, comments were added and each part was formatted a little differently to show various styles allowed by the parser.
 (If you want, you can even use mix and match them in a single line.)
 
 ([file](tests/tricky_one/input))
@@ -174,18 +186,6 @@ a, b, c, d  # Arguments - they are shared by all the functions.
 tricky_1 # This name could be skipped. The program would generate one if needed.
 5 14
 0 1 3 4 7, 10;11 12 ,13 15  # You can mix different separators.
-```
-
-The input above is equivalent to the one below.
-
-```
-a, b, c, d
-tricky_0
-0, 5, 13
-1, 2, 4, 15
-tricky_1
-5, 14
-0, 1, 3, 4, 7, 10, 11, 12, 13, 15
 ```
 
 ### Human-readable output (long variant)
@@ -259,6 +259,34 @@ Gate cost: NOTs = 2, ANDs = 3, ORs = 2
 This is the same as the long variant except it doesn't print functions represented as Karnaugh maps (which significantly reduces the output length).
 
 ([file](tests/tricky_one/--format=human))
+```
+--- tricky_0 ---
+
+(¬a ∧ ¬c) ∨ (a ∧ b ∧ d)
+
+Gate cost: NOTs = 2, ANDs = 3, ORs = 1
+
+
+--- tricky_1 ---
+
+(a ∧ b) ∨ (¬a ∧ ¬c)
+
+Gate cost: NOTs = 2, ANDs = 2, ORs = 1
+
+
+=== optimized solution ===
+
+Negated inputs: a, c
+Products:
+	[0] = a ∧ b
+	[1] = d ∧ [0]
+	[2] = ¬a ∧ ¬c
+Sums:
+	"tricky_0" = [1] ∨ [2]
+	"tricky_1" = [0] ∨ [2]
+
+Gate cost: NOTs = 2, ANDs = 3, ORs = 2
+```
 
 ### Human-readable output (short variant)
 
