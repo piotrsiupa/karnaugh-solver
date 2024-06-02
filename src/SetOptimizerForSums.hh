@@ -8,7 +8,7 @@
 #include "SetOptimizer.hh"
 
 
-class SetOptimizerForSums : public SetOptimizer<std::set<std::size_t>, std::size_t, std::size_t, std::set>
+class SetOptimizerForSums : public SetOptimizer<false>
 {
 public:
 	static Result optimizeSet(sets_t &&sets, Progress &progress) { const auto infoGuard = progress.addInfo("Sums"); return SetOptimizerForSums().extractCommonParts(std::move(sets), progress); }

@@ -8,7 +8,7 @@
 #include "SetOptimizer.hh"
 
 
-class SetOptimizerForProducts : public SetOptimizer<Implicant, Implicant::splitBit_t, std::int_fast8_t, std::vector>
+class SetOptimizerForProducts : public SetOptimizer<true>
 {
 public:
 	static Result optimizeSet(sets_t &&sets, Progress &progress) { const auto infoGuard = progress.addInfo("Products"); return SetOptimizerForProducts().extractCommonParts(std::move(sets), progress); }

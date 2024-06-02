@@ -2,23 +2,25 @@
 
 #include <cstddef>
 #include <set>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
+#include "Implicant.hh"
 #include "Progress.hh"
 #include "SubsetGraph.hh"
 
 
-template<typename SET, typename SET_ELEMENT, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
+template<bool IS_IMPLICANT>
 class SetOptimizer
 {
 public:
-	using set_t = SET;
+	using set_t = std::conditional_t<IS_IMPLICANT, Implicant, std::set<std::size_t>>;
 	
 protected:
-	using valueId_t = VALUE_ID;
-	using setElement_t = SET_ELEMENT;
-	using SubsetFinder = SubsetGraph<valueId_t, FINDER_CONTAINER>;
+	using valueId_t = std::conditional_t<IS_IMPLICANT, std::int_fast8_t, std::size_t>;
+	using setElement_t = std::conditional_t<IS_IMPLICANT, Implicant::splitBit_t, std::size_t>;
+	using SubsetFinder = std::conditional_t<IS_IMPLICANT, SubsetGraph<valueId_t, std::vector>, SubsetGraph<valueId_t, std::set>>;
 	using possibleSubsets_t = std::vector<std::size_t>;
 	using graphNode_t = struct { set_t set; possibleSubsets_t possibleSubsets; };
 	using graph_t = std::vector<graphNode_t>;

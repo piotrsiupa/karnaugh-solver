@@ -12,8 +12,8 @@
 #include "utils.hh"
 
 
-template<typename SET, typename SET_ELEMENT, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
-typename SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::Result SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::extractCommonParts(sets_t &&oldSets, Progress &progress)
+template<bool IS_IMPLICANT>
+typename SetOptimizer<IS_IMPLICANT>::Result SetOptimizer<IS_IMPLICANT>::extractCommonParts(sets_t &&oldSets, Progress &progress)
 {
 	subsetSelections_t subsetSelections = findBestSubsets(oldSets, progress);
 	sets_t newSets = makeSets();
@@ -23,15 +23,15 @@ typename SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::Result SetO
 	return {newSets, finalSets, subsetSelections};
 }
 
-template<typename SET, typename SET_ELEMENT, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
-void SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::makeFullGraph(const sets_t &oldSets)
+template<bool IS_IMPLICANT>
+void SetOptimizer<IS_IMPLICANT>::makeFullGraph(const sets_t &oldSets)
 {
 	const typename SubsetFinder::setHierarchy_t setHierarchy = SubsetFinder::makeSetHierarchy(convertSets(oldSets));
 	makeGraph(setHierarchy);
 }
 
-template<typename SET, typename SET_ELEMENT, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
-void SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::makeGreedyGraph(const sets_t &oldSets, Progress &progress)
+template<bool IS_IMPLICANT>
+void SetOptimizer<IS_IMPLICANT>::makeGreedyGraph(const sets_t &oldSets, Progress &progress)
 {
 	static constexpr auto lessForSorting = [](const set_t &x, const set_t &y) -> bool { return x.size() != y.size() ? x.size() > y.size() : x > y; };
 	
@@ -97,8 +97,8 @@ void SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::makeGreedyGraph
 	endNodes = std::move(newEndNodes);
 }
 
-template<typename SET, typename SET_ELEMENT, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
-std::size_t SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::getMaxRoughDepth()
+template<bool IS_IMPLICANT>
+std::size_t SetOptimizer<IS_IMPLICANT>::getMaxRoughDepth()
 {
 	switch (options::maxRoughDepth.getValue())
 	{
@@ -111,8 +111,8 @@ std::size_t SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::getMaxRo
 	}
 }
 
-template<typename SET, typename SET_ELEMENT, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
-std::size_t SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::getMaxRoughWidth()
+template<bool IS_IMPLICANT>
+std::size_t SetOptimizer<IS_IMPLICANT>::getMaxRoughWidth()
 {
 	switch (options::maxRoughWidth.getValue())
 	{
@@ -125,8 +125,8 @@ std::size_t SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::getMaxRo
 	}
 }
 
-template<typename SET, typename SET_ELEMENT, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
-void SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::makeRoughGraph(const sets_t &oldSets, Progress &progress)
+template<bool IS_IMPLICANT>
+void SetOptimizer<IS_IMPLICANT>::makeRoughGraph(const sets_t &oldSets, Progress &progress)
 {
 	std::vector<setElement_t> allSetElements = getAllSetElements(oldSets);
 	if (const std::size_t maxWidth = getMaxRoughWidth(); allSetElements.size() > maxWidth)
@@ -136,7 +136,7 @@ void SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::makeRoughGraph(
 	if (std::ranges::find(oldSets, set_t()) != oldSets.cend()) [[unlikely]]
 		endNodes.insert(0);
 	std::vector<typename decltype(allSetElements)::const_iterator> nextElements{allSetElements.cbegin()};
-	if constexpr (std::is_same_v<SET, Implicant>)
+	if constexpr (IS_IMPLICANT)
 	{
 		if (const auto foundSet = std::ranges::find(oldSets, Implicant::none()); foundSet != oldSets.cend()) [[unlikely]]
 		{
@@ -219,7 +219,7 @@ void SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::makeRoughGraph(
 			}
 		}
 		prevLevelStart = prevLevelEnd;
-		if constexpr (std::is_same_v<SET, Implicant>)
+		if constexpr (IS_IMPLICANT)
 			if (prevLevelStart == 1 && graph.size() > 1 && graph[1].set.size() == 0) [[unlikely]]
 				prevLevelStart = 2;
 		prevLevelEnd = graph.size();
@@ -247,8 +247,8 @@ void SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::makeRoughGraph(
 	permuteIndexes(endNodes, newIndexes);
 }
 
-template<typename SET, typename SET_ELEMENT, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
-void SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::makeGraph(const sets_t &oldSets, Progress &progress)
+template<bool IS_IMPLICANT>
+void SetOptimizer<IS_IMPLICANT>::makeGraph(const sets_t &oldSets, Progress &progress)
 {
 	switch (options::optimizationHeuristics.getValue())
 	{
@@ -268,8 +268,8 @@ void SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::makeGraph(const
 	assert(graph.size() >= endNodes.size());
 }
 
-template<typename SET, typename SET_ELEMENT, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
-void SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::switchToParentNodesIfAllowed(subsetSelections_t &subsetSelections, usageCounts_t &usageCounts) const
+template<bool IS_IMPLICANT>
+void SetOptimizer<IS_IMPLICANT>::switchToParentNodesIfAllowed(subsetSelections_t &subsetSelections, usageCounts_t &usageCounts) const
 {
 	for (std::size_t nodeIndex = 0; nodeIndex != subsetSelections.size(); ++nodeIndex)
 	{
@@ -323,8 +323,8 @@ void SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::switchToParentN
 	}
 }
 
-template<typename SET, typename SET_ELEMENT, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
-void SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::removeSingleUseNonFinalNodes(subsetSelections_t &subsetSelections, usageCounts_t &usageCounts) const
+template<bool IS_IMPLICANT>
+void SetOptimizer<IS_IMPLICANT>::removeSingleUseNonFinalNodes(subsetSelections_t &subsetSelections, usageCounts_t &usageCounts) const
 {
 	for (std::size_t i = 0; i != subsetSelections.size(); ++i)
 	{
@@ -361,8 +361,8 @@ void SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::removeSingleUse
 	}
 }
 
-template<typename SET, typename SET_ELEMENT, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
-void SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::removeUnnecessaryParents(subsetSelections_t &subsetSelections, usageCounts_t &usageCounts) const
+template<bool IS_IMPLICANT>
+void SetOptimizer<IS_IMPLICANT>::removeUnnecessaryParents(subsetSelections_t &subsetSelections, usageCounts_t &usageCounts) const
 {
 	for (std::size_t nodeIndex = 0; nodeIndex != subsetSelections.size(); ++nodeIndex)
 	{
@@ -391,8 +391,8 @@ void SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::removeUnnecessa
 	}
 }
 
-template<typename SET, typename SET_ELEMENT, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
-void SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::removeUnusedNodes(subsetSelections_t &subsetSelections, usageCounts_t &usageCounts)
+template<bool IS_IMPLICANT>
+void SetOptimizer<IS_IMPLICANT>::removeUnusedNodes(subsetSelections_t &subsetSelections, usageCounts_t &usageCounts)
 {
 	std::size_t moveTarget = SIZE_MAX;
 	for (std::size_t i = graph.size(); i --> 0;)
@@ -436,8 +436,8 @@ void SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::removeUnusedNod
 	endNodes = std::move(newEndNodes);
 }
 
-template<typename SET, typename SET_ELEMENT, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
-void SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::removeRedundantNodes(subsetSelections_t &subsetSelections, usageCounts_t &usageCounts, const bool switchToParents)
+template<bool IS_IMPLICANT>
+void SetOptimizer<IS_IMPLICANT>::removeRedundantNodes(subsetSelections_t &subsetSelections, usageCounts_t &usageCounts, const bool switchToParents)
 {
 	if (switchToParents)
 		switchToParentNodesIfAllowed(subsetSelections, usageCounts);
@@ -448,8 +448,8 @@ void SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::removeRedundant
 	assert(graph.size() == subsetSelections.size() && subsetSelections.size() == usageCounts.size());
 }
 
-template<typename SET, typename SET_ELEMENT, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
-std::pair<Progress::completion_t, Progress::completion_t> SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::estimateBruteForceCompletion(const subsetSelection_t &subsetSelection, const possibleSubsets_t &possibleSubsets)
+template<bool IS_IMPLICANT>
+std::pair<Progress::completion_t, Progress::completion_t> SetOptimizer<IS_IMPLICANT>::estimateBruteForceCompletion(const subsetSelection_t &subsetSelection, const possibleSubsets_t &possibleSubsets)
 {
 	const Progress::completion_t stepCompletion = 1.0 / std::pow(2.0, possibleSubsets.size());
 	Progress::completion_t completion = 0.0, currentPositionWeight = 1.0;
@@ -467,8 +467,8 @@ std::pair<Progress::completion_t, Progress::completion_t> SetOptimizer<SET, SET_
 	return {stepCompletion, completion};
 }
 
-template<typename SET, typename SET_ELEMENT, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
-Progress::completion_t SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::estimateBruteForceCompletion(const subsetSelections_t &subsetSelections, const usageCounts_t &usageCounts) const
+template<bool IS_IMPLICANT>
+Progress::completion_t SetOptimizer<IS_IMPLICANT>::estimateBruteForceCompletion(const subsetSelections_t &subsetSelections, const usageCounts_t &usageCounts) const
 {
 	Progress::completion_t completion = 0.0;
 	for (std::size_t i = 0; i != subsetSelections.size(); ++i)
@@ -482,8 +482,8 @@ Progress::completion_t SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER
 	return completion;
 }
 
-template<typename SET, typename SET_ELEMENT, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
-bool SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::chooseNextSubsetsForBruteForce(subsetSelections_t &subsetSelectionsIndexes, usageCounts_t &usageCounts) const
+template<bool IS_IMPLICANT>
+bool SetOptimizer<IS_IMPLICANT>::chooseNextSubsetsForBruteForce(subsetSelections_t &subsetSelectionsIndexes, usageCounts_t &usageCounts) const
 {
 	try_again:
 	// Don't let the familiar sight of the loop make an impression that control flow of this function is in any way understandable without analyzing specific paths.
@@ -528,8 +528,8 @@ bool SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::chooseNextSubse
 	return false;
 }
 
-template<typename SET, typename SET_ELEMENT, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
-typename SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::subsetSelections_t SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::processGraph_bruteForce(Progress &progress)
+template<bool IS_IMPLICANT>
+typename SetOptimizer<IS_IMPLICANT>::subsetSelections_t SetOptimizer<IS_IMPLICANT>::processGraph_bruteForce(Progress &progress)
 {
 	subsetSelections_t subsetSelectionIndexes(graph.size()), bestSubsetSelections(graph.size());
 	usageCounts_t usageCounts(graph.size()), bestUsageCounts(graph.size());
@@ -564,8 +564,8 @@ typename SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::subsetSelec
 	return bestSubsetSelections;
 }
 
-template<typename SET, typename SET_ELEMENT, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
-bool SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::chooseNextSubsetsForExhaustive(usageCounts_t &usageCounts) const
+template<bool IS_IMPLICANT>
+bool SetOptimizer<IS_IMPLICANT>::chooseNextSubsetsForExhaustive(usageCounts_t &usageCounts) const
 {
 	for (std::size_t i = 0; i != graph.size(); ++i)
 	{
@@ -585,8 +585,8 @@ bool SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::chooseNextSubse
 	return false;
 }
 
-template<typename SET, typename SET_ELEMENT, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
-void SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::cleanupResultOfExhaustive(subsetSelections_t &subsetSelections, usageCounts_t &usageCounts) const
+template<bool IS_IMPLICANT>
+void SetOptimizer<IS_IMPLICANT>::cleanupResultOfExhaustive(subsetSelections_t &subsetSelections, usageCounts_t &usageCounts) const
 {
 	for (std::size_t i = 0; i != subsetSelections.size(); ++i)
 	{
@@ -605,8 +605,8 @@ void SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::cleanupResultOf
 			--usageCounts[i];
 }
 
-template<typename SET, typename SET_ELEMENT, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
-typename SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::subsetSelections_t SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::processGraph_exhaustive(Progress &progress)
+template<bool IS_IMPLICANT>
+typename SetOptimizer<IS_IMPLICANT>::subsetSelections_t SetOptimizer<IS_IMPLICANT>::processGraph_exhaustive(Progress &progress)
 {
 	auto progressStep = progress.makeCountingStepHelper(std::pow(Progress::completion_t(2), graph.size() - endNodes.size()));
 	
@@ -649,8 +649,8 @@ typename SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::subsetSelec
 	return bestSubsetSelections;
 }
 
-template<typename SET, typename SET_ELEMENT, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
-typename SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::subsetSelections_t SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::processGraph_cursory(Progress &progress)
+template<bool IS_IMPLICANT>
+typename SetOptimizer<IS_IMPLICANT>::subsetSelections_t SetOptimizer<IS_IMPLICANT>::processGraph_cursory(Progress &progress)
 {
 	progress.substep(0.0);
 	
@@ -692,8 +692,8 @@ typename SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::subsetSelec
 	return subsetSelections;
 }
 
-template<typename SET, typename SET_ELEMENT, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
-typename SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::subsetSelections_t SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::processGraph_greedy(Progress &progress)
+template<bool IS_IMPLICANT>
+typename SetOptimizer<IS_IMPLICANT>::subsetSelections_t SetOptimizer<IS_IMPLICANT>::processGraph_greedy(Progress &progress)
 {
 	progress.substep(0.0);
 	
@@ -704,8 +704,8 @@ typename SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::subsetSelec
 	return subsetSelections;
 }
 
-template<typename SET, typename SET_ELEMENT, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
-typename SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::subsetSelections_t SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::processGraph_rough(Progress &progress)
+template<bool IS_IMPLICANT>
+typename SetOptimizer<IS_IMPLICANT>::subsetSelections_t SetOptimizer<IS_IMPLICANT>::processGraph_rough(Progress &progress)
 {
 	progress.substep(0.0);
 	
@@ -725,8 +725,8 @@ typename SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::subsetSelec
 	return subsetSelections;
 }
 
-template<typename SET, typename SET_ELEMENT, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
-typename SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::subsetSelections_t SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::processGraph(Progress &progress)
+template<bool IS_IMPLICANT>
+typename SetOptimizer<IS_IMPLICANT>::subsetSelections_t SetOptimizer<IS_IMPLICANT>::processGraph(Progress &progress)
 {
 	switch (options::optimizationHeuristics.getValue())
 	{
@@ -746,15 +746,15 @@ typename SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::subsetSelec
 	return {};
 }
 
-template<typename SET, typename SET_ELEMENT, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
-typename SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::subsetSelections_t SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::findBestSubsets(const sets_t &oldSets, Progress &progress)
+template<bool IS_IMPLICANT>
+typename SetOptimizer<IS_IMPLICANT>::subsetSelections_t SetOptimizer<IS_IMPLICANT>::findBestSubsets(const sets_t &oldSets, Progress &progress)
 {
 	makeGraph(oldSets, progress);
 	return processGraph(progress);
 }
 
-template<typename SET, typename SET_ELEMENT, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
-typename SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::sets_t SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::makeSets() const
+template<bool IS_IMPLICANT>
+typename SetOptimizer<IS_IMPLICANT>::sets_t SetOptimizer<IS_IMPLICANT>::makeSets() const
 {
 	sets_t sets;
 	sets.reserve(graph.size());
@@ -763,8 +763,8 @@ typename SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::sets_t SetO
 	return sets;
 }
 
-template<typename SET, typename SET_ELEMENT, typename VALUE_ID, template<typename> class FINDER_CONTAINER>
-typename SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::finalSets_t SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::makeFinalSets(sets_t &&oldSets, const sets_t &newSets)
+template<bool IS_IMPLICANT>
+typename SetOptimizer<IS_IMPLICANT>::finalSets_t SetOptimizer<IS_IMPLICANT>::makeFinalSets(sets_t &&oldSets, const sets_t &newSets)
 {
 	const permutation_t oldSetsPermutation = makeSortingPermutation(oldSets);
 	applyPermutation(oldSets, oldSetsPermutation);
@@ -781,5 +781,5 @@ typename SetOptimizer<SET, SET_ELEMENT, VALUE_ID, FINDER_CONTAINER>::finalSets_t
 }
 
 
-template class SetOptimizer<Implicant, Implicant::splitBit_t, std::int_fast8_t, std::vector>;
-template class SetOptimizer<std::set<std::size_t>, std::size_t, std::size_t, std::set>;
+template class SetOptimizer<true>;
+template class SetOptimizer<false>;
