@@ -1,0 +1,31 @@
+library IEEE;
+use IEEE.std_logic_1164.all;
+
+entity tricky_one is
+  port(
+    a, b, c, d : in std_logic;
+    tricky_0, tricky_1 : out std_logic
+  );
+end tricky_one;
+
+architecture behavioural of tricky_one is
+  -- Internal signals
+  signal prods : std_logic_vector(2 downto 0);
+  signal sums : std_logic_vector(1 downto 0);
+  
+begin
+  
+  -- Products
+  prods(0) <= a and b;
+  prods(1) <= d and prods(0);
+  prods(2) <= not a and not c;
+  
+  -- Sums
+  sums(0) <= prods(1) or prods(2);
+  sums(1) <= prods(0) or prods(2);
+  
+  -- Results
+  tricky_0 <= sums(0);
+  tricky_1 <= sums(1);
+  
+end behavioural;

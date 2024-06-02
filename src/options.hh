@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <string_view>
 #include <vector>
 
@@ -49,6 +50,7 @@ namespace options
 	};
 	extern MappedOutputFormats outputFormat;
 	extern Mapped<OutputOperators> outputOperators;
+	extern Indent indent;
 	extern Text name;
 	extern Flag verboseGraph;
 	

@@ -61,6 +61,7 @@ namespace options
 			{"programming", "prog(?:ramm?(?:ing)?)?|p", OutputOperators::PROGRAMMING},
 			{"names", "(?:names?|words?|text)|[nwt]", OutputOperators::NAMES},
 		});
+	Indent indent({"indent", "indent-size", "indent-style"}, 'I');
 	Text name({"name", "module-name", "class-name"}, 'n');
 	Flag verboseGraph({"verbose-graph", "expanded-graph", "redundant-graph"}, 'G');
 	
@@ -69,7 +70,7 @@ namespace options
 	std::vector<std::string_view> freeArgs;
 	
 	
-	const optionList_t allOptions = {&help, &helpOptions, &version, &prompt, &status, &outputBanner, &outputFormat, &outputOperators, &name, &verboseGraph, &skipOptimization};
+	const optionList_t allOptions = {&help, &helpOptions, &version, &prompt, &status, &outputBanner, &outputFormat, &outputOperators, &indent, &name, &verboseGraph, &skipOptimization};
 	
 	bool parse(const int argc, const char *const *const argv)
 	{

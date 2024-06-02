@@ -1,0 +1,2 @@
+tricky_0(a, b, c, d) = (NOT a AND NOT c) OR (a AND b AND d)
+tricky_1(a, b, c, d) = (a AND b) OR (b AND d)

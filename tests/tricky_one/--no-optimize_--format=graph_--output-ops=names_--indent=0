@@ -1,0 +1,54 @@
+digraph tricky_one
+{
+	subgraph inputs
+	{
+		rank=same;
+		node [shape=invhouse];
+		i0 [label="a"];
+		i1 [label="b"];
+		i2 [label="c"];
+		i3 [label="d"];
+	}
+	subgraph function_0
+	{
+		subgraph negated_inputs
+		{
+			node [shape=diamond];
+			f0_ni0_0 [label="NOT a"];
+			i0 -> f0_ni0_0;
+			f0_ni2_0 [label="NOT c"];
+			i2 -> f0_ni2_0;
+		}
+		subgraph products
+		{
+			node [shape=ellipse];
+			f0_s0 [label="AND\n[0]"];
+			f0_ni0_0, f0_ni2_0 -> f0_s0;
+			f0_s1 [label="AND\n[1]"];
+			i0, i1, i3 -> f0_s1;
+		}
+		subgraph sum
+		{
+			node [shape=rectangle, style=filled];
+			f0 [label="OR\ntricky_0"];
+			f0_s0, f0_s1 -> f0;
+		}
+	}
+	subgraph function_1
+	{
+		subgraph products
+		{
+			node [shape=ellipse];
+			f1_s0 [label="AND\n[2]"];
+			i0, i1 -> f1_s0;
+			f1_s1 [label="AND\n[3]"];
+			i1, i3 -> f1_s1;
+		}
+		subgraph sum
+		{
+			node [shape=rectangle, style=filled];
+			f1 [label="OR\ntricky_1"];
+			f1_s0, f1_s1 -> f1;
+		}
+	}
+}

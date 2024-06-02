@@ -1,7 +1,10 @@
 #pragma once
 
 #include <algorithm>
+#include <charconv>
+#include <cstdint>
 #include <functional>
+#include <limits>
 #include <optional>
 #include <regex>
 #include <string>
@@ -186,6 +189,43 @@ namespace options
 		[[nodiscard]] operator bool() const { return static_cast<bool>(value); }
 		[[nodiscard]] const std::string& operator*() const { return *value; }
 		[[nodiscard]] const std::optional<std::string>& operator->() const { return value; }
+	};
+	
+	template<typename T>
+	class Number : public Option
+	{
+		const T min, max;
+		T value;
+		bool isSet_ = false;
+		
+	public:
+		Number(std::vector<std::string_view> &&longNames, const char shortName, const T min, const T max, const T initialValue) : Option(std::move(longNames), shortName), min(min), max(max), value(initialValue) {}
+		
+		[[nodiscard]] bool needsArgument() const final { return true; }
+		[[nodiscard]] bool parse(const std::string_view argument) final;
+		[[nodiscard]] bool isSet() const final { return isSet_; }
+		[[nodiscard]] std::string compose() const final { return Option::compose() + '=' + std::to_string(value); }
+		
+		void set(const T &newValue) { value = newValue; }
+		[[nodiscard]] const T& get() const { return value; }
+		[[nodiscard]] operator T() const { return get(); }
+	};
+	
+	class Indent : public Option
+	{
+		Number<std::uint_fast8_t> number;
+		std::string indent;
+		
+	public:
+		Indent(std::vector<std::string_view> &&longNames, const char shortName) : Option(std::move(longNames), shortName), number({}, '\0', 0, 16, 0), indent("\t") {}
+		
+		[[nodiscard]] bool needsArgument() const final { return true; }
+		[[nodiscard]] bool parse(const std::string_view argument) final;
+		[[nodiscard]] bool isSet() const final { return number.isSet(); }
+		[[nodiscard]] std::string compose() const final { return Option::compose() + '=' + std::to_string(number.get()); }
+		
+		[[nodiscard]] const std::string& get() const { return indent; }
+		[[nodiscard]] operator const std::string&() const { return get(); }
 	};
 	
 	

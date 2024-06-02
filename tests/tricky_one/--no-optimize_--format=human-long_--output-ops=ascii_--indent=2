@@ -1,0 +1,47 @@
+--- tricky_0 ---
+
+goal:
+   00 01 11 10 
+00 1  X  0  X
+01 X  1  0  0
+11 0  1  X  0
+10 0  0  0  0
+
+best fit:
+   00 01 11 10 
+00 1  1  0  0
+01 1  1  0  0
+11 0  1  1  0
+10 0  0  0  0
+
+solution:
+(~a /\ ~c) \/ (a /\ b /\ d)
+
+Gate cost: NOTs = 2, ANDs = 3, ORs = 1
+
+
+--- tricky_1 ---
+
+goal:
+   00 01 11 10 
+00 X  X  X  0
+01 X  1  X  0
+11 X  X  X  1
+10 0  0  X  X
+
+best fit:
+   00 01 11 10 
+00 0  0  0  0
+01 0  1  1  0
+11 1  1  1  1
+10 0  0  0  0
+
+solution:
+(a /\ b) \/ (b /\ d)
+
+Gate cost: NOTs = 0, ANDs = 2, ORs = 1
+
+
+=== summary ===
+
+Gate cost: NOTs = 2, ANDs = 5, ORs = 2

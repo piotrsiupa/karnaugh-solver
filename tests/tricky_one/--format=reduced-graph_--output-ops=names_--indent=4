@@ -1,0 +1,19 @@
+digraph tricky_one
+{
+    subgraph products
+    {
+        node [shape=ellipse];
+        s0 [label="[0] = a AND b"];
+        s1 [label="AND\n[1] = d"];
+        s0 -> s1;
+        s2 [label="[2] = NOT a AND NOT c"];
+    }
+    subgraph sums
+    {
+        node [shape=rectangle];
+        s3 [label="OR\ntricky_0", style=filled];
+        s1, s2 -> s3;
+        s4 [label="OR\ntricky_1", style=filled];
+        s0, s2 -> s4;
+    }
+}

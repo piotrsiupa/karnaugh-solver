@@ -1,12 +1,14 @@
 #include "./IndentedOStream.hh"
 
+#include "options.hh"
+
 
 void IndentedOStream::insertIndent()
 {
 	if (newLine)
 	{
 		for (std::size_t i = 0; i != indentSize; ++i)
-			*o << '\t';
+			*o << options::indent.get();
 		newLine = false;
 	}
 }

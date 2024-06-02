@@ -124,6 +124,40 @@ namespace options
 		return false;
 	}
 	
+	template<typename T>
+	bool Number<T>::parse(const std::string_view argument)
+	{
+		const auto [endOfNumber, errorCode] = std::from_chars(argument.cbegin(), argument.cend(), value);
+		if (endOfNumber == argument.cend() && errorCode == std::errc() && value >= min && value <= max) [[likely]]
+		{
+			isSet_ = true;
+			return true;
+		}
+		if (endOfNumber != argument.cend())
+		{
+			std::cerr << '\"' << argument << "\" is not a number (starting at character " << (endOfNumber - argument.cbegin() + 1) << ")!\n";
+		}
+		else
+		{
+			if constexpr (std::numeric_limits<T>::is_signed)
+				std::cerr << '\"' << argument << "\" is out of range (" << static_cast<std::intmax_t>(min) << ".." << static_cast<std::intmax_t>(max) << ")!\n";
+			else
+				std::cerr << '\"' << argument << "\" is out of range (" << static_cast<std::uintmax_t>(min) << ".." << static_cast<std::uintmax_t>(max) << ")!\n";
+		}
+		return false;
+	}
+	
+	template class Number<std::uint_fast8_t>;
+	
+	bool Indent::parse(const std::string_view argument)
+	{
+		if (!number.parse(argument))
+			return false;
+		if (number != 0)
+			indent = std::string(number, ' ');
+		return true;
+	}
+	
 	
 	namespace
 	{
