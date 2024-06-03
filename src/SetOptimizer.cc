@@ -4,6 +4,8 @@
 #include <cassert>
 #include <cmath>
 #include <cstdint>
+#include <iterator>
+#include <limits>
 #include <numeric>
 #include <ranges>
 
@@ -15,6 +17,7 @@
 template<bool IS_IMPLICANT>
 typename SetOptimizer<IS_IMPLICANT>::Result SetOptimizer<IS_IMPLICANT>::extractCommonParts(sets_t &&oldSets, Progress &progress)
 {
+	const auto infoGuard = progress.addInfo(IS_IMPLICANT ? "Products" : "Sums");
 	subsetSelections_t subsetSelections = findBestSubsets(oldSets, progress);
 	sets_t newSets = makeSets();
 	const finalSets_t finalSets = makeFinalSets(std::move(oldSets), newSets);
@@ -23,11 +26,103 @@ typename SetOptimizer<IS_IMPLICANT>::Result SetOptimizer<IS_IMPLICANT>::extractC
 	return {newSets, finalSets, subsetSelections};
 }
 
-template<bool IS_IMPLICANT>
-void SetOptimizer<IS_IMPLICANT>::makeFullGraph(const sets_t &oldSets)
+template<>
+void SetOptimizer<true>::substractSet(set_t &set, const set_t &otherSet)
+{
+	set.substract(otherSet);
+}
+
+template<>
+void SetOptimizer<false>::substractSet(set_t &set, const set_t &otherSet)
+{
+	for (const std::size_t x : otherSet)
+		set.erase(x);
+}
+
+template<>
+typename SetOptimizer<true>::SubsetFinder::sets_t SetOptimizer<true>::convertSets(const sets_t &sets)
+{
+	SubsetFinder::sets_t convertedSets;
+	for (const Implicant &set : sets)
+	{
+		SubsetFinder::set_t convertedSet;
+		if (set == Implicant::all())
+		{
+			convertedSet.push_back(std::numeric_limits<valueId_t>::max());
+		}
+		else if (set == Implicant::none())
+		{
+			convertedSet.push_back(std::numeric_limits<valueId_t>::min());
+		}
+		else
+		{
+			for (const auto &bit : set.splitBits())
+				convertedSet.push_back(bit.second ? bit.first : -bit.first - 1);
+			std::ranges::sort(convertedSet);
+		}
+		convertedSets.push_back(std::move(convertedSet));
+	}
+	return convertedSets;
+}
+
+template<>
+typename SetOptimizer<false>::SubsetFinder::sets_t SetOptimizer<false>::convertSets(const sets_t &sets)
+{
+	SubsetFinder::sets_t convertedSets;
+	for (const std::set<std::size_t> &set : sets)
+		convertedSets.push_back(set);
+	return convertedSets;
+}
+
+template<>
+void SetOptimizer<true>::makeFullGraph(const sets_t &oldSets)
 {
 	const typename SubsetFinder::setHierarchy_t setHierarchy = SubsetFinder::makeSetHierarchy(convertSets(oldSets));
-	makeGraph(setHierarchy);
+	
+	graph.reserve(setHierarchy.size());
+	std::size_t i = 0;
+	for (auto &setHierarchyEntry : setHierarchy)
+	{
+		Implicant set = Implicant::all();
+		const auto &values = setHierarchyEntry.values;
+		if (values.size() == 1 && values[0] == std::numeric_limits<valueId_t>::max())
+		{
+			set = Implicant::all();
+		}
+		else if (values.size() == 1 && values[0] == std::numeric_limits<valueId_t>::min())
+		{
+			set = Implicant::none();
+		}
+		else
+		{
+			for (const auto &value : values)
+				if (value >= 0)
+					set.setBit(value, true);
+				else
+					set.setBit(-value - 1, false);
+		}
+		graph.emplace_back(set, std::move(setHierarchyEntry.subsets));
+		if (setHierarchyEntry.isOriginalSet)
+			endNodes.insert(i);
+		++i;
+	}
+}
+
+template<>
+void SetOptimizer<false>::makeFullGraph(const sets_t &oldSets)
+{
+	const typename SubsetFinder::setHierarchy_t setHierarchy = SubsetFinder::makeSetHierarchy(convertSets(oldSets));
+	
+	graph.reserve(setHierarchy.size());
+	std::size_t i = 0;
+	for (auto &setHierarchyEntry : setHierarchy)
+	{
+		std::set<std::size_t> set(setHierarchyEntry.values.begin(), setHierarchyEntry.values.end());
+		graph.emplace_back(std::move(set), std::move(setHierarchyEntry.subsets));
+		if (setHierarchyEntry.isOriginalSet)
+			endNodes.insert(i);
+		++i;
+	}
 }
 
 template<bool IS_IMPLICANT>
@@ -56,8 +151,17 @@ void SetOptimizer<IS_IMPLICANT>::makeGreedyGraph(const sets_t &oldSets, Progress
 		for (std::size_t j = i + 1; j != graph.size(); ++j)
 		{
 			const set_t otherSet = graph[j].set;
-			set_t commonElements = getSetIntersection(remainingElements, otherSet);
-			if (isSubsetWorthy(commonElements))
+			set_t commonElements;
+			if constexpr (IS_IMPLICANT)
+			{
+				commonElements = remainingElements;
+				commonElements.intersect(otherSet);
+			}
+			else
+			{
+				std::ranges::set_intersection(remainingElements, otherSet, std::inserter(commonElements, commonElements.begin()));
+			}
+			if (commonElements.size() >= 2)
 			{
 				substractSet(remainingElements, commonElements);
 				if (commonElements == otherSet)  // The other set doesn't need to be checked because they are unique and sorted by size.
@@ -123,6 +227,66 @@ std::size_t SetOptimizer<IS_IMPLICANT>::getMaxRoughWidth()
 	default:
 		return options::maxRoughWidth.getValue();
 	}
+}
+
+template<>
+std::vector<SetOptimizer<true>::setElement_t> SetOptimizer<true>::getAllSetElements(const sets_t &oldSets)
+{
+	std::map<setElement_t, std::size_t> allSetElementsMap;
+	for (const set_t &set : oldSets)
+		for (const Implicant::splitBit_t &bit : set.splitBits())
+			++allSetElementsMap[bit];
+	std::vector<setElement_t> allSetElements;
+	allSetElements.reserve(allSetElementsMap.size());
+	for (const auto &[element, count] : allSetElementsMap)
+		allSetElements.push_back(element);
+	std::ranges::sort(allSetElements, std::less(), [allSetElementsMap = std::as_const(allSetElementsMap)](const setElement_t &x){ return allSetElementsMap.at(x); });
+	return allSetElements;
+}
+
+template<>
+std::vector<SetOptimizer<false>::setElement_t> SetOptimizer<false>::getAllSetElements(const sets_t &oldSets)
+{
+	std::map<std::size_t, std::size_t> allSetElementsMap;
+	for (const set_t &set : oldSets)
+		for (const std::size_t element : set)
+			++allSetElementsMap[element];
+	std::vector<setElement_t> allSetElements;
+	allSetElements.reserve(allSetElementsMap.size());
+	for (const auto [element, count] : allSetElementsMap)
+		allSetElements.push_back(element);
+	std::ranges::sort(allSetElements, std::less(), [allSetElementsMap = std::as_const(allSetElementsMap)](const std::size_t x){ return allSetElementsMap.at(x); });
+	return allSetElements;
+}
+
+template<>
+SetOptimizer<true>::set_t SetOptimizer<true>::addSetElement(const set_t &set, const setElement_t &setElement)
+{
+	if (set.hasOppositeBit(setElement))
+		return set_t();
+	set_t newSet = set;
+	newSet.setBit(setElement);
+	return newSet;
+}
+
+template<>
+SetOptimizer<false>::set_t SetOptimizer<false>::addSetElement(const set_t &set, const setElement_t &setElement)
+{
+	set_t newSet = set;
+	newSet.insert(setElement);
+	return newSet;
+}
+
+template<>
+bool SetOptimizer<true>::setContainsSet(const set_t &x, const set_t &y)
+{
+	return x.contains(y);
+}
+
+template<>
+bool SetOptimizer<false>::setContainsSet(const set_t &x, const set_t &y)
+{
+	return std::ranges::includes(x, y);
 }
 
 template<bool IS_IMPLICANT>
@@ -240,7 +404,7 @@ void SetOptimizer<IS_IMPLICANT>::makeRoughGraph(const sets_t &oldSets, Progress 
 		}
 	}
 	
-	const permutation_t newIndexes = makeRemovingPermutationByIndex(graph, [this](const std::size_t i){ return !isSubsetWorthy(graph[i].set) && !endNodes.contains(i); });
+	const permutation_t newIndexes = makeRemovingPermutationByIndex(graph, [this](const std::size_t i){ return graph[i].set.size() < 2 && !endNodes.contains(i); });
 	removeByPermutation(graph, newIndexes);
 	for (graphNode_t &graphNode : graph)
 		removeAndPermuteIndexes(graphNode.possibleSubsets, newIndexes);
@@ -446,6 +610,48 @@ void SetOptimizer<IS_IMPLICANT>::removeRedundantNodes(subsetSelections_t &subset
 	removeUnnecessaryParents(subsetSelections, usageCounts);
 	removeUnusedNodes(subsetSelections, usageCounts);
 	assert(graph.size() == subsetSelections.size() && subsetSelections.size() == usageCounts.size());
+}
+
+template<>
+SetOptimizer<true>::gateCount_t SetOptimizer<true>::countGates(const subsetSelections_t &subsetSelections, const usageCounts_t &usageCounts) const
+{
+	gateCount_t gates = 0;
+	for (std::size_t i = 0; i != graph.size(); ++i)
+	{
+		if (usageCounts[i] == 0)
+			continue;
+		gates += subsetSelections[i].size();
+		Implicant reducedProduct = graph[i].set;
+		for (const std::size_t &subset : subsetSelections[i])
+			reducedProduct.substract(graph[subset].set);
+		gates += reducedProduct.size();
+		if (subsetSelections[i].size() != 0 || !reducedProduct.empty())
+			--gates;
+	}
+	return gates;
+}
+
+template<>
+SetOptimizer<false>::gateCount_t SetOptimizer<false>::countGates(const subsetSelections_t &subsetSelections, const usageCounts_t &usageCounts) const
+{
+	gateCount_t gates = 0;
+	for (std::size_t i = 0; i != graph.size(); ++i)
+	{
+		if (usageCounts[i] == 0)
+			continue;
+		gates += subsetSelections[i].size();
+		std::set<std::size_t> reducedSet = graph[i].set;
+		for (const std::size_t &subset : subsetSelections[i])
+		{
+			std::set<std::size_t> setDifference;
+			std::ranges::set_difference(reducedSet, graph[subset].set, std::inserter(setDifference, setDifference.end()));
+			reducedSet = std::move(setDifference);
+		}
+		gates += reducedSet.size();
+		if (subsetSelections[i].size() != 0 || !reducedSet.empty())
+			--gates;
+	}
+	return gates;
 }
 
 template<bool IS_IMPLICANT>
@@ -778,6 +984,35 @@ typename SetOptimizer<IS_IMPLICANT>::finalSets_t SetOptimizer<IS_IMPLICANT>::mak
 	}
 	
 	return finalSets;
+}
+
+template<>
+void SetOptimizer<true>::substractSubsets(sets_t &sets, const subsetSelections_t &subsetSelections)
+{
+	for (std::size_t i = sets.size(); i --> 0;)
+	{
+		for (const std::size_t subsetIndex : subsetSelections[i])
+		{
+			sets[i].substract(sets[subsetIndex]);
+			assert((sets[i].getBits() & ~sets[i].getMask()) == 0);
+		}
+	}
+}
+
+template<>
+void SetOptimizer<false>::substractSubsets(sets_t &sets, const subsetSelections_t &subsetSelections)
+{
+	for (std::size_t i = sets.size(); i --> 0;)
+	{
+		set_t &set = sets[i];
+		for (const std::size_t subsetIndex : subsetSelections[i])
+		{
+			const set_t &subset = sets[subsetIndex];
+			std::set<std::size_t> setDifference;
+			std::ranges::set_difference(set, subset, std::inserter(setDifference, setDifference.end()));
+			set = std::move(setDifference);
+		}
+	}
 }
 
 

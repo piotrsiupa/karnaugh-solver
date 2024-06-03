@@ -17,7 +17,7 @@ class SetOptimizer
 public:
 	using set_t = std::conditional_t<IS_IMPLICANT, Implicant, std::set<std::size_t>>;
 	
-protected:
+private:
 	using valueId_t = std::conditional_t<IS_IMPLICANT, std::int_fast8_t, std::size_t>;
 	using setElement_t = std::conditional_t<IS_IMPLICANT, Implicant::splitBit_t, std::size_t>;
 	using SubsetFinder = std::conditional_t<IS_IMPLICANT, SubsetGraph<valueId_t, std::vector>, SubsetGraph<valueId_t, std::set>>;
@@ -43,29 +43,24 @@ public:
 		subsetSelections_t subsets;
 	};
 	
-protected:
+private:
 	SetOptimizer() = default;
 	
 	Result extractCommonParts(sets_t &&sets, Progress &progress);
 	
-	virtual typename SubsetFinder::sets_t convertSets(const sets_t &sets) const = 0;
-	virtual void makeGraph(const typename SubsetFinder::setHierarchy_t &setHierarchy) = 0;
-	virtual std::vector<setElement_t> getAllSetElements(const sets_t &oldSets) const = 0;
-	virtual set_t addSetElement(const set_t &set, const setElement_t &setElement) const = 0;
-	virtual gateCount_t countGates(const subsetSelections_t &subsetSelections, const usageCounts_t &usageCounts) const = 0;
-	virtual void substractSubsets(sets_t &sets, const subsetSelections_t &subsetSelections) = 0;
-	virtual void substractSet(set_t &set, const set_t &otherSet) const = 0;
-	virtual bool setContainsSet(const set_t &x, const set_t &y) const = 0;
-	virtual set_t getSetIntersection(const set_t &set0, const set_t &set1) const = 0;
-	virtual bool isSubsetWorthy(const set_t &subset) const = 0;
-	
 private:
+	static void substractSet(set_t &set, const set_t &otherSet);
+	
+	static typename SubsetFinder::sets_t convertSets(const sets_t &sets);
 	void makeFullGraph(const sets_t &oldSets);
 	
 	void makeGreedyGraph(const sets_t &oldSets, Progress &progress);
 	
 	static std::size_t getMaxRoughDepth();
 	static std::size_t getMaxRoughWidth();
+	static std::vector<setElement_t> getAllSetElements(const sets_t &oldSets);
+	static set_t addSetElement(const set_t &set, const setElement_t &setElement);
+	static inline bool setContainsSet(const set_t &x, const set_t &y);
 	void makeRoughGraph(const sets_t &oldSets, Progress &progress);
 	
 	void makeGraph(const sets_t &oldSets, Progress &progress);
@@ -75,6 +70,8 @@ private:
 	void removeUnusedNodes(subsetSelections_t &subsetSelections, usageCounts_t &usageCounts);
 	void removeUnnecessaryParents(subsetSelections_t &subsetSelections, usageCounts_t &usageCounts) const;
 	void removeRedundantNodes(subsetSelections_t &subsetSelections, usageCounts_t &usageCounts, const bool switchToParents);
+	
+	gateCount_t countGates(const subsetSelections_t &subsetSelections, const usageCounts_t &usageCounts) const;
 	
 	static std::pair<Progress::completion_t, Progress::completion_t> estimateBruteForceCompletion(const subsetSelection_t &subsetSelection, const possibleSubsets_t &possibleSubsets);
 	Progress::completion_t estimateBruteForceCompletion(const subsetSelections_t &subsetSelections, const usageCounts_t &usageCounts) const;
@@ -97,4 +94,9 @@ private:
 	sets_t makeSets() const;
 	
 	finalSets_t makeFinalSets(sets_t &&oldSets, const sets_t &newSets);
+	
+	static void substractSubsets(sets_t &sets, const subsetSelections_t &subsetSelections);
+	
+public:
+	[[nodiscard]] static Result optimizeSet(sets_t &&sets, Progress &progress) { return SetOptimizer().extractCommonParts(std::move(sets), progress); }
 };
