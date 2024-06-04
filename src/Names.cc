@@ -10,14 +10,12 @@ void Names::printName(IndentedOStream &o, const std::size_t i) const
 	{
 		switch (options::outputFormat)
 		{
+		case options::OutputFormat::CPP:
 		case options::OutputFormat::VERILOG:
 			o << replacementName << '[' << i << ']';
 			return;
 		case options::OutputFormat::VHDL:
 			o << replacementName << '(' << i << ')';
-			return;
-		case options::OutputFormat::CPP:
-			o << replacementName << '[' << i << ']';
 			return;
 		default:
 			break;

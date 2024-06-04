@@ -74,7 +74,7 @@ This program is distributed under the MIT license. A full copy of it is availabl
 ## Compilation
 
 The program is written in pure C++, without use of any external libraries, which makes the compilation pretty straightforward.
-Any compiler conforming to the C++17 standard should be able to handle it.
+Any compiler conforming to the C++20 standard should be able to handle it.
 (Clang will also work because it can be made conforming by using command line flags.)
 
 You can build it in two ways:

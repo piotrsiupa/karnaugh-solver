@@ -7,6 +7,7 @@
 #include <limits>
 #include <optional>
 #include <regex>
+#include <span>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -232,7 +233,7 @@ namespace options
 	};
 	
 	
-	using optionList_t = std::vector<Option*>; //TODO use `std::span` in C++20
+	using optionList_t = std::span<Option *const>;
 	using freeArgs_t = std::vector<std::string_view>;
 	[[nodiscard]] bool parse(const int argc, const char *const *const argv, const optionList_t &allOptions, freeArgs_t &freeArgs);
 	

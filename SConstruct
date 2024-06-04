@@ -22,10 +22,10 @@ else:
         env.Append(CCFLAGS=['-O3'])
 
 if 'msvc' in env['TOOLS']:
-    env.Append(CCFLAGS=['/W4', '/std:c++17', '/FS', '/EHsc'])
+    env.Append(CCFLAGS=['/W4', '/std:c++20', '/utf-8', '/FS', '/EHsc'])
     env.Append(CPPDEFINES=['_CRT_SECURE_NO_WARNINGS'])
 else:
-    env.Append(CCFLAGS=['-Wall', '-Wextra', '-pedantic', '-std=c++17'])
+    env.Append(CCFLAGS=['-Wall', '-Wextra', '-pedantic', '-std=c++20'])
 if 'g++' in env['TOOLS'] or 'clang++' in env['TOOLS']:
     env.Append(CCFLAGS=['-fdiagnostics-color=always'])
 if 'clang++' in env['TOOLS']:

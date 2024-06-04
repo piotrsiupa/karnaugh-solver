@@ -70,7 +70,7 @@ namespace options
 	std::vector<std::string_view> freeArgs;
 	
 	
-	const optionList_t allOptions = {&help, &helpOptions, &version, &prompt, &status, &outputBanner, &outputFormat, &outputOperators, &indent, &name, &verboseGraph, &skipOptimization};
+	Option *const allOptions[] = {&help, &helpOptions, &version, &prompt, &status, &outputBanner, &outputFormat, &outputOperators, &indent, &name, &verboseGraph, &skipOptimization};
 	
 	bool parse(const int argc, const char *const *const argv)
 	{

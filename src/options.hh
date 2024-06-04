@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <cstdint>
 #include <string_view>
 #include <vector>
@@ -59,7 +60,7 @@ namespace options
 	extern std::vector<std::string_view> freeArgs;
 	
 	
-	extern const optionList_t allOptions;
+	extern Option *const allOptions[12];
 	
 	[[nodiscard]] bool parse(const int argc, const char *const *const argv);
 	

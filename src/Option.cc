@@ -171,11 +171,11 @@ namespace options
 		{
 			const int argc;
 			const char *const *const argv;
-			const optionList_t allOptions;
+			const std::vector<Option*> allOptions;
 			freeArgs_t &freeArgs;
 			int i;
 			
-			[[nodiscard]] static optionList_t expandOptions(const optionList_t &options);
+			[[nodiscard]] static std::vector<Option*> expandOptions(const optionList_t &options);
 			
 			Parser(const int argc, const char *const *const argv, const optionList_t &allOptions, freeArgs_t &freeArgs) : argc(argc), argv(argv), allOptions(expandOptions(allOptions)), freeArgs(freeArgs) {}
 			
@@ -191,9 +191,9 @@ namespace options
 			[[nodiscard]] static bool parse(const int argc, const char *const *const argv, const optionList_t &allOptions, freeArgs_t &freeArgs) { return Parser(argc, argv, allOptions, freeArgs).parse(); }
 		};
 		
-		optionList_t Parser::expandOptions(const optionList_t &options)
+		std::vector<Option*> Parser::expandOptions(const optionList_t &options)
 		{
-			optionList_t newOptionList;
+			std::vector<Option*> newOptionList;
 			for (Option *option : options)
 			{
 				while (option != nullptr)

@@ -175,7 +175,7 @@ std::pair<bool, bool> OutputComposer::checkForUsedConstants() const
 bool OutputComposer::areInputsUsed() const
 {
 	for (const Solution &solution : solutions)
-		if (std::any_of(solution.cbegin(), solution.cend(), [](const Implicant &implicant){ return implicant.getBitCount() != 0; }))
+		if (std::ranges::any_of(solution, [](const Implicant &implicant){ return implicant.getBitCount() != 0; }))
 			return true;
 	return false;
 }
@@ -204,7 +204,7 @@ bool OutputComposer::isOptimizedSumWorthPrintingInGeneral(const OptimizedSolutio
 {
 	if (!isHumanReadable())
 		return optimizedSolutions->getSum(sumId).size() >= 2;
-	if (std::count(optimizedSolutions->getFinalSums().cbegin(), optimizedSolutions->getFinalSums().cend(), sumId) >= 2 && optimizedSolutions->getSum(sumId).size() >= 2)
+	if (std::ranges::count(optimizedSolutions->getFinalSums(), sumId) >= 2 && optimizedSolutions->getSum(sumId).size() >= 2)
 		return true;
 	for (std::size_t i = 0; i != optimizedSolutions->getSumCount(); ++i)
 		for (const OptimizedSolutions::id_t &id : optimizedSolutions->getSum(optimizedSolutions->makeSumId(i)))
@@ -220,7 +220,7 @@ bool OutputComposer::isOptimizedSumWorthPrinting(const OptimizedSolutions::id_t 
 	case OF::REDUCED_GRAPH:
 		return optimizedSolutions->getSum(sumId).size() != 1;
 	case OF::MATHEMATICAL:
-		return isOptimizedSumWorthPrintingInGeneral(sumId) && (optimizedSolutions->getIdUseCount(sumId) + std::count(optimizedSolutions->getFinalSums().cbegin(), optimizedSolutions->getFinalSums().cend(), sumId) >= 2);
+		return isOptimizedSumWorthPrintingInGeneral(sumId) && (optimizedSolutions->getIdUseCount(sumId) + std::ranges::count(optimizedSolutions->getFinalSums(), sumId) >= 2);
 	default:
 		return isOptimizedSumWorthPrintingInGeneral(sumId);
 	}
@@ -316,21 +316,21 @@ void OutputComposer::printBool(const bool value, const bool strictlyForCode) con
 {
 	const OF outputFormat = strictlyForCode ? OF::CPP : getOperatorsStyle();
 	if (value)
-		printFormatSpecific(outputFormat, 'T', u8"\u22A4", "TRUE", "true", '1', "'1'");
+		printFormatSpecific(outputFormat, 'T', "\u22A4", "TRUE", "true", '1', "'1'");
 	else
-		printFormatSpecific(outputFormat, 'F', u8"\u22A5", "FALSE", "false", '0', "'0'");
+		printFormatSpecific(outputFormat, 'F', "\u22A5", "FALSE", "false", '0', "'0'");
 }
 
 void OutputComposer::printNot() const
 {
-	printFormatSpecific(getOperatorsStyle(), '~', u8"\u00AC", "NOT ", NEXT, '!', "not ");
+	printFormatSpecific(getOperatorsStyle(), '~', "\u00AC", "NOT ", NEXT, '!', "not ");
 }
 
 void OutputComposer::printAnd(const bool spaces) const
 {
 	if (spaces)
 		o << ' ';
-	printFormatSpecific(getOperatorsStyle(), "/\\", u8"\u2227", "AND", "&&", '&', "and");
+	printFormatSpecific(getOperatorsStyle(), "/\\", "\u2227", "AND", "&&", '&', "and");
 	if (spaces)
 		o << ' ';
 }
@@ -339,7 +339,7 @@ void OutputComposer::printOr(const bool spaces) const
 {
 	if (spaces)
 		o << ' ';
-	printFormatSpecific(getOperatorsStyle(), "\\/", u8"\u2228", "OR", "||", '|', "or");
+	printFormatSpecific(getOperatorsStyle(), "\\/", "\u2228", "OR", "||", '|', "or");
 	if (spaces)
 		o << ' ';
 }
@@ -348,7 +348,7 @@ void OutputComposer::printBanner() const
 {
 	printCommentStart();
 	o << "Generated with " << getFullName() << " v" << getVersionNumber() << " by " << getAuthor();
-	if (std::any_of(options::allOptions.cbegin(), options::allOptions.cend(), [](const options::Option *const option){ return option->isSet(); }))
+	if (std::ranges::any_of(options::allOptions, [](const options::Option *const option){ return option->isSet(); }))
 	{
 		o << " (with options:";
 		for (const options::Option *const option : options::allOptions)
@@ -494,7 +494,7 @@ void OutputComposer::printGraphNegatedInputs(const Solution &solution, const std
 			if ((falseBits & (1 << (::bits - j - 1))) != 0)
 				negatedInputs[j].push_back(i);
 	}
-	if (std::any_of(negatedInputs.cbegin(), negatedInputs.cend(), [](const std::vector<std::size_t> &x){ return !x.empty(); }))
+	if (std::ranges::any_of(negatedInputs, [](const std::vector<std::size_t> &x){ return !x.empty(); }))
 	{
 		o << "subgraph negated_inputs\n";
 		o << "{\n";
@@ -531,7 +531,7 @@ inline void OutputComposer::printGraphParentBit(const std::size_t functionNum, c
 
 std::size_t OutputComposer::printGraphProducts(const Solution &solution, const std::size_t functionNum, std::size_t idShift) const
 {
-	if (std::any_of(solution.cbegin(), solution.cend(), [](const Implicant &x){ return x.getBitCount() >= 2; }))
+	if (std::ranges::any_of(solution, [](const Implicant &x){ return x.getBitCount() >= 2; }))
 	{
 		const bool isFullGraph = discriminate<OF::GRAPH>();
 		o << "subgraph products\n";
@@ -587,7 +587,7 @@ void OutputComposer::printGraphSum(const Solution &solution, const std::size_t f
 		const auto indentGuard = o.startIndent();
 		o << "node [shape=rectangle, style=filled];\n";
 		o << "f" << functionNum << " [label=\"";
-		const bool hasParents = isFullGraph || (solution.size() >= 2 && std::any_of(solution.cbegin(), solution.cend(), [](const Implicant &x){ return x.getBitCount() >= 2; }));
+		const bool hasParents = isFullGraph || (solution.size() >= 2 && std::ranges::any_of(solution, [](const Implicant &x){ return x.getBitCount() >= 2; }));
 		{
 			const auto sanitizeGuard = o.startSanitize();
 			if (hasParents && solution.size() >= 2)
@@ -1037,7 +1037,7 @@ std::size_t OutputComposer::printOptimizedGraphSumLabel(const OptimizedSolutions
 {
 	const OptimizedSolutions::sum_t &sum = optimizedSolutions->getSum(sumId);
 	const bool isFullGraph = discriminate<OF::GRAPH>();
-	const bool hasParents = isFullGraph || std::any_of(sum.cbegin(), sum.cend(), [this](const OptimizedSolutions::id_t id){ return !optimizedSolutions->isProduct(id) || isOptimizedProductWorthPrintingInGeneral(id); });
+	const bool hasParents = isFullGraph || std::ranges::any_of(sum, [this](const OptimizedSolutions::id_t id){ return !optimizedSolutions->isProduct(id) || isOptimizedProductWorthPrintingInGeneral(id); });
 	if (hasParents)
 	{
 		printOr(false);
@@ -1075,7 +1075,8 @@ void OutputComposer::printOptimizedGraphSumProducts(const OptimizedSolutions::id
 	else
 	{
 		sum = optimizedSolutions->getSum(sumId);
-		sum.erase(std::remove_if(sum.begin(), sum.end(), [this](const OptimizedSolutions::id_t id){ return !optimizedSolutions->isProduct(id) || isOptimizedProductWorthPrintingInGeneral(id); }), sum.end());
+		const auto eraseBegin = std::remove_if(sum.begin(), sum.end(), [this](const OptimizedSolutions::id_t id){ return !optimizedSolutions->isProduct(id) || isOptimizedProductWorthPrintingInGeneral(id); }), eraseEnd = sum.end();
+		sum.erase(eraseBegin, eraseEnd);
 	}
 	First first;
 	for (const auto &productId : sum)
@@ -1126,7 +1127,7 @@ void OutputComposer::printOptimizedSum(const OptimizedSolutions::id_t sumId) con
 		o << " [label=\"";
 		const OptimizedSolutions::sum_t &sum = optimizedSolutions->getSum(sumId);
 		const bool isFullGraph = discriminate<OF::GRAPH>();
-		const bool hasParents = isFullGraph || std::any_of(sum.cbegin(), sum.cend(), [this](const OptimizedSolutions::id_t id){ return !optimizedSolutions->isProduct(id) || isOptimizedProductWorthPrintingInGeneral(id); });
+		const bool hasParents = isFullGraph || std::ranges::any_of(sum, [this](const OptimizedSolutions::id_t id){ return !optimizedSolutions->isProduct(id) || isOptimizedProductWorthPrintingInGeneral(id); });
 		std::size_t functionNum = isFullGraph ? SIZE_MAX : optimizedSolutions->findSumEndNode(sumId);
 		{
 			const auto sanitizeGuard = o.startSanitize();
