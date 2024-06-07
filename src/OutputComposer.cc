@@ -529,7 +529,7 @@ inline void OutputComposer::printGraphParentBit(const std::size_t functionNum, c
 		o << 'i' << static_cast<unsigned>(bit);
 }
 
-std::size_t OutputComposer::printGraphProducts(const Solution &solution, const std::size_t functionNum, std::size_t idShift) const
+void OutputComposer::printGraphProducts(const Solution &solution, const std::size_t functionNum, std::size_t idShift) const
 {
 	if (std::ranges::any_of(solution, [](const Implicant &x){ return x.getBitCount() >= 2; }))
 	{
@@ -575,7 +575,6 @@ std::size_t OutputComposer::printGraphProducts(const Solution &solution, const s
 		}
 		o << "}\n";
 	}
-	return idShift;
 }
 
 void OutputComposer::printGraphSum(const Solution &solution, const std::size_t functionNum) const
@@ -642,24 +641,23 @@ void OutputComposer::printGraphSum(const Solution &solution, const std::size_t f
 	o << "}\n";
 }
 
-std::size_t OutputComposer::printSolution(const std::size_t i, std::size_t idShift) const
+void OutputComposer::printSolution(const std::size_t i, const std::size_t idShift) const
 {
 	const Solution solution = Solution(solutions[i]).sort();
 	
 	if (isGraph())
 	{
-		const bool isFullGraph = discriminate<OF::GRAPH>();
-		if (isFullGraph)
+		if (discriminate<OF::GRAPH>())
 			printGraphNegatedInputs(solution, i);
-		if (isFullGraph || solution.size() >= 2)
-			idShift = printGraphProducts(solution, i, idShift);
+		if (discriminate<OF::GRAPH>() || solution.size() >= 2)
+			printGraphProducts(solution, i, idShift);
 		printGraphSum(solution, i);
-		return idShift;
+		return;
 	}
 	else if (discriminate<OF::GATE_COSTS>())
 	{
 		printGateCost(solution, true);
-		return 0;
+		return;
 	}
 	
 	if (isHuman())
@@ -710,8 +708,6 @@ std::size_t OutputComposer::printSolution(const std::size_t i, std::size_t idShi
 			printGateCost(solution, false);
 		}
 	}
-	
-	return 0;
 }
 
 void OutputComposer::printSolutions() const
@@ -753,7 +749,9 @@ void OutputComposer::printSolutions() const
 		if (isGraph())
 		{
 			const auto indentGuard = o.startIndent();
-			idShift = printSolution(i, idShift);
+			printSolution(i, idShift);
+			if (discriminate<OF::GRAPH>() || solutions[i].size() >= 2)
+				idShift += std::ranges::count_if(solutions[i], [](const Implicant &x){ return x.getBitCount() >= 2; });
 		}
 		else
 		{
@@ -905,7 +903,7 @@ void OutputComposer::printOptimizedGraphProductImplicant(const OptimizedSolution
 	printImplicant(primeImplicant, false, true);
 }
 
-std::size_t OutputComposer::printOptimizedGraphProductLabel(const OptimizedSolutions::id_t productId, std::size_t functionNum) const
+void OutputComposer::printOptimizedGraphProductLabel(const OptimizedSolutions::id_t productId, std::size_t functionNum) const
 {
 	const bool isFullGraph = discriminate<OF::GRAPH>();
 	const bool hasParents = isFullGraph || !optimizedSolutions->getProduct(productId).subProducts.empty();
@@ -924,16 +922,14 @@ std::size_t OutputComposer::printOptimizedGraphProductLabel(const OptimizedSolut
 		while (true)
 		{
 			functionNames.printName(o, functionNum);
-			const std::size_t additionalFunNum = optimizedSolutions->findProductEndNode(productId, functionNum + 1);
-			if (additionalFunNum == SIZE_MAX)
+			functionNum = optimizedSolutions->findProductEndNode(productId, functionNum + 1);
+			if (functionNum == SIZE_MAX)
 				break;
 			o << ", ";
-			functionNum = additionalFunNum;
 		}
 	}
 	if (!isFullGraph || isGraphVerbose)
 		printOptimizedGraphProductImplicant(productId);
-	return functionNum;
 }
 
 void OutputComposer::printOptimizedGraphProductParents(const OptimizedSolutions::id_t productId) const
@@ -967,10 +963,10 @@ void OutputComposer::printOptimizedProduct(const OptimizedSolutions::id_t produc
 		o << " [label=\"";
 		const bool isFullGraph = discriminate<OF::GRAPH>();
 		const bool hasParents = isFullGraph || !optimizedSolutions->getProduct(productId).subProducts.empty();
-		std::size_t functionNum = isFullGraph ? SIZE_MAX : optimizedSolutions->findProductEndNode(productId);
+		const std::size_t functionNum = isFullGraph ? SIZE_MAX : optimizedSolutions->findProductEndNode(productId);
 		{
 			const auto sanitizeGuard = o.startSanitize();
-			functionNum = printOptimizedGraphProductLabel(productId, functionNum);
+			printOptimizedGraphProductLabel(productId, functionNum);
 		}
 		o << '"';
 		if (functionNum != SIZE_MAX)
@@ -1033,7 +1029,7 @@ void OutputComposer::printOptimizedSumBody(const OptimizedSolutions::id_t sumId)
 	}
 }
 
-std::size_t OutputComposer::printOptimizedGraphSumLabel(const OptimizedSolutions::id_t sumId, std::size_t functionNum) const
+void OutputComposer::printOptimizedGraphSumLabel(const OptimizedSolutions::id_t sumId, std::size_t functionNum) const
 {
 	const OptimizedSolutions::sum_t &sum = optimizedSolutions->getSum(sumId);
 	const bool isFullGraph = discriminate<OF::GRAPH>();
@@ -1053,16 +1049,14 @@ std::size_t OutputComposer::printOptimizedGraphSumLabel(const OptimizedSolutions
 		while (true)
 		{
 			functionNames.printName(o, functionNum);
-			const std::size_t additionalFunNum = optimizedSolutions->findSumEndNode(sumId, functionNum + 1);
-			if (additionalFunNum == SIZE_MAX)
+			functionNum = optimizedSolutions->findSumEndNode(sumId, functionNum + 1);
+			if (functionNum == SIZE_MAX)
 				break;
 			o << ", ";
-			functionNum = additionalFunNum;
 		}
 	}
 	if (!isFullGraph || isGraphVerbose)
 		printOptimizedGraphSumProducts(sumId);
-	return functionNum;
 }
 
 void OutputComposer::printOptimizedGraphSumProducts(const OptimizedSolutions::id_t sumId) const
@@ -1128,10 +1122,10 @@ void OutputComposer::printOptimizedSum(const OptimizedSolutions::id_t sumId) con
 		const OptimizedSolutions::sum_t &sum = optimizedSolutions->getSum(sumId);
 		const bool isFullGraph = discriminate<OF::GRAPH>();
 		const bool hasParents = isFullGraph || std::ranges::any_of(sum, [this](const OptimizedSolutions::id_t id){ return !optimizedSolutions->isProduct(id) || isOptimizedProductWorthPrintingInGeneral(id); });
-		std::size_t functionNum = isFullGraph ? SIZE_MAX : optimizedSolutions->findSumEndNode(sumId);
+		const std::size_t functionNum = isFullGraph ? SIZE_MAX : optimizedSolutions->findSumEndNode(sumId);
 		{
 			const auto sanitizeGuard = o.startSanitize();
-			functionNum = printOptimizedGraphSumLabel(sumId, functionNum);
+			printOptimizedGraphSumLabel(sumId, functionNum);
 		}
 		o << '"';
 		if (functionNum != SIZE_MAX)

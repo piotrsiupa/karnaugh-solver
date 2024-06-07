@@ -128,10 +128,10 @@ class OutputComposer
 	
 	void printGraphInputs() const;
 	void printGraphParentBit(const std::size_t functionNum, const Implicant::splitBit_t &splitBit, const std::size_t i) const;
-	[[nodiscard]] std::size_t printGraphProducts(const Solution &solution, const std::size_t functionNum, std::size_t idShift) const;
+	void printGraphProducts(const Solution &solution, const std::size_t functionNum, std::size_t idShift) const;
 	void printGraphSum(const Solution &solution, const std::size_t functionNum) const;
 	
-	std::size_t printSolution(const std::size_t i, const std::size_t idShift = 0) const;
+	void printSolution(const std::size_t i, const std::size_t idShift = 0) const;
 	void printSolutions() const;
 	
 	void printOptimizedImmediates(const std::size_t immediateProductCount, const std::size_t immediateSumCount) const;
@@ -142,13 +142,13 @@ class OutputComposer
 	
 	void printOptimizedProductBody(const OptimizedSolutions::id_t productId, const bool parentheses) const;
 	void printOptimizedGraphProductImplicant(const OptimizedSolutions::id_t productId) const;
-	std::size_t printOptimizedGraphProductLabel(const OptimizedSolutions::id_t productId, const std::size_t functionNum) const;
+	void printOptimizedGraphProductLabel(const OptimizedSolutions::id_t productId, const std::size_t functionNum) const;
 	void printOptimizedGraphProductParents(const OptimizedSolutions::id_t productId) const;
 	void printOptimizedProduct(const OptimizedSolutions::id_t productId) const;
 	void printOptimizedProducts() const;
 	
 	void printOptimizedSumBody(const OptimizedSolutions::id_t sumId) const;
-	std::size_t printOptimizedGraphSumLabel(const OptimizedSolutions::id_t sumId, std::size_t functionNum) const;
+	void printOptimizedGraphSumLabel(const OptimizedSolutions::id_t sumId, std::size_t functionNum) const;
 	void printOptimizedGraphSumProducts(const OptimizedSolutions::id_t sumId) const;
 	void printOptimizedGraphSumParents(const OptimizedSolutions::id_t sumId) const;
 	void printOptimizedSum(const OptimizedSolutions::id_t sumId) const;
