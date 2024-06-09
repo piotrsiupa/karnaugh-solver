@@ -1,0 +1,39 @@
+--- half ---
+
+goal:
+   00 01 11 10 
+00 1  0  0  1
+01 1  0  0  1
+11 1  0  0  1
+10 1  0  0  1
+
+solution:
+¬z
+
+Gate cost: NOTs = 1, ANDs = 0, ORs = 0
+
+
+--- half_again ---
+
+goal:
+   00 01 11 10 
+00 1  0  0  1
+01 1  0  0  1
+11 1  0  0  1
+10 1  0  0  1
+
+solution:
+¬z
+
+Gate cost: NOTs = 1, ANDs = 0, ORs = 0
+
+
+=== optimized solution ===
+
+Negated inputs: z
+Products:
+Sums:
+	"half" = ¬z
+	"half_again" = ¬z
+
+Gate cost: NOTs = 1, ANDs = 0, ORs = 0

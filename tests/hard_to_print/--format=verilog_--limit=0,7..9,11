@@ -1,0 +1,24 @@
+module hard_to_print (
+	input wire q, x, y, z,
+	output wire none, some_again, more_than_less_again, half, more_than_less_the_third_time,
+);
+	
+	// Internal signals
+	wire [1:0] prods;
+	wire [0:0] sums;
+	
+	// Products
+	assign prods[0] = !q & !x;
+	assign prods[1] = !y & prods[0];
+	
+	// Sums
+	assign sums[0] = prods[1] | !z;
+	
+	// Results
+	assign none = 0;
+	assign some_again = prods[0];
+	assign more_than_less_again = sums[0];
+	assign half = !z;
+	assign more_than_less_the_third_time = sums[0];
+	
+endmodule

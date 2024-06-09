@@ -1,0 +1,5 @@
+--- second ---
+
+(a ∧ b ∧ c ∧ d) ∨ (a ∧ ¬b ∧ ¬c ∧ d) ∨ (¬a ∧ b ∧ c ∧ ¬d) ∨ (¬a ∧ b ∧ ¬c ∧ d)
+
+Gate cost: NOTs = 6, ANDs = 12, ORs = 3

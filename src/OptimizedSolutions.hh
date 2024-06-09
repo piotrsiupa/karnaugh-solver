@@ -1,6 +1,6 @@
 #pragma once
 
-#include <bitset>
+#include <bit>
 #include <cstddef>
 #include <set>
 #include <utility>
@@ -50,6 +50,7 @@ public:
 	
 	[[nodiscard]] std::size_t getProductCount() const { return products.size(); }
 	[[nodiscard]] std::size_t getSumCount() const { return sums.size(); }
+	[[nodiscard]] id_t getMaxId() const { return static_cast<id_t>(getProductCount()) + static_cast<id_t>(getSumCount()); }
 	
 	[[nodiscard]] static id_t makeProductId(const std::size_t index) { return index; }
 	[[nodiscard]] id_t makeSumId(const std::size_t index) const { return index + products.size(); }
@@ -65,9 +66,11 @@ public:
 	[[nodiscard]] Implicant flattenProduct(const id_t productId) const;
 	[[nodiscard]] std::vector<id_t> flattenSum(const id_t sumId) const;
 	
-	[[nodiscard]] std::size_t getNotCount() const final { return std::bitset<32>(negatedInputs).count(); }
-	[[nodiscard]] std::size_t getAndCount() const final { std::size_t andCount = 0; for (const auto &[primeImplicant, ids] : products) andCount += std::max(std::size_t(1), primeImplicant.getBitCount() + ids.size()) - 1; return andCount; }
-	[[nodiscard]] std::size_t getOrCount() const final { std::size_t orCount = 0; for (const auto &sum : sums) orCount += sum.size() - 1; return orCount; }
+	[[nodiscard]] std::size_t getNotCount() const final { return std::popcount(negatedInputs); }
+	[[nodiscard]] std::size_t getProductAndCount(const product_t &product) const { return std::max(std::size_t(1), product.implicant.getBitCount() + product.subProducts.size()) - 1; }
+	[[nodiscard]] std::size_t getAndCount() const final { std::size_t andCount = 0; for (const auto &product : products) andCount += getProductAndCount(product); return andCount; }
+	[[nodiscard]] std::size_t getSumOrCount(const sum_t &sum) const { return sum.size() - 1; }
+	[[nodiscard]] std::size_t getOrCount() const final { std::size_t orCount = 0; for (const auto &sum : sums) orCount += getSumOrCount(sum); return orCount; }
 	
 	[[nodiscard]] const Minterm& getNegatedInputs() const { return negatedInputs; }
 	

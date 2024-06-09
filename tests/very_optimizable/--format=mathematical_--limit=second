@@ -1,0 +1,10 @@
+Let:
+p1(c, d) = ¬c ∧ d
+p2(a, b) = ¬a ∧ b
+p3(c, d) = c ∧ ¬d
+p4(a, b) = a ∧ ¬b
+s1(a, b, c, d) = (p2(a, b) ∧ p3(c, d)) ∨ (p1(c, d) ∧ p4(a, b))
+s2(a, b, c, d) = (p2(a, b) ∧ p1(c, d)) ∨ s1(a, b, c, d)
+
+Then:
+second(a, b, c, d) = (a ∧ b ∧ c ∧ d) ∨ s2(a, b, c, d)

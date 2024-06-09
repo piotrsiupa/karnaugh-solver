@@ -8,14 +8,6 @@
 #include "Progress.hh"
 
 
-bool Karnaughs::shouldFunctionNamesBeUsed() const
-{
-	for (const Karnaugh &karnaugh : karnaughs)
-		if (karnaugh.hasCustomName())
-			return true;
-	return false;
-}
-
 Names Karnaughs::gatherFunctionNames() const
 {
 	Names::names_t functionNames;
@@ -23,6 +15,14 @@ Names Karnaughs::gatherFunctionNames() const
 	for (const Karnaugh &karnaugh : karnaughs)
 		functionNames.emplace_back(karnaugh.getFunctionName());
 	return {shouldFunctionNamesBeUsed(), std::move(functionNames), "o"};
+}
+
+bool Karnaughs::shouldFunctionNamesBeUsed() const
+{
+	for (const Karnaugh &karnaugh : karnaughs)
+		if (karnaugh.hasCustomName())
+			return true;
+	return false;
 }
 
 bool Karnaughs::loadData(Input &input)

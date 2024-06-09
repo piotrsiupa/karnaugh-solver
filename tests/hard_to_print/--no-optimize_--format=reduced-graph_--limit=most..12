@@ -1,0 +1,11 @@
+digraph hard_to_print
+{
+	subgraph function_12
+	{
+		subgraph sum
+		{
+			node [shape=rectangle, style=filled];
+			f12 [label="most = q ∨ y"];
+		}
+	}
+}

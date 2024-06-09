@@ -3,8 +3,10 @@
 #include <algorithm>
 #include <cctype>
 #include <iostream>
+#include <ranges>
 
 #include "global.hh"
+#include "Names.hh"
 
 
 namespace options
@@ -20,6 +22,7 @@ namespace options
 		}
 		return parse();
 	}
+	
 	
 	std::vector<std::string> Trilean::makeNegatedLongNames(const std::vector<std::string_view> &longNames)
 	{
@@ -93,6 +96,7 @@ namespace options
 		}
 	}
 	
+	
 	bool Choice::parse(std::string_view argument)
 	{
 		prepareRegex();
@@ -124,6 +128,7 @@ namespace options
 		return false;
 	}
 	
+	
 	template<typename T>
 	bool Number<T>::parse(const std::string_view argument)
 	{
@@ -149,6 +154,7 @@ namespace options
 	
 	template class Number<std::uint_fast8_t>;
 	
+	
 	bool Indent::parse(std::string_view argument)
 	{
 		if (!argument.empty() && (argument.front() == '+' || argument.front() == '-'))
@@ -161,6 +167,113 @@ namespace options
 		if (number != 0)
 			indent = std::string(number, ' ');
 		return true;
+	}
+	
+	
+	FilterSpec::funcRef_t FilterSpec::stringToFuncRef(const std::string_view string)
+	{
+		const char *const begin = string.data(), *const end = begin + string.size();
+		std::size_t number;
+		const auto [endOfNumber, errorCode] = std::from_chars(begin, end, number);
+		if (endOfNumber != end || errorCode != std::errc())
+			return std::string(string);
+		else
+			return number;
+	}
+	
+	bool FilterSpec::parse(const std::string_view argument)
+	{
+		for (const auto x : std::ranges::split_view(argument, ','))
+		{
+			static constexpr std::string_view rangeMarker = "..";
+			const std::string_view range(&*x.begin(), std::ranges::distance(x));
+			std::string_view::size_type rangeMarkerPos = range.find(rangeMarker);
+			std::string_view begin, end;
+			if (rangeMarkerPos == std::string_view::npos)
+			{
+				begin = end = stripString(range);
+			}
+			else if (range.find(rangeMarker, rangeMarkerPos + 1) == std::string_view::npos)
+			{
+				begin = stripString(range.substr(0, rangeMarkerPos));
+				rangeMarkerPos += rangeMarker.size();
+				end = stripString(range.substr(rangeMarkerPos, range.size() - rangeMarkerPos));
+			}
+			else
+			{
+				std::cerr << "Range decriptor can contain only one \"..\"!\n";
+				return false;
+			}
+			functionRefs.emplace_back(stringToFuncRef(begin), stringToFuncRef(end));
+		}
+		return true;
+	}
+	
+	std::string FilterSpec::compose() const
+	{
+		std::string result = Option::compose() + '=';
+		First first;
+		for (const funcRefRange_t &range : functionRefs)
+		{
+			if (!first)
+				result += ',';
+			result += std::holds_alternative<std::size_t>(range.first) ? std::to_string(std::get<std::size_t>(range.first)) : std::get<std::string>(range.first);
+			if (range.first != range.last)
+			{
+				result += "..";
+				result += std::holds_alternative<std::size_t>(range.last) ? std::to_string(std::get<std::size_t>(range.last)) : std::get<std::string>(range.last);
+			}
+		}
+		return result;
+	}
+	
+	bool FilterSpec::prepare(const Names &functionNames)
+	{
+		const auto prepareRef = [&functionNames](const funcRef_t &ref)->std::size_t{
+				if (std::holds_alternative<std::size_t>(ref))
+					return std::get<std::size_t>(ref);
+				for (std::size_t i = 0; i != functionNames.size(); ++i)
+					if (std::get<std::string>(ref) == functionNames[i])
+						return i;
+				return SIZE_MAX;
+			};
+		Filter::ranges_t preparedRanges;
+		for (const funcRefRange_t &range : functionRefs)
+		{
+			preparedRanges.emplace_back(prepareRef(range.first), prepareRef(range.last));
+			if (preparedRanges.back().first >= functionNames.size() || preparedRanges.back().last >= functionNames.size()) [[unlikely]]
+			{
+				std::cerr << "Specified function was not found!\n";
+				return false;
+			}
+			if (preparedRanges.back().first > preparedRanges.back().last) [[unlikely]]
+			{
+				std::cerr << "The first element of a range is bigger than the last one!\n";
+				return false;
+			}
+		}
+		limit = std::move(preparedRanges);
+		return true;
+	}
+	
+	bool FilterSpec::Filter::operator[](const std::size_t n) const
+	{
+		if (ranges.empty())
+			return true;
+		for (const range_t &range : ranges)
+			if (range.first <= n && range.last >= n)
+				return true;
+		return false;
+	}
+	
+	std::size_t FilterSpec::Filter::count(const std::size_t totalCount) const
+	{
+		if (ranges.empty())
+			return totalCount;
+		std::size_t count = 0;
+		for (const range_t &range : ranges)
+			count += range.last - range.first + 1;
+		return count;
 	}
 	
 	

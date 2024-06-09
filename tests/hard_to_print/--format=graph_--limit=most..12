@@ -1,0 +1,24 @@
+digraph hard_to_print
+{
+	subgraph inputs
+	{
+		rank=same;
+		node [shape=invhouse];
+		i0 [label="q"];
+		i1 [label="x"];
+		i2 [label="y"];
+		i3 [label="z"];
+	}
+	subgraph sums
+	{
+		node [shape=rectangle];
+		s3 [label="∨\n[3]"];
+		i2, i0 -> s3;
+	}
+	subgraph final_sums
+	{
+		node [shape=rectangle, style=filled];
+		f12 [label="most"];
+		s3 -> f12;
+	}
+}

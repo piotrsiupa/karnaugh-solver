@@ -1,0 +1,34 @@
+library IEEE;
+use IEEE.std_logic_1164.all;
+
+entity very_optimizable is
+	port(
+		a, b, c, d : in std_logic;
+		fourth : out std_logic
+	);
+end very_optimizable;
+
+architecture behavioural of very_optimizable is
+	-- Internal signals
+	signal prods : std_logic_vector(6 downto 0);
+	signal sums : std_logic_vector(1 downto 0);
+	
+begin
+	
+	-- Products
+	prods(0) <= not c and d;
+	prods(1) <= not a and b;
+	prods(2) <= c and not d;
+	prods(3) <= prods(1) and prods(2);
+	prods(4) <= a and not b;
+	prods(5) <= prods(0) and prods(4);
+	prods(6) <= not a and not b and not c and not d;
+	
+	-- Sums
+	sums(0) <= prods(3) or prods(5);
+	sums(1) <= prods(6) or sums(0);
+	
+	-- Results
+	fourth <= sums(1);
+	
+end behavioural;

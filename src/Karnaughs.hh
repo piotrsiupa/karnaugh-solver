@@ -23,8 +23,11 @@ class Karnaughs
 	Solutions bestSolutions;
 	OptimizedSolutions optimizedSolutions;
 	
-	[[nodiscard]] bool shouldFunctionNamesBeUsed() const;
+public:
 	Names gatherFunctionNames() const;
+	
+private:
+	[[nodiscard]] bool shouldFunctionNamesBeUsed() const;
 	[[nodiscard]] static std::string getName();
 	
 	solutionses_t makeSolutionses() const;

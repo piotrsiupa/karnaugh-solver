@@ -1,0 +1,10 @@
+--- none ---
+⊥
+--- some_again ---
+¬q ∧ ¬x
+--- more_than_less_again ---
+¬z ∨ (¬q ∧ ¬x ∧ ¬y)
+--- half ---
+¬z
+--- more_than_less_the_third_time ---
+¬z ∨ (¬q ∧ ¬x ∧ ¬y)

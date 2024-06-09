@@ -54,13 +54,14 @@ namespace options
 	extern Indent indent;
 	extern Text name;
 	extern Flag verboseGraph;
+	extern FilterSpec printFilter;
 	
 	extern Flag skipOptimization;
 	
 	extern std::vector<std::string_view> freeArgs;
 	
 	
-	extern Option *const allOptions[12];
+	extern Option *const allOptions[13];
 	
 	[[nodiscard]] bool parse(const int argc, const char *const *const argv);
 	

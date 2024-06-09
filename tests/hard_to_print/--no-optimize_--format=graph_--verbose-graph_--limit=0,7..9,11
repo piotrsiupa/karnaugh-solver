@@ -1,0 +1,118 @@
+digraph hard_to_print
+{
+	subgraph inputs
+	{
+		rank=same;
+		node [shape=invhouse];
+		i0 [label="q"];
+		i1 [label="x"];
+		i2 [label="y"];
+		i3 [label="z"];
+	}
+	subgraph constants
+	{
+		node [shape=octagon, style=dashed];
+		false [label="⊥"];
+	}
+	subgraph function_0
+	{
+		subgraph sum
+		{
+			node [shape=rectangle, style=filled];
+			f0 [label="none = ⊥"];
+			false -> f0;
+		}
+	}
+	subgraph function_7
+	{
+		subgraph negated_inputs
+		{
+			node [shape=diamond];
+			f7_ni0_0 [label="¬q"];
+			i0 -> f7_ni0_0;
+			f7_ni1_0 [label="¬x"];
+			i1 -> f7_ni1_0;
+		}
+		subgraph products
+		{
+			node [shape=ellipse];
+			f7_s0 [label="∧\n[3] = ¬q ∧ ¬x"];
+			f7_ni0_0, f7_ni1_0 -> f7_s0;
+		}
+		subgraph sum
+		{
+			node [shape=rectangle, style=filled];
+			f7 [label="some_again = ¬q ∧ ¬x"];
+			f7_s0 -> f7;
+		}
+	}
+	subgraph function_8
+	{
+		subgraph negated_inputs
+		{
+			node [shape=diamond];
+			f8_ni0_1 [label="¬q"];
+			i0 -> f8_ni0_1;
+			f8_ni1_1 [label="¬x"];
+			i1 -> f8_ni1_1;
+			f8_ni2_1 [label="¬y"];
+			i2 -> f8_ni2_1;
+			f8_ni3_0 [label="¬z"];
+			i3 -> f8_ni3_0;
+		}
+		subgraph products
+		{
+			node [shape=ellipse];
+			f8_s1 [label="∧\n[4] = ¬q ∧ ¬x ∧ ¬y"];
+			f8_ni0_1, f8_ni1_1, f8_ni2_1 -> f8_s1;
+		}
+		subgraph sum
+		{
+			node [shape=rectangle, style=filled];
+			f8 [label="∨\nmore_than_less_again = ¬z ∨ (¬q ∧ ¬x ∧ ¬y)"];
+			f8_ni3_0, f8_s1 -> f8;
+		}
+	}
+	subgraph function_9
+	{
+		subgraph negated_inputs
+		{
+			node [shape=diamond];
+			f9_ni3_0 [label="¬z"];
+			i3 -> f9_ni3_0;
+		}
+		subgraph sum
+		{
+			node [shape=rectangle, style=filled];
+			f9 [label="half = ¬z"];
+			f9_ni3_0 -> f9;
+		}
+	}
+	subgraph function_11
+	{
+		subgraph negated_inputs
+		{
+			node [shape=diamond];
+			f11_ni0_1 [label="¬q"];
+			i0 -> f11_ni0_1;
+			f11_ni1_1 [label="¬x"];
+			i1 -> f11_ni1_1;
+			f11_ni2_1 [label="¬y"];
+			i2 -> f11_ni2_1;
+			f11_ni3_0 [label="¬z"];
+			i3 -> f11_ni3_0;
+		}
+		subgraph products
+		{
+			node [shape=ellipse];
+			f11_s1 [label="∧\n[6] = ¬q ∧ ¬x ∧ ¬y"];
+			f11_ni0_1, f11_ni1_1, f11_ni2_1 -> f11_s1;
+		}
+		subgraph sum
+		{
+			node [shape=rectangle, style=filled];
+			f11 [label="∨\nmore_than_less_the_third_time = ¬z ∨ (¬q ∧ ¬x ∧ ¬y)"];
+			f11_ni3_0, f11_s1 -> f11;
+		}
+	}
+}

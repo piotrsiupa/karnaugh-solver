@@ -1,0 +1,18 @@
+digraph hard_to_print
+{
+	subgraph products
+	{
+		node [shape=ellipse];
+		s0 [label="none = ⊥", style=filled];
+		s2 [label="some_again = ¬q ∧ ¬x", style=filled];
+		s3 [label="∧\n[3] = ¬y"];
+		s2 -> s3;
+		s4 [label="half = ¬z", style=filled];
+	}
+	subgraph sums
+	{
+		node [shape=rectangle];
+		s5 [label="∨\nmore_than_less_again, more_than_less_the_third_time = ¬z", style=filled];
+		s3 -> s5;
+	}
+}

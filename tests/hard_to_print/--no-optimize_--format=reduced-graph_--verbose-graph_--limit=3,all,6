@@ -1,0 +1,27 @@
+digraph hard_to_print
+{
+	subgraph function_1
+	{
+		subgraph sum
+		{
+			node [shape=rectangle, style=filled];
+			f1 [label="all = ⊤"];
+		}
+	}
+	subgraph function_3
+	{
+		subgraph sum
+		{
+			node [shape=rectangle, style=filled];
+			f3 [label="even_less = ¬q ∧ ¬x ∧ ¬y"];
+		}
+	}
+	subgraph function_6
+	{
+		subgraph sum
+		{
+			node [shape=rectangle, style=filled];
+			f6 [label="all_again = ⊤"];
+		}
+	}
+}

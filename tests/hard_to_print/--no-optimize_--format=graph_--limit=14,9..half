@@ -1,0 +1,42 @@
+digraph hard_to_print
+{
+	subgraph inputs
+	{
+		rank=same;
+		node [shape=invhouse];
+		i0 [label="q"];
+		i1 [label="x"];
+		i2 [label="y"];
+		i3 [label="z"];
+	}
+	subgraph function_9
+	{
+		subgraph negated_inputs
+		{
+			node [shape=diamond];
+			f9_ni3_0 [label="¬z"];
+			i3 -> f9_ni3_0;
+		}
+		subgraph sum
+		{
+			node [shape=rectangle, style=filled];
+			f9 [label="half"];
+			f9_ni3_0 -> f9;
+		}
+	}
+	subgraph function_14
+	{
+		subgraph negated_inputs
+		{
+			node [shape=diamond];
+			f14_ni3_0 [label="¬z"];
+			i3 -> f14_ni3_0;
+		}
+		subgraph sum
+		{
+			node [shape=rectangle, style=filled];
+			f14 [label="half_again"];
+			f14_ni3_0 -> f14;
+		}
+	}
+}

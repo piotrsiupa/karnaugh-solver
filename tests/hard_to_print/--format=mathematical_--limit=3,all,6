@@ -1,0 +1,8 @@
+Let:
+p1(q, x) = ¬q ∧ ¬x
+p2(q, x, y) = ¬y ∧ p1(q, x)
+
+Then:
+all(q, x, y, z) = ⊤
+even_less(q, x, y, z) = p2(q, x, y)
+all_again(q, x, y, z) = ⊤

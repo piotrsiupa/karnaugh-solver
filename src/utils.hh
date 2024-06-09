@@ -5,6 +5,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <numeric>
+#include <ranges>
 #include <string>
 #include <string_view>
 #include <type_traits>
@@ -68,6 +69,14 @@ public:
 		assert(result.size() == calculatedSize);
 	}
 	return result;
+}
+
+[[nodiscard]] inline std::string_view stripString(std::string_view string)
+{
+	static constexpr auto isNotSpace = [](const char ch) { return !std::isspace(ch); };
+	string.remove_prefix(std::ranges::distance(string.cbegin(), std::ranges::find_if(string, isNotSpace)));
+	string.remove_suffix(std::ranges::distance(string.crbegin(), std::ranges::find_if(string | std::ranges::views::reverse, isNotSpace)));
+	return string;
 }
 
 

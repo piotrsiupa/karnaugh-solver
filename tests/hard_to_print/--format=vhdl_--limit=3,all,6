@@ -1,0 +1,26 @@
+library IEEE;
+use IEEE.std_logic_1164.all;
+
+entity hard_to_print is
+	port(
+		q, x, y, z : in std_logic;
+		all, even_less, all_again : out std_logic
+	);
+end hard_to_print;
+
+architecture behavioural of hard_to_print is
+	-- Internal signals
+	signal prods : std_logic_vector(1 downto 0);
+	
+begin
+	
+	-- Products
+	prods(0) <= not q and not x;
+	prods(1) <= not y and prods(0);
+	
+	-- Results
+	all <= '1';
+	even_less <= prods(1);
+	all_again <= '1';
+	
+end behavioural;

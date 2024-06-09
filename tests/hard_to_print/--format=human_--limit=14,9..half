@@ -1,0 +1,23 @@
+--- half ---
+
+¬z
+
+Gate cost: NOTs = 1, ANDs = 0, ORs = 0
+
+
+--- half_again ---
+
+¬z
+
+Gate cost: NOTs = 1, ANDs = 0, ORs = 0
+
+
+=== optimized solution ===
+
+Negated inputs: z
+Products:
+Sums:
+	"half" = ¬z
+	"half_again" = ¬z
+
+Gate cost: NOTs = 1, ANDs = 0, ORs = 0

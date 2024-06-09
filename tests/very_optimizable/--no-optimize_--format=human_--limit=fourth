@@ -1,0 +1,5 @@
+--- fourth ---
+
+(a ∧ ¬b ∧ ¬c ∧ d) ∨ (¬a ∧ b ∧ c ∧ ¬d) ∨ (¬a ∧ ¬b ∧ ¬c ∧ ¬d)
+
+Gate cost: NOTs = 8, ANDs = 9, ORs = 2

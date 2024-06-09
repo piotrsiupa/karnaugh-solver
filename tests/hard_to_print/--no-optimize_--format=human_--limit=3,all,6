@@ -1,0 +1,24 @@
+--- all ---
+
+⊤
+
+Gate cost: NOTs = 0, ANDs = 0, ORs = 0
+
+
+--- even_less ---
+
+¬q ∧ ¬x ∧ ¬y
+
+Gate cost: NOTs = 3, ANDs = 2, ORs = 0
+
+
+--- all_again ---
+
+⊤
+
+Gate cost: NOTs = 0, ANDs = 0, ORs = 0
+
+
+=== summary ===
+
+Gate cost: NOTs = 3, ANDs = 2, ORs = 0

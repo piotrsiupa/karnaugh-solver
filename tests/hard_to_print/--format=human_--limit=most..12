@@ -1,0 +1,16 @@
+--- most ---
+
+q ∨ y
+
+Gate cost: NOTs = 0, ANDs = 0, ORs = 1
+
+
+=== optimized solution ===
+
+Negated inputs: <none>
+Products:
+Sums:
+	[3] = y ∨ q
+	"most" = [3]
+
+Gate cost: NOTs = 0, ANDs = 0, ORs = 1

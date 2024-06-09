@@ -1,0 +1,23 @@
+library IEEE;
+use IEEE.std_logic_1164.all;
+
+entity hard_to_print is
+	port(
+		q, x, y, z : in std_logic;
+		most : out std_logic
+	);
+end hard_to_print;
+
+architecture behavioural of hard_to_print is
+	-- Internal signals
+	signal sums : std_logic_vector(0 downto 0);
+	
+begin
+	
+	-- Sums
+	sums(0) <= y or q;
+	
+	-- Results
+	most <= sums(0);
+	
+end behavioural;

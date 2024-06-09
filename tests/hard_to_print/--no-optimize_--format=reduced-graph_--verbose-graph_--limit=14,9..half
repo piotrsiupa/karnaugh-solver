@@ -1,0 +1,19 @@
+digraph hard_to_print
+{
+	subgraph function_9
+	{
+		subgraph sum
+		{
+			node [shape=rectangle, style=filled];
+			f9 [label="half = ¬z"];
+		}
+	}
+	subgraph function_14
+	{
+		subgraph sum
+		{
+			node [shape=rectangle, style=filled];
+			f14 [label="half_again = ¬z"];
+		}
+	}
+}

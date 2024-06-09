@@ -1,0 +1,32 @@
+--- third ---
+
+goal:
+   00 01 11 10 
+00 0  0  0  0
+01 0  1  0  1
+11 0  0  0  0
+10 0  1  0  0
+
+solution:
+(a ∧ ¬b ∧ ¬c ∧ d) ∨ (¬a ∧ b ∧ c ∧ ¬d) ∨ (¬a ∧ b ∧ ¬c ∧ d)
+
+Gate cost: NOTs = 6, ANDs = 9, ORs = 2
+
+
+=== optimized solution ===
+
+Negated inputs: a, b, c, d
+Products:
+	[1] = ¬c ∧ d
+	[2] = ¬a ∧ b
+	[3] = [2] ∧ [1]
+	[4] = c ∧ ¬d
+	[5] = [2] ∧ [4]
+	[6] = a ∧ ¬b
+	[7] = [1] ∧ [6]
+Sums:
+	[10] = [5] ∨ [7]
+	[11] = [3] ∨ [10]
+	"third" = [11]
+
+Gate cost: NOTs = 4, ANDs = 7, ORs = 2

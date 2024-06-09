@@ -1,0 +1,2 @@
+half(q, x, y, z) = ¬z
+half_again(q, x, y, z) = ¬z

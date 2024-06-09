@@ -28,8 +28,9 @@ class OutputComposer
 	
 	options::OutputFormat format;
 	options::OutputOperators operators;
-	bool isGraphVerbose;
 	std::string name;
+	bool isGraphVerbose;
+	options::FilterSpec::Filter filter;
 	
 	mutable IndentedOStream o;
 	
@@ -90,14 +91,22 @@ class OutputComposer
 	inline std::enable_if_t<!std::is_same_v<GRAPH, options::MappedOutputFormats>, void>
 	printFormatSpecific(GRAPH graph, HUMAN human) const;
 	
+	[[nodiscard]] Minterm getNegatedInputs() const;
 	[[nodiscard]] std::pair<bool, bool> checkForUsedConstants(const Solution &solution) const;
 	[[nodiscard]] std::pair<bool, bool> checkForUsedConstants() const;
 	[[nodiscard]] bool areInputsUsed() const;
+	
+	[[nodiscard]] std::size_t findProductFunctionNum(const OptimizedSolutions::id_t productId, const std::size_t startAt = 0) const;
+	[[nodiscard]] std::size_t findSumFunctionNum(const OptimizedSolutions::id_t sumId, const std::size_t startAt = 0) const;
 	
 	[[nodiscard]] bool isOptimizedProductWorthPrintingInGeneral(const OptimizedSolutions::id_t productId) const;
 	[[nodiscard]] bool isOptimizedProductWorthPrinting(const OptimizedSolutions::id_t productId) const;
 	[[nodiscard]] bool isOptimizedSumWorthPrintingInGeneral(const OptimizedSolutions::id_t sumId) const;
 	[[nodiscard]] bool isOptimizedSumWorthPrinting(const OptimizedSolutions::id_t sumId) const;
+	[[nodiscard]] bool isOptimizedElementWorthPrinting(const OptimizedSolutions::id_t id) const { return optimizedSolutions->isProduct(id) ? isOptimizedProductWorthPrinting(id) : isOptimizedSumWorthPrinting(id); }
+	
+	std::vector<bool> visibleElements;
+	void generateVisibleElements();
 	
 	std::vector<OptimizedSolutions::id_t> normalizedOptimizedIds;
 	std::pair<std::size_t, std::size_t> generateOptimizedNormalizedIds();
@@ -131,6 +140,8 @@ class OutputComposer
 	void printGraphProducts(const Solution &solution, const std::size_t functionNum, std::size_t idShift) const;
 	void printGraphSum(const Solution &solution, const std::size_t functionNum) const;
 	
+	void printSolutionsGateCost(const bool full) const;
+	
 	void printSolution(const std::size_t i, const std::size_t idShift = 0) const;
 	void printSolutions() const;
 	
@@ -157,6 +168,8 @@ class OutputComposer
 	void printOptimizedGraphFinalSumLabel(const std::size_t i) const;
 	void printOptimizedFinalSums() const;
 	
+	void printOptimizedGateCost(const bool full) const;
+	
 	void printOptimizedSolution();
 	
 	void printGraphConstants() const;
@@ -175,5 +188,5 @@ public:
 	
 	OutputComposer(Names &&functionNames, std::vector<Karnaugh> &karnaughs, const Solutions &solutions, const OptimizedSolutions *const optimizedSolutions);
 	
-	void print(std::ostream &stream, const options::OutputFormat outputFormat, const options::OutputOperators outputOperators, const bool isGraphVerbose, const bool includeBanner, std::string &&generalName);
+	void print(std::ostream &stream, const bool includeBanner, const options::OutputFormat outputFormat, const options::OutputOperators outputOperators, std::string &&generalName, const bool isGraphVerbose, const options::FilterSpec::Filter &printFilter);
 };

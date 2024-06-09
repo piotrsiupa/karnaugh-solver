@@ -1,0 +1,11 @@
+Let:
+p1(q, x) = ¬q ∧ ¬x
+p2(q, x, y) = ¬y ∧ p1(q, x)
+s1(q, x, y, z) = p2(q, x, y) ∨ ¬z
+
+Then:
+none(q, x, y, z) = ⊥
+some_again(q, x, y, z) = p1(q, x)
+more_than_less_again(q, x, y, z) = s1(q, x, y, z)
+half(q, x, y, z) = ¬z
+more_than_less_the_third_time(q, x, y, z) = s1(q, x, y, z)

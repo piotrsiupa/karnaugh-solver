@@ -1,0 +1,8 @@
+digraph hard_to_print
+{
+	subgraph sums
+	{
+		node [shape=rectangle];
+		s6 [label="most = y ∨ q", style=filled];
+	}
+}

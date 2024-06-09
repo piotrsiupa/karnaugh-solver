@@ -129,16 +129,6 @@ static bool loadInput(IstreamUniquePtr istream, Karnaughs &karnaughs)
 	return true;
 }
 
-static bool processInput(IstreamUniquePtr istream)
-{
-	Karnaughs karnaughs;
-	if (!loadInput(std::move(istream), karnaughs))
-		return false;
-	karnaughs.solve();
-	karnaughs.makeOutputComposer().print(std::cout, options::outputFormat, options::outputOperators, options::verboseGraph, options::outputBanner, OutputComposer::getStandardName());
-	return true;
-}
-
 int main(const int argc, const char *const *const argv)
 {
 	Progress::init();
@@ -177,8 +167,13 @@ int main(const int argc, const char *const *const argv)
 	::terminalInput = ::terminalStdin && istream.get() == &std::cin;
 	::terminalStderr = isStderrTerminal();
 	
-	if (!processInput(std::move(istream)))
+	Karnaughs karnaughs;
+	if (!loadInput(std::move(istream), karnaughs))
 		return 1;
+	if (const auto cerrGuard = Progress::cerr(); !options::printFilter.prepare(karnaughs.gatherFunctionNames()))
+		return 1;
+	karnaughs.solve();
+	karnaughs.makeOutputComposer().print(std::cout, options::outputBanner, options::outputFormat, options::outputOperators, OutputComposer::getStandardName(), options::verboseGraph, options::printFilter);
 	
 	return 0;
 }

@@ -1,0 +1,8 @@
+digraph hard_to_print
+{
+	subgraph products
+	{
+		node [shape=ellipse];
+		s4 [label="half, half_again = ¬z", style=filled];
+	}
+}

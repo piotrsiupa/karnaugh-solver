@@ -1,0 +1,18 @@
+module hard_to_print (
+	input wire q, x, y, z,
+	output wire all, even_less, all_again,
+);
+	
+	// Internal signals
+	wire [1:0] prods;
+	
+	// Products
+	assign prods[0] = !q & !x;
+	assign prods[1] = !y & prods[0];
+	
+	// Results
+	assign all = 1;
+	assign even_less = prods[1];
+	assign all_again = 1;
+	
+endmodule

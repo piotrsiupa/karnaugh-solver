@@ -1,0 +1,39 @@
+class very_optimizable
+{
+public:
+	using input_t = struct { bool a, b, c, d; };
+	using output_t = struct { bool first; };
+	
+	[[nodiscard]] constexpr output_t operator()(const bool a, const bool b, const bool c, const bool d) const { return (*this)({a, b, c, d}); }
+	[[nodiscard]] constexpr output_t operator()(const input_t &i) const { return calc(i); }
+	
+	[[nodiscard]] static constexpr output_t calc(const bool a, const bool b, const bool c, const bool d) { return calc({a, b, c, d}); }
+	[[nodiscard]] static constexpr output_t calc(const input_t &i);
+};
+
+constexpr very_optimizable::output_t very_optimizable::calc(const input_t &i)
+{
+	// Intermediary values
+	bool prods[8] = {};
+	bool sums[3] = {};
+	
+	// Products
+	prods[0] = !i.c && i.d;
+	prods[1] = !i.a && i.b;
+	prods[2] = prods[1] && prods[0];
+	prods[3] = i.c && !i.d;
+	prods[4] = prods[1] && prods[3];
+	prods[5] = i.a && !i.b;
+	prods[6] = prods[0] && prods[5];
+	prods[7] = prods[3] && prods[5];
+	
+	// Sums
+	sums[0] = prods[4] || prods[6];
+	sums[1] = prods[2] || sums[0];
+	sums[2] = prods[7] || sums[1];
+	
+	// Results
+	output_t o = {};
+	o.first = sums[2];
+	return o;
+}

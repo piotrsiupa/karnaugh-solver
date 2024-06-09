@@ -1,0 +1,57 @@
+digraph hard_to_print
+{
+	subgraph inputs
+	{
+		rank=same;
+		node [shape=invhouse];
+		i0 [label="q"];
+		i1 [label="x"];
+		i2 [label="y"];
+		i3 [label="z"];
+	}
+	subgraph constants
+	{
+		node [shape=octagon, style=dashed];
+		false [label="⊥"];
+	}
+	subgraph negated_inputs
+	{
+		node [shape=diamond];
+		ni0 [label="¬q"];
+		i0 -> ni0;
+		ni1 [label="¬x"];
+		i1 -> ni1;
+		ni2 [label="¬y"];
+		i2 -> ni2;
+		ni3 [label="¬z"];
+		i3 -> ni3;
+	}
+	subgraph products
+	{
+		node [shape=ellipse];
+		s0 [label="∧\n[0] = ¬q ∧ ¬x"];
+		ni0, ni1 -> s0;
+		s1 [label="∧\n[1] = ¬q ∧ ¬x ∧ ¬y"];
+		ni2, s0 -> s1;
+	}
+	subgraph sums
+	{
+		node [shape=rectangle];
+		s2 [label="∨\n[2] = (¬q ∧ ¬x ∧ ¬y) ∨ ¬z"];
+		s1, ni3 -> s2;
+	}
+	subgraph final_sums
+	{
+		node [shape=rectangle, style=filled];
+		f0 [label="none = ⊥"];
+		false -> f0;
+		f7 [label="some_again = ¬q ∧ ¬x"];
+		s0 -> f7;
+		f8 [label="more_than_less_again = (¬q ∧ ¬x ∧ ¬y) ∨ ¬z"];
+		s2 -> f8;
+		f9 [label="half = ¬z"];
+		ni3 -> f9;
+		f11 [label="more_than_less_the_third_time = (¬q ∧ ¬x ∧ ¬y) ∨ ¬z"];
+		s2 -> f11;
+	}
+}

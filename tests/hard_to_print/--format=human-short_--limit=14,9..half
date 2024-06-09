@@ -1,0 +1,5 @@
+Negated inputs: z
+Products:
+Sums:
+	"half" = ¬z
+	"half_again" = ¬z

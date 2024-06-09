@@ -1,0 +1,64 @@
+--- all ---
+
+goal:
+   00 01 11 10 
+00 X  X  X  X
+01 X  X  1  X
+11 X  X  X  X
+10 X  X  X  X
+
+best fit:
+   00 01 11 10 
+00 1  1  1  1
+01 1  1  1  1
+11 1  1  1  1
+10 1  1  1  1
+
+solution:
+⊤
+
+Gate cost: NOTs = 0, ANDs = 0, ORs = 0
+
+
+--- even_less ---
+
+goal:
+   00 01 11 10 
+00 1  1  0  0
+01 0  0  0  0
+11 0  0  0  0
+10 0  0  0  0
+
+solution:
+¬q ∧ ¬x ∧ ¬y
+
+Gate cost: NOTs = 3, ANDs = 2, ORs = 0
+
+
+--- all_again ---
+
+goal:
+   00 01 11 10 
+00 1  1  1  1
+01 1  1  1  1
+11 1  1  1  1
+10 1  1  1  1
+
+solution:
+⊤
+
+Gate cost: NOTs = 0, ANDs = 0, ORs = 0
+
+
+=== optimized solution ===
+
+Negated inputs: q, x, y
+Products:
+	[0] = ¬q ∧ ¬x
+	[1] = ¬y ∧ [0]
+Sums:
+	"all" = ⊤
+	"even_less" = [1]
+	"all_again" = ⊤
+
+Gate cost: NOTs = 3, ANDs = 2, ORs = 0

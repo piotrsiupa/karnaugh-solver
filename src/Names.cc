@@ -1,8 +1,20 @@
 #include "./Names.hh"
 
-#include "options.hh"
 #include "utils.hh"
 
+
+void Names::printRawNames(IndentedOStream &o, const options::FilterSpec::Filter &filter) const
+{
+	std::vector<std::string> limitedNames;
+	limitedNames.reserve(filter.count(names.size()));
+	for (std::size_t i = 0; i != names.size(); ++i)
+		if (filter[i])
+			limitedNames.push_back(names[i]);
+	if (!useInCode || options::outputFormat != options::OutputFormat::VERILOG)
+		o << joinStrings(limitedNames);
+	else
+		o << joinStrings(limitedNames, "", " ", ",");
+}
 
 void Names::printName(IndentedOStream &o, const std::size_t i) const
 {
@@ -26,17 +38,9 @@ void Names::printName(IndentedOStream &o, const std::size_t i) const
 	printPlainName(o, i);
 }
 
-void Names::printNames(IndentedOStream &o) const
+void Names::printNames(IndentedOStream &o, const options::FilterSpec::Filter &filter) const
 {
-	if (useInCode)
-	{
-		if (options::outputFormat == options::OutputFormat::VERILOG)
-		{
-			o << joinStrings(names, "", " ", ",");
-			return;
-		}
-	}
-	else
+	if (!useInCode)
 	{
 		switch (options::outputFormat)
 		{
@@ -50,12 +54,11 @@ void Names::printNames(IndentedOStream &o) const
 			break;
 		}
 	}
-	o << joinStrings(names);
+	printRawNames(o, filter);
 }
 
-void Names::printType(IndentedOStream &o) const
+void Names::printType(IndentedOStream &o, const options::FilterSpec::Filter &filter) const
 {
-	
 	switch (options::outputFormat)
 	{
 	case options::OutputFormat::VHDL:
@@ -69,7 +72,11 @@ void Names::printType(IndentedOStream &o) const
 		{
 			o << "struct {";
 			if (!names.empty())
-				o << " bool " << joinStrings(names) << ';';
+			{
+				o << " bool ";
+				printRawNames(o, filter);
+				o << ';';
+			}
 			o << " }";
 		}
 		else

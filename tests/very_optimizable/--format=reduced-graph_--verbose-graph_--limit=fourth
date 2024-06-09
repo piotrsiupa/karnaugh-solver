@@ -1,0 +1,24 @@
+digraph very_optimizable
+{
+	subgraph products
+	{
+		node [shape=ellipse];
+		s1 [label="[1] = ¬c ∧ d"];
+		s2 [label="[2] = ¬a ∧ b"];
+		s4 [label="[4] = c ∧ ¬d"];
+		s5 [label="∧\n[5] = ¬a ∧ b ∧ c ∧ ¬d"];
+		s2, s4 -> s5;
+		s6 [label="[6] = a ∧ ¬b"];
+		s7 [label="∧\n[7] = a ∧ ¬b ∧ ¬c ∧ d"];
+		s1, s6 -> s7;
+		s9 [label="[9] = ¬a ∧ ¬b ∧ ¬c ∧ ¬d"];
+	}
+	subgraph sums
+	{
+		node [shape=rectangle];
+		s10 [label="∨\n[10] = (¬a ∧ b ∧ c ∧ ¬d) ∨ (a ∧ ¬b ∧ ¬c ∧ d)"];
+		s5, s7 -> s10;
+		s14 [label="∨\nfourth = (¬a ∧ ¬b ∧ ¬c ∧ ¬d) ∨ (¬a ∧ b ∧ c ∧ ¬d) ∨ (a ∧ ¬b ∧ ¬c ∧ d)", style=filled];
+		s9, s10 -> s14;
+	}
+}

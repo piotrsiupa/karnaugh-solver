@@ -1,0 +1,60 @@
+digraph hard_to_print
+{
+	subgraph inputs
+	{
+		rank=same;
+		node [shape=invhouse];
+		i0 [label="q"];
+		i1 [label="x"];
+		i2 [label="y"];
+		i3 [label="z"];
+	}
+	subgraph constants
+	{
+		node [shape=octagon, style=dashed];
+		true [label="⊤"];
+	}
+	subgraph function_1
+	{
+		subgraph sum
+		{
+			node [shape=rectangle, style=filled];
+			f1 [label="all = ⊤"];
+			true -> f1;
+		}
+	}
+	subgraph function_3
+	{
+		subgraph negated_inputs
+		{
+			node [shape=diamond];
+			f3_ni0_0 [label="¬q"];
+			i0 -> f3_ni0_0;
+			f3_ni1_0 [label="¬x"];
+			i1 -> f3_ni1_0;
+			f3_ni2_0 [label="¬y"];
+			i2 -> f3_ni2_0;
+		}
+		subgraph products
+		{
+			node [shape=ellipse];
+			f3_s0 [label="∧\n[1] = ¬q ∧ ¬x ∧ ¬y"];
+			f3_ni0_0, f3_ni1_0, f3_ni2_0 -> f3_s0;
+		}
+		subgraph sum
+		{
+			node [shape=rectangle, style=filled];
+			f3 [label="even_less = ¬q ∧ ¬x ∧ ¬y"];
+			f3_s0 -> f3;
+		}
+	}
+	subgraph function_6
+	{
+		subgraph sum
+		{
+			node [shape=rectangle, style=filled];
+			f6 [label="all_again = ⊤"];
+			true -> f6;
+		}
+	}
+}

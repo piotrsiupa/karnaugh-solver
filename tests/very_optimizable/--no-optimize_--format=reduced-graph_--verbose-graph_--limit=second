@@ -1,0 +1,20 @@
+digraph very_optimizable
+{
+	subgraph function_1
+	{
+		subgraph products
+		{
+			node [shape=ellipse];
+			f1_s0 [label="[4] = a ∧ b ∧ c ∧ d"];
+			f1_s1 [label="[5] = a ∧ ¬b ∧ ¬c ∧ d"];
+			f1_s2 [label="[6] = ¬a ∧ b ∧ c ∧ ¬d"];
+			f1_s3 [label="[7] = ¬a ∧ b ∧ ¬c ∧ d"];
+		}
+		subgraph sum
+		{
+			node [shape=rectangle, style=filled];
+			f1 [label="∨\nsecond = (a ∧ b ∧ c ∧ d) ∨ (a ∧ ¬b ∧ ¬c ∧ d) ∨ (¬a ∧ b ∧ c ∧ ¬d) ∨ (¬a ∧ b ∧ ¬c ∧ d)"];
+			f1_s0, f1_s1, f1_s2, f1_s3 -> f1;
+		}
+	}
+}

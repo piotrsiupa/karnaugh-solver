@@ -1,0 +1,78 @@
+--- none ---
+
+goal:
+   00 01 11 10 
+00 0  0  0  0
+01 0  0  0  0
+11 0  0  0  0
+10 0  0  0  0
+
+solution:
+⊥
+
+Gate cost: NOTs = 0, ANDs = 0, ORs = 0
+
+
+--- some_again ---
+
+goal:
+   00 01 11 10 
+00 1  1  1  1
+01 0  0  0  0
+11 0  0  0  0
+10 0  0  0  0
+
+solution:
+¬q ∧ ¬x
+
+Gate cost: NOTs = 2, ANDs = 1, ORs = 0
+
+
+--- more_than_less_again ---
+
+goal:
+   00 01 11 10 
+00 1  1  0  1
+01 1  0  0  1
+11 1  0  0  1
+10 1  0  0  1
+
+solution:
+¬z ∨ (¬q ∧ ¬x ∧ ¬y)
+
+Gate cost: NOTs = 4, ANDs = 2, ORs = 1
+
+
+--- half ---
+
+goal:
+   00 01 11 10 
+00 1  0  0  1
+01 1  0  0  1
+11 1  0  0  1
+10 1  0  0  1
+
+solution:
+¬z
+
+Gate cost: NOTs = 1, ANDs = 0, ORs = 0
+
+
+--- more_than_less_the_third_time ---
+
+goal:
+   00 01 11 10 
+00 1  1  0  1
+01 1  0  0  1
+11 1  0  0  1
+10 1  0  0  1
+
+solution:
+¬z ∨ (¬q ∧ ¬x ∧ ¬y)
+
+Gate cost: NOTs = 4, ANDs = 2, ORs = 1
+
+
+=== summary ===
+
+Gate cost: NOTs = 11, ANDs = 5, ORs = 2

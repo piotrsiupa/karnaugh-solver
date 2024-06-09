@@ -1,0 +1,26 @@
+class hard_to_print
+{
+public:
+	using input_t = struct { bool q, x, y, z; };
+	using output_t = struct { bool most; };
+	
+	[[nodiscard]] constexpr output_t operator()(const bool q, const bool x, const bool y, const bool z) const { return (*this)({q, x, y, z}); }
+	[[nodiscard]] constexpr output_t operator()(const input_t &i) const { return calc(i); }
+	
+	[[nodiscard]] static constexpr output_t calc(const bool q, const bool x, const bool y, const bool z) { return calc({q, x, y, z}); }
+	[[nodiscard]] static constexpr output_t calc(const input_t &i);
+};
+
+constexpr hard_to_print::output_t hard_to_print::calc(const input_t &i)
+{
+	// Intermediary values
+	bool sums[1] = {};
+	
+	// Sums
+	sums[0] = i.y || i.q;
+	
+	// Results
+	output_t o = {};
+	o.most = sums[0];
+	return o;
+}

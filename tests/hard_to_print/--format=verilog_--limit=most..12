@@ -1,0 +1,15 @@
+module hard_to_print (
+	input wire q, x, y, z,
+	output wire most,
+);
+	
+	// Internal signals
+	wire [0:0] sums;
+	
+	// Sums
+	assign sums[0] = y | q;
+	
+	// Results
+	assign most = sums[0];
+	
+endmodule

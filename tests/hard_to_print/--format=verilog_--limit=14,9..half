@@ -1,0 +1,10 @@
+module hard_to_print (
+	input wire q, x, y, z,
+	output wire half, half_again,
+);
+	
+	// Results
+	assign half = !z;
+	assign half_again = !z;
+	
+endmodule

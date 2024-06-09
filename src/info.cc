@@ -40,6 +40,7 @@ void printShortHelp()
 			"    -I, --indent=X\t- Set number of spaces used to indent output. `0` means\n\t\t\t  \"use tabs\" and it's chosen by default. Adding prefix\n\t\t\t  \"-\" to the number turns off indenting empty lines.\n"
 			"    -n, --name=X\t- Set module name for Verilog output or entity name for\n\t\t\t  VHDL output or class name for C++ output.\n\t\t\t  (By default, the name of the input file is used,\n\t\t\t  or \"Karnaugh\" if input is read from stdin.)\n"
 			"    -G, --verbose-graph\t- Show shows all inputs in every node of a graph output,\n\t\t\t  instead only the ones added by that node. (It's more\n\t\t\t  readable but less useful for building the circuit.)\n"
+			"    -l, --limit\t\t- Select functions that will be present in the output\n\t\t\t  (all by default). This only affects outputs and it's\n\t\t\t  meant to aid humans in reading them (mainly graphs).\n\t\t\t  Outputs with different \"limits\" are consistent.\n"
 			" 3rd stage - common subexpression elimination:\n"
 			"    -O, --no-optimize\t- Skip the common subexpression elimination optimization\n\t\t\t  and show only a raw solution for each function.\n"
 		;

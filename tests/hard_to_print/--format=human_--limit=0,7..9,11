@@ -1,0 +1,50 @@
+--- none ---
+
+⊥
+
+Gate cost: NOTs = 0, ANDs = 0, ORs = 0
+
+
+--- some_again ---
+
+¬q ∧ ¬x
+
+Gate cost: NOTs = 2, ANDs = 1, ORs = 0
+
+
+--- more_than_less_again ---
+
+¬z ∨ (¬q ∧ ¬x ∧ ¬y)
+
+Gate cost: NOTs = 4, ANDs = 2, ORs = 1
+
+
+--- half ---
+
+¬z
+
+Gate cost: NOTs = 1, ANDs = 0, ORs = 0
+
+
+--- more_than_less_the_third_time ---
+
+¬z ∨ (¬q ∧ ¬x ∧ ¬y)
+
+Gate cost: NOTs = 4, ANDs = 2, ORs = 1
+
+
+=== optimized solution ===
+
+Negated inputs: q, x, y, z
+Products:
+	[0] = ¬q ∧ ¬x
+	[1] = ¬y ∧ [0]
+Sums:
+	[2] = [1] ∨ ¬z
+	"none" = ⊥
+	"some_again" = [0]
+	"more_than_less_again" = [2]
+	"half" = ¬z
+	"more_than_less_the_third_time" = [2]
+
+Gate cost: NOTs = 4, ANDs = 2, ORs = 1

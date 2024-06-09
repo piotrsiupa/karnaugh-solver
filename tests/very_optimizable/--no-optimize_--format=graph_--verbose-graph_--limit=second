@@ -1,0 +1,49 @@
+digraph very_optimizable
+{
+	subgraph inputs
+	{
+		rank=same;
+		node [shape=invhouse];
+		i0 [label="a"];
+		i1 [label="b"];
+		i2 [label="c"];
+		i3 [label="d"];
+	}
+	subgraph function_1
+	{
+		subgraph negated_inputs
+		{
+			node [shape=diamond];
+			f1_ni0_2 [label="¬a"];
+			i0 -> f1_ni0_2;
+			f1_ni0_3 [label="¬a"];
+			i0 -> f1_ni0_3;
+			f1_ni1_1 [label="¬b"];
+			i1 -> f1_ni1_1;
+			f1_ni2_1 [label="¬c"];
+			i2 -> f1_ni2_1;
+			f1_ni2_3 [label="¬c"];
+			i2 -> f1_ni2_3;
+			f1_ni3_2 [label="¬d"];
+			i3 -> f1_ni3_2;
+		}
+		subgraph products
+		{
+			node [shape=ellipse];
+			f1_s0 [label="∧\n[4] = a ∧ b ∧ c ∧ d"];
+			i0, i1, i2, i3 -> f1_s0;
+			f1_s1 [label="∧\n[5] = a ∧ ¬b ∧ ¬c ∧ d"];
+			i0, f1_ni1_1, f1_ni2_1, i3 -> f1_s1;
+			f1_s2 [label="∧\n[6] = ¬a ∧ b ∧ c ∧ ¬d"];
+			f1_ni0_2, i1, i2, f1_ni3_2 -> f1_s2;
+			f1_s3 [label="∧\n[7] = ¬a ∧ b ∧ ¬c ∧ d"];
+			f1_ni0_3, i1, f1_ni2_3, i3 -> f1_s3;
+		}
+		subgraph sum
+		{
+			node [shape=rectangle, style=filled];
+			f1 [label="∨\nsecond = (a ∧ b ∧ c ∧ d) ∨ (a ∧ ¬b ∧ ¬c ∧ d) ∨ (¬a ∧ b ∧ c ∧ ¬d) ∨ (¬a ∧ b ∧ ¬c ∧ d)"];
+			f1_s0, f1_s1, f1_s2, f1_s3 -> f1;
+		}
+	}
+}

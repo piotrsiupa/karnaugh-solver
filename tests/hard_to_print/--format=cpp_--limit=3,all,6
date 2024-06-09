@@ -1,0 +1,29 @@
+class hard_to_print
+{
+public:
+	using input_t = struct { bool q, x, y, z; };
+	using output_t = struct { bool all, even_less, all_again; };
+	
+	[[nodiscard]] constexpr output_t operator()(const bool q, const bool x, const bool y, const bool z) const { return (*this)({q, x, y, z}); }
+	[[nodiscard]] constexpr output_t operator()(const input_t &i) const { return calc(i); }
+	
+	[[nodiscard]] static constexpr output_t calc(const bool q, const bool x, const bool y, const bool z) { return calc({q, x, y, z}); }
+	[[nodiscard]] static constexpr output_t calc(const input_t &i);
+};
+
+constexpr hard_to_print::output_t hard_to_print::calc(const input_t &i)
+{
+	// Intermediary values
+	bool prods[2] = {};
+	
+	// Products
+	prods[0] = !i.q && !i.x;
+	prods[1] = !i.y && prods[0];
+	
+	// Results
+	output_t o = {};
+	o.all = true;
+	o.even_less = prods[1];
+	o.all_again = true;
+	return o;
+}

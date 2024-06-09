@@ -1,6 +1,7 @@
 #pragma once
 
 #include <algorithm>
+#include <cassert>
 #include <charconv>
 #include <cstdint>
 #include <functional>
@@ -11,9 +12,12 @@
 #include <string>
 #include <string_view>
 #include <utility>
+#include <variant>
 #include <vector>
 
 #include "utils.hh"
+
+class Names;
 
 
 namespace options
@@ -230,6 +234,47 @@ namespace options
 		[[nodiscard]] operator const std::string&() const { return get(); }
 		[[nodiscard]] bool hasIndentOnEmpty() const { return indentEmpty; }
 		[[nodiscard]] operator bool() const { return hasIndentOnEmpty(); }
+	};
+	
+	class FilterSpec : public Option
+	{
+	public:
+		class Filter
+		{
+			using range_t = struct { std::size_t first, last; };
+			using ranges_t = std::vector<range_t>;
+			ranges_t ranges;
+			
+			Filter& operator=(ranges_t &&newRanges) { ranges = std::move(newRanges); return *this; }
+			
+			friend class FilterSpec;
+			
+		public:
+			[[nodiscard]] std::size_t count(const std::size_t totalCount) const;
+			[[nodiscard]] bool operator[](const std::size_t n) const;
+		};
+		
+	private:
+		using funcRef_t = std::variant<std::size_t, std::string>;
+		using funcRefRange_t = struct { funcRef_t first, last; };
+		using functionRefs_t = std::vector<funcRefRange_t>;
+		
+		functionRefs_t functionRefs;
+		Filter limit;
+		
+		[[nodiscard]] static funcRef_t stringToFuncRef(const std::string_view string);
+		
+	public:
+		using Option::Option;
+		
+		[[nodiscard]] bool needsArgument() const final { return true; }
+		[[nodiscard]] bool parse(std::string_view argument) final;
+		[[nodiscard]] bool isSet() const final { return !functionRefs.empty(); }
+		[[nodiscard]] std::string compose() const final;
+		
+		[[nodiscard]] bool prepare(const Names &functionNames);
+		[[nodiscard]] const Filter& get() const { assert(functionRefs.size() == limit.ranges.size()); return limit; }
+		[[nodiscard]] operator const Filter&() const { return get(); }
 	};
 	
 	

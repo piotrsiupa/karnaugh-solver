@@ -1,0 +1,33 @@
+--- all ---
+
+⊤
+
+Gate cost: NOTs = 0, ANDs = 0, ORs = 0
+
+
+--- even_less ---
+
+¬q ∧ ¬x ∧ ¬y
+
+Gate cost: NOTs = 3, ANDs = 2, ORs = 0
+
+
+--- all_again ---
+
+⊤
+
+Gate cost: NOTs = 0, ANDs = 0, ORs = 0
+
+
+=== optimized solution ===
+
+Negated inputs: q, x, y
+Products:
+	[0] = ¬q ∧ ¬x
+	[1] = ¬y ∧ [0]
+Sums:
+	"all" = ⊤
+	"even_less" = [1]
+	"all_again" = ⊤
+
+Gate cost: NOTs = 3, ANDs = 2, ORs = 0

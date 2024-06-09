@@ -64,13 +64,14 @@ namespace options
 	Indent indent({"indent", "indent-size", "indent-style"}, 'I');
 	Text name({"name", "module-name", "class-name"}, 'n');
 	Flag verboseGraph({"verbose-graph", "expanded-graph", "redundant-graph"}, 'G');
+	FilterSpec printFilter({"limit", "print-limit", "filter", "print-filter", "pick", "picked-functions"}, 'l');
 	
 	Flag skipOptimization({"no-optimize", "no-cse", "no-optimization", "skip-optimize", "skip-cse", "skip-optimization"}, 'O');
 	
 	std::vector<std::string_view> freeArgs;
 	
 	
-	Option *const allOptions[] = {&help, &helpOptions, &version, &prompt, &status, &outputBanner, &outputFormat, &outputOperators, &indent, &name, &verboseGraph, &skipOptimization};
+	Option *const allOptions[] = {&help, &helpOptions, &version, &prompt, &status, &outputBanner, &outputFormat, &outputOperators, &indent, &name, &verboseGraph, &printFilter, &skipOptimization};
 	
 	bool parse(const int argc, const char *const *const argv)
 	{

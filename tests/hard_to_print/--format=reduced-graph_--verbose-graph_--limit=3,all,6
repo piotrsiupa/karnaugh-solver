@@ -1,0 +1,11 @@
+digraph hard_to_print
+{
+	subgraph products
+	{
+		node [shape=ellipse];
+		s1 [label="all, all_again = ⊤", style=filled];
+		s2 [label="[2] = ¬q ∧ ¬x"];
+		s3 [label="∧\neven_less = ¬q ∧ ¬x ∧ ¬y", style=filled];
+		s2 -> s3;
+	}
+}

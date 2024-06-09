@@ -1,0 +1,16 @@
+library IEEE;
+use IEEE.std_logic_1164.all;
+
+entity very_optimizable is
+	port(
+		a, b, c, d : in std_logic;
+		third : out std_logic
+	);
+end very_optimizable;
+
+architecture behavioural of very_optimizable is
+begin
+	
+	third <= (a and not b and not c and d) or (not a and b and c and not d) or (not a and b and not c and d);
+	
+end behavioural;

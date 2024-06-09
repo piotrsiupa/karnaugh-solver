@@ -1,0 +1,8 @@
+Negated inputs: q, x, y
+Products:
+	[0] = ¬q ∧ ¬x
+	[1] = ¬y ∧ [0]
+Sums:
+	"all" = ⊤
+	"even_less" = [1]
+	"all_again" = ⊤

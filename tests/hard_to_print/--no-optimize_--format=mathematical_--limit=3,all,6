@@ -1,0 +1,3 @@
+all(q, x, y, z) = ⊤
+even_less(q, x, y, z) = ¬q ∧ ¬x ∧ ¬y
+all_again(q, x, y, z) = ⊤

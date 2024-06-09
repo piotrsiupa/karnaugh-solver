@@ -1,0 +1,8 @@
+module very_optimizable (
+	input wire a, b, c, d,
+	output wire fourth,
+);
+	
+	assign fourth = (a & !b & !c & d) | (!a & b & c & !d) | (!a & !b & !c & !d);
+	
+endmodule

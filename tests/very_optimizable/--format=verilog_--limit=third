@@ -1,0 +1,26 @@
+module very_optimizable (
+	input wire a, b, c, d,
+	output wire third,
+);
+	
+	// Internal signals
+	wire [6:0] prods;
+	wire [1:0] sums;
+	
+	// Products
+	assign prods[0] = !c & d;
+	assign prods[1] = !a & b;
+	assign prods[2] = prods[1] & prods[0];
+	assign prods[3] = c & !d;
+	assign prods[4] = prods[1] & prods[3];
+	assign prods[5] = a & !b;
+	assign prods[6] = prods[0] & prods[5];
+	
+	// Sums
+	assign sums[0] = prods[4] | prods[6];
+	assign sums[1] = prods[2] | sums[0];
+	
+	// Results
+	assign third = sums[1];
+	
+endmodule

@@ -1,0 +1,11 @@
+Negated inputs: q, x, y, z
+Products:
+	[0] = ¬q ∧ ¬x
+	[1] = ¬y ∧ [0]
+Sums:
+	[2] = [1] ∨ ¬z
+	"none" = ⊥
+	"some_again" = [0]
+	"more_than_less_again" = [2]
+	"half" = ¬z
+	"more_than_less_the_third_time" = [2]

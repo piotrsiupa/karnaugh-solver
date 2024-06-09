@@ -1,0 +1,5 @@
+none(q, x, y, z) = ⊥
+some_again(q, x, y, z) = ¬q ∧ ¬x
+more_than_less_again(q, x, y, z) = ¬z ∨ (¬q ∧ ¬x ∧ ¬y)
+half(q, x, y, z) = ¬z
+more_than_less_the_third_time(q, x, y, z) = ¬z ∨ (¬q ∧ ¬x ∧ ¬y)

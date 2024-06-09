@@ -1,0 +1,32 @@
+library IEEE;
+use IEEE.std_logic_1164.all;
+
+entity hard_to_print is
+	port(
+		q, x, y, z : in std_logic;
+		none, some_again, more_than_less_again, half, more_than_less_the_third_time : out std_logic
+	);
+end hard_to_print;
+
+architecture behavioural of hard_to_print is
+	-- Internal signals
+	signal prods : std_logic_vector(1 downto 0);
+	signal sums : std_logic_vector(0 downto 0);
+	
+begin
+	
+	-- Products
+	prods(0) <= not q and not x;
+	prods(1) <= not y and prods(0);
+	
+	-- Sums
+	sums(0) <= prods(1) or not z;
+	
+	-- Results
+	none <= '0';
+	some_again <= prods(0);
+	more_than_less_again <= sums(0);
+	half <= not z;
+	more_than_less_the_third_time <= sums(0);
+	
+end behavioural;

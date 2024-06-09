@@ -1,0 +1,33 @@
+--- half ---
+
+goal:
+   00 01 11 10 
+00 1  0  0  1
+01 1  0  0  1
+11 1  0  0  1
+10 1  0  0  1
+
+solution:
+¬z
+
+Gate cost: NOTs = 1, ANDs = 0, ORs = 0
+
+
+--- half_again ---
+
+goal:
+   00 01 11 10 
+00 1  0  0  1
+01 1  0  0  1
+11 1  0  0  1
+10 1  0  0  1
+
+solution:
+¬z
+
+Gate cost: NOTs = 1, ANDs = 0, ORs = 0
+
+
+=== summary ===
+
+Gate cost: NOTs = 2, ANDs = 0, ORs = 0

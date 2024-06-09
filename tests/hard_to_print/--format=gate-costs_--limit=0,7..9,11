@@ -1,0 +1,9 @@
+Gate cost: NOTs = 0, ANDs = 0, ORs = 0, overall cost = 0, cost without input NOTs = 0
+Gate cost: NOTs = 2, ANDs = 1, ORs = 0, overall cost = 4, cost without input NOTs = 2
+Gate cost: NOTs = 4, ANDs = 2, ORs = 1, overall cost = 10, cost without input NOTs = 6
+Gate cost: NOTs = 1, ANDs = 0, ORs = 0, overall cost = 1, cost without input NOTs = 0
+Gate cost: NOTs = 4, ANDs = 2, ORs = 1, overall cost = 10, cost without input NOTs = 6
+=== summary ===
+Gate cost: NOTs = 11, ANDs = 5, ORs = 2, overall cost = 25, cost without input NOTs = 14
+=== optimized solution ===
+Gate cost: NOTs = 4, ANDs = 2, ORs = 1, overall cost = 10, cost without input NOTs = 6

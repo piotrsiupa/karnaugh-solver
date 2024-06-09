@@ -1,0 +1,18 @@
+library IEEE;
+use IEEE.std_logic_1164.all;
+
+entity hard_to_print is
+	port(
+		q, x, y, z : in std_logic;
+		half, half_again : out std_logic
+	);
+end hard_to_print;
+
+architecture behavioural of hard_to_print is
+begin
+	
+	-- Results
+	half <= not z;
+	half_again <= not z;
+	
+end behavioural;
