@@ -4,11 +4,11 @@
 #include "utils.hh"
 
 
-void Names::printName(IndentedOStream &o, const std::size_t i) const
+void Names::printName(IndentedOStream &o, const options::OutputFormat outputFormat, const std::size_t i) const
 {
 	if (!useInCode)
 	{
-		switch (options::outputFormat)
+		switch (outputFormat)
 		{
 		case options::OutputFormat::VERILOG:
 			o << replacementName << '[' << i << ']';
@@ -23,16 +23,16 @@ void Names::printName(IndentedOStream &o, const std::size_t i) const
 			break;
 		}
 	}
-	if (options::outputFormat == options::OutputFormat::CPP)
+	if (outputFormat == options::OutputFormat::CPP)
 		o << replacementName << '.';
 	printPlainName(o, i);
 }
 
-void Names::printNames(IndentedOStream &o) const
+void Names::printNames(IndentedOStream &o, const options::OutputFormat outputFormat) const
 {
 	if (useInCode)
 	{
-		if (options::outputFormat == options::OutputFormat::VERILOG)
+		if (outputFormat == options::OutputFormat::VERILOG)
 		{
 			o << joinStrings(names, "", " ", ",");
 			return;
@@ -40,7 +40,7 @@ void Names::printNames(IndentedOStream &o) const
 	}
 	else
 	{
-		switch (options::outputFormat)
+		switch (outputFormat)
 		{
 		case options::OutputFormat::VERILOG:
 			o << " [" << (names.size() - 1) << ":0] " << replacementName << ',';
@@ -55,10 +55,9 @@ void Names::printNames(IndentedOStream &o) const
 	o << joinStrings(names);
 }
 
-void Names::printType(IndentedOStream &o) const
+void Names::printType(IndentedOStream &o, const options::OutputFormat outputFormat) const
 {
-	
-	switch (options::outputFormat)
+	switch (outputFormat)
 	{
 	case options::OutputFormat::VHDL:
 		if (useInCode)

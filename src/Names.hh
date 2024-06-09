@@ -27,9 +27,9 @@ public:
 	Names& operator=(Names &&) = default;
 	
 	void printPlainName(IndentedOStream &o, const std::size_t i) const { o << names[i]; }
-	void printName(IndentedOStream &o, const std::size_t i) const;
-	void printNames(IndentedOStream &o) const;
-	void printType(IndentedOStream &o) const;
+	void printName(IndentedOStream &o, const options::OutputFormat outputFormat, const std::size_t i) const;
+	void printNames(IndentedOStream &o, const options::OutputFormat outputFormat) const;
+	void printType(IndentedOStream &o, const options::OutputFormat outputFormat) const;
 	
 	[[nodiscard]] bool empty() const { return names.empty(); }
 	[[nodiscard]] std::size_t size() const { return names.size(); }

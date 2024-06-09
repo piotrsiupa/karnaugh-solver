@@ -464,7 +464,7 @@ void OutputComposer::printImplicant(const Implicant &implicant, const bool paren
 				printAnd(true);
 			if (negated)
 				printNot();
-			::inputNames.printName(o, bitIndex);
+			::inputNames.printName(o, format, bitIndex);
 		}
 	}
 	
@@ -509,7 +509,7 @@ void OutputComposer::printGraphNegatedInputs(const Solution &solution, const std
 					{
 						const auto sanitizeGuard = o.startSanitize();
 						printNot();
-						::inputNames.printName(o, i);
+						::inputNames.printName(o, format, i);
 					}
 					o << "\"];\n";
 					o << "i" << i << " -> f" << functionNum << "_ni" << i << '_' << j << ";\n";
@@ -596,7 +596,7 @@ void OutputComposer::printGraphSum(const Solution &solution, const std::size_t f
 				const auto desanitizeGuard = o.startSanitize(false);
 				o << "\\n";
 			}
-			functionNames.printName(o, functionNum);
+			functionNames.printName(o, format, functionNum);
 			if (!isFullGraph || isGraphVerbose)
 			{
 				First first;
@@ -746,8 +746,8 @@ void OutputComposer::printSolutions() const
 		if (isGraph())
 			o << i;
 		else if (!discriminate<OF::GATE_COSTS>())
-			functionNames.printName(o, i);
-		printFormatSpecific("\n{\n", [this]{ o << '('; ::inputNames.printNames(o); o << ')'; printAssignmentOp(); }, BLANK, " ---\n", NEXT, NEXT, &OutputComposer::printAssignmentOp);
+			functionNames.printName(o, format, i);
+		printFormatSpecific("\n{\n", [this]{ o << '('; ::inputNames.printNames(o, format); o << ')'; printAssignmentOp(); }, BLANK, " ---\n", NEXT, NEXT, &OutputComposer::printAssignmentOp);
 		if (discriminate<OF::HUMAN_LONG, OF::HUMAN>())
 			o << '\n';
 		if (isGraph())
@@ -812,7 +812,7 @@ void OutputComposer::printOptimizedMathArgs(const OptimizedSolutions::id_t id) c
 	{
 		if (!first)
 			o << ", ";
-		::inputNames.printName(o, bit);
+		::inputNames.printName(o, format, bit);
 	}
 	o << ')';
 }
@@ -851,7 +851,7 @@ void OutputComposer::printOptimizedNegatedInputs() const
 							},
 							' '
 						);
-					::inputNames.printName(o, i);
+					::inputNames.printName(o, format, i);
 				}
 				if (isGraph())
 				{
@@ -923,7 +923,7 @@ std::size_t OutputComposer::printOptimizedGraphProductLabel(const OptimizedSolut
 	{
 		while (true)
 		{
-			functionNames.printName(o, functionNum);
+			functionNames.printName(o, format, functionNum);
 			const std::size_t additionalFunNum = optimizedSolutions->findProductEndNode(productId, functionNum + 1);
 			if (additionalFunNum == SIZE_MAX)
 				break;
@@ -1052,7 +1052,7 @@ std::size_t OutputComposer::printOptimizedGraphSumLabel(const OptimizedSolutions
 	{
 		while (true)
 		{
-			functionNames.printName(o, functionNum);
+			functionNames.printName(o, format, functionNum);
 			const std::size_t additionalFunNum = optimizedSolutions->findSumEndNode(sumId, functionNum + 1);
 			if (additionalFunNum == SIZE_MAX)
 				break;
@@ -1188,7 +1188,7 @@ void OutputComposer::printOptimizedGraphFinalSumLabel(const std::size_t i) const
 		const auto sanitizeGuard = o.startSanitize(false);
 		o << "\\n";
 	}
-	functionNames.printName(o, i);
+	functionNames.printName(o, format, i);
 	if (isGraphVerbose)
 		printOptimizedGraphSumProducts(sumId);
 }
@@ -1225,13 +1225,13 @@ void OutputComposer::printOptimizedFinalSums() const
 				if (isGraph())
 					printOptimizedGraphFinalSumLabel(i);
 				else
-					functionNames.printName(o, i);
+					functionNames.printName(o, format, i);
 				if (isHuman())
 					o << '"';
 				if (discriminate<OF::MATHEMATICAL>())
 				{
 					o << '(';
-					::inputNames.printNames(o);
+					::inputNames.printNames(o, format);
 					o << ")";
 				}
 			}
@@ -1332,7 +1332,7 @@ void OutputComposer::printGraphInputs() const
 			o << "i" << i << " [label=\"";
 			{
 				const auto sanitizeGuard = o.startSanitize();
-				::inputNames.printName(o, i);
+				::inputNames.printName(o, format, i);
 			}
 			o << "\"];\n";
 		}
@@ -1398,13 +1398,13 @@ void OutputComposer::printVerilog()
 		if (!::inputNames.empty())
 		{
 			o << "input wire";
-			::inputNames.printNames(o);
+			::inputNames.printNames(o, format);
 			o << '\n';
 		}
 		if (!karnaughs.empty())
 		{
 			o << "output wire";
-			functionNames.printNames(o);
+			functionNames.printNames(o, format);
 			o << '\n';
 		}
 	}
@@ -1434,18 +1434,18 @@ void OutputComposer::printVhdl()
 			const auto indentGuard1 = o.startIndent();
 			if (!::inputNames.empty())
 			{
-				::inputNames.printNames(o);
+				::inputNames.printNames(o, format);
 				o << " : in ";
-				::inputNames.printType(o);
+				::inputNames.printType(o, format);
 				if (!karnaughs.empty())
 					o << ';';
 				o << '\n';
 			}
 			if (!karnaughs.empty())
 			{
-				functionNames.printNames(o);
+				functionNames.printNames(o, format);
 				o << " : out ";
-				functionNames.printType(o);
+				functionNames.printType(o, format);
 				o << '\n';
 			}
 		}
@@ -1475,10 +1475,10 @@ void OutputComposer::printCpp()
 	{
 		const auto indentGuard = o.startIndent();
 		o << "using input_t = ";
-		::inputNames.printType(o);
+		::inputNames.printType(o, format);
 		o << ";\n";
 		o << "using output_t = ";
-		functionNames.printType(o);
+		functionNames.printType(o, format);
 		o << ";\n";
 		o << '\n';
 		o << "[[nodiscard]] constexpr output_t operator()(";
