@@ -28,9 +28,9 @@ class OutputComposer
 	
 	options::OutputFormat format;
 	options::OutputOperators operators;
-	std::string name;
+	std::string_view name;
 	bool isGraphVerbose;
-	options::FilterSpec::Filter filter;
+	const options::FilterSpec::Filter *filter;
 	
 	mutable IndentedOStream o;
 	
@@ -188,5 +188,5 @@ public:
 	
 	OutputComposer(Names &&functionNames, std::vector<Karnaugh> &karnaughs, const Solutions &solutions, const OptimizedSolutions *const optimizedSolutions);
 	
-	void print(std::ostream &stream, const bool includeBanner, const options::OutputFormat outputFormat, const options::OutputOperators outputOperators, std::string &&generalName, const bool isGraphVerbose, const options::FilterSpec::Filter &printFilter);
+	void print(std::ostream &stream, const bool includeBanner, const options::OutputFormat outputFormat, const options::OutputOperators outputOperators, const std::string_view generalName, const bool isGraphVerbose, const options::FilterSpec::Filter &printFilter);
 };

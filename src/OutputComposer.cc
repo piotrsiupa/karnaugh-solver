@@ -154,7 +154,7 @@ Minterm OutputComposer::getNegatedInputs() const
 {
 	Minterm negatedInputs = 0;
 	for (std::size_t i = 0; i != solutions.size(); ++i)
-		if (filter[i])
+		if ((*filter)[i])
 			for (const auto &x : solutions[i])
 				negatedInputs |= x.getFalseBits();
 	return negatedInputs;
@@ -175,7 +175,7 @@ std::pair<bool, bool> OutputComposer::checkForUsedConstants() const
 	bool anyUsesFalse = false, anyUsesTrue = false;
 	for (std::size_t i = 0; i != solutions.size(); ++i)
 	{
-		if (!filter[i])
+		if (!(*filter)[i])
 			continue;
 		const auto [usesFalse, usesTrue] = checkForUsedConstants(solutions[i]);
 		anyUsesFalse |= usesFalse;
@@ -190,7 +190,7 @@ std::size_t OutputComposer::findProductFunctionNum(const OptimizedSolutions::id_
 	while (true)
 	{
 		functionNum = optimizedSolutions->findProductEndNode(productId, functionNum);
-		if (functionNum == SIZE_MAX || filter[functionNum])
+		if (functionNum == SIZE_MAX || (*filter)[functionNum])
 			break;
 		++functionNum;
 	}
@@ -203,7 +203,7 @@ std::size_t OutputComposer::findSumFunctionNum(const OptimizedSolutions::id_t su
 	while (true)
 	{
 		functionNum = optimizedSolutions->findSumEndNode(sumId, functionNum);
-		if (functionNum == SIZE_MAX || filter[functionNum])
+		if (functionNum == SIZE_MAX || (*filter)[functionNum])
 			break;
 		++functionNum;
 	}
@@ -273,7 +273,7 @@ void OutputComposer::generateVisibleElements()
 		const auto &finalSums = optimizedSolutions->getFinalSums();
 		assert(functionNames.size() == finalSums.size());
 		for (std::size_t i = 0; i != finalSums.size(); ++i)
-			if (filter[i])
+			if ((*filter)[i])
 				idsToAdd.push(finalSums[i]);
 	}
 	while (!idsToAdd.empty())
@@ -711,7 +711,7 @@ void OutputComposer::printSolutionsGateCost(const bool full) const
 {
 	StandaloneGateCost stc;
 	for (std::size_t i = 0; i != solutions.size(); ++i)
-		if (filter[i])
+		if ((*filter)[i])
 			stc += solutions[i];
 	printGateCost(stc, full);
 }
@@ -810,7 +810,7 @@ void OutputComposer::printSolutions() const
 	std::size_t idShift = 0;
 	for (std::size_t i = 0; i != functionNames.size(); ++i)
 	{
-		if (filter[i])
+		if ((*filter)[i])
 		{
 			if (discriminate<OF::HUMAN_LONG, OF::HUMAN>() && !first)
 				o << "\n\n";
@@ -1298,7 +1298,7 @@ void OutputComposer::printOptimizedFinalSums() const
 		const auto &finalSums = optimizedSolutions->getFinalSums();
 		for (std::size_t i = 0; i != finalSums.size(); ++i)
 		{
-			if (!filter[i])
+			if (!(*filter)[i])
 				continue;
 			
 			{
@@ -1460,7 +1460,7 @@ void OutputComposer::printHuman()
 		printSolutions();
 		if (!discriminate<OF::HUMAN_SHORT>())
 		{
-			if (filter.count(solutions.size()) != 1 && optimizedSolutions == nullptr)
+			if (filter->count(solutions.size()) != 1 && optimizedSolutions == nullptr)
 			{
 				if (!solutions.empty())
 					o << "\n\n=== summary ===\n" << '\n';
@@ -1510,7 +1510,7 @@ void OutputComposer::printVerilog()
 		if (!karnaughs.empty())
 		{
 			o << "output wire";
-			functionNames.printNames(o, filter);
+			functionNames.printNames(o, *filter);
 			o << '\n';
 		}
 	}
@@ -1549,9 +1549,9 @@ void OutputComposer::printVhdl()
 			}
 			if (!karnaughs.empty())
 			{
-				functionNames.printNames(o, filter);
+				functionNames.printNames(o, *filter);
 				o << " : out ";
-				functionNames.printType(o, filter);
+				functionNames.printType(o, *filter);
 				o << '\n';
 			}
 		}
@@ -1584,7 +1584,7 @@ void OutputComposer::printCpp()
 		::inputNames.printType(o);
 		o << ";\n";
 		o << "using output_t = ";
-		functionNames.printType(o, filter);
+		functionNames.printType(o, *filter);
 		o << ";\n";
 		o << '\n';
 		o << "[[nodiscard]] constexpr output_t operator()(";
@@ -1688,14 +1688,14 @@ OutputComposer::OutputComposer(Names &&functionNames, std::vector<Karnaugh> &kar
 {
 }
 
-void OutputComposer::print(std::ostream &stream, const bool includeBanner, const OF outputFormat, const OO outputOperators, std::string &&generalName, const bool shouldGraphBeVerbose, const options::FilterSpec::Filter &printFilter)
+void OutputComposer::print(std::ostream &stream, const bool includeBanner, const OF outputFormat, const OO outputOperators, const std::string_view generalName, const bool shouldGraphBeVerbose, const options::FilterSpec::Filter &printFilter)
 {
 	o.setStream(stream);
 	format = outputFormat;
 	operators = outputOperators;
 	name = std::move(generalName);
 	isGraphVerbose = shouldGraphBeVerbose;
-	filter = printFilter;
+	filter = &printFilter;
 	
 	if (includeBanner)
 		printBanner();
